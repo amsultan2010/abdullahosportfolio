@@ -75,12 +75,12 @@ export default function BlogPostLayout({
           {/* Blog Post Terminal Window */}
           <div className="glass rounded-lg overflow-hidden shadow-2xl">
             {/* Terminal Title Bar */}
-            <div className="bg-gray-800 h-6 flex items-center space-x-2 px-4">
+            <div className="h-6 flex items-center space-x-2 px-4 border-b border-white/10">
               <div className="w-3 h-3 rounded-full bg-red-500"></div>
               <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
               <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              <span className="text-sm text-gray-300 flex-grow text-center font-semibold flex items-center justify-center gap-2">
-                <FaRegFolderClosed size={14} className="text-gray-300" />
+              <span className="text-sm text-gray-200 flex-grow text-center font-semibold flex items-center justify-center gap-2">
+                <FaRegFolderClosed size={14} className="text-gray-200" />
                 {slug} — blog post
               </span>
             </div>

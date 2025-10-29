@@ -83,12 +83,12 @@ function formatDate(dateString: string) {
         <!-- Case Study Terminal Window -->
         <div class="glass rounded-lg overflow-hidden shadow-2xl">
           <!-- Terminal Title Bar -->
-          <div class="bg-gray-800 h-6 flex items-center space-x-2 px-4">
+          <div class="h-6 flex items-center space-x-2 px-4 border-b border-white/10">
             <div class="w-3 h-3 rounded-full bg-red-500"></div>
             <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
             <div class="w-3 h-3 rounded-full bg-green-500"></div>
-            <span class="text-sm text-gray-300 flex-grow text-center font-semibold flex items-center justify-center gap-2">
-              <FaRegFolderClosed size={14} className="text-gray-300" />
+            <span class="text-sm text-gray-200 flex-grow text-center font-semibold flex items-center justify-center gap-2">
+              <FaRegFolderClosed size={14} className="text-gray-200" />
               {caseStudy.data.slug || caseStudy.id.replace('.md', '')}.case — {caseStudy.data.company}
             </span>
           </div>
