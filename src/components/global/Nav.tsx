@@ -110,7 +110,7 @@ function MenuBlock({ trigger, triggerHref, items, isOpen, onToggle }: MenuBlockP
                 <div className="flex flex-col">
                   <span className="font-normal">{item.label}</span>
                   {item.sublabel && (
-                    <span className="text-xs text-white/60 mt-0.5">{item.sublabel}</span>
+                    <span className="text-xs text-white/90 mt-0.5">{item.sublabel}</span>
                   )}
                 </div>
               </a>
