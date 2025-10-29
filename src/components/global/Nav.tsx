@@ -222,7 +222,7 @@ export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
 
         {/* Case Studies Block */}
         <MenuBlock
-          trigger="Case Studies"
+          trigger="Cases"
           triggerHref="/case-studies"
           items={caseStudyItems}
           isOpen={openMenu === 'case-studies'}
