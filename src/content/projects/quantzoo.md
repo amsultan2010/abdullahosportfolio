@@ -52,6 +52,7 @@ QuantZoo solves these problems by providing a unified strategy API, a modular ba
 - **Strategies**: Implementations live in `strategies/` and inherit from a small `Strategy` interface. Example strategies included: MNQ_808 (example), momentum, volatility breakout, pairs trading.
 - **Backtesting Engine**: Event-driven, vectorized engine that supports position sizing, slippage, commissions, and realistic execution simulation.
 - **Portfolio Engine**: Capital allocation across strategies with equal-weight, risk parity, volatility targeting, and scheduled rebalancing.
+- **CLI & Persistence**: A command-line interface (`qz`) runs backtests, generates reports, and exports leaderboards. Results are persisted in DuckDB for efficient analytics.
 - **Metrics & Reporting**: Standardized metrics (Sharpe, max drawdown, win rate, profit factor, historical VaR, expected shortfall) and markdown/image reports generated per backtest.
 - **Indicators**: Strictly historical technical indicators (ATR, RSI, MACD, Bollinger Bands) implemented with no look-ahead.
 - **Data Layer**: Pluggable loaders for CSV/Parquet, Yahoo Finance, Polygon, Alpha Vantage, and custom feeds with quality-cleaning (splits/dividends/missing data handling).
@@ -81,7 +82,7 @@ These results illustrate the engine's ability to capture high-frequency intraday
 
 ## Key Features
 
-- Event-driven, vectorized backtester with realistic fees and slippage models
+- event‑driven backtesting engine with realistic fees and slippage, walk‑forward validation, and a DuckDB persistence layer
 - PineScript-compatible strategy API to reduce translation friction
 - Walk-forward optimization and purged K-fold validation primitives
 - Real-time FastAPI streaming backend and Streamlit dashboard for live and replay modes
@@ -97,6 +98,7 @@ These results illustrate the engine's ability to capture high-frequency intraday
 - **Execution Realism**: Flexible slippage/commission models and basic market-impact hooks.
 - **Extensible API**: Add strategies or indicators with minimal boilerplate — a single method to implement for signal generation.
 - **Documentation & Examples**: API reference, YAML experiment examples, and reproducible notebooks for onboarding.
+- **Operational Stack**: Monitoring with Prometheus and Grafana; CI/CD runs pytest, mypy type checks, flake8 linting, and Bandit security scans on every commit via GitHub Actions.
 
 ## Impact
 
