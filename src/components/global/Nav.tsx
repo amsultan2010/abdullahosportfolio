@@ -104,32 +104,60 @@ function MenuBlock({ trigger, triggerHref, items, isOpen, onToggle }: MenuBlockP
       </a>
       
       {shouldShowMenu && (
-        <div
-          ref={menuRef}
-          className="fixed md:absolute top-full left-0 mt-0 backdrop-blur-xl bg-slate-900/50 border border-white/10 shadow-2xl min-w-48 z-[100]"
-          style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}
-          onKeyDown={handleKeyDown}
-          role="menu"
-        >
-          {items.map((item, index) => (
-            <div key={index}>
-              {item.divider && <div className="border-t border-white/10 my-1" />}
-              <a
-                href={item.href}
-                className="block px-4 py-2 text-sm text-white hover:bg-slate-700/50 transition-colors focus:bg-slate-700/50 focus:outline-none"
-                role="menuitem"
-                tabIndex={-1}
-              >
-                <div className="flex flex-col">
-                  <span className="font-normal">{item.label}</span>
-                  {item.sublabel && (
-                    <span className="text-xs text-white/90 mt-0.5">{item.sublabel}</span>
-                  )}
-                </div>
-              </a>
-            </div>
-          ))}
-        </div>
+        <>
+          {/* Mobile: Fixed positioning */}
+          <div
+            ref={menuRef}
+            className="md:hidden fixed backdrop-blur-xl bg-slate-900/50 border border-white/10 shadow-2xl min-w-48 z-[100]"
+            style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}
+            onKeyDown={handleKeyDown}
+            role="menu"
+          >
+            {items.map((item, index) => (
+              <div key={index}>
+                {item.divider && <div className="border-t border-white/10 my-1" />}
+                <a
+                  href={item.href}
+                  className="block px-4 py-2 text-sm text-white hover:bg-slate-700/50 transition-colors focus:bg-slate-700/50 focus:outline-none"
+                  role="menuitem"
+                  tabIndex={-1}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-normal">{item.label}</span>
+                    {item.sublabel && (
+                      <span className="text-xs text-white/90 mt-0.5">{item.sublabel}</span>
+                    )}
+                  </div>
+                </a>
+              </div>
+            ))}
+          </div>
+          {/* Desktop: Absolute positioning */}
+          <div
+            className="hidden md:block absolute top-full left-0 mt-0 backdrop-blur-xl bg-slate-900/50 border border-white/10 shadow-2xl min-w-48 z-[100]"
+            onKeyDown={handleKeyDown}
+            role="menu"
+          >
+            {items.map((item, index) => (
+              <div key={index}>
+                {item.divider && <div className="border-t border-white/10 my-1" />}
+                <a
+                  href={item.href}
+                  className="block px-4 py-2 text-sm text-white hover:bg-slate-700/50 transition-colors focus:bg-slate-700/50 focus:outline-none"
+                  role="menuitem"
+                  tabIndex={-1}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-normal">{item.label}</span>
+                    {item.sublabel && (
+                      <span className="text-xs text-white/90 mt-0.5">{item.sublabel}</span>
+                    )}
+                  </div>
+                </a>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
