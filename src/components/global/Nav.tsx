@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type ReactNode } from 'react';
 
 interface NavProps {
   currentPath: string;
@@ -11,7 +11,7 @@ interface NavProps {
 }
 
 interface MenuBlockProps {
-  trigger: string;
+  trigger: string | ReactNode;
   triggerHref: string;
   items: Array<{
     label: string;
@@ -185,9 +185,9 @@ export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
   return (
     <nav 
       ref={navRef}
-      className="fixed top-0 left-0 right-0 z-50 h-6 backdrop-blur-xl bg-slate-900/50 border-b border-white/5"
+      className="fixed top-0 left-0 right-0 z-50 h-6 backdrop-blur-xl bg-slate-900/50 border-b border-white/5 overflow-x-auto md:overflow-x-visible"
     >
-      <div className="flex items-center h-full px-4 space-x-6">
+      <div className="flex items-center h-full px-4 space-x-6 min-w-max md:min-w-0">
         {/* RG Logo + Name Block */}
         <a 
           href="/" 
@@ -222,7 +222,12 @@ export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
 
         {/* Case Studies Block */}
         <MenuBlock
-          trigger="Cases"
+          trigger={
+            <>
+              <span className="hidden md:inline">Case Studies</span>
+              <span className="md:hidden">Cases</span>
+            </>
+          }
           triggerHref="/case-studies"
           items={caseStudyItems}
           isOpen={openMenu === 'case-studies'}
