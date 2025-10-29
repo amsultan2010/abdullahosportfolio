@@ -1,7 +1,7 @@
-import macBackground3 from '../assets/images/mac-background3.jpg';
+import hollywoodBackground from '../assets/images/hollywood-background.png';
 
-// Using only the sand/desert background for all pages
-export const backgrounds = [macBackground3];
+// Using the Hollywood Hills background for all pages
+export const backgrounds = [hollywoodBackground];
 
 export function getFixedBackgroundKey() {
   return 'bg-1'; // Always use the same background
@@ -9,7 +9,7 @@ export function getFixedBackgroundKey() {
 
 export async function getOptimizedBackgrounds(getImage: any) {
   const optimized = await getImage({
-    src: macBackground3,
+    src: hollywoodBackground,
     width: 3500,
   });
 
