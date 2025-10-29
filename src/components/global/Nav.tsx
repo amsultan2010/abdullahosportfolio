@@ -76,14 +76,14 @@ function MenuBlock({ trigger, triggerHref, items, isOpen, onToggle }: MenuBlockP
 
   return (
     <div 
-      className="relative"
+      className="relative flex-shrink-0"
       onMouseEnter={handleMouseEnter}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <a
         href={triggerHref}
-        className="text-white hover:text-white/80 transition-colors text-sm font-normal px-0"
+        className="text-white hover:text-white/80 transition-colors text-sm font-normal px-0 whitespace-nowrap"
         onKeyDown={handleKeyDown}
         aria-expanded={shouldShowMenu}
         aria-haspopup="true"
@@ -94,7 +94,7 @@ function MenuBlock({ trigger, triggerHref, items, isOpen, onToggle }: MenuBlockP
       {shouldShowMenu && (
         <div
           ref={menuRef}
-          className="absolute top-full left-0 mt-0 backdrop-blur-xl bg-slate-900/50 border border-white/10 shadow-2xl min-w-48"
+          className="absolute top-full left-0 mt-0 backdrop-blur-xl bg-slate-900/50 border border-white/10 shadow-2xl min-w-48 z-[100]"
           onKeyDown={handleKeyDown}
           role="menu"
         >
@@ -185,13 +185,13 @@ export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
   return (
     <nav 
       ref={navRef}
-      className="fixed top-0 left-0 right-0 z-50 h-6 backdrop-blur-xl bg-slate-900/50 border-b border-white/5 overflow-x-auto md:overflow-x-visible"
+      className="fixed top-0 left-0 right-0 z-50 h-6 backdrop-blur-xl bg-slate-900/50 border-b border-white/5"
     >
-      <div className="flex items-center h-full px-4 space-x-6 min-w-max md:min-w-0">
+      <div className="flex items-center h-full px-4 space-x-6 overflow-x-auto md:overflow-x-visible scrollbar-hide">
         {/* RG Logo + Name Block */}
         <a 
           href="/" 
-          className="flex items-center space-x-2 text-white hover:text-white/80 transition-colors text-sm font-semibold"
+          className="flex items-center space-x-2 text-white hover:text-white/80 transition-colors text-sm font-semibold flex-shrink-0"
         >
           <img 
             src="/icons/rglogo.png" 
@@ -235,7 +235,7 @@ export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
         />
 
         {/* Simple Link Blocks */}
-        <a href="/contact" className="text-white hover:text-white/80 transition-colors text-sm font-normal">
+        <a href="/contact" className="text-white hover:text-white/80 transition-colors text-sm font-normal whitespace-nowrap flex-shrink-0">
           Contact
         </a>
         
@@ -243,7 +243,7 @@ export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
           href="/Ronniel_Gandhe_Resume.pdf" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="text-white hover:text-white/80 transition-colors text-sm font-normal"
+          className="text-white hover:text-white/80 transition-colors text-sm font-normal whitespace-nowrap flex-shrink-0"
         >
           Résumé
         </a>
