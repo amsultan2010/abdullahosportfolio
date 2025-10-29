@@ -25,12 +25,24 @@ interface MenuBlockProps {
 
 function MenuBlock({ trigger, triggerHref, items, isOpen, onToggle }: MenuBlockProps) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLAnchorElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
     if ((isOpen || isHovered) && menuRef.current) {
       const firstItem = menuRef.current.querySelector('a') as HTMLElement;
       firstItem?.focus();
+    }
+  }, [isOpen, isHovered]);
+
+  useEffect(() => {
+    if ((isOpen || isHovered) && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom,
+        left: rect.left
+      });
     }
   }, [isOpen, isHovered]);
 
@@ -78,10 +90,10 @@ function MenuBlock({ trigger, triggerHref, items, isOpen, onToggle }: MenuBlockP
     <div 
       className="relative flex-shrink-0"
       onMouseEnter={handleMouseEnter}
-      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <a
+        ref={triggerRef}
         href={triggerHref}
         className="text-white hover:text-white/80 transition-colors text-sm font-normal px-0 whitespace-nowrap"
         onKeyDown={handleKeyDown}
@@ -94,7 +106,8 @@ function MenuBlock({ trigger, triggerHref, items, isOpen, onToggle }: MenuBlockP
       {shouldShowMenu && (
         <div
           ref={menuRef}
-          className="absolute top-full left-0 mt-0 backdrop-blur-xl bg-slate-900/50 border border-white/10 shadow-2xl min-w-48 z-[100]"
+          className="fixed md:absolute top-full left-0 mt-0 backdrop-blur-xl bg-slate-900/50 border border-white/10 shadow-2xl min-w-48 z-[100]"
+          style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}
           onKeyDown={handleKeyDown}
           role="menu"
         >
