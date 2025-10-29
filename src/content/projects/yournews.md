@@ -12,8 +12,6 @@ highlights:
   - Sub-1s page load times
 ---
 
-# YourNews
-
 ## Problem
 
 Traditional news aggregators (Google News, Feedly) have two major issues:

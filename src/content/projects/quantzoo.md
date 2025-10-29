@@ -12,9 +12,7 @@ highlights:
     - Real-time FastAPI backend + Streamlit dashboard
     - Scalable persistence with DuckDB and Parquet
 ---
-
-# QuantZoo — Technical Report (2025)
-
+ 
 QuantZoo is a production-grade, open-source Python framework for systematic trading strategy research, backtesting, walk-forward validation, real-time streaming, portfolio management, and risk analytics. It is designed for reproducibility, extensibility, and professional quant development.
 
 ## Problem Statement

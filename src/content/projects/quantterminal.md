@@ -12,8 +12,6 @@ highlights:
   - Terminal-inspired UI
 ---
 
-# QuantTerminal
-
 ## Problem
 
 After building **QuantZoo** (a backtesting library for systematic strategies), I faced a practical limitation: **backtest results don't guarantee live trading success**. Even a profitable strategy can fail in production due to:
