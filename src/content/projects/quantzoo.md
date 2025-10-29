@@ -25,6 +25,33 @@ Quantitative trading research is often fragmented:
 
 QuantZoo solves these problems by providing a unified strategy API, a modular backtesting engine, standardized data ingestion and reporting, and comprehensive validation tools.
 
+## Approach
+
+### System Architecture
+
+```
+┌────────────────────────┐    ┌────────────────────┐    ┌───────────────────┐
+│   Data / Ingestion     │──▶ │   Backtesting /     │──▶ │  Portfolio Engine  │
+│ (CSV, Parquet, APIs)   │    │   Execution Engine  │    │ (allocation, risk) │
+└────────────────────────┘    └────────────────────┘    └───────────────────┘
+    │                          │                         │
+    │                          ▼                         ▼
+    │                   ┌────────────────┐        ┌──────────────────┐
+    │                   │   FastAPI /     │        │   Streamlit UI    │
+    │                   │   Real-time     │        │   Dashboard /     │
+    │                   │   Streaming     │        │   Visualization   │
+    │                   └────────────────┘        └──────────────────┘
+    ▼
+   CLI (qz) — runs backtests, exports leaderboards, and writes results to DuckDB
+```
+
+Flow:
+1. Ingest raw market and alternative data into standardized Parquet/DuckDB tables.
+2. Run strategies in the event-driven backtester (vectorized/pandas-based) with slippage and commission models.
+3. Persist backtest artifacts and performance leaderboards to DuckDB for fast analysis and reporting.
+4. Expose real-time streams and replay controls via FastAPI and a Streamlit dashboard.
+
+
 ## Architecture Principles
 
 - **Modular Design**: Each component (strategy, data, execution, metrics, reporting) is a separate module and can be replaced or extended independently.

@@ -14,6 +14,8 @@ highlights:
 
 ## Problem
 
+YourNews is a personalized news aggregator that ingests RSS sources, ranks content by relevance using TF-IDF/BM25, and surfaces AI summaries with structured insights, takeaways, actions, and watch items. It is designed to be fast, affordable, and to scale to thousands of users with caching and defensive ingestion built in.
+
 Traditional news aggregators (Google News, Feedly) have two major issues:
 
 1. **Generic Ranking**: Articles are sorted by recency or publisher prominence, not personal relevance. If you care about AI policy but not celebrity news, you still see both mixed together.
