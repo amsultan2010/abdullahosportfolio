@@ -68,10 +68,10 @@ const Projects = () => {
       id="projects"
       className="projects-container"
       style={{
-        position: 'absolute',
-        top: '1450px',
-        left: '50%',
-        transform: 'translateX(-50%)',
+        position: 'relative',
+        marginTop: '80px',
+        marginLeft: 'auto',
+        marginRight: 'auto',
         zIndex: 10,
         width: '90%',
         maxWidth: '1200px',
@@ -241,43 +241,19 @@ const Projects = () => {
           pointer-events: none;
         }
 
-        @media (max-width: 1024px) {
-          .projects-container {
-            top: 1500px !important;
-          }
-        }
-
         @media (max-width: 768px) {
           .projects-container {
-            top: 1650px !important;
             width: calc(95% - 40px) !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
             min-width: 300px !important;
             padding: 0 20px 80px 20px !important;
           }
         }
 
-        @media (max-width: 626px) {
-          .projects-container {
-            top: 1800px !important;
-          }
-        }
-
         @media (max-width: 480px) {
           .projects-container {
-            top: 1750px !important;
             width: calc(98% - 40px) !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
             min-width: 280px !important;
             padding: 0 20px 80px 20px !important;
-          }
-        }
-
-        @media (max-width: 416px) {
-          .projects-container {
-            top: 1780px !important;
           }
         }
       `}</style>

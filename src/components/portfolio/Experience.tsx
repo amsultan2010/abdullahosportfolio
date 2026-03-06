@@ -38,15 +38,16 @@ const Experience = () => {
       id="experience"
       className="experience-container"
       style={{
-        position: 'absolute',
-        top: '900px',
-        left: '50%',
+        position: 'relative',
+        marginTop: '80px',
+        marginLeft: 'auto',
+        marginRight: 'auto',
         zIndex: 10,
         width: '90%',
         maxWidth: '1200px',
         minWidth: '320px',
         opacity: hasAnimated ? 1 : 0,
-        transform: `translateX(-50%) ${hasAnimated ? 'translateY(0)' : 'translateY(20px)'}`,
+        transform: hasAnimated ? 'translateY(0)' : 'translateY(20px)',
         transition: 'opacity 0.8s ease-out, transform 0.8s ease-out'
       }}
     >
@@ -89,8 +90,6 @@ const Experience = () => {
         @media (max-width: 1200px) {
           .experience-container {
             width: 95% !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
             min-width: 300px !important;
             padding: 0 20px !important;
           }
@@ -99,17 +98,8 @@ const Experience = () => {
         @media (max-width: 768px) {
           .experience-container {
             width: calc(95% - 40px) !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
             min-width: 300px !important;
             padding: 0 20px !important;
-            top: 950px !important;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .experience-container {
-            top: 900px !important;
           }
         }
       `}</style>

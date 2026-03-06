@@ -9,7 +9,7 @@ import Projects from './Projects';
 
 function PortfolioApp() {
   return (
-    <div style={{ position: 'relative', width: '100%', minHeight: '2400px' }}>
+    <div style={{ position: 'relative', width: '100%' }}>
       <Background />
       <NameHeader />
       <NameFlash />

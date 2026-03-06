@@ -17,16 +17,17 @@ const MainContent = () => {
       ref={contentRef}
       className="main-content-container"
       style={{
-        position: 'absolute',
-        top: '180px',
-        left: '50%',
+        position: 'relative',
+        marginTop: '180px',
+        marginLeft: 'auto',
+        marginRight: 'auto',
         textAlign: 'left',
         width: '90%',
         minWidth: '320px',
         maxWidth: '1200px',
         zIndex: 2,
         opacity: hasAnimated ? 1 : 0,
-        transform: `translateX(-50%) ${hasAnimated ? 'translateY(0)' : 'translateY(20px)'}`,
+        transform: hasAnimated ? 'translateY(0)' : 'translateY(20px)',
         transition: 'opacity 0.8s ease-out, transform 0.8s ease-out'
       }}
     >
@@ -92,8 +93,7 @@ const MainContent = () => {
             padding: 0 20px;
             min-width: 320px;
             max-width: 600px;
-            top: 170px !important;
-            margin-bottom: 0;
+            margin-top: 150px !important;
           }
 
           .main-content-text h1 {
@@ -107,15 +107,7 @@ const MainContent = () => {
             padding: 0 20px;
             min-width: 300px;
             max-width: 400px;
-            top: 150px !important;
-            margin-bottom: 0;
-          }
-        }
-
-        @media (max-width: 457px) {
-          .main-content-container {
-            top: 130px !important;
-            margin-bottom: 0;
+            margin-top: 130px !important;
           }
         }
 
