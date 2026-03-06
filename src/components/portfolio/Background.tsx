@@ -125,8 +125,9 @@ const Background = () => {
       left: 0,
       width: 'calc(100% - 1px)',
       height: '100%',
-      zIndex: -1,
-      overflow: 'hidden'
+      zIndex: 0,
+      overflow: 'hidden',
+      pointerEvents: 'none'
     }}>
       <Canvas
         dpr={[1, 2]}
