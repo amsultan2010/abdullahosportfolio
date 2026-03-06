@@ -48,10 +48,10 @@ const Projects = () => {
     },
     {
       id: 2,
-      title: "QuantTerminal",
-      description: "Production trading platform with live market data, strategy backtesting, and order execution. Sub-200ms API latency with automated risk controls and terminal-inspired UI.",
+      title: "CreatorScope",
+      description: "Go-to-market automation tool for sourcing TikTok creators for brand partnerships. Multi-source discovery, three-tier classification, and Creator Intent Scoring (0-100). Built with FastAPI, SQLAlchemy, and RapidAPI.",
       gradient: "linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%)",
-      repoUrl: "https://github.com/ronnielgandhe/quantterminal"
+      repoUrl: "https://github.com/ronnielgandhe/creatorscope"
     },
     {
       id: 3,
