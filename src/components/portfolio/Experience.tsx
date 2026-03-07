@@ -50,7 +50,7 @@ const Experience = ({ onCardClick }: ExperienceProps) => {
       location: "Toronto, ON",
       description: "Owned data contracts and CI/CD pipelines with GitHub Actions. Implemented feature flags, blue/green and canary rollouts. Created release/SLO dashboards for latency, error rate, and CTR impact.",
       logo: "/cibc-dark.svg",
-      logoSize: 55,
+      logoSize: 60,
       detail: {
         type: 'experience' as const,
         id: 2,
