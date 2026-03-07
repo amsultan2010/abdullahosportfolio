@@ -7,6 +7,7 @@ interface ProjectsProps {
 
 const Projects = ({ onCardClick }: ProjectsProps) => {
   const [pageIndex, setPageIndex] = useState(0);
+  const [perPage, setPerPage] = useState(2);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [titleAnimated, setTitleAnimated] = useState(false);
   const [cardAnimated, setCardAnimated] = useState(false);
@@ -155,7 +156,6 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
     }
   ];
 
-  const perPage = 2;
   const totalPages = Math.ceil(projects.length / perPage);
   const pageProjects = projects.slice(pageIndex * perPage, pageIndex * perPage + perPage);
 
@@ -163,6 +163,14 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
     if (isTransitioning || idx === pageIndex) return;
     setIsTransitioning(true);
     setPageIndex(idx);
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
+  const switchView = (newPerPage: number) => {
+    if (newPerPage === perPage) return;
+    setIsTransitioning(true);
+    setPerPage(newPerPage);
+    setPageIndex(0);
     setTimeout(() => setIsTransitioning(false), 400);
   };
 
@@ -228,10 +236,10 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
             </svg>
           </button>
 
-          {/* Cards Grid — 2 per page */}
+          {/* Cards Grid */}
           <div
-            key={pageIndex}
-            className="projects-page-grid"
+            key={`${pageIndex}-${perPage}`}
+            className={`projects-page-grid projects-grid-${perPage}`}
             style={{ animation: 'projFadeSlide 0.4s ease-out forwards' }}
           >
           {pageProjects.map((project) => (
@@ -318,33 +326,75 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           </button>
         </div>
 
-        {/* Dot Indicators — one per page */}
-        {totalPages > 1 && (
+        {/* Bottom controls: dots + view switcher */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '1rem',
+          marginTop: '1.25rem'
+        }}>
+          {/* Dot Indicators — one per page */}
+          {totalPages > 1 && (
+            <div style={{
+              display: 'flex',
+              gap: '6px',
+              alignItems: 'center'
+            }}>
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => goToPage(i)}
+                  aria-label={`Go to projects page ${i + 1}`}
+                  style={{
+                    width: i === pageIndex ? '20px' : '6px',
+                    height: '6px',
+                    borderRadius: '3px',
+                    border: 'none',
+                    background: i === pageIndex ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.25)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    padding: 0
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Separator */}
           <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '8px',
-            marginTop: '1.25rem'
-          }}>
-            {Array.from({ length: totalPages }).map((_, i) => (
+            width: '1px',
+            height: '14px',
+            background: 'rgba(255, 255, 255, 0.15)'
+          }} />
+
+          {/* View Mode Switcher */}
+          <div className="view-switcher">
+            {[1, 2, 3].map((n) => (
               <button
-                key={i}
-                onClick={() => goToPage(i)}
-                aria-label={`Go to projects page ${i + 1}`}
-                style={{
-                  width: i === pageIndex ? '24px' : '8px',
-                  height: '8px',
-                  borderRadius: '4px',
-                  border: 'none',
-                  background: i === pageIndex ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.25)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  padding: 0
-                }}
-              />
+                key={n}
+                onClick={() => switchView(n)}
+                aria-label={`${n}-column view`}
+                className={`view-switcher-btn${perPage === n ? ' view-active' : ''}`}
+              >
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+                  {n === 1 && (
+                    <rect x="2" y="1" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                  )}
+                  {n === 2 && (<>
+                    <rect x="1" y="1" width="6" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                    <rect x="9" y="1" width="6" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                  </>)}
+                  {n === 3 && (<>
+                    <rect x="0.5" y="1" width="4" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                    <rect x="6" y="1" width="4" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                    <rect x="11.5" y="1" width="4" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                  </>)}
+                </svg>
+              </button>
             ))}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Styles */}
@@ -362,11 +412,14 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
 
         .projects-page-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
           gap: 1.5rem;
           flex: 1;
           min-width: 0;
         }
+
+        .projects-grid-1 { grid-template-columns: 1fr; }
+        .projects-grid-2 { grid-template-columns: 1fr 1fr; }
+        .projects-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
 
         .glass-project-card {
           position: relative;
@@ -442,6 +495,41 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           pointer-events: none;
         }
 
+        /* View Switcher */
+        .view-switcher {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 0.5px solid rgba(255, 255, 255, 0.12);
+          border-radius: 8px;
+          padding: 3px;
+        }
+
+        .view-switcher-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 26px;
+          height: 22px;
+          border: none;
+          border-radius: 5px;
+          background: transparent;
+          color: rgba(255, 255, 255, 0.3);
+          cursor: pointer;
+          transition: all 0.25s ease;
+          padding: 0;
+        }
+
+        .view-switcher-btn:hover {
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .view-switcher-btn.view-active {
+          background: rgba(255, 255, 255, 0.12);
+          color: rgba(255, 255, 255, 0.85);
+        }
+
         @media (max-width: 768px) {
           .projects-container {
             width: calc(95% - 40px) !important;
@@ -452,6 +540,7 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
             grid-template-columns: 1fr !important;
           }
           .proj-nav-btn { width: 32px; height: 32px; }
+          .view-switcher { display: none; }
         }
 
         @media (max-width: 480px) {
