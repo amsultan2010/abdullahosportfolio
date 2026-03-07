@@ -8,10 +8,19 @@ interface ProjectsProps {
 const Projects = ({ onCardClick }: ProjectsProps) => {
   const [pageIndex, setPageIndex] = useState(0);
   const [perPage, setPerPage] = useState(2);
+  const [isMobile, setIsMobile] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [titleAnimated, setTitleAnimated] = useState(false);
   const [cardAnimated, setCardAnimated] = useState(false);
   const projectsRef = useRef<HTMLDivElement>(null);
+
+  // Detect mobile
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   // Intersection observer for scroll-triggered animation
   useEffect(() => {
@@ -156,11 +165,13 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
     }
   ];
 
-  const totalPages = Math.ceil(projects.length / perPage);
-  const pageProjects = projects.slice(pageIndex * perPage, pageIndex * perPage + perPage);
+  const effectivePerPage = isMobile ? 1 : perPage;
+  const totalPages = Math.ceil(projects.length / effectivePerPage);
+  const safePageIndex = Math.min(pageIndex, totalPages - 1);
+  const pageProjects = projects.slice(safePageIndex * effectivePerPage, safePageIndex * effectivePerPage + effectivePerPage);
 
   const goToPage = (idx: number) => {
-    if (isTransitioning || idx === pageIndex) return;
+    if (isTransitioning || idx === safePageIndex) return;
     setIsTransitioning(true);
     setPageIndex(idx);
     setTimeout(() => setIsTransitioning(false), 400);
@@ -175,10 +186,10 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
   };
 
   const goNext = () => {
-    if (pageIndex < totalPages - 1) goToPage(pageIndex + 1);
+    if (safePageIndex < totalPages - 1) goToPage(safePageIndex + 1);
   };
   const goPrev = () => {
-    if (pageIndex > 0) goToPage(pageIndex - 1);
+    if (safePageIndex > 0) goToPage(safePageIndex - 1);
   };
 
   return (
@@ -229,7 +240,7 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           <button
             onClick={(e) => { e.stopPropagation(); goPrev(); }}
             aria-label="Previous projects"
-            className={`proj-nav-btn${pageIndex === 0 ? ' proj-nav-hidden' : ''}`}
+            className={`proj-nav-btn${safePageIndex === 0 ? ' proj-nav-hidden' : ''}`}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6" />
@@ -238,8 +249,8 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
 
           {/* Cards Grid */}
           <div
-            key={`${pageIndex}-${perPage}`}
-            className={`projects-page-grid projects-grid-${perPage}`}
+            key={`${safePageIndex}-${effectivePerPage}`}
+            className={`projects-page-grid projects-grid-${effectivePerPage}`}
             style={{ animation: 'projFadeSlide 0.4s ease-out forwards' }}
           >
           {pageProjects.map((project) => (
@@ -318,7 +329,7 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           <button
             onClick={(e) => { e.stopPropagation(); goNext(); }}
             aria-label="Next projects"
-            className={`proj-nav-btn${pageIndex >= totalPages - 1 ? ' proj-nav-hidden' : ''}`}
+            className={`proj-nav-btn${safePageIndex >= totalPages - 1 ? ' proj-nav-hidden' : ''}`}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6" />
@@ -356,11 +367,11 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
                     onClick={() => goToPage(i)}
                     aria-label={`Go to projects page ${i + 1}`}
                     style={{
-                      width: i === pageIndex ? '20px' : '6px',
+                      width: i === safePageIndex ? '20px' : '6px',
                       height: '6px',
                       borderRadius: '3px',
                       border: 'none',
-                      background: i === pageIndex ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.25)',
+                      background: i === safePageIndex ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.25)',
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
                       padding: 0
@@ -538,9 +549,6 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
             width: calc(95% - 40px) !important;
             min-width: 300px !important;
             padding: 0 20px 40px 20px !important;
-          }
-          .projects-page-grid {
-            grid-template-columns: 1fr !important;
           }
           .proj-nav-btn { width: 32px; height: 32px; }
           .view-switcher { display: none; }
