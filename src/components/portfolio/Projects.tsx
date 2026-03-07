@@ -6,7 +6,7 @@ interface ProjectsProps {
 }
 
 const Projects = ({ onCardClick }: ProjectsProps) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [pageIndex, setPageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [titleAnimated, setTitleAnimated] = useState(false);
   const [cardAnimated, setCardAnimated] = useState(false);
@@ -36,16 +36,6 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
 
     return () => observer.disconnect();
   }, []);
-
-  const goTo = (index: number) => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    setCurrentIndex(index);
-    setTimeout(() => setIsTransitioning(false), 400);
-  };
-
-  const goNext = () => goTo((currentIndex + 1) % projects.length);
-  const goPrev = () => goTo((currentIndex - 1 + projects.length) % projects.length);
 
   const projects = [
     {
@@ -165,7 +155,23 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
     }
   ];
 
-  const project = projects[currentIndex];
+  const perPage = 2;
+  const totalPages = Math.ceil(projects.length / perPage);
+  const pageProjects = projects.slice(pageIndex * perPage, pageIndex * perPage + perPage);
+
+  const goToPage = (idx: number) => {
+    if (isTransitioning || idx === pageIndex) return;
+    setIsTransitioning(true);
+    setPageIndex(idx);
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+
+  const goNext = () => {
+    if (pageIndex < totalPages - 1) goToPage(pageIndex + 1);
+  };
+  const goPrev = () => {
+    if (pageIndex > 0) goToPage(pageIndex - 1);
+  };
 
   return (
     <div
@@ -211,11 +217,11 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           transition: 'opacity 0.8s ease-out 0.15s, transform 0.8s ease-out 0.15s'
         }}
       >
-        {/* Prev / Next Arrows */}
+        {/* Prev / Next Arrows — hidden at boundaries */}
         <button
           onClick={(e) => { e.stopPropagation(); goPrev(); }}
-          aria-label="Previous project"
-          className="proj-nav-btn proj-nav-prev"
+          aria-label="Previous projects"
+          className={`proj-nav-btn proj-nav-prev${pageIndex === 0 ? ' proj-nav-hidden' : ''}`}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
@@ -223,109 +229,119 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); goNext(); }}
-          aria-label="Next project"
-          className="proj-nav-btn proj-nav-next"
+          aria-label="Next projects"
+          className={`proj-nav-btn proj-nav-next${pageIndex >= totalPages - 1 ? ' proj-nav-hidden' : ''}`}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
 
-        {/* Card */}
+        {/* Cards Grid — 2 per page */}
         <div
-          key={currentIndex}
-          className="glass-project-card"
-          data-project-id={project.id}
-          onClick={() => {
-            if (onCardClick && project.detail) {
-              onCardClick(project.detail);
-            } else if (project.repoUrl) {
-              window.open(project.repoUrl, '_blank', 'noopener,noreferrer');
-            }
-          }}
-          style={{ cursor: 'pointer', animation: 'projFadeSlide 0.4s ease-out forwards' }}
+          key={pageIndex}
+          className="projects-page-grid"
+          style={{ animation: 'projFadeSlide 0.4s ease-out forwards' }}
         >
-          {/* Cover Image */}
-          <div style={{
-            width: '100%',
-            height: '240px',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            marginBottom: '1.25rem',
-            background: project.gradient,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            {project.coverImage ? (
-              <img
-                src={project.coverImage}
-                alt={`${project.title} preview`}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            ) : (
-              <span style={{
-                fontSize: '2rem',
+          {pageProjects.map((project) => (
+            <div
+              key={project.id}
+              className="glass-project-card"
+              data-project-id={project.id}
+              onClick={() => {
+                if (onCardClick && project.detail) {
+                  onCardClick(project.detail);
+                } else if (project.repoUrl) {
+                  window.open(project.repoUrl, '_blank', 'noopener,noreferrer');
+                }
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              {/* Cover Image */}
+              <div style={{
+                width: '100%',
+                height: '200px',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                marginBottom: '1.25rem',
+                background: project.gradient,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                {project.coverImage ? (
+                  <img
+                    src={project.coverImage}
+                    alt={`${project.title} preview`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <span style={{
+                    fontSize: '2rem',
+                    fontFamily: 'NeueMontreal-Medium, sans-serif',
+                    color: 'rgba(255, 255, 255, 0.15)',
+                    fontWeight: '500',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase'
+                  }}>
+                    {project.title}
+                  </span>
+                )}
+              </div>
+
+              {/* Title */}
+              <h3 style={{
+                fontSize: 'clamp(1.05rem, 2vw, 1.3rem)',
+                color: 'rgba(255, 255, 255, 0.9)',
                 fontFamily: 'NeueMontreal-Medium, sans-serif',
-                color: 'rgba(255, 255, 255, 0.15)',
-                fontWeight: '500',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase'
+                margin: '0 0 0.75rem 0',
+                fontWeight: '500'
               }}>
                 {project.title}
-              </span>
-            )}
-          </div>
+              </h3>
 
-          {/* Title */}
-          <h3 style={{
-            fontSize: 'clamp(1.1rem, 2.5vw, 1.4rem)',
-            color: 'rgba(255, 255, 255, 0.9)',
-            fontFamily: 'NeueMontreal-Medium, sans-serif',
-            margin: '0 0 0.75rem 0',
-            fontWeight: '500'
-          }}>
-            {project.title}
-          </h3>
-
-          {/* Description */}
-          <p style={{
-            color: 'rgba(255, 255, 255, 0.7)',
-            fontSize: 'clamp(0.9rem, 2vw, 1rem)',
-            fontFamily: 'NeueMontreal-Light, sans-serif',
-            lineHeight: '1.7',
-            margin: 0,
-            fontWeight: '300'
-          }}>
-            {project.description}
-          </p>
-        </div>
-
-        {/* Dot Indicators */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '8px',
-          marginTop: '1.25rem'
-        }}>
-          {projects.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              aria-label={`Go to project ${i + 1}`}
-              style={{
-                width: i === currentIndex ? '24px' : '8px',
-                height: '8px',
-                borderRadius: '4px',
-                border: 'none',
-                background: i === currentIndex ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.25)',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                padding: 0
-              }}
-            />
+              {/* Description */}
+              <p style={{
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
+                fontFamily: 'NeueMontreal-Light, sans-serif',
+                lineHeight: '1.7',
+                margin: 0,
+                fontWeight: '300'
+              }}>
+                {project.description}
+              </p>
+            </div>
           ))}
         </div>
+
+        {/* Dot Indicators — one per page */}
+        {totalPages > 1 && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '8px',
+            marginTop: '1.25rem'
+          }}>
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goToPage(i)}
+                aria-label={`Go to projects page ${i + 1}`}
+                style={{
+                  width: i === pageIndex ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  background: i === pageIndex ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.25)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  padding: 0
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Styles */}
@@ -333,6 +349,12 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
         @keyframes projFadeSlide {
           from { opacity: 0; transform: translateX(20px); }
           to { opacity: 1; transform: translateX(0); }
+        }
+
+        .projects-page-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
         }
 
         .glass-project-card {
@@ -343,11 +365,12 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           padding: 1.5rem;
           overflow: hidden;
           box-sizing: border-box;
-          transition: box-shadow 0.3s ease;
+          transition: box-shadow 0.3s ease, transform 0.3s ease;
         }
 
         .glass-project-card:hover {
           box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+          transform: translateY(-4px);
         }
 
         .glass-project-card h3,
@@ -383,7 +406,8 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
 
         .proj-nav-btn {
           position: absolute;
-          top: 140px;
+          top: 50%;
+          transform: translateY(-50%);
           z-index: 5;
           width: 40px;
           height: 40px;
@@ -404,6 +428,11 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           color: white;
         }
 
+        .proj-nav-btn.proj-nav-hidden {
+          opacity: 0;
+          pointer-events: none;
+        }
+
         .proj-nav-prev { left: -50px; }
         .proj-nav-next { right: -50px; }
 
@@ -417,6 +446,9 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
             width: calc(95% - 40px) !important;
             min-width: 300px !important;
             padding: 0 20px 40px 20px !important;
+          }
+          .projects-page-grid {
+            grid-template-columns: 1fr !important;
           }
           .proj-nav-prev { left: -5px; }
           .proj-nav-next { right: -5px; }
