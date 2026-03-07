@@ -55,7 +55,7 @@ const Education = ({ onCardClick }: EducationProps) => {
           "Laurier Entrepreneurship Club"
         ],
         achievements: [],
-        reflection: ""
+        reflection: "Transferring into Laurier's standalone CS program gave me the chance to go deeper into systems-level thinking — from OS internals and microprocessors to networking and algorithm design. The smaller cohort and hands-on labs helped me build stronger fundamentals."
       } satisfies EducationDetail
     }
   ];
@@ -111,7 +111,7 @@ const Education = ({ onCardClick }: EducationProps) => {
         achievements: [
           "Completed double degree program spanning two universities"
         ],
-        reflection: ""
+        reflection: "The double degree was an intense two years — balancing proof-heavy math at Waterloo with case competitions at Laurier. It taught me how to context-switch between analytical and business thinking, and gave me a strong foundation in both CS theory and real-world problem framing."
       } satisfies EducationDetail
     }
   ];
