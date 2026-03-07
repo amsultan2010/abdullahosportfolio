@@ -347,37 +347,40 @@ const DetailPanel = ({ detail, onClose }: DetailPanelProps) => {
 // ─── Education Detail ───────────────────────────────────────
 
 const EducationContent = ({ detail }: { detail: EducationDetail }) => {
-  const [litCount, setLitCount] = useState(0);
-  const [sectionLit, setSectionLit] = useState(false);
   const totalCourses = detail.courses.length;
-
-  // Cascade: light up courses one by one, then sections below
-  useEffect(() => {
-    if (totalCourses === 0) {
-      setSectionLit(true);
-      return;
-    }
-
-    // Start cascade after a short delay
-    const startDelay = setTimeout(() => {
-      let current = 0;
-      const interval = setInterval(() => {
-        current++;
-        setLitCount(current);
-        if (current >= totalCourses) {
-          clearInterval(interval);
-          // Light up sections below after courses finish
-          setTimeout(() => setSectionLit(true), 300);
-        }
-      }, 65); // 65ms per course for a smooth cascade
-      return () => clearInterval(interval);
-    }, 400);
-
-    return () => clearTimeout(startDelay);
-  }, [totalCourses]);
+  // Time (s) when the last course finishes its animation
+  const cascadeEnd = 0.3 + totalCourses * 0.055 + 0.5; // start delay + stagger + animation duration
 
   return (
     <div>
+      {/* Keyframes for pure-CSS cascade */}
+      <style>{`
+        @keyframes courseLightUp {
+          0% {
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.05);
+            box-shadow: none;
+          }
+          100% {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.18);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.04), inset 0 0 8px rgba(255, 255, 255, 0.02);
+          }
+        }
+        @keyframes courseTextLightUp {
+          0% { color: rgba(255, 255, 255, 0.2); }
+          100% { color: rgba(255, 255, 255, 0.95); }
+        }
+        @keyframes courseSubTextLightUp {
+          0% { color: rgba(255, 255, 255, 0.1); }
+          100% { color: rgba(255, 255, 255, 0.65); }
+        }
+        @keyframes sectionFadeIn {
+          0% { opacity: 0.1; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         {detail.logo && (
@@ -398,47 +401,46 @@ const EducationContent = ({ detail }: { detail: EducationDetail }) => {
         </div>
       </div>
 
-      {/* Courses — cascade light-up */}
+      {/* Courses — pure CSS cascade */}
       {detail.courses.length > 0 && (
         <div style={{ marginBottom: '2rem' }}>
           <h3 style={sectionTitleStyle}>Courses</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '0.75rem' }}>
             {detail.courses.map((c, i) => {
-              const isLit = i < litCount;
+              const delay = `${0.3 + i * 0.055}s`;
               return (
                 <div
                   key={i}
                   style={{
                     ...pillCardStyle,
-                    background: isLit ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-                    borderColor: isLit ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.05)',
-                    boxShadow: isLit ? '0 0 12px rgba(255, 255, 255, 0.04), inset 0 0 8px rgba(255, 255, 255, 0.02)' : 'none',
-                    transition: 'all 0.4s ease',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderColor: 'rgba(255, 255, 255, 0.05)',
+                    animation: `courseLightUp 0.5s ease ${delay} forwards`,
                   }}
                 >
                   <span style={{
                     fontFamily: 'NeueMontreal-Medium, sans-serif',
-                    color: isLit ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.25)',
+                    color: 'rgba(255,255,255,0.2)',
                     fontSize: '0.85rem',
-                    transition: 'color 0.4s ease'
+                    animation: `courseTextLightUp 0.5s ease ${delay} forwards`,
                   }}>
                     {c.code}
                   </span>
                   <span style={{
                     fontFamily: 'NeueMontreal-Light, sans-serif',
-                    color: isLit ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.15)',
+                    color: 'rgba(255,255,255,0.1)',
                     fontSize: '0.8rem',
-                    transition: 'color 0.4s ease'
+                    animation: `courseSubTextLightUp 0.5s ease ${delay} forwards`,
                   }}>
                     {c.name}
                   </span>
                   {c.grade && (
                     <span style={{
                       fontFamily: 'NeueMontreal-Medium, sans-serif',
-                      color: isLit ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.1)',
+                      color: 'rgba(255,255,255,0.1)',
                       fontSize: '0.75rem',
                       marginLeft: 'auto',
-                      transition: 'color 0.4s ease'
+                      animation: `courseSubTextLightUp 0.5s ease ${delay} forwards`,
                     }}>
                       {c.grade}
                     </span>
@@ -450,79 +452,49 @@ const EducationContent = ({ detail }: { detail: EducationDetail }) => {
         </div>
       )}
 
-      {/* Activities — lights up after courses */}
+      {/* Activities — fades in after courses finish */}
       {detail.activities.length > 0 && (
         <div style={{
           marginBottom: '2rem',
-          opacity: sectionLit ? 1 : 0.15,
-          transform: sectionLit ? 'translateY(0)' : 'translateY(6px)',
-          transition: 'opacity 0.5s ease, transform 0.5s ease'
+          opacity: 0.1,
+          animation: `sectionFadeIn 0.6s ease ${cascadeEnd}s forwards`,
         }}>
-          <h3 style={{
-            ...sectionTitleStyle,
-            color: sectionLit ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)',
-            transition: 'color 0.5s ease'
-          }}>Activities</h3>
+          <h3 style={sectionTitleStyle}>Activities</h3>
           <ul style={listStyle}>
-            {detail.activities.map((a, i) => (
-              <li key={i} style={{
-                ...listItemStyle,
-                color: sectionLit ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)',
-                transition: 'color 0.5s ease',
-                transitionDelay: sectionLit ? `${i * 0.1}s` : '0s'
-              }}>{a}</li>
-            ))}
+            {detail.activities.map((a, i) => <li key={i} style={listItemStyle}>{a}</li>)}
           </ul>
         </div>
       )}
 
-      {/* Achievements — lights up after courses */}
+      {/* Achievements — fades in slightly after activities */}
       {detail.achievements.length > 0 && (
         <div style={{
           marginBottom: '2rem',
-          opacity: sectionLit ? 1 : 0.15,
-          transform: sectionLit ? 'translateY(0)' : 'translateY(6px)',
-          transition: 'opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s'
+          opacity: 0.1,
+          animation: `sectionFadeIn 0.6s ease ${cascadeEnd + 0.15}s forwards`,
         }}>
-          <h3 style={{
-            ...sectionTitleStyle,
-            color: sectionLit ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)',
-            transition: 'color 0.5s ease'
-          }}>Achievements</h3>
+          <h3 style={sectionTitleStyle}>Achievements</h3>
           <ul style={listStyle}>
-            {detail.achievements.map((a, i) => (
-              <li key={i} style={{
-                ...listItemStyle,
-                color: sectionLit ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)',
-                transition: 'color 0.5s ease',
-                transitionDelay: sectionLit ? `${i * 0.1}s` : '0s'
-              }}>{a}</li>
-            ))}
+            {detail.achievements.map((a, i) => <li key={i} style={listItemStyle}>{a}</li>)}
           </ul>
         </div>
       )}
 
-      {/* Reflection / Notes — lights up after courses */}
+      {/* Reflection / Notes — fades in last */}
       {detail.reflection && (
         <div style={{
           marginBottom: '2rem',
-          opacity: sectionLit ? 1 : 0.15,
-          transform: sectionLit ? 'translateY(0)' : 'translateY(6px)',
-          transition: 'opacity 0.5s ease 0.3s, transform 0.5s ease 0.3s'
+          opacity: 0.1,
+          animation: `sectionFadeIn 0.6s ease ${cascadeEnd + 0.3}s forwards`,
         }}>
-          <h3 style={{
-            ...sectionTitleStyle,
-            color: sectionLit ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)',
-            transition: 'color 0.5s ease 0.3s'
-          }}>Reflection</h3>
+          <h3 style={sectionTitleStyle}>Reflection</h3>
           <p style={{
             fontFamily: 'NeueMontreal-Light, sans-serif',
-            color: sectionLit ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.15)',
+            color: 'rgba(255,255,255,0.75)',
             fontSize: '0.9rem',
             lineHeight: '1.7',
             margin: 0,
             fontStyle: 'italic',
-            transition: 'color 0.5s ease 0.3s'
           }}>
             {detail.reflection}
           </p>
