@@ -1,3 +1,5 @@
+import { useState, useEffect, useRef } from 'react';
+
 interface CardRole {
   role: string;
   date?: string;
@@ -27,6 +29,10 @@ interface ExperienceCardProps {
 }
 
 const ExperienceCard = ({ experience, clickable = false, link = null, onDetailClick }: ExperienceCardProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [litIndex, setLitIndex] = useState(-1);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const handleClick = () => {
     if (onDetailClick) {
       onDetailClick();
@@ -35,9 +41,38 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
     }
   };
 
+  // Sequential light-up on hover for multi-role cards
+  useEffect(() => {
+    if (!experience.roles || experience.roles.length === 0) return;
+
+    if (isHovered) {
+      let current = -1;
+      intervalRef.current = setInterval(() => {
+        current++;
+        if (current >= experience.roles!.length) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          return;
+        }
+        setLitIndex(current);
+      }, 180);
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      setLitIndex(-1);
+    }
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isHovered, experience.roles]);
+
   return (
     <div
       className="glass-experience-card"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -140,9 +175,9 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
         </h3>
 
         {experience.roles && experience.roles.length > 0 ? (
-          /* LinkedIn-style multi-role timeline */
+          /* LinkedIn-style multi-role timeline with hover light-up */
           <div style={{ position: 'relative', paddingLeft: '1.25rem', marginTop: '0.5rem' }}>
-            {/* Vertical line */}
+            {/* Base vertical line */}
             <div style={{
               position: 'absolute',
               left: '4px',
@@ -151,45 +186,65 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
               width: '2px',
               background: 'rgba(255, 255, 255, 0.2)'
             }} />
-            {experience.roles.map((r, i) => (
-              <div key={i} style={{ position: 'relative', marginBottom: i < experience.roles!.length - 1 ? '1rem' : '0' }}>
-                {/* Dot */}
-                <div style={{
-                  position: 'absolute',
-                  left: '-1.25rem',
-                  top: '6px',
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '50%',
-                  background: i === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.4)',
-                  border: `2px solid ${i === 0 ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.2)'}`,
-                  boxShadow: i === 0 ? '0 0 8px rgba(255,255,255,0.3)' : 'none'
-                }} />
-                <p style={{
-                  fontSize: 'clamp(0.95rem, 2.3vw, 1.1rem)',
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  fontFamily: 'NeueMontreal-Light, sans-serif',
-                  margin: 0,
-                  fontWeight: '300',
-                  lineHeight: '1.4',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none'
-                }}>
-                  {r.role}
-                </p>
-                <p style={{
-                  fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)',
-                  color: 'rgba(255, 255, 255, 0.5)',
-                  fontFamily: 'NeueMontreal-Light, sans-serif',
-                  margin: '0.1rem 0 0',
-                  fontWeight: '300',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none'
-                }}>
-                  {[r.date, r.location].filter(Boolean).join(' · ')}
-                </p>
-              </div>
-            ))}
+            {/* Glow vertical line — grows as roles light up */}
+            <div style={{
+              position: 'absolute',
+              left: '3px',
+              top: '8px',
+              width: '4px',
+              height: litIndex >= experience.roles.length - 1 ? 'calc(100% - 16px)' : litIndex >= 0 ? `${((litIndex + 1) / experience.roles.length) * 100}%` : '0%',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.5) 100%)',
+              filter: 'blur(1.5px)',
+              borderRadius: '2px',
+              transition: 'height 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+              opacity: litIndex >= 0 ? 1 : 0,
+              pointerEvents: 'none'
+            }} />
+            {experience.roles.map((r, i) => {
+              const isLit = i <= litIndex;
+              return (
+                <div key={i} style={{ position: 'relative', marginBottom: i < experience.roles!.length - 1 ? '1rem' : '0' }}>
+                  {/* Dot */}
+                  <div style={{
+                    position: 'absolute',
+                    left: '-1.25rem',
+                    top: '6px',
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    background: isLit ? 'rgba(255, 255, 255, 0.95)' : (i === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.4)'),
+                    border: `2px solid ${isLit ? 'rgba(255, 255, 255, 0.7)' : (i === 0 ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.2)')}`,
+                    boxShadow: isLit
+                      ? '0 0 10px rgba(255,255,255,0.6), 0 0 20px rgba(255,255,255,0.2)'
+                      : (i === 0 ? '0 0 8px rgba(255,255,255,0.3)' : 'none'),
+                    transition: 'all 0.35s ease'
+                  }} />
+                  <p style={{
+                    fontSize: 'clamp(0.95rem, 2.3vw, 1.1rem)',
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    fontFamily: 'NeueMontreal-Light, sans-serif',
+                    margin: 0,
+                    fontWeight: '300',
+                    lineHeight: '1.4',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none'
+                  }}>
+                    {r.role}
+                  </p>
+                  <p style={{
+                    fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)',
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    fontFamily: 'NeueMontreal-Light, sans-serif',
+                    margin: '0.1rem 0 0',
+                    fontWeight: '300',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none'
+                  }}>
+                    {[r.date, r.location].filter(Boolean).join(' · ')}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         ) : (
           /* Single-role layout (original) */

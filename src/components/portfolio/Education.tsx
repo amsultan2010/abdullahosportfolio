@@ -54,7 +54,8 @@ const Education = ({ onCardClick }: EducationProps) => {
           "Laurier Computing Society",
           "Laurier Entrepreneurship Club"
         ],
-        achievements: []
+        achievements: [],
+        reflection: ""
       } satisfies EducationDetail
     }
   ];
@@ -109,7 +110,8 @@ const Education = ({ onCardClick }: EducationProps) => {
         ],
         achievements: [
           "Completed double degree program spanning two universities"
-        ]
+        ],
+        reflection: ""
       } satisfies EducationDetail
     }
   ];

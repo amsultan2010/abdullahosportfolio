@@ -19,6 +19,7 @@ export interface EducationDetail {
   courses: DetailCourse[];
   activities: string[];
   achievements: string[];
+  reflection?: string;
 }
 
 export interface TimelineEntry {
@@ -345,73 +346,191 @@ const DetailPanel = ({ detail, onClose }: DetailPanelProps) => {
 
 // ─── Education Detail ───────────────────────────────────────
 
-const EducationContent = ({ detail }: { detail: EducationDetail }) => (
-  <div>
-    {/* Header */}
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-      {detail.logo && (
-        <img src={detail.logo} alt="" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover' }} />
-      )}
-      {detail.logo2 && (
-        <img src={detail.logo2} alt="" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover' }} />
-      )}
-      <div>
-        <h2 style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', fontSize: '1.5rem', color: 'white', margin: 0 }}>
-          {detail.institution}
-        </h2>
-        {detail.gpa && (
-          <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', margin: '0.25rem 0 0', fontSize: '0.95rem' }}>
-            GPA: {detail.gpa}
-          </p>
-        )}
-      </div>
-    </div>
+const EducationContent = ({ detail }: { detail: EducationDetail }) => {
+  const [litCount, setLitCount] = useState(0);
+  const [sectionLit, setSectionLit] = useState(false);
+  const totalCourses = detail.courses.length;
 
-    {/* Courses */}
-    {detail.courses.length > 0 && (
-      <div style={{ marginBottom: '2rem' }}>
-        <h3 style={sectionTitleStyle}>Courses</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '0.75rem' }}>
-          {detail.courses.map((c, i) => (
-            <div key={i} style={pillCardStyle}>
-              <span style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', color: 'rgba(255,255,255,0.9)', fontSize: '0.85rem' }}>
-                {c.code}
-              </span>
-              <span style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem' }}>
-                {c.name}
-              </span>
-              {c.grade && (
-                <span style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', marginLeft: 'auto' }}>
-                  {c.grade}
-                </span>
-              )}
-            </div>
-          ))}
+  // Cascade: light up courses one by one, then sections below
+  useEffect(() => {
+    if (totalCourses === 0) {
+      setSectionLit(true);
+      return;
+    }
+
+    // Start cascade after a short delay
+    const startDelay = setTimeout(() => {
+      let current = 0;
+      const interval = setInterval(() => {
+        current++;
+        setLitCount(current);
+        if (current >= totalCourses) {
+          clearInterval(interval);
+          // Light up sections below after courses finish
+          setTimeout(() => setSectionLit(true), 300);
+        }
+      }, 65); // 65ms per course for a smooth cascade
+      return () => clearInterval(interval);
+    }, 400);
+
+    return () => clearTimeout(startDelay);
+  }, [totalCourses]);
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+        {detail.logo && (
+          <img src={detail.logo} alt="" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover' }} />
+        )}
+        {detail.logo2 && (
+          <img src={detail.logo2} alt="" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover' }} />
+        )}
+        <div>
+          <h2 style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', fontSize: '1.5rem', color: 'white', margin: 0 }}>
+            {detail.institution}
+          </h2>
+          {detail.gpa && (
+            <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', margin: '0.25rem 0 0', fontSize: '0.95rem' }}>
+              GPA: {detail.gpa}
+            </p>
+          )}
         </div>
       </div>
-    )}
 
-    {/* Activities */}
-    {detail.activities.length > 0 && (
-      <div style={{ marginBottom: '2rem' }}>
-        <h3 style={sectionTitleStyle}>Activities</h3>
-        <ul style={listStyle}>
-          {detail.activities.map((a, i) => <li key={i} style={listItemStyle}>{a}</li>)}
-        </ul>
-      </div>
-    )}
+      {/* Courses — cascade light-up */}
+      {detail.courses.length > 0 && (
+        <div style={{ marginBottom: '2rem' }}>
+          <h3 style={sectionTitleStyle}>Courses</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '0.75rem' }}>
+            {detail.courses.map((c, i) => {
+              const isLit = i < litCount;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    ...pillCardStyle,
+                    background: isLit ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                    borderColor: isLit ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+                    boxShadow: isLit ? '0 0 12px rgba(255, 255, 255, 0.04), inset 0 0 8px rgba(255, 255, 255, 0.02)' : 'none',
+                    transition: 'all 0.4s ease',
+                  }}
+                >
+                  <span style={{
+                    fontFamily: 'NeueMontreal-Medium, sans-serif',
+                    color: isLit ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.25)',
+                    fontSize: '0.85rem',
+                    transition: 'color 0.4s ease'
+                  }}>
+                    {c.code}
+                  </span>
+                  <span style={{
+                    fontFamily: 'NeueMontreal-Light, sans-serif',
+                    color: isLit ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.15)',
+                    fontSize: '0.8rem',
+                    transition: 'color 0.4s ease'
+                  }}>
+                    {c.name}
+                  </span>
+                  {c.grade && (
+                    <span style={{
+                      fontFamily: 'NeueMontreal-Medium, sans-serif',
+                      color: isLit ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.1)',
+                      fontSize: '0.75rem',
+                      marginLeft: 'auto',
+                      transition: 'color 0.4s ease'
+                    }}>
+                      {c.grade}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
-    {/* Achievements */}
-    {detail.achievements.length > 0 && (
-      <div>
-        <h3 style={sectionTitleStyle}>Achievements</h3>
-        <ul style={listStyle}>
-          {detail.achievements.map((a, i) => <li key={i} style={listItemStyle}>{a}</li>)}
-        </ul>
-      </div>
-    )}
-  </div>
-);
+      {/* Activities — lights up after courses */}
+      {detail.activities.length > 0 && (
+        <div style={{
+          marginBottom: '2rem',
+          opacity: sectionLit ? 1 : 0.15,
+          transform: sectionLit ? 'translateY(0)' : 'translateY(6px)',
+          transition: 'opacity 0.5s ease, transform 0.5s ease'
+        }}>
+          <h3 style={{
+            ...sectionTitleStyle,
+            color: sectionLit ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)',
+            transition: 'color 0.5s ease'
+          }}>Activities</h3>
+          <ul style={listStyle}>
+            {detail.activities.map((a, i) => (
+              <li key={i} style={{
+                ...listItemStyle,
+                color: sectionLit ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)',
+                transition: 'color 0.5s ease',
+                transitionDelay: sectionLit ? `${i * 0.1}s` : '0s'
+              }}>{a}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Achievements — lights up after courses */}
+      {detail.achievements.length > 0 && (
+        <div style={{
+          marginBottom: '2rem',
+          opacity: sectionLit ? 1 : 0.15,
+          transform: sectionLit ? 'translateY(0)' : 'translateY(6px)',
+          transition: 'opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s'
+        }}>
+          <h3 style={{
+            ...sectionTitleStyle,
+            color: sectionLit ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)',
+            transition: 'color 0.5s ease'
+          }}>Achievements</h3>
+          <ul style={listStyle}>
+            {detail.achievements.map((a, i) => (
+              <li key={i} style={{
+                ...listItemStyle,
+                color: sectionLit ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)',
+                transition: 'color 0.5s ease',
+                transitionDelay: sectionLit ? `${i * 0.1}s` : '0s'
+              }}>{a}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Reflection / Notes — lights up after courses */}
+      {detail.reflection && (
+        <div style={{
+          marginBottom: '2rem',
+          opacity: sectionLit ? 1 : 0.15,
+          transform: sectionLit ? 'translateY(0)' : 'translateY(6px)',
+          transition: 'opacity 0.5s ease 0.3s, transform 0.5s ease 0.3s'
+        }}>
+          <h3 style={{
+            ...sectionTitleStyle,
+            color: sectionLit ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)',
+            transition: 'color 0.5s ease 0.3s'
+          }}>Reflection</h3>
+          <p style={{
+            fontFamily: 'NeueMontreal-Light, sans-serif',
+            color: sectionLit ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.15)',
+            fontSize: '0.9rem',
+            lineHeight: '1.7',
+            margin: 0,
+            fontStyle: 'italic',
+            transition: 'color 0.5s ease 0.3s'
+          }}>
+            {detail.reflection}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ─── Experience Detail ──────────────────────────────────────
 
