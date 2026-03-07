@@ -223,16 +223,14 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
         }
 
         .glass-experience-card h3,
-        .glass-experience-card p {
+        .glass-experience-card p,
+        .glass-experience-card span {
           transition: color 0.3s ease !important;
         }
 
-        .glass-experience-card:hover h3 {
-          color: rgb(255, 255, 255) !important;
-          text-shadow: 0 0 1px rgba(255, 255, 255, 0.3);
-        }
-
-        .glass-experience-card:hover p {
+        .glass-experience-card:hover h3,
+        .glass-experience-card:hover p,
+        .glass-experience-card:hover span {
           color: rgb(255, 255, 255) !important;
         }
 
