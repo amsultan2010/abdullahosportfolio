@@ -326,49 +326,52 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           </button>
         </div>
 
-        {/* Bottom controls: dots + view switcher */}
+        {/* Bottom controls */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          gap: '1rem',
-          marginTop: '1.25rem'
+          justifyContent: 'flex-end',
+          position: 'relative',
+          marginTop: '0.75rem'
         }}>
-          {/* Dot Indicators — one per page */}
+          {/* Dot Indicators — centered via flex spacer trick */}
           {totalPages > 1 && (
             <div style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
               display: 'flex',
-              gap: '6px',
-              alignItems: 'center'
+              justifyContent: 'center',
+              pointerEvents: 'none'
             }}>
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => goToPage(i)}
-                  aria-label={`Go to projects page ${i + 1}`}
-                  style={{
-                    width: i === pageIndex ? '20px' : '6px',
-                    height: '6px',
-                    borderRadius: '3px',
-                    border: 'none',
-                    background: i === pageIndex ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.25)',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    padding: 0
-                  }}
-                />
-              ))}
+              <div style={{
+                display: 'flex',
+                gap: '6px',
+                alignItems: 'center',
+                pointerEvents: 'auto'
+              }}>
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goToPage(i)}
+                    aria-label={`Go to projects page ${i + 1}`}
+                    style={{
+                      width: i === pageIndex ? '20px' : '6px',
+                      height: '6px',
+                      borderRadius: '3px',
+                      border: 'none',
+                      background: i === pageIndex ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.25)',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      padding: 0
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Separator */}
-          <div style={{
-            width: '1px',
-            height: '14px',
-            background: 'rgba(255, 255, 255, 0.15)'
-          }} />
-
-          {/* View Mode Switcher */}
+          {/* View Mode Switcher — bottom right */}
           <div className="view-switcher">
             {[1, 2, 3].map((n) => (
               <button
