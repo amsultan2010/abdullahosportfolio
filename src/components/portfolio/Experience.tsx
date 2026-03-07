@@ -23,52 +23,51 @@ const Experience = ({ onCardClick }: ExperienceProps) => {
       id: 0,
       company: "Augmentor Labs",
       role: "Software Engineer, Growth Team",
-      date: "Jan 2026 – Current",
       location: "New York / Remote",
-      description: "Currently working on the growth team, building user acquisition and engagement features to drive platform adoption and retention.",
+      description: "",
       logo: "/augmentor-dark.svg",
+      roles: [
+        { role: "Software Engineer, Growth Team", date: "Jan 2026 – Current", location: "New York / Remote" },
+        { role: "Software Engineering Intern, Cloud Infrastructure", date: "Jan – Apr 2025", location: "Palo Alto, CA" }
+      ],
       detail: {
         type: 'experience' as const,
         id: 0,
         company: "Augmentor Labs",
         role: "Software Engineer, Growth Team",
-        date: "Jan 2026 – Current",
-        location: "New York / Remote",
         logo: "/augmentor-dark.svg",
-        timeline: [
-          { month: "Month 1", description: "Joined the growth team. Ramping up on the product, growth metrics, and experimentation framework. Contributing to user acquisition features." },
-          { month: "Month 2", description: "Building engagement features and running experiments to drive platform adoption and retention." }
-        ],
+        timeline: [],
         reflection: "",
-        skillsLearned: ["Growth Engineering", "Experimentation", "Product Analytics"],
-        techStack: ["TypeScript", "React", "Python", "FastAPI"]
-      } satisfies ExperienceDetail
-    },
-    {
-      id: 1,
-      company: "Augmentor Labs",
-      role: "Software Engineering Intern, Cloud Infrastructure Team",
-      date: "Jan – Apr 2025",
-      location: "Palo Alto, CA",
-      description: "Built event ingestion pipelines to S3/DynamoDB, webhook integrations for GitHub/Jira/Salesforce, and observability systems with dashboards and alerts. Reduced p95 ingestion latency by 35% and dropped mean-time-to-detect by 42%.",
-      logo: "/augmentor-dark.svg",
-      detail: {
-        type: 'experience' as const,
-        id: 1,
-        company: "Augmentor Labs",
-        role: "Software Engineering Intern, Cloud Infrastructure Team",
-        date: "Jan – Apr 2025",
-        location: "Palo Alto, CA",
-        logo: "/augmentor-dark.svg",
-        timeline: [
-          { month: "Month 1", description: "Onboarded to the cloud infrastructure team. Learned internal tooling, AWS architecture patterns, and the event-driven ingestion pipeline. Set up local development environment and completed first small PRs." },
-          { month: "Month 2", description: "Built webhook integrations for GitHub, Jira, and Salesforce. Designed event schema and implemented validation layer. Integrated with the S3/DynamoDB ingestion pipeline." },
-          { month: "Month 3", description: "Developed observability dashboards and alerting system. Worked on reducing p95 ingestion latency — identified bottlenecks in serialization and batch processing. Achieved 35% reduction." },
-          { month: "Month 4", description: "Focused on reliability improvements and documentation. Reduced mean-time-to-detect by 42% through better alert routing. Presented final project to engineering leadership." }
-        ],
-        reflection: "Working at Augmentor Labs gave me hands-on experience with production-grade cloud infrastructure at scale. I learned how to think about system reliability, latency budgets, and the importance of observability. The team culture of thorough code reviews and design docs shaped how I approach engineering problems.",
-        skillsLearned: ["System Design", "Observability", "Event-Driven Architecture", "Technical Writing", "On-Call Practices"],
-        techStack: ["AWS (S3, DynamoDB, Lambda, CloudWatch)", "Python", "Terraform", "GitHub Actions", "Datadog"]
+        skillsLearned: [],
+        techStack: [],
+        roles: [
+          {
+            role: "Software Engineer, Growth Team",
+            date: "Jan 2026 – Current",
+            location: "New York / Remote",
+            timeline: [
+              { month: "Month 1", description: "Joined the growth team. Ramping up on the product, growth metrics, and experimentation framework. Contributing to user acquisition features." },
+              { month: "Month 2", description: "Building engagement features and running experiments to drive platform adoption and retention." }
+            ],
+            reflection: "",
+            skillsLearned: ["Growth Engineering", "Experimentation", "Product Analytics"],
+            techStack: ["TypeScript", "React", "Python", "FastAPI"]
+          },
+          {
+            role: "Software Engineering Intern, Cloud Infrastructure",
+            date: "Jan – Apr 2025",
+            location: "Palo Alto, CA",
+            timeline: [
+              { month: "Month 1", description: "Onboarded to the cloud infrastructure team. Learned internal tooling, AWS architecture patterns, and the event-driven ingestion pipeline. Set up local development environment and completed first small PRs." },
+              { month: "Month 2", description: "Built webhook integrations for GitHub, Jira, and Salesforce. Designed event schema and implemented validation layer. Integrated with the S3/DynamoDB ingestion pipeline." },
+              { month: "Month 3", description: "Developed observability dashboards and alerting system. Worked on reducing p95 ingestion latency — identified bottlenecks in serialization and batch processing. Achieved 35% reduction." },
+              { month: "Month 4", description: "Focused on reliability improvements and documentation. Reduced mean-time-to-detect by 42% through better alert routing. Presented final project to engineering leadership." }
+            ],
+            reflection: "Working at Augmentor Labs gave me hands-on experience with production-grade cloud infrastructure at scale. I learned how to think about system reliability, latency budgets, and the importance of observability. The team culture of thorough code reviews and design docs shaped how I approach engineering problems.",
+            skillsLearned: ["System Design", "Observability", "Event-Driven Architecture", "Technical Writing", "On-Call Practices"],
+            techStack: ["AWS (S3, DynamoDB, Lambda, CloudWatch)", "Python", "Terraform", "GitHub Actions", "Datadog"]
+          }
+        ]
       } satisfies ExperienceDetail
     },
     {

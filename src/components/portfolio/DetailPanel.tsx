@@ -26,6 +26,16 @@ export interface TimelineEntry {
   description: string;
 }
 
+export interface ExperienceRole {
+  role: string;
+  date?: string;
+  location?: string;
+  timeline: TimelineEntry[];
+  reflection: string;
+  skillsLearned: string[];
+  techStack: string[];
+}
+
 export interface ExperienceDetail {
   type: 'experience';
   id: number;
@@ -38,6 +48,7 @@ export interface ExperienceDetail {
   reflection: string;
   skillsLearned: string[];
   techStack: string[];
+  roles?: ExperienceRole[];
 }
 
 export interface ProjectDetail {
@@ -268,12 +279,288 @@ const EducationContent = ({ detail }: { detail: EducationDetail }) => (
 // ─── Experience Detail ──────────────────────────────────────
 
 const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
+  // If multi-role, render each role as a separate section
+  if (detail.roles && detail.roles.length > 0) {
+    return <MultiRoleExperienceContent detail={detail} />;
+  }
+  return <SingleRoleExperienceContent detail={detail} />;
+};
+
+// ─── Multi-Role Experience (LinkedIn-style) ─────────────────
+
+const MultiRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
+  // Track unlock state per role
+  const [unlockedRoles, setUnlockedRoles] = useState<Set<number>>(new Set());
+  const allUnlocked = detail.roles!.every((_, i) => unlockedRoles.has(i));
+
+  const handleRoleUnlock = (roleIndex: number) => {
+    setUnlockedRoles(prev => new Set([...prev, roleIndex]));
+  };
+
+  // Gather all skills/tech across all roles for the combined section
+  const allSkills = [...new Set(detail.roles!.flatMap(r => r.skillsLearned))];
+  const allTech = [...new Set(detail.roles!.flatMap(r => r.techStack))];
+  const allReflections = detail.roles!.map(r => r.reflection).filter(Boolean);
+
+  return (
+    <div>
+      {/* Header — company only */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+        {detail.logo && (
+          <img src={detail.logo} alt="" style={{ width: '50px', height: '50px', borderRadius: '10px', objectFit: 'contain' }} />
+        )}
+        <h2 style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', fontSize: '1.5rem', color: 'white', margin: 0 }}>
+          {detail.company}
+        </h2>
+      </div>
+
+      {/* Roles — each with its own timeline */}
+      {detail.roles!.map((role, roleIdx) => (
+        <RoleTimelineSection
+          key={roleIdx}
+          role={role}
+          roleIndex={roleIdx}
+          isLast={roleIdx === detail.roles!.length - 1}
+          onUnlock={() => handleRoleUnlock(roleIdx)}
+        />
+      ))}
+
+      {/* Combined Reflection */}
+      {allReflections.length > 0 && (
+        <div style={{ marginBottom: '2rem', transition: 'opacity 0.5s ease', opacity: allUnlocked ? 1 : 0.7 }}>
+          <h3 style={{
+            ...sectionTitleStyle,
+            color: allUnlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
+            transition: 'color 0.5s ease'
+          }}>Reflection</h3>
+          {allReflections.map((r, i) => (
+            <p key={i} style={{
+              fontFamily: 'NeueMontreal-Light, sans-serif',
+              color: allUnlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)',
+              fontSize: '0.9rem',
+              lineHeight: '1.7',
+              margin: i > 0 ? '1rem 0 0' : 0,
+              transition: 'color 0.5s ease'
+            }}>
+              {r}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {/* Combined Skills */}
+      {allSkills.length > 0 && (
+        <div style={{ marginBottom: '1.5rem', transition: 'opacity 0.5s ease', opacity: allUnlocked ? 1 : 0.7 }}>
+          <h3 style={{
+            ...sectionTitleStyle,
+            color: allUnlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
+            transition: 'color 0.5s ease'
+          }}>Skills Learned</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {allSkills.map((s, i) => {
+              const tc = getTagColor(s);
+              return (
+                <span key={i} style={{
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
+                  fontSize: '0.8rem',
+                  color: allUnlocked ? tc.text : 'rgba(255, 255, 255, 0.65)',
+                  padding: '0.3rem 0.75rem',
+                  borderRadius: '20px',
+                  background: allUnlocked ? tc.bg : 'rgba(255, 255, 255, 0.08)',
+                  border: `0.5px solid ${allUnlocked ? tc.border : 'rgba(255, 255, 255, 0.12)'}`,
+                  transition: 'all 0.5s ease',
+                  transitionDelay: allUnlocked ? `${i * 0.06}s` : '0s'
+                }}>{s}</span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Combined Tech Stack */}
+      {allTech.length > 0 && (
+        <div style={{ transition: 'opacity 0.5s ease', opacity: allUnlocked ? 1 : 0.7 }}>
+          <h3 style={{
+            ...sectionTitleStyle,
+            color: allUnlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
+            transition: 'color 0.5s ease'
+          }}>Tech Stack</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {allTech.map((t, i) => {
+              const tc = getTagColor(t);
+              return (
+                <span key={i} style={{
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
+                  fontSize: '0.8rem',
+                  color: allUnlocked ? tc.text : 'rgba(255, 255, 255, 0.65)',
+                  padding: '0.3rem 0.75rem',
+                  borderRadius: '20px',
+                  background: allUnlocked ? tc.bg : 'rgba(255, 255, 255, 0.08)',
+                  border: `0.5px solid ${allUnlocked ? tc.border : 'rgba(255, 255, 255, 0.12)'}`,
+                  transition: 'all 0.5s ease',
+                  transitionDelay: allUnlocked ? `${i * 0.06}s` : '0s'
+                }}>{t}</span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Role Timeline Section (used inside multi-role) ─────────
+
+const RoleTimelineSection = ({ role, roleIndex, isLast, onUnlock }: {
+  role: ExperienceRole;
+  roleIndex: number;
+  isLast: boolean;
+  onUnlock: () => void;
+}) => {
   const [hoveredIndex, setHoveredIndex] = useState(-1);
   const [unlocked, setUnlocked] = useState(false);
   const entryRefs = useRef<(HTMLDivElement | null)[]>([]);
   const trackRef = useRef<HTMLDivElement>(null);
 
-  // Once the user reaches the last entry, lock the unlocked state permanently
+  const handleHover = (i: number) => {
+    setHoveredIndex(i);
+    if (i >= role.timeline.length - 1 && !unlocked) {
+      setUnlocked(true);
+      onUnlock();
+    }
+  };
+
+  const getGlowHeight = () => {
+    if (hoveredIndex < 0 || !trackRef.current) return '0%';
+    const entry = entryRefs.current[hoveredIndex];
+    if (!entry) return '0%';
+    const trackRect = trackRef.current.getBoundingClientRect();
+    const entryRect = entry.getBoundingClientRect();
+    const dotCenter = entryRect.top - trackRect.top + 10;
+    return `${dotCenter}px`;
+  };
+
+  return (
+    <div style={{ marginBottom: isLast ? '2rem' : '2.5rem' }}>
+      {/* Role header */}
+      <div style={{ marginBottom: '1rem' }}>
+        <p style={{
+          fontFamily: 'NeueMontreal-Medium, sans-serif',
+          color: 'rgba(255,255,255,0.9)',
+          fontSize: '1.1rem',
+          margin: 0
+        }}>
+          {role.role}
+        </p>
+        <p style={{
+          fontFamily: 'NeueMontreal-Light, sans-serif',
+          color: 'rgba(255,255,255,0.45)',
+          fontSize: '0.85rem',
+          margin: '0.15rem 0 0'
+        }}>
+          {[role.date, role.location].filter(Boolean).join(' · ')}
+        </p>
+      </div>
+
+      {/* Timeline */}
+      {role.timeline.length > 0 && (
+        <div
+          ref={trackRef}
+          onMouseLeave={() => { if (!unlocked) setHoveredIndex(-1); }}
+          style={{ position: 'relative', paddingLeft: '1.5rem' }}
+        >
+          {/* Static base line */}
+          <div style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '2px',
+            height: '100%',
+            background: 'rgba(255,255,255,0.1)'
+          }} />
+          {/* Glow line */}
+          <div style={{
+            position: 'absolute',
+            left: '-1px',
+            top: 0,
+            width: '4px',
+            height: unlocked ? '100%' : (hoveredIndex >= 0 ? getGlowHeight() : '0px'),
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 60%, rgba(255,255,255,0.8) 100%)',
+            filter: 'blur(1px)',
+            transition: 'height 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+            borderRadius: '2px',
+            opacity: (unlocked || hoveredIndex >= 0) ? 1 : 0
+          }} />
+
+          {role.timeline.map((entry, i) => {
+            const isActive = unlocked || (hoveredIndex >= 0 && i <= hoveredIndex);
+            const isDirectHover = unlocked || i === hoveredIndex;
+
+            return (
+              <div
+                key={i}
+                ref={(el) => { entryRefs.current[i] = el; }}
+                onMouseEnter={() => handleHover(i)}
+                style={{
+                  marginBottom: '1.5rem',
+                  position: 'relative',
+                  cursor: 'default',
+                  padding: '0.25rem 0'
+                }}
+              >
+                <div style={{
+                  position: 'absolute',
+                  left: '-1.75rem',
+                  top: '0.35rem',
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  background: isActive ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.3)',
+                  border: `2px solid ${isActive ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.15)'}`,
+                  boxShadow: isActive
+                    ? (isDirectHover
+                      ? '0 0 10px rgba(255,255,255,0.7), 0 0 20px rgba(255,255,255,0.3)'
+                      : '0 0 6px rgba(255,255,255,0.5), 0 0 12px rgba(255,255,255,0.15)')
+                    : 'none',
+                  transition: 'all 0.35s ease',
+                  opacity: isActive ? 1 : 0.6
+                }} />
+                <p style={{
+                  fontFamily: 'NeueMontreal-Medium, sans-serif',
+                  color: isDirectHover ? 'rgb(255,255,255)' : (isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)'),
+                  fontSize: '0.9rem',
+                  margin: '0 0 0.25rem',
+                  transition: 'color 0.3s ease'
+                }}>
+                  {entry.month}
+                </p>
+                <p style={{
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
+                  color: isDirectHover ? 'rgba(255,255,255,0.95)' : (isActive ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.35)'),
+                  fontSize: '0.85rem',
+                  margin: 0,
+                  lineHeight: '1.5',
+                  transition: 'color 0.3s ease'
+                }}>
+                  {entry.description}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Single-Role Experience (original) ──────────────────────
+
+const SingleRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
+  const [hoveredIndex, setHoveredIndex] = useState(-1);
+  const [unlocked, setUnlocked] = useState(false);
+  const entryRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const trackRef = useRef<HTMLDivElement>(null);
+
   const handleHover = (i: number) => {
     setHoveredIndex(i);
     if (i >= detail.timeline.length - 1) {
@@ -281,14 +568,12 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
     }
   };
 
-  // Calculate glow line height based on hovered entry position
   const getGlowHeight = () => {
     if (hoveredIndex < 0 || !trackRef.current) return '0%';
     const entry = entryRefs.current[hoveredIndex];
     if (!entry) return '0%';
     const trackRect = trackRef.current.getBoundingClientRect();
     const entryRect = entry.getBoundingClientRect();
-    // Glow line extends to the middle of the hovered entry's dot
     const dotCenter = entryRect.top - trackRect.top + 10;
     return `${dotCenter}px`;
   };
@@ -325,7 +610,6 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
             onMouseLeave={() => { if (!unlocked) setHoveredIndex(-1); }}
             style={{ position: 'relative', paddingLeft: '1.5rem' }}
           >
-            {/* Static base line */}
             <div style={{
               position: 'absolute',
               left: 0,
@@ -334,7 +618,6 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
               height: '100%',
               background: 'rgba(255,255,255,0.1)'
             }} />
-            {/* Glow line - grows to hovered entry */}
             <div style={{
               position: 'absolute',
               left: '-1px',
@@ -364,7 +647,6 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
                     padding: '0.25rem 0'
                   }}
                 >
-                  {/* Dot */}
                   <div style={{
                     position: 'absolute',
                     left: '-1.75rem',
@@ -409,87 +691,81 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
       )}
 
       {/* Reflection */}
-      {detail.reflection && (() => {
-        return (
-          <div style={{ marginBottom: '2rem', transition: 'opacity 0.5s ease', opacity: unlocked ? 1 : 0.7 }}>
-            <h3 style={{
-              ...sectionTitleStyle,
-              color: unlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
-              transition: 'color 0.5s ease'
-            }}>Reflection</h3>
-            <p style={{
-              fontFamily: 'NeueMontreal-Light, sans-serif',
-              color: unlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)',
-              fontSize: '0.9rem',
-              lineHeight: '1.7',
-              margin: 0,
-              transition: 'color 0.5s ease'
-            }}>
-              {detail.reflection}
-            </p>
-          </div>
-        );
-      })()}
+      {detail.reflection && (
+        <div style={{ marginBottom: '2rem', transition: 'opacity 0.5s ease', opacity: unlocked ? 1 : 0.7 }}>
+          <h3 style={{
+            ...sectionTitleStyle,
+            color: unlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
+            transition: 'color 0.5s ease'
+          }}>Reflection</h3>
+          <p style={{
+            fontFamily: 'NeueMontreal-Light, sans-serif',
+            color: unlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)',
+            fontSize: '0.9rem',
+            lineHeight: '1.7',
+            margin: 0,
+            transition: 'color 0.5s ease'
+          }}>
+            {detail.reflection}
+          </p>
+        </div>
+      )}
 
       {/* Skills + Tech */}
-      {detail.skillsLearned.length > 0 && (() => {
-        return (
-          <div style={{ marginBottom: '1.5rem', transition: 'opacity 0.5s ease', opacity: unlocked ? 1 : 0.7 }}>
-            <h3 style={{
-              ...sectionTitleStyle,
-              color: unlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
-              transition: 'color 0.5s ease'
-            }}>Skills Learned</h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {detail.skillsLearned.map((s, i) => {
-                const tc = getTagColor(s);
-                return (
-                  <span key={i} style={{
-                    fontFamily: 'NeueMontreal-Light, sans-serif',
-                    fontSize: '0.8rem',
-                    color: unlocked ? tc.text : 'rgba(255, 255, 255, 0.65)',
-                    padding: '0.3rem 0.75rem',
-                    borderRadius: '20px',
-                    background: unlocked ? tc.bg : 'rgba(255, 255, 255, 0.08)',
-                    border: `0.5px solid ${unlocked ? tc.border : 'rgba(255, 255, 255, 0.12)'}`,
-                    transition: 'all 0.5s ease',
-                    transitionDelay: unlocked ? `${i * 0.06}s` : '0s'
-                  }}>{s}</span>
-                );
-              })}
-            </div>
+      {detail.skillsLearned.length > 0 && (
+        <div style={{ marginBottom: '1.5rem', transition: 'opacity 0.5s ease', opacity: unlocked ? 1 : 0.7 }}>
+          <h3 style={{
+            ...sectionTitleStyle,
+            color: unlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
+            transition: 'color 0.5s ease'
+          }}>Skills Learned</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {detail.skillsLearned.map((s, i) => {
+              const tc = getTagColor(s);
+              return (
+                <span key={i} style={{
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
+                  fontSize: '0.8rem',
+                  color: unlocked ? tc.text : 'rgba(255, 255, 255, 0.65)',
+                  padding: '0.3rem 0.75rem',
+                  borderRadius: '20px',
+                  background: unlocked ? tc.bg : 'rgba(255, 255, 255, 0.08)',
+                  border: `0.5px solid ${unlocked ? tc.border : 'rgba(255, 255, 255, 0.12)'}`,
+                  transition: 'all 0.5s ease',
+                  transitionDelay: unlocked ? `${i * 0.06}s` : '0s'
+                }}>{s}</span>
+              );
+            })}
           </div>
-        );
-      })()}
-      {detail.techStack.length > 0 && (() => {
-        return (
-          <div style={{ transition: 'opacity 0.5s ease', opacity: unlocked ? 1 : 0.7 }}>
-            <h3 style={{
-              ...sectionTitleStyle,
-              color: unlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
-              transition: 'color 0.5s ease'
-            }}>Tech Stack</h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {detail.techStack.map((t, i) => {
-                const tc = getTagColor(t);
-                return (
-                  <span key={i} style={{
-                    fontFamily: 'NeueMontreal-Light, sans-serif',
-                    fontSize: '0.8rem',
-                    color: unlocked ? tc.text : 'rgba(255, 255, 255, 0.65)',
-                    padding: '0.3rem 0.75rem',
-                    borderRadius: '20px',
-                    background: unlocked ? tc.bg : 'rgba(255, 255, 255, 0.08)',
-                    border: `0.5px solid ${unlocked ? tc.border : 'rgba(255, 255, 255, 0.12)'}`,
-                    transition: 'all 0.5s ease',
-                    transitionDelay: unlocked ? `${i * 0.06}s` : '0s'
-                  }}>{t}</span>
-                );
-              })}
-            </div>
+        </div>
+      )}
+      {detail.techStack.length > 0 && (
+        <div style={{ transition: 'opacity 0.5s ease', opacity: unlocked ? 1 : 0.7 }}>
+          <h3 style={{
+            ...sectionTitleStyle,
+            color: unlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
+            transition: 'color 0.5s ease'
+          }}>Tech Stack</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {detail.techStack.map((t, i) => {
+              const tc = getTagColor(t);
+              return (
+                <span key={i} style={{
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
+                  fontSize: '0.8rem',
+                  color: unlocked ? tc.text : 'rgba(255, 255, 255, 0.65)',
+                  padding: '0.3rem 0.75rem',
+                  borderRadius: '20px',
+                  background: unlocked ? tc.bg : 'rgba(255, 255, 255, 0.08)',
+                  border: `0.5px solid ${unlocked ? tc.border : 'rgba(255, 255, 255, 0.12)'}`,
+                  transition: 'all 0.5s ease',
+                  transitionDelay: unlocked ? `${i * 0.06}s` : '0s'
+                }}>{t}</span>
+              );
+            })}
           </div>
-        );
-      })()}
+        </div>
+      )}
     </div>
   );
 };

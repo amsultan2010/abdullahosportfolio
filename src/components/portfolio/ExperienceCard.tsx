@@ -1,3 +1,10 @@
+interface CardRole {
+  role: string;
+  date?: string;
+  location?: string;
+  description?: string;
+}
+
 interface ExperienceData {
   id: number;
   company: string;
@@ -9,6 +16,7 @@ interface ExperienceData {
   logo2?: string;
   logoSize?: number;
   logoRound?: boolean;
+  roles?: CardRole[];
 }
 
 interface ExperienceCardProps {
@@ -114,94 +122,145 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
         overflowWrap: 'break-word',
         wordBreak: 'break-word'
       }}>
-        {/* Company and Role */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.25rem',
-          width: '100%'
+        {/* Company Name */}
+        <h3 style={{
+          fontSize: 'clamp(1rem, 2.5vw, 1.3rem)',
+          color: 'rgba(255, 255, 255, 0.95)',
+          fontFamily: 'NeueMontreal-Medium, sans-serif',
+          fontStyle: 'normal',
+          margin: 0,
+          fontWeight: '500',
+          wordWrap: 'break-word',
+          overflowWrap: 'break-word',
+          wordBreak: 'break-word',
+          userSelect: 'none',
+          WebkitUserSelect: 'none'
         }}>
-          <h3 style={{
-            fontSize: 'clamp(1rem, 2.5vw, 1.3rem)',
-            color: 'rgba(255, 255, 255, 0.95)',
-            fontFamily: 'NeueMontreal-Medium, sans-serif',
-            fontStyle: 'normal',
-            margin: 0,
-            fontWeight: '500',
-            wordWrap: 'break-word',
-            overflowWrap: 'break-word',
-            wordBreak: 'break-word',
-            userSelect: 'none',
-            WebkitUserSelect: 'none'
-          }}>
-            {experience.company}
-          </h3>
-          <p style={{
-            fontSize: 'clamp(0.95rem, 2.3vw, 1.15rem)',
-            color: 'rgba(255, 255, 255, 0.9)',
-            fontFamily: 'NeueMontreal-Light, sans-serif',
-            margin: 0,
-            fontWeight: '300',
-            lineHeight: '1.4',
-            wordWrap: 'break-word',
-            overflowWrap: 'break-word',
-            wordBreak: 'break-word',
-            letterSpacing: '0.005em',
-            userSelect: 'none',
-            WebkitUserSelect: 'none'
-          }}>
-            {experience.role}
-          </p>
-          {experience.date && (
+          {experience.company}
+        </h3>
+
+        {experience.roles && experience.roles.length > 0 ? (
+          /* LinkedIn-style multi-role timeline */
+          <div style={{ position: 'relative', paddingLeft: '1.25rem', marginTop: '0.5rem' }}>
+            {/* Vertical line */}
+            <div style={{
+              position: 'absolute',
+              left: '4px',
+              top: '8px',
+              bottom: '8px',
+              width: '2px',
+              background: 'rgba(255, 255, 255, 0.2)'
+            }} />
+            {experience.roles.map((r, i) => (
+              <div key={i} style={{ position: 'relative', marginBottom: i < experience.roles!.length - 1 ? '1rem' : '0' }}>
+                {/* Dot */}
+                <div style={{
+                  position: 'absolute',
+                  left: '-1.25rem',
+                  top: '6px',
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  background: i === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.4)',
+                  border: `2px solid ${i === 0 ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.2)'}`,
+                  boxShadow: i === 0 ? '0 0 8px rgba(255,255,255,0.3)' : 'none'
+                }} />
+                <p style={{
+                  fontSize: 'clamp(0.95rem, 2.3vw, 1.1rem)',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
+                  margin: 0,
+                  fontWeight: '300',
+                  lineHeight: '1.4',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none'
+                }}>
+                  {r.role}
+                </p>
+                <p style={{
+                  fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
+                  margin: '0.1rem 0 0',
+                  fontWeight: '300',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none'
+                }}>
+                  {[r.date, r.location].filter(Boolean).join(' · ')}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Single-role layout (original) */
+          <>
             <p style={{
-              fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
-              color: 'rgba(255, 255, 255, 0.5)',
+              fontSize: 'clamp(0.95rem, 2.3vw, 1.15rem)',
+              color: 'rgba(255, 255, 255, 0.9)',
               fontFamily: 'NeueMontreal-Light, sans-serif',
-              margin: '0.15rem 0 0',
+              margin: 0,
               fontWeight: '300',
+              lineHeight: '1.4',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              wordBreak: 'break-word',
+              letterSpacing: '0.005em',
               userSelect: 'none',
               WebkitUserSelect: 'none'
             }}>
-              {experience.date}
+              {experience.role}
             </p>
-          )}
-        </div>
+            {experience.date && (
+              <p style={{
+                fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontFamily: 'NeueMontreal-Light, sans-serif',
+                margin: '0.15rem 0 0',
+                fontWeight: '300',
+                userSelect: 'none',
+                WebkitUserSelect: 'none'
+              }}>
+                {experience.date}
+              </p>
+            )}
 
-        {/* Location */}
-        <p style={{
-          fontSize: 'clamp(0.9rem, 2.2vw, 1rem)',
-          color: 'rgba(255, 255, 255, 0.6)',
-          fontFamily: 'NeueMontreal-Light, sans-serif',
-          margin: 0,
-          fontWeight: '300',
-          wordWrap: 'break-word',
-          overflowWrap: 'break-word',
-          wordBreak: 'break-word',
-          userSelect: 'none',
-          WebkitUserSelect: 'none'
-        }}>
-          {experience.location}
-        </p>
+            {/* Location */}
+            <p style={{
+              fontSize: 'clamp(0.9rem, 2.2vw, 1rem)',
+              color: 'rgba(255, 255, 255, 0.6)',
+              fontFamily: 'NeueMontreal-Light, sans-serif',
+              margin: 0,
+              fontWeight: '300',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              wordBreak: 'break-word',
+              userSelect: 'none',
+              WebkitUserSelect: 'none'
+            }}>
+              {experience.location}
+            </p>
 
-        {/* Description */}
-        <p style={{
-          fontSize: 'clamp(0.95rem, 2.3vw, 1.1rem)',
-          color: 'rgba(255, 255, 255, 0.9)',
-          fontFamily: 'NeueMontreal-Light, sans-serif',
-          lineHeight: '1.6',
-          margin: 0,
-          marginTop: '0.75rem',
-          fontWeight: '300',
-          wordWrap: 'break-word',
-          overflowWrap: 'break-word',
-          wordBreak: 'break-word',
-          hyphens: 'auto',
-          letterSpacing: '0.01em',
-          userSelect: 'none',
-          WebkitUserSelect: 'none'
-        }}>
-          {experience.description}
-        </p>
+            {/* Description */}
+            <p style={{
+              fontSize: 'clamp(0.95rem, 2.3vw, 1.1rem)',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontFamily: 'NeueMontreal-Light, sans-serif',
+              lineHeight: '1.6',
+              margin: 0,
+              marginTop: '0.75rem',
+              fontWeight: '300',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              wordBreak: 'break-word',
+              hyphens: 'auto',
+              letterSpacing: '0.01em',
+              userSelect: 'none',
+              WebkitUserSelect: 'none'
+            }}>
+              {experience.description}
+            </p>
+          </>
+        )}
       </div>
 
       {/* Responsive CSS */}
