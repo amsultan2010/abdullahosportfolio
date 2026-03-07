@@ -56,6 +56,8 @@ export interface ProjectDetail {
   id: number;
   title: string;
   gradient: string;
+  coverImage?: string;
+  demoVideo?: string;
   architecture?: string;
   technicalChallenges: string[];
   lessonsLearned: string[];
@@ -72,8 +74,46 @@ interface DetailPanelProps {
   onClose: () => void;
 }
 
+const CloseButton = ({ onClose }: { onClose: () => void }) => (
+  <button
+    onClick={onClose}
+    aria-label="Close panel"
+    style={{
+      position: 'sticky',
+      top: '1.5rem',
+      float: 'right',
+      marginRight: '1.5rem',
+      zIndex: 10,
+      background: 'rgba(255, 255, 255, 0.1)',
+      border: '0.5px solid rgba(255, 255, 255, 0.2)',
+      borderRadius: '50%',
+      width: '36px',
+      height: '36px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: 'pointer',
+      color: 'rgba(255, 255, 255, 0.7)',
+      fontSize: '18px',
+      fontFamily: 'NeueMontreal-Light, sans-serif',
+      transition: 'all 0.2s ease'
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+      e.currentTarget.style.color = 'white';
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+    }}
+  >
+    ✕
+  </button>
+);
+
 const DetailPanel = ({ detail, onClose }: DetailPanelProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
+  const hasVideo = detail.type === 'project' && !!(detail as ProjectDetail).demoVideo;
 
   // Escape key + body scroll lock
   useEffect(() => {
@@ -94,6 +134,137 @@ const DetailPanel = ({ detail, onClose }: DetailPanelProps) => {
     panelRef.current?.focus();
   }, []);
 
+  // ── Video split layout (CreatorScope) ──
+  if (hasVideo) {
+    const projectDetail = detail as ProjectDetail;
+    return (
+      <>
+        {/* Backdrop */}
+        <div
+          onClick={onClose}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            zIndex: 200,
+            animation: 'detailFadeIn 0.3s ease-out forwards'
+          }}
+        />
+
+        {/* Split Container */}
+        <div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
+          className="video-split-container"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 201,
+            display: 'flex',
+            outline: 'none',
+            animation: 'detailFadeIn 0.4s ease-out forwards'
+          }}
+        >
+          {/* Left: Video */}
+          <div
+            className="video-split-left"
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '2rem',
+              minWidth: 0
+            }}
+          >
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              style={{
+                width: '100%',
+                maxHeight: '85vh',
+                borderRadius: '16px',
+                objectFit: 'contain',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                border: '0.5px solid rgba(255,255,255,0.1)'
+              }}
+            >
+              <source src={projectDetail.demoVideo} type="video/quicktime" />
+              <source src={projectDetail.demoVideo} type="video/mp4" />
+            </video>
+          </div>
+
+          {/* Right: Details */}
+          <div
+            className="video-split-right"
+            style={{
+              width: '420px',
+              minWidth: '360px',
+              maxWidth: '480px',
+              height: '100%',
+              overflowY: 'auto',
+              background: 'rgba(30, 30, 30, 0.95)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderLeft: '0.5px solid rgba(255, 255, 255, 0.15)',
+              animation: 'detailSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+            }}
+          >
+            <CloseButton onClose={onClose} />
+            <div style={{ padding: '2rem 2rem 3rem', clear: 'both' }}>
+              <ProjectContent detail={projectDetail} />
+            </div>
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes detailSlideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+          }
+          @keyframes detailFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @media (max-width: 900px) {
+            .video-split-container {
+              flex-direction: column !important;
+            }
+            .video-split-left {
+              flex: none !important;
+              height: 40vh !important;
+              padding: 1rem !important;
+            }
+            .video-split-left video {
+              max-height: 100% !important;
+            }
+            .video-split-right {
+              width: 100% !important;
+              min-width: unset !important;
+              max-width: unset !important;
+              flex: 1 !important;
+              border-left: none !important;
+              border-top: 0.5px solid rgba(255,255,255,0.15) !important;
+            }
+          }
+        `}</style>
+      </>
+    );
+  }
+
+  // ── Standard right-side panel ──
   return (
     <>
       {/* Backdrop */}
@@ -135,41 +306,7 @@ const DetailPanel = ({ detail, onClose }: DetailPanelProps) => {
         }}
         className="detail-panel"
       >
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          aria-label="Close panel"
-          style={{
-            position: 'sticky',
-            top: '1.5rem',
-            float: 'right',
-            marginRight: '1.5rem',
-            zIndex: 10,
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: '0.5px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '50%',
-            width: '36px',
-            height: '36px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            color: 'rgba(255, 255, 255, 0.7)',
-            fontSize: '18px',
-            fontFamily: 'NeueMontreal-Light, sans-serif',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-            e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
-          }}
-        >
-          ✕
-        </button>
+        <CloseButton onClose={onClose} />
 
         {/* Content */}
         <div style={{ padding: '2rem 2.5rem 3rem', clear: 'both' }}>
@@ -774,27 +911,29 @@ const SingleRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =
 
 const ProjectContent = ({ detail }: { detail: ProjectDetail }) => (
   <div>
-    {/* Gradient Header */}
-    <div style={{
-      width: '100%',
-      height: '120px',
-      borderRadius: '12px',
-      background: detail.gradient,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: '1.5rem'
-    }}>
-      <h2 style={{
-        fontFamily: 'NeueMontreal-Medium, sans-serif',
-        fontSize: '2rem',
-        color: 'rgba(255,255,255,0.15)',
-        letterSpacing: '0.1em',
-        textTransform: 'uppercase'
+    {/* Gradient Header — skip when video is showing on the left */}
+    {!detail.demoVideo && (
+      <div style={{
+        width: '100%',
+        height: '120px',
+        borderRadius: '12px',
+        background: detail.gradient,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: '1.5rem'
       }}>
-        {detail.title}
-      </h2>
-    </div>
+        <h2 style={{
+          fontFamily: 'NeueMontreal-Medium, sans-serif',
+          fontSize: '2rem',
+          color: 'rgba(255,255,255,0.15)',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase'
+        }}>
+          {detail.title}
+        </h2>
+      </div>
+    )}
 
     <h2 style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', fontSize: '1.5rem', color: 'white', margin: '0 0 1.5rem' }}>
       {detail.title}

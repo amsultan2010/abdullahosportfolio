@@ -75,12 +75,15 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
       title: "CreatorScope",
       description: "Go-to-market automation tool for sourcing TikTok creators for brand partnerships. Multi-source discovery, three-tier classification, and Creator Intent Scoring (0-100). Built with FastAPI, SQLAlchemy, and RapidAPI.",
       gradient: "linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%)",
+      coverImage: "/cover.png",
       repoUrl: "https://github.com/ronnielgandhe/creatorscope",
       detail: {
         type: 'project' as const,
         id: 2,
         title: "CreatorScope",
         gradient: "linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%)",
+        coverImage: "/cover.png",
+        demoVideo: "/creatorscope-demo.mov",
         architecture: "FastAPI backend with SQLAlchemy ORM and SQLite. Background task workers handle async scraping via RapidAPI's TikTok scraper. Single-page frontend with real-time dashboard polling. Three-tier classification pipeline with configurable thresholds.",
         technicalChallenges: [
           "Managing API rate limits and budgets (50-400 calls) while maximizing discovery coverage",
@@ -183,7 +186,7 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
                 cursor: 'pointer'
               }}
             >
-              {/* Project Image Placeholder with Gradient */}
+              {/* Project Image / Cover */}
               <div style={{
                 width: '100%',
                 height: '200px',
@@ -193,18 +196,31 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
                 background: project.gradient,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                position: 'relative'
               }}>
-                <span style={{
-                  fontSize: '2rem',
-                  fontFamily: 'NeueMontreal-Medium, sans-serif',
-                  color: 'rgba(255, 255, 255, 0.15)',
-                  fontWeight: '500',
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase'
-                }}>
-                  {project.title}
-                </span>
+                {(project as any).coverImage ? (
+                  <img
+                    src={(project as any).coverImage}
+                    alt={`${project.title} preview`}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                ) : (
+                  <span style={{
+                    fontSize: '2rem',
+                    fontFamily: 'NeueMontreal-Medium, sans-serif',
+                    color: 'rgba(255, 255, 255, 0.15)',
+                    fontWeight: '500',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase'
+                  }}>
+                    {project.title}
+                  </span>
+                )}
               </div>
 
               {/* Project Content */}
