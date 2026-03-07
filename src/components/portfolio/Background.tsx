@@ -123,7 +123,7 @@ const Background = () => {
       position: 'fixed',
       top: 0,
       left: 0,
-      width: 'calc(100% - 1px)',
+      width: '100%',
       height: '100%',
       zIndex: 0,
       overflow: 'hidden',
@@ -133,7 +133,7 @@ const Background = () => {
         dpr={[1, 2]}
         frameloop="always"
         style={{
-          width: 'calc(100% - 1px)',
+          width: '100%',
           height: '100%',
           display: 'block'
         }}
