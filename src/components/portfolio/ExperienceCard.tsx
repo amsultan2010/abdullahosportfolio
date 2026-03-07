@@ -228,11 +228,12 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
         }
 
         .glass-experience-card:hover h3 {
-          color: rgba(255, 255, 255, 1) !important;
+          color: rgb(255, 255, 255) !important;
+          text-shadow: 0 0 1px rgba(255, 255, 255, 0.3);
         }
 
         .glass-experience-card:hover p {
-          color: rgba(255, 255, 255, 0.95) !important;
+          color: rgb(255, 255, 255) !important;
         }
 
         .glass-experience-card::before {
