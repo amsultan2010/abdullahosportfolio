@@ -129,6 +129,27 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
         techStack: ["Python", "GPT-4 API", "TF-IDF", "BM25", "FastAPI", "React"],
         repoUrl: "https://github.com/ronnielgandhe/yournews"
       } satisfies ProjectDetail
+    },
+    {
+      id: 4,
+      title: "How Many Clicks",
+      description: "Minimal browser game that challenges users to click a target as many times as possible. Tracks high scores, reaction time analytics, and session streaks with a clean, addictive UI.",
+      gradient: "linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 50%, #1a1a2e 100%)",
+      coverImage: "/howmanyclicks-cover.png",
+      repoUrl: "",
+      detail: {
+        type: 'project' as const,
+        id: 4,
+        title: "How Many Clicks",
+        gradient: "linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 50%, #1a1a2e 100%)",
+        coverImage: "/howmanyclicks-cover.png",
+        demoVideo: "/howmanyclicks-demo.mp4",
+        architecture: "",
+        technicalChallenges: [],
+        lessonsLearned: [],
+        techStack: [],
+        repoUrl: ""
+      } satisfies ProjectDetail
     }
   ];
 
