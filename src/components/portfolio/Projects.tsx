@@ -106,12 +106,15 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
       title: "YourNews",
       description: "AI-powered personalized news aggregator using TF-IDF/BM25 ranking and GPT-4 summaries. Profile-aware ranking with smart query classification and click-feedback personalization.",
       gradient: "linear-gradient(135deg, #1a1a1a 0%, #2d1f3d 50%, #1a1a2e 100%)",
+      coverImage: "/yournews-cover.png",
       repoUrl: "https://github.com/ronnielgandhe/yournews",
       detail: {
         type: 'project' as const,
         id: 3,
         title: "YourNews",
         gradient: "linear-gradient(135deg, #1a1a1a 0%, #2d1f3d 50%, #1a1a2e 100%)",
+        coverImage: "/yournews-cover.png",
+        demoVideo: "/yournews-demo.mp4",
         architecture: "Hybrid ranking pipeline combining TF-IDF and BM25 for relevance scoring. GPT-4 integration for article summarization. User profile system tracks reading preferences via click-feedback loops. Smart query classifier routes searches to appropriate ranking strategy.",
         technicalChallenges: [
           "Balancing relevance scoring between TF-IDF and BM25 for different query types",
