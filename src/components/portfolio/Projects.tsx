@@ -133,10 +133,10 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
     {
       id: 4,
       title: "How Many Clicks",
-      description: "Minimal browser game that challenges users to click a target as many times as possible. Tracks high scores, reaction time analytics, and session streaks with a clean, addictive UI.",
+      description: "Wikipedia connection game where an AI pathfinding algorithm races to link two articles, then users compete to beat it. Real-time beam search with semantic scoring, hub recognition, and journey visualization.",
       gradient: "linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 50%, #1a1a2e 100%)",
       coverImage: "/howmanyclicks-cover.png",
-      repoUrl: "",
+      repoUrl: "https://github.com/ronnielgandhe/how-many-clicks",
       detail: {
         type: 'project' as const,
         id: 4,
@@ -144,11 +144,19 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
         gradient: "linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 50%, #1a1a2e 100%)",
         coverImage: "/howmanyclicks-cover.png",
         demoVideo: "/howmanyclicks-demo.mp4",
-        architecture: "",
-        technicalChallenges: [],
-        lessonsLearned: [],
-        techStack: [],
-        repoUrl: ""
+        architecture: "Entirely browser-based React + Vite app with no backend. Uses the Wikipedia MediaWiki API for article data and link traversal. Beam search pathfinding evaluates links based on semantic similarity to the target while penalizing topic clustering and recognizing bridging hub pages. Dual modes: Normal (exploratory beam search) and God Mode (wider search, faster results).",
+        technicalChallenges: [
+          "Building a real-time pathfinding algorithm that balances exploration breadth with semantic relevance scoring",
+          "Implementing hub article recognition and diversity penalties to avoid getting stuck in topic clusters",
+          "Visualizing the AI's journey in real-time with article snapshots and reasoning commentary"
+        ],
+        lessonsLearned: [
+          "Beam search with semantic scoring outperforms naive BFS for Wikipedia navigation",
+          "Related term expansion and bridging hub recognition are key to finding non-obvious paths",
+          "Entirely client-side apps can still deliver rich interactive experiences without a backend"
+        ],
+        techStack: ["React", "Vite", "JavaScript", "Wikipedia API", "CSS Animations"],
+        repoUrl: "https://github.com/ronnielgandhe/how-many-clicks"
       } satisfies ProjectDetail
     }
   ];
