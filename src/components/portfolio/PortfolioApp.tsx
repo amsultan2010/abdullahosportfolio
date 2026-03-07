@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Background from './Background';
 import NameHeader from './NameHeader';
 import NameFlash from './NameFlash';
@@ -6,8 +7,17 @@ import MainContent from './MainContent';
 import Education from './Education';
 import Experience from './Experience';
 import Projects from './Projects';
+import CaseStudies from './CaseStudies';
+import Blog from './Blog';
+import DetailPanel from './DetailPanel';
+import ContentViewer from './ContentViewer';
+import type { DetailContent } from './DetailPanel';
+import type { ContentViewData } from './ContentViewer';
 
 function PortfolioApp() {
+  const [activeDetail, setActiveDetail] = useState<DetailContent | null>(null);
+  const [activeContent, setActiveContent] = useState<ContentViewData | null>(null);
+
   return (
     <div style={{ position: 'relative', width: '100%' }}>
       <Background />
@@ -15,9 +25,25 @@ function PortfolioApp() {
       <NameFlash />
       <Navbar />
       <MainContent />
-      <Education />
-      <Experience />
-      <Projects />
+      <Education onCardClick={(detail) => setActiveDetail(detail)} />
+      <Experience onCardClick={(detail) => setActiveDetail(detail)} />
+      <Projects onCardClick={(detail) => setActiveDetail(detail)} />
+      <CaseStudies onContentClick={(content) => setActiveContent(content)} />
+      <Blog onContentClick={(content) => setActiveContent(content)} />
+
+      {activeDetail && (
+        <DetailPanel
+          detail={activeDetail}
+          onClose={() => setActiveDetail(null)}
+        />
+      )}
+
+      {activeContent && (
+        <ContentViewer
+          content={activeContent}
+          onClose={() => setActiveContent(null)}
+        />
+      )}
 
       {/* Font rendering */}
       <style>{`

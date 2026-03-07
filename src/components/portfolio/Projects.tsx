@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
+import type { ProjectDetail, DetailContent } from './DetailPanel';
 
-const Projects = () => {
+interface ProjectsProps {
+  onCardClick?: (detail: DetailContent) => void;
+}
+
+const Projects = ({ onCardClick }: ProjectsProps) => {
   const [titleAnimated, setTitleAnimated] = useState(false);
   const [animatedCards, setAnimatedCards] = useState(new Set<string>());
   const projectsRef = useRef<HTMLDivElement>(null);
@@ -44,21 +49,78 @@ const Projects = () => {
       title: "QuantZoo",
       description: "Production-grade Python framework for systematic strategy research, backtesting, walk-forward validation, real-time streaming, and risk analytics. Built with PyTorch, Hugging Face, and FastAPI.",
       gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
-      repoUrl: "https://github.com/ronnielgandhe/quantzoo"
+      repoUrl: "https://github.com/ronnielgandhe/quantzoo",
+      detail: {
+        type: 'project' as const,
+        id: 1,
+        title: "QuantZoo",
+        gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+        architecture: "Modular Python framework with a plugin-based strategy engine. Backtesting core uses vectorized operations for performance. Walk-forward validation with configurable rolling windows. Real-time streaming via WebSocket connections with FastAPI backend.",
+        technicalChallenges: [
+          "Implementing walk-forward validation without look-ahead bias",
+          "Building a real-time streaming pipeline that handles market data at sub-second latency",
+          "Designing a plugin architecture flexible enough for diverse strategy types"
+        ],
+        lessonsLearned: [
+          "Vectorized operations in NumPy/Pandas dramatically outperform loop-based approaches for backtesting",
+          "Proper data alignment and timezone handling is critical for financial data",
+          "Walk-forward validation is essential to avoid overfitting in strategy research"
+        ],
+        techStack: ["Python", "PyTorch", "Hugging Face", "FastAPI", "NumPy", "Pandas", "WebSocket"],
+        repoUrl: "https://github.com/ronnielgandhe/quantzoo"
+      } satisfies ProjectDetail
     },
     {
       id: 2,
       title: "CreatorScope",
       description: "Go-to-market automation tool for sourcing TikTok creators for brand partnerships. Multi-source discovery, three-tier classification, and Creator Intent Scoring (0-100). Built with FastAPI, SQLAlchemy, and RapidAPI.",
       gradient: "linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%)",
-      repoUrl: "https://github.com/ronnielgandhe/creatorscope"
+      repoUrl: "https://github.com/ronnielgandhe/creatorscope",
+      detail: {
+        type: 'project' as const,
+        id: 2,
+        title: "CreatorScope",
+        gradient: "linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%)",
+        architecture: "FastAPI backend with SQLAlchemy ORM and SQLite. Background task workers handle async scraping via RapidAPI's TikTok scraper. Single-page frontend with real-time dashboard polling. Three-tier classification pipeline with configurable thresholds.",
+        technicalChallenges: [
+          "Managing API rate limits and budgets (50-400 calls) while maximizing discovery coverage",
+          "Building a scoring algorithm that accurately predicts creator openness to brand deals",
+          "Handling async scraping with proper error recovery and retry logic"
+        ],
+        lessonsLearned: [
+          "API budget management is crucial when working with paid external APIs",
+          "A three-tier classification (Pass/Review/Filter) is more practical than binary classification",
+          "Pre-built niche presets dramatically improve user experience for non-technical users"
+        ],
+        techStack: ["Python", "FastAPI", "SQLAlchemy", "SQLite", "RapidAPI", "HTML/CSS/JS"],
+        repoUrl: "https://github.com/ronnielgandhe/creatorscope"
+      } satisfies ProjectDetail
     },
     {
       id: 3,
       title: "YourNews",
       description: "AI-powered personalized news aggregator using TF-IDF/BM25 ranking and GPT-4 summaries. Profile-aware ranking with smart query classification and click-feedback personalization.",
       gradient: "linear-gradient(135deg, #1a1a1a 0%, #2d1f3d 50%, #1a1a2e 100%)",
-      repoUrl: "https://github.com/ronnielgandhe/yournews"
+      repoUrl: "https://github.com/ronnielgandhe/yournews",
+      detail: {
+        type: 'project' as const,
+        id: 3,
+        title: "YourNews",
+        gradient: "linear-gradient(135deg, #1a1a1a 0%, #2d1f3d 50%, #1a1a2e 100%)",
+        architecture: "Hybrid ranking pipeline combining TF-IDF and BM25 for relevance scoring. GPT-4 integration for article summarization. User profile system tracks reading preferences via click-feedback loops. Smart query classifier routes searches to appropriate ranking strategy.",
+        technicalChallenges: [
+          "Balancing relevance scoring between TF-IDF and BM25 for different query types",
+          "Implementing real-time click-feedback personalization without cold-start problems",
+          "Managing GPT-4 API costs while providing useful summaries"
+        ],
+        lessonsLearned: [
+          "Hybrid ranking approaches outperform single-method approaches for diverse content",
+          "Click-feedback personalization needs careful dampening to avoid filter bubbles",
+          "Smart query classification (navigational vs informational) improves ranking quality"
+        ],
+        techStack: ["Python", "GPT-4 API", "TF-IDF", "BM25", "FastAPI", "React"],
+        repoUrl: "https://github.com/ronnielgandhe/yournews"
+      } satisfies ProjectDetail
     }
   ];
 
@@ -76,8 +138,7 @@ const Projects = () => {
         width: '90%',
         maxWidth: '1200px',
         minWidth: '320px',
-        overflow: 'hidden',
-        paddingBottom: '80px'
+        overflow: 'hidden'
       }}
     >
       {/* Section Title */}
@@ -112,7 +173,9 @@ const Projects = () => {
               data-project-id={project.id}
               className={`project-card glass-project-card ${isAnimated ? 'animated' : ''}`}
               onClick={() => {
-                if (project.repoUrl) {
+                if (onCardClick && project.detail) {
+                  onCardClick(project.detail);
+                } else if (project.repoUrl) {
                   window.open(project.repoUrl, '_blank', 'noopener,noreferrer');
                 }
               }}

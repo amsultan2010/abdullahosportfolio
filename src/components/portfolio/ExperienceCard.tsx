@@ -12,11 +12,14 @@ interface ExperienceCardProps {
   experience: ExperienceData;
   clickable?: boolean;
   link?: string | null;
+  onDetailClick?: () => void;
 }
 
-const ExperienceCard = ({ experience, clickable = false, link = null }: ExperienceCardProps) => {
+const ExperienceCard = ({ experience, clickable = false, link = null, onDetailClick }: ExperienceCardProps) => {
   const handleClick = () => {
-    if (clickable && link) {
+    if (onDetailClick) {
+      onDetailClick();
+    } else if (clickable && link) {
       window.open(link, '_blank', 'noopener,noreferrer');
     }
   };
@@ -33,7 +36,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null }: Experien
         userSelect: 'none',
         WebkitUserSelect: 'none',
         flexWrap: 'wrap',
-        cursor: clickable ? 'pointer' : 'default'
+        cursor: (clickable || onDetailClick) ? 'pointer' : 'default'
       }}
       onClick={handleClick}
     >
