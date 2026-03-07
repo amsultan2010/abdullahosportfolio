@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 1255 1255" width="200" height="200">
-  <!-- Augmentor Labs square bracket icon - exact paths from original logo -->
-  <rect x="-80" y="-80" width="1255" height="1255" rx="120" fill="#1a1a1a"/>
+  <!-- Augmentor Labs square bracket icon -->
   <path d="M0 54.732H711.498" stroke="white" stroke-width="109.461"/>
   <path d="M1039.88 1094.62V383.118" stroke="white" stroke-width="109.461"/>
   <path d="M0 1039.88H1094.61" stroke="white" stroke-width="109.461"/>

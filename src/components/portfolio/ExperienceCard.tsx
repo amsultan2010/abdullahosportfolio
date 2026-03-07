@@ -63,7 +63,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'cover'
+                objectFit: experience.logoRound ? 'cover' : 'contain'
               }}
             />
           ) : (
@@ -220,6 +220,19 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
         .glass-experience-card:hover {
           box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
           transform: translateZ(10px) scale(1.02);
+        }
+
+        .glass-experience-card h3,
+        .glass-experience-card p {
+          transition: color 0.3s ease !important;
+        }
+
+        .glass-experience-card:hover h3 {
+          color: rgba(255, 255, 255, 1) !important;
+        }
+
+        .glass-experience-card:hover p {
+          color: rgba(255, 255, 255, 0.95) !important;
         }
 
         .glass-experience-card::before {
