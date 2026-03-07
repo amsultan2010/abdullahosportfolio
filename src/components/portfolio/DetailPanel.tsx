@@ -911,7 +911,7 @@ const SingleRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =
 
 const ProjectContent = ({ detail }: { detail: ProjectDetail }) => (
   <div>
-    {/* Gradient Header — skip when video is showing on the left */}
+    {/* Header — skip when video is showing on the left */}
     {!detail.demoVideo && (
       <div style={{
         width: '100%',
@@ -921,17 +921,26 @@ const ProjectContent = ({ detail }: { detail: ProjectDetail }) => (
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: '1.5rem'
+        marginBottom: '1.5rem',
+        overflow: 'hidden'
       }}>
-        <h2 style={{
-          fontFamily: 'NeueMontreal-Medium, sans-serif',
-          fontSize: '2rem',
-          color: 'rgba(255,255,255,0.15)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase'
-        }}>
-          {detail.title}
-        </h2>
+        {detail.coverImage ? (
+          <img
+            src={detail.coverImage}
+            alt={`${detail.title} preview`}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        ) : (
+          <h2 style={{
+            fontFamily: 'NeueMontreal-Medium, sans-serif',
+            fontSize: '2rem',
+            color: 'rgba(255,255,255,0.15)',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase'
+          }}>
+            {detail.title}
+          </h2>
+        )}
       </div>
     )}
 

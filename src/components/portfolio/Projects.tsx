@@ -49,12 +49,14 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
       title: "QuantZoo",
       description: "Production-grade Python framework for systematic strategy research, backtesting, walk-forward validation, real-time streaming, and risk analytics. Built with PyTorch, Hugging Face, and FastAPI.",
       gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+      coverImage: "/trading.png",
       repoUrl: "https://github.com/ronnielgandhe/quantzoo",
       detail: {
         type: 'project' as const,
         id: 1,
         title: "QuantZoo",
         gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+        coverImage: "/trading.png",
         architecture: "Modular Python framework with a plugin-based strategy engine. Backtesting core uses vectorized operations for performance. Walk-forward validation with configurable rolling windows. Real-time streaming via WebSocket connections with FastAPI backend.",
         technicalChallenges: [
           "Implementing walk-forward validation without look-ahead bias",
