@@ -242,6 +242,20 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
                   }}>
                     {[r.date, r.location].filter(Boolean).join(' · ')}
                   </p>
+                  {r.description && (
+                    <p style={{
+                      fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      fontFamily: 'NeueMontreal-Light, sans-serif',
+                      margin: '0.4rem 0 0',
+                      fontWeight: '300',
+                      lineHeight: '1.5',
+                      userSelect: 'none',
+                      WebkitUserSelect: 'none'
+                    }}>
+                      {r.description}
+                    </p>
+                  )}
                 </div>
               );
             })}

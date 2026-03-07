@@ -27,8 +27,8 @@ const Experience = ({ onCardClick }: ExperienceProps) => {
       description: "",
       logo: "/augmentor-dark.svg",
       roles: [
-        { role: "Software Engineer, Growth Team", date: "Jan 2026 – Current", location: "New York / Remote" },
-        { role: "Software Engineering Intern, Cloud Infrastructure", date: "Jan – Apr 2025", location: "Palo Alto, CA" }
+        { role: "Software Engineer, Growth Team", date: "Jan 2026 – Current", location: "New York / Remote", description: "Building user acquisition and engagement features, running growth experiments, and driving platform adoption and retention metrics." },
+        { role: "Software Engineering Intern, Cloud Infrastructure", date: "Jan – Apr 2025", location: "Palo Alto, CA", description: "Built webhook integrations, designed event schemas for the ingestion pipeline, and reduced p95 ingestion latency by 35% through observability and optimization work." }
       ],
       detail: {
         type: 'experience' as const,
