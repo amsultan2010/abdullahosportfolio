@@ -20,9 +20,35 @@ const Experience = ({ onCardClick }: ExperienceProps) => {
 
   const experiences = [
     {
+      id: 0,
+      company: "Augmentor Labs",
+      role: "Software Engineer, Growth Team",
+      date: "Jan 2026 – Current",
+      location: "New York / Remote",
+      description: "Currently working on the growth team, building user acquisition and engagement features to drive platform adoption and retention.",
+      logo: "/augmentor-dark.svg",
+      detail: {
+        type: 'experience' as const,
+        id: 0,
+        company: "Augmentor Labs",
+        role: "Software Engineer, Growth Team",
+        date: "Jan 2026 – Current",
+        location: "New York / Remote",
+        logo: "/augmentor-dark.svg",
+        timeline: [
+          { month: "Month 1", description: "Joined the growth team. Ramping up on the product, growth metrics, and experimentation framework. Contributing to user acquisition features." },
+          { month: "Month 2", description: "Building engagement features and running experiments to drive platform adoption and retention." }
+        ],
+        reflection: "",
+        skillsLearned: ["Growth Engineering", "Experimentation", "Product Analytics"],
+        techStack: ["TypeScript", "React", "Python", "FastAPI"]
+      } satisfies ExperienceDetail
+    },
+    {
       id: 1,
       company: "Augmentor Labs",
       role: "Software Engineering Intern, Cloud Infrastructure Team",
+      date: "Jan – Apr 2025",
       location: "Palo Alto, CA",
       description: "Built event ingestion pipelines to S3/DynamoDB, webhook integrations for GitHub/Jira/Salesforce, and observability systems with dashboards and alerts. Reduced p95 ingestion latency by 35% and dropped mean-time-to-detect by 42%.",
       logo: "/augmentor-dark.svg",
@@ -31,6 +57,8 @@ const Experience = ({ onCardClick }: ExperienceProps) => {
         id: 1,
         company: "Augmentor Labs",
         role: "Software Engineering Intern, Cloud Infrastructure Team",
+        date: "Jan – Apr 2025",
+        location: "Palo Alto, CA",
         logo: "/augmentor-dark.svg",
         timeline: [
           { month: "Month 1", description: "Onboarded to the cloud infrastructure team. Learned internal tooling, AWS architecture patterns, and the event-driven ingestion pipeline. Set up local development environment and completed first small PRs." },
@@ -47,6 +75,7 @@ const Experience = ({ onCardClick }: ExperienceProps) => {
       id: 2,
       company: "CIBC",
       role: "Data Scientist Intern, Technology Operations",
+      date: "Jan – Apr 2024",
       location: "Toronto, ON",
       description: "Owned data contracts and CI/CD pipelines with GitHub Actions. Implemented feature flags, blue/green and canary rollouts. Created release/SLO dashboards for latency, error rate, and CTR impact.",
       logo: "/cibc-dark.svg",
@@ -56,6 +85,8 @@ const Experience = ({ onCardClick }: ExperienceProps) => {
         id: 2,
         company: "CIBC",
         role: "Data Scientist Intern, Technology Operations",
+        date: "Jan – Apr 2024",
+        location: "Toronto, ON",
         logo: "/cibc-dark.svg",
         timeline: [
           { month: "Month 1", description: "Onboarded to Technology Operations. Learned internal data platform, CI/CD workflows, and deployment strategies. Began owning data contracts for cross-team pipelines." },

@@ -31,6 +31,8 @@ export interface ExperienceDetail {
   id: number;
   company: string;
   role: string;
+  date?: string;
+  location?: string;
   logo?: string;
   timeline: TimelineEntry[];
   reflection: string;
@@ -305,6 +307,11 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
           <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', margin: '0.25rem 0 0', fontSize: '0.95rem' }}>
             {detail.role}
           </p>
+          {(detail.date || detail.location) && (
+            <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.4)', margin: '0.15rem 0 0', fontSize: '0.85rem' }}>
+              {[detail.date, detail.location].filter(Boolean).join(' · ')}
+            </p>
+          )}
         </div>
       </div>
 

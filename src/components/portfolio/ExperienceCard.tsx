@@ -2,6 +2,7 @@ interface ExperienceData {
   id: number;
   company: string;
   role: string;
+  date?: string;
   location: string;
   description: string;
   logo?: string;
@@ -122,7 +123,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
         }}>
           <h3 style={{
             fontSize: 'clamp(1rem, 2.5vw, 1.3rem)',
-            color: 'rgba(255, 255, 255, 0.75)',
+            color: 'rgba(255, 255, 255, 0.95)',
             fontFamily: 'NeueMontreal-Medium, sans-serif',
             fontStyle: 'normal',
             margin: 0,
@@ -151,6 +152,19 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
           }}>
             {experience.role}
           </p>
+          {experience.date && (
+            <p style={{
+              fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
+              color: 'rgba(255, 255, 255, 0.5)',
+              fontFamily: 'NeueMontreal-Light, sans-serif',
+              margin: '0.15rem 0 0',
+              fontWeight: '300',
+              userSelect: 'none',
+              WebkitUserSelect: 'none'
+            }}>
+              {experience.date}
+            </p>
+          )}
         </div>
 
         {/* Location */}
@@ -172,7 +186,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
         {/* Description */}
         <p style={{
           fontSize: 'clamp(0.95rem, 2.3vw, 1.1rem)',
-          color: 'rgba(255, 255, 255, 0.85)',
+          color: 'rgba(255, 255, 255, 0.9)',
           fontFamily: 'NeueMontreal-Light, sans-serif',
           lineHeight: '1.6',
           margin: 0,
