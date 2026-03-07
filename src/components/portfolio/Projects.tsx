@@ -186,8 +186,7 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
         zIndex: 10,
         width: '90%',
         maxWidth: '1200px',
-        minWidth: '320px',
-        overflow: 'hidden'
+        minWidth: '320px'
       }}
     >
       {/* Section Title */}
@@ -211,38 +210,30 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
       <div
         className="projects-carousel"
         style={{
-          position: 'relative',
           opacity: cardAnimated ? 1 : 0,
           transform: cardAnimated ? 'translateY(0)' : 'translateY(20px)',
           transition: 'opacity 0.8s ease-out 0.15s, transform 0.8s ease-out 0.15s'
         }}
       >
-        {/* Prev / Next Arrows — hidden at boundaries */}
-        <button
-          onClick={(e) => { e.stopPropagation(); goPrev(); }}
-          aria-label="Previous projects"
-          className={`proj-nav-btn proj-nav-prev${pageIndex === 0 ? ' proj-nav-hidden' : ''}`}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); goNext(); }}
-          aria-label="Next projects"
-          className={`proj-nav-btn proj-nav-next${pageIndex >= totalPages - 1 ? ' proj-nav-hidden' : ''}`}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
+        {/* Row: [prev] [cards] [next] */}
+        <div className="projects-carousel-row">
+          {/* Prev Arrow */}
+          <button
+            onClick={(e) => { e.stopPropagation(); goPrev(); }}
+            aria-label="Previous projects"
+            className={`proj-nav-btn${pageIndex === 0 ? ' proj-nav-hidden' : ''}`}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
 
-        {/* Cards Grid — 2 per page */}
-        <div
-          key={pageIndex}
-          className="projects-page-grid"
-          style={{ animation: 'projFadeSlide 0.4s ease-out forwards' }}
-        >
+          {/* Cards Grid — 2 per page */}
+          <div
+            key={pageIndex}
+            className="projects-page-grid"
+            style={{ animation: 'projFadeSlide 0.4s ease-out forwards' }}
+          >
           {pageProjects.map((project) => (
             <div
               key={project.id}
@@ -313,6 +304,18 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
               </p>
             </div>
           ))}
+          </div>
+
+          {/* Next Arrow */}
+          <button
+            onClick={(e) => { e.stopPropagation(); goNext(); }}
+            aria-label="Next projects"
+            className={`proj-nav-btn${pageIndex >= totalPages - 1 ? ' proj-nav-hidden' : ''}`}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
         </div>
 
         {/* Dot Indicators — one per page */}
@@ -351,10 +354,18 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           to { opacity: 1; transform: translateX(0); }
         }
 
+        .projects-carousel-row {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
         .projects-page-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 1.5rem;
+          flex: 1;
+          min-width: 0;
         }
 
         .glass-project-card {
@@ -405,17 +416,12 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
         }
 
         .proj-nav-btn {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          z-index: 5;
+          flex-shrink: 0;
           width: 36px;
           height: 36px;
           border-radius: 50%;
           border: 0.5px solid rgba(255, 255, 255, 0.2);
           background: rgba(255, 255, 255, 0.08);
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
           color: rgba(255, 255, 255, 0.6);
           display: flex;
           align-items: center;
@@ -436,9 +442,6 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           pointer-events: none;
         }
 
-        .proj-nav-prev { left: 12px; }
-        .proj-nav-next { right: 12px; }
-
         @media (max-width: 768px) {
           .projects-container {
             width: calc(95% - 40px) !important;
@@ -448,8 +451,6 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           .projects-page-grid {
             grid-template-columns: 1fr !important;
           }
-          .proj-nav-prev { left: 8px; }
-          .proj-nav-next { right: 8px; }
           .proj-nav-btn { width: 32px; height: 32px; }
         }
 
