@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { getTagColor } from './tagColors';
 
 // ─── Type Definitions ───────────────────────────────────────
 
@@ -392,32 +393,90 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
       )}
 
       {/* Reflection */}
-      {detail.reflection && (
-        <div style={{ marginBottom: '2rem' }}>
-          <h3 style={sectionTitleStyle}>Reflection</h3>
-          <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: '1.7', margin: 0 }}>
-            {detail.reflection}
-          </p>
-        </div>
-      )}
+      {detail.reflection && (() => {
+        const unlocked = hoveredIndex >= detail.timeline.length - 1;
+        return (
+          <div style={{ marginBottom: '2rem', transition: 'opacity 0.5s ease', opacity: unlocked ? 1 : 0.7 }}>
+            <h3 style={{
+              ...sectionTitleStyle,
+              color: unlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
+              transition: 'color 0.5s ease'
+            }}>Reflection</h3>
+            <p style={{
+              fontFamily: 'NeueMontreal-Light, sans-serif',
+              color: unlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)',
+              fontSize: '0.9rem',
+              lineHeight: '1.7',
+              margin: 0,
+              transition: 'color 0.5s ease'
+            }}>
+              {detail.reflection}
+            </p>
+          </div>
+        );
+      })()}
 
       {/* Skills + Tech */}
-      {detail.skillsLearned.length > 0 && (
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h3 style={sectionTitleStyle}>Skills Learned</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            {detail.skillsLearned.map((s, i) => <span key={i} style={tagStyle}>{s}</span>)}
+      {detail.skillsLearned.length > 0 && (() => {
+        const unlocked = hoveredIndex >= detail.timeline.length - 1;
+        return (
+          <div style={{ marginBottom: '1.5rem', transition: 'opacity 0.5s ease', opacity: unlocked ? 1 : 0.7 }}>
+            <h3 style={{
+              ...sectionTitleStyle,
+              color: unlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
+              transition: 'color 0.5s ease'
+            }}>Skills Learned</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {detail.skillsLearned.map((s, i) => {
+                const tc = getTagColor(s);
+                return (
+                  <span key={i} style={{
+                    fontFamily: 'NeueMontreal-Light, sans-serif',
+                    fontSize: '0.8rem',
+                    color: unlocked ? tc.text : 'rgba(255, 255, 255, 0.65)',
+                    padding: '0.3rem 0.75rem',
+                    borderRadius: '20px',
+                    background: unlocked ? tc.bg : 'rgba(255, 255, 255, 0.08)',
+                    border: `0.5px solid ${unlocked ? tc.border : 'rgba(255, 255, 255, 0.12)'}`,
+                    transition: 'all 0.5s ease',
+                    transitionDelay: unlocked ? `${i * 0.06}s` : '0s'
+                  }}>{s}</span>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
-      {detail.techStack.length > 0 && (
-        <div>
-          <h3 style={sectionTitleStyle}>Tech Stack</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            {detail.techStack.map((t, i) => <span key={i} style={tagStyle}>{t}</span>)}
+        );
+      })()}
+      {detail.techStack.length > 0 && (() => {
+        const unlocked = hoveredIndex >= detail.timeline.length - 1;
+        return (
+          <div style={{ transition: 'opacity 0.5s ease', opacity: unlocked ? 1 : 0.7 }}>
+            <h3 style={{
+              ...sectionTitleStyle,
+              color: unlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
+              transition: 'color 0.5s ease'
+            }}>Tech Stack</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {detail.techStack.map((t, i) => {
+                const tc = getTagColor(t);
+                return (
+                  <span key={i} style={{
+                    fontFamily: 'NeueMontreal-Light, sans-serif',
+                    fontSize: '0.8rem',
+                    color: unlocked ? tc.text : 'rgba(255, 255, 255, 0.65)',
+                    padding: '0.3rem 0.75rem',
+                    borderRadius: '20px',
+                    background: unlocked ? tc.bg : 'rgba(255, 255, 255, 0.08)',
+                    border: `0.5px solid ${unlocked ? tc.border : 'rgba(255, 255, 255, 0.12)'}`,
+                    transition: 'all 0.5s ease',
+                    transitionDelay: unlocked ? `${i * 0.06}s` : '0s'
+                  }}>{t}</span>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };
