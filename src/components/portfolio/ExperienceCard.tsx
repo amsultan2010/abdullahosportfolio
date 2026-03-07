@@ -6,6 +6,8 @@ interface ExperienceData {
   description: string;
   logo?: string;
   logo2?: string;
+  logoSize?: number;
+  logoRound?: boolean;
 }
 
 interface ExperienceCardProps {
@@ -45,15 +47,14 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
       <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
         <div className="company-icon" style={{
           flexShrink: 0,
-          width: '50px',
-          height: '50px',
-          borderRadius: '10px',
+          width: `${experience.logoSize || 50}px`,
+          height: `${experience.logoSize || 50}px`,
+          borderRadius: experience.logoRound ? '50%' : '10px',
           overflow: 'hidden',
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          minWidth: '50px'
+          minWidth: `${experience.logoSize || 50}px`
         }}>
           {experience.logo ? (
             <img
@@ -79,15 +80,14 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
         {experience.logo2 && (
           <div className="company-icon" style={{
             flexShrink: 0,
-            width: '50px',
-            height: '50px',
-            borderRadius: '10px',
+            width: `${experience.logoSize || 50}px`,
+            height: `${experience.logoSize || 50}px`,
+            borderRadius: experience.logoRound ? '50%' : '10px',
             overflow: 'hidden',
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            minWidth: '50px'
+            minWidth: `${experience.logoSize || 50}px`
           }}>
             <img
               src={experience.logo2}

@@ -26,6 +26,8 @@ const Education = ({ onCardClick }: EducationProps) => {
       location: "Waterloo, ON",
       description: "Bachelor of Science in Computer Science (Management Option). Currently enrolled.",
       logo: "/laurier-seal.png",
+      logoRound: true,
+      logoSize: 55,
       detail: {
         type: 'education' as const,
         id: 1,
@@ -33,15 +35,20 @@ const Education = ({ onCardClick }: EducationProps) => {
         logo: "/laurier-seal.png",
         gpa: "",
         courses: [
-          { code: "CP104", name: "Introduction to Programming" },
-          { code: "CP164", name: "Data Structures" },
-          { code: "CP264", name: "Data Structures & Algorithms II" },
+          // Year 2
+          { code: "CP213", name: "Introduction to Object-Oriented Programming" },
+          { code: "CP214", name: "Discrete Structures for Computer Science" },
+          { code: "CP216", name: "Introduction to Microprocessors" },
+          { code: "CP220", name: "Digital Electronics" },
+          { code: "CP264", name: "Data Structures II" },
+          // Year 3
+          { code: "CP312", name: "Algorithm Design and Analysis I" },
           { code: "CP317", name: "Software Engineering" },
-          { code: "CP363", name: "Database Systems" },
+          { code: "CP363", name: "Database I" },
           { code: "CP372", name: "Computer Networks" },
-          { code: "MA103", name: "Calculus I" },
-          { code: "MA122", name: "Linear Algebra" },
-          { code: "ST230", name: "Probability & Statistics" }
+          { code: "CP373", name: "Ethics and Professional Practice in CS" },
+          { code: "CP386", name: "Operating Systems" },
+          { code: "ST230", name: "Probability and Statistics for Science" }
         ],
         activities: [
           "Laurier Computing Society",
@@ -61,6 +68,8 @@ const Education = ({ onCardClick }: EducationProps) => {
       description: "Enrolled in University of Waterloo Computer Science & Wilfrid Laurier BBA double degree program. Sep 2023 – 2025.",
       logo: "/waterloo-logo.png",
       logo2: "/laurier-seal.png",
+      logoRound: true,
+      logoSize: 55,
       detail: {
         type: 'education' as const,
         id: 2,
@@ -69,16 +78,33 @@ const Education = ({ onCardClick }: EducationProps) => {
         logo2: "/laurier-seal.png",
         gpa: "",
         courses: [
-          { code: "CS135", name: "Designing Functional Programs" },
-          { code: "CS136", name: "Elementary Algorithm Design" },
-          { code: "MATH135", name: "Algebra for Honours Mathematics" },
-          { code: "MATH136", name: "Linear Algebra 1" },
-          { code: "MATH137", name: "Calculus 1" },
-          { code: "MATH138", name: "Calculus 2" },
-          { code: "BU111", name: "Introduction to Business Organization" },
-          { code: "BU121", name: "Functional Areas of the Organization" },
-          { code: "EC120", name: "Introduction to Microeconomics" },
-          { code: "EC140", name: "Introduction to Macroeconomics" }
+          // Year 1 - Waterloo CS & Math
+          { code: "CS 135", name: "Designing Functional Programs" },
+          { code: "CS 136", name: "Elementary Algorithm Design and Data Abstraction" },
+          { code: "MATH 135", name: "Algebra for Honours Mathematics" },
+          { code: "MATH 136", name: "Linear Algebra 1 for Honours Mathematics" },
+          { code: "MATH 137", name: "Calculus 1 for Honours Mathematics" },
+          { code: "MATH 138", name: "Calculus 2 for Honours Mathematics" },
+          // Year 1 - Laurier BBA
+          { code: "BU 111", name: "Understanding the Business Environment" },
+          { code: "BU 121", name: "Functional Areas of the Organization" },
+          { code: "EC 120", name: "Introduction to Microeconomics" },
+          { code: "EC 140", name: "Introduction to Macroeconomics" },
+          // Year 2 - Waterloo CS & Math
+          { code: "CS 245", name: "Logic and Computation" },
+          { code: "CS 246", name: "Object-Oriented Software Development" },
+          { code: "CS 241", name: "Foundations of Sequential Programs" },
+          { code: "CS 251", name: "Computer Organization and Design" },
+          { code: "STAT 230", name: "Probability" },
+          { code: "STAT 231", name: "Statistics" },
+          { code: "MATH 239", name: "Introduction to Combinatorics" },
+          { code: "CO 250", name: "Introduction to Optimization" },
+          // Year 2 - Laurier BBA
+          { code: "BU 127", name: "Introduction to Financial Accounting" },
+          { code: "BU 283", name: "Financial Management I" },
+          { code: "BU 288", name: "Organizational Behaviour I" },
+          { code: "BU 231", name: "Business Law" },
+          { code: "BU 247", name: "Managerial Accounting" }
         ],
         activities: [
           "University of Waterloo Computer Science Club",

@@ -269,7 +269,7 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => (
     {/* Header */}
     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
       {detail.logo && (
-        <img src={detail.logo} alt="" style={{ width: '50px', height: '50px', borderRadius: '10px', objectFit: 'cover', background: 'rgba(255,255,255,0.1)', padding: '4px' }} />
+        <img src={detail.logo} alt="" style={{ width: '50px', height: '50px', borderRadius: '10px', objectFit: 'contain' }} />
       )}
       <div>
         <h2 style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', fontSize: '1.5rem', color: 'white', margin: 0 }}>
