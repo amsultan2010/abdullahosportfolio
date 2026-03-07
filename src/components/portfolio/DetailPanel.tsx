@@ -265,7 +265,21 @@ const EducationContent = ({ detail }: { detail: EducationDetail }) => (
 // ─── Experience Detail ──────────────────────────────────────
 
 const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
-  const [isHovered, setIsHovered] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState(-1);
+  const entryRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  // Calculate glow line height based on hovered entry position
+  const getGlowHeight = () => {
+    if (hoveredIndex < 0 || !trackRef.current) return '0%';
+    const entry = entryRefs.current[hoveredIndex];
+    if (!entry) return '0%';
+    const trackRect = trackRef.current.getBoundingClientRect();
+    const entryRect = entry.getBoundingClientRect();
+    // Glow line extends to the middle of the hovered entry's dot
+    const dotCenter = entryRect.top - trackRect.top + 10;
+    return `${dotCenter}px`;
+  };
 
   return (
     <div>
@@ -289,9 +303,9 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
         <div style={{ marginBottom: '2rem' }}>
           <h3 style={sectionTitleStyle}>Timeline</h3>
           <div
+            ref={trackRef}
             className="timeline-track"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseLeave={() => setHoveredIndex(-1)}
             style={{ position: 'relative', paddingLeft: '1.5rem' }}
           >
             {/* Static base line */}
@@ -303,89 +317,77 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
               height: '100%',
               background: 'rgba(255,255,255,0.1)'
             }} />
-            {/* Animated glow line */}
+            {/* Glow line - grows to hovered entry */}
             <div style={{
               position: 'absolute',
               left: '-1px',
               top: 0,
               width: '4px',
-              height: '100%',
-              background: isHovered
-                ? 'linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 30%, rgba(255,255,255,0.1) 60%, transparent 100%)'
-                : 'transparent',
-              filter: isHovered ? 'blur(1px)' : 'none',
-              animation: isHovered ? 'timelineGlowTravel 1.8s ease-out forwards' : 'none',
-              borderRadius: '2px'
+              height: hoveredIndex >= 0 ? getGlowHeight() : '0px',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 60%, rgba(255,255,255,0.8) 100%)',
+              filter: 'blur(1px)',
+              transition: 'height 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+              borderRadius: '2px',
+              opacity: hoveredIndex >= 0 ? 1 : 0
             }} />
 
-            {detail.timeline.map((entry, i) => (
-              <div key={i} style={{ marginBottom: '1.5rem', position: 'relative' }}>
-                {/* Dot */}
+            {detail.timeline.map((entry, i) => {
+              const isActive = hoveredIndex >= 0 && i <= hoveredIndex;
+              const isDirectHover = i === hoveredIndex;
+
+              return (
                 <div
-                  className={isHovered ? 'timeline-dot-glow' : ''}
+                  key={i}
+                  ref={(el) => { entryRefs.current[i] = el; }}
+                  onMouseEnter={() => setHoveredIndex(i)}
                   style={{
+                    marginBottom: '1.5rem',
+                    position: 'relative',
+                    cursor: 'default',
+                    padding: '0.25rem 0'
+                  }}
+                >
+                  {/* Dot */}
+                  <div style={{
                     position: 'absolute',
                     left: '-1.75rem',
                     top: '0.35rem',
                     width: '10px',
                     height: '10px',
                     borderRadius: '50%',
-                    background: isHovered ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)',
-                    border: `2px solid ${isHovered ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)'}`,
-                    boxShadow: isHovered ? '0 0 8px rgba(255,255,255,0.6), 0 0 16px rgba(255,255,255,0.2)' : 'none',
-                    transition: 'all 0.4s ease',
-                    transitionDelay: isHovered ? `${i * 0.4}s` : '0s',
-                    opacity: isHovered ? 1 : 0.7,
-                    animationDelay: isHovered ? `${i * 0.4}s` : '0s'
-                  }}
-                />
-                <p style={{
-                  fontFamily: 'NeueMontreal-Medium, sans-serif',
-                  color: isHovered ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.8)',
-                  fontSize: '0.9rem',
-                  margin: '0 0 0.25rem',
-                  transition: 'color 0.4s ease',
-                  transitionDelay: isHovered ? `${i * 0.4}s` : '0s'
-                }}>
-                  {entry.month}
-                </p>
-                <p style={{
-                  fontFamily: 'NeueMontreal-Light, sans-serif',
-                  color: isHovered ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.55)',
-                  fontSize: '0.85rem',
-                  margin: 0,
-                  lineHeight: '1.5',
-                  transition: 'color 0.4s ease',
-                  transitionDelay: isHovered ? `${i * 0.4}s` : '0s'
-                }}>
-                  {entry.description}
-                </p>
-              </div>
-            ))}
+                    background: isActive ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.3)',
+                    border: `2px solid ${isActive ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.15)'}`,
+                    boxShadow: isActive
+                      ? (isDirectHover
+                        ? '0 0 10px rgba(255,255,255,0.7), 0 0 20px rgba(255,255,255,0.3)'
+                        : '0 0 6px rgba(255,255,255,0.5), 0 0 12px rgba(255,255,255,0.15)')
+                      : 'none',
+                    transition: 'all 0.35s ease',
+                    opacity: isActive ? 1 : 0.6
+                  }} />
+                  <p style={{
+                    fontFamily: 'NeueMontreal-Medium, sans-serif',
+                    color: isDirectHover ? 'rgb(255,255,255)' : (isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)'),
+                    fontSize: '0.9rem',
+                    margin: '0 0 0.25rem',
+                    transition: 'color 0.3s ease'
+                  }}>
+                    {entry.month}
+                  </p>
+                  <p style={{
+                    fontFamily: 'NeueMontreal-Light, sans-serif',
+                    color: isDirectHover ? 'rgba(255,255,255,0.95)' : (isActive ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.35)'),
+                    fontSize: '0.85rem',
+                    margin: 0,
+                    lineHeight: '1.5',
+                    transition: 'color 0.3s ease'
+                  }}>
+                    {entry.description}
+                  </p>
+                </div>
+              );
+            })}
           </div>
-
-          <style>{`
-            @keyframes timelineGlowTravel {
-              0% {
-                clip-path: inset(0 0 100% 0);
-                opacity: 0;
-              }
-              10% {
-                opacity: 1;
-              }
-              100% {
-                clip-path: inset(0 0 0% 0);
-                opacity: 1;
-              }
-            }
-            .timeline-dot-glow {
-              animation: dotPulse 2s ease-in-out infinite;
-            }
-            @keyframes dotPulse {
-              0%, 100% { box-shadow: 0 0 6px rgba(255,255,255,0.4), 0 0 12px rgba(255,255,255,0.15); }
-              50% { box-shadow: 0 0 10px rgba(255,255,255,0.7), 0 0 20px rgba(255,255,255,0.3); }
-            }
-          `}</style>
         </div>
       )}
 

@@ -283,6 +283,16 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           transition: all 0.3s ease;
         }
 
+        .glass-project-card h3,
+        .glass-project-card p {
+          transition: color 0.3s ease !important;
+        }
+
+        .glass-project-card:hover h3,
+        .glass-project-card:hover p {
+          color: rgb(255, 255, 255) !important;
+        }
+
         .glass-project-card::before {
           content: '';
           position: absolute;
