@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // ─── Type Definitions ───────────────────────────────────────
 
@@ -264,82 +264,161 @@ const EducationContent = ({ detail }: { detail: EducationDetail }) => (
 
 // ─── Experience Detail ──────────────────────────────────────
 
-const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => (
-  <div>
-    {/* Header */}
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-      {detail.logo && (
-        <img src={detail.logo} alt="" style={{ width: '50px', height: '50px', borderRadius: '10px', objectFit: 'contain' }} />
+const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+        {detail.logo && (
+          <img src={detail.logo} alt="" style={{ width: '50px', height: '50px', borderRadius: '10px', objectFit: 'contain' }} />
+        )}
+        <div>
+          <h2 style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', fontSize: '1.5rem', color: 'white', margin: 0 }}>
+            {detail.company}
+          </h2>
+          <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', margin: '0.25rem 0 0', fontSize: '0.95rem' }}>
+            {detail.role}
+          </p>
+        </div>
+      </div>
+
+      {/* Timeline */}
+      {detail.timeline.length > 0 && (
+        <div style={{ marginBottom: '2rem' }}>
+          <h3 style={sectionTitleStyle}>Timeline</h3>
+          <div
+            className="timeline-track"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            style={{ position: 'relative', paddingLeft: '1.5rem' }}
+          >
+            {/* Static base line */}
+            <div style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: '2px',
+              height: '100%',
+              background: 'rgba(255,255,255,0.1)'
+            }} />
+            {/* Animated glow line */}
+            <div style={{
+              position: 'absolute',
+              left: '-1px',
+              top: 0,
+              width: '4px',
+              height: '100%',
+              background: isHovered
+                ? 'linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 30%, rgba(255,255,255,0.1) 60%, transparent 100%)'
+                : 'transparent',
+              filter: isHovered ? 'blur(1px)' : 'none',
+              animation: isHovered ? 'timelineGlowTravel 1.8s ease-out forwards' : 'none',
+              borderRadius: '2px'
+            }} />
+
+            {detail.timeline.map((entry, i) => (
+              <div key={i} style={{ marginBottom: '1.5rem', position: 'relative' }}>
+                {/* Dot */}
+                <div
+                  className={isHovered ? 'timeline-dot-glow' : ''}
+                  style={{
+                    position: 'absolute',
+                    left: '-1.75rem',
+                    top: '0.35rem',
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    background: isHovered ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)',
+                    border: `2px solid ${isHovered ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)'}`,
+                    boxShadow: isHovered ? '0 0 8px rgba(255,255,255,0.6), 0 0 16px rgba(255,255,255,0.2)' : 'none',
+                    transition: 'all 0.4s ease',
+                    transitionDelay: isHovered ? `${i * 0.4}s` : '0s',
+                    opacity: isHovered ? 1 : 0.7,
+                    animationDelay: isHovered ? `${i * 0.4}s` : '0s'
+                  }}
+                />
+                <p style={{
+                  fontFamily: 'NeueMontreal-Medium, sans-serif',
+                  color: isHovered ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.8)',
+                  fontSize: '0.9rem',
+                  margin: '0 0 0.25rem',
+                  transition: 'color 0.4s ease',
+                  transitionDelay: isHovered ? `${i * 0.4}s` : '0s'
+                }}>
+                  {entry.month}
+                </p>
+                <p style={{
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
+                  color: isHovered ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.55)',
+                  fontSize: '0.85rem',
+                  margin: 0,
+                  lineHeight: '1.5',
+                  transition: 'color 0.4s ease',
+                  transitionDelay: isHovered ? `${i * 0.4}s` : '0s'
+                }}>
+                  {entry.description}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <style>{`
+            @keyframes timelineGlowTravel {
+              0% {
+                clip-path: inset(0 0 100% 0);
+                opacity: 0;
+              }
+              10% {
+                opacity: 1;
+              }
+              100% {
+                clip-path: inset(0 0 0% 0);
+                opacity: 1;
+              }
+            }
+            .timeline-dot-glow {
+              animation: dotPulse 2s ease-in-out infinite;
+            }
+            @keyframes dotPulse {
+              0%, 100% { box-shadow: 0 0 6px rgba(255,255,255,0.4), 0 0 12px rgba(255,255,255,0.15); }
+              50% { box-shadow: 0 0 10px rgba(255,255,255,0.7), 0 0 20px rgba(255,255,255,0.3); }
+            }
+          `}</style>
+        </div>
       )}
-      <div>
-        <h2 style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', fontSize: '1.5rem', color: 'white', margin: 0 }}>
-          {detail.company}
-        </h2>
-        <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', margin: '0.25rem 0 0', fontSize: '0.95rem' }}>
-          {detail.role}
-        </p>
-      </div>
+
+      {/* Reflection */}
+      {detail.reflection && (
+        <div style={{ marginBottom: '2rem' }}>
+          <h3 style={sectionTitleStyle}>Reflection</h3>
+          <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: '1.7', margin: 0 }}>
+            {detail.reflection}
+          </p>
+        </div>
+      )}
+
+      {/* Skills + Tech */}
+      {detail.skillsLearned.length > 0 && (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h3 style={sectionTitleStyle}>Skills Learned</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {detail.skillsLearned.map((s, i) => <span key={i} style={tagStyle}>{s}</span>)}
+          </div>
+        </div>
+      )}
+      {detail.techStack.length > 0 && (
+        <div>
+          <h3 style={sectionTitleStyle}>Tech Stack</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {detail.techStack.map((t, i) => <span key={i} style={tagStyle}>{t}</span>)}
+          </div>
+        </div>
+      )}
     </div>
-
-    {/* Timeline */}
-    {detail.timeline.length > 0 && (
-      <div style={{ marginBottom: '2rem' }}>
-        <h3 style={sectionTitleStyle}>Timeline</h3>
-        <div style={{ position: 'relative', paddingLeft: '1.5rem', borderLeft: '2px solid rgba(255,255,255,0.15)' }}>
-          {detail.timeline.map((entry, i) => (
-            <div key={i} style={{ marginBottom: '1.5rem', position: 'relative' }}>
-              {/* Dot */}
-              <div style={{
-                position: 'absolute',
-                left: '-1.75rem',
-                top: '0.35rem',
-                width: '10px',
-                height: '10px',
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.4)',
-                border: '2px solid rgba(255,255,255,0.2)'
-              }} />
-              <p style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', margin: '0 0 0.25rem' }}>
-                {entry.month}
-              </p>
-              <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.55)', fontSize: '0.85rem', margin: 0, lineHeight: '1.5' }}>
-                {entry.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-
-    {/* Reflection */}
-    {detail.reflection && (
-      <div style={{ marginBottom: '2rem' }}>
-        <h3 style={sectionTitleStyle}>Reflection</h3>
-        <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: '1.7', margin: 0 }}>
-          {detail.reflection}
-        </p>
-      </div>
-    )}
-
-    {/* Skills + Tech */}
-    {detail.skillsLearned.length > 0 && (
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h3 style={sectionTitleStyle}>Skills Learned</h3>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-          {detail.skillsLearned.map((s, i) => <span key={i} style={tagStyle}>{s}</span>)}
-        </div>
-      </div>
-    )}
-    {detail.techStack.length > 0 && (
-      <div>
-        <h3 style={sectionTitleStyle}>Tech Stack</h3>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-          {detail.techStack.map((t, i) => <span key={i} style={tagStyle}>{t}</span>)}
-        </div>
-      </div>
-    )}
-  </div>
-);
+  );
+};
 
 // ─── Project Detail ─────────────────────────────────────────
 

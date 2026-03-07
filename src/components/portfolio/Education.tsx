@@ -90,11 +90,7 @@ const Education = ({ onCardClick }: EducationProps) => {
           { code: "BU 121", name: "Functional Areas of the Organization" },
           { code: "EC 120", name: "Introduction to Microeconomics" },
           { code: "EC 140", name: "Introduction to Macroeconomics" },
-          // Year 2 - Waterloo CS & Math
-          { code: "CS 245", name: "Logic and Computation" },
-          { code: "CS 246", name: "Object-Oriented Software Development" },
-          { code: "CS 241", name: "Foundations of Sequential Programs" },
-          { code: "CS 251", name: "Computer Organization and Design" },
+          // Year 2 - Waterloo Math & Stats
           { code: "STAT 230", name: "Probability" },
           { code: "STAT 231", name: "Statistics" },
           { code: "MATH 239", name: "Introduction to Combinatorics" },
