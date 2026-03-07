@@ -223,7 +223,7 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           aria-label="Previous projects"
           className={`proj-nav-btn proj-nav-prev${pageIndex === 0 ? ' proj-nav-hidden' : ''}`}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
@@ -232,7 +232,7 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           aria-label="Next projects"
           className={`proj-nav-btn proj-nav-next${pageIndex >= totalPages - 1 ? ' proj-nav-hidden' : ''}`}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
@@ -409,23 +409,26 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           top: 50%;
           transform: translateY(-50%);
           z-index: 5;
-          width: 40px;
-          height: 40px;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
           border: 0.5px solid rgba(255, 255, 255, 0.2);
           background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           color: rgba(255, 255, 255, 0.6);
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: all 0.25s ease;
           padding: 0;
         }
 
         .proj-nav-btn:hover {
-          background: rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.18);
           color: white;
+          border-color: rgba(255, 255, 255, 0.35);
         }
 
         .proj-nav-btn.proj-nav-hidden {
@@ -433,13 +436,8 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           pointer-events: none;
         }
 
-        .proj-nav-prev { left: -50px; }
-        .proj-nav-next { right: -50px; }
-
-        @media (max-width: 1200px) {
-          .proj-nav-prev { left: -10px; }
-          .proj-nav-next { right: -10px; }
-        }
+        .proj-nav-prev { left: 12px; }
+        .proj-nav-next { right: 12px; }
 
         @media (max-width: 768px) {
           .projects-container {
@@ -450,9 +448,9 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           .projects-page-grid {
             grid-template-columns: 1fr !important;
           }
-          .proj-nav-prev { left: -5px; }
-          .proj-nav-next { right: -5px; }
-          .proj-nav-btn { width: 34px; height: 34px; }
+          .proj-nav-prev { left: 8px; }
+          .proj-nav-next { right: 8px; }
+          .proj-nav-btn { width: 32px; height: 32px; }
         }
 
         @media (max-width: 480px) {
