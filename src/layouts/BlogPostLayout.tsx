@@ -3,6 +3,7 @@ import { FaRegFolderClosed } from 'react-icons/fa6';
 import MobileDock from '../components/global/MobileDock';
 import DesktopDock from '../components/global/DesktopDock';
 import Nav from '../components/global/Nav';
+import Background from '../components/portfolio/Background';
 
 interface BlogPostLayoutProps {
   title: string;
@@ -47,11 +48,8 @@ export default function BlogPostLayout({
 
   return (
     <div className="relative w-screen min-h-screen overflow-x-hidden">
-      {/* Background */}
-      <div
-        className="fixed inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${backgroundMap[currentBg]})` }}
-      />
+      {/* WebGL Background */}
+      <Background />
 
       {/* Navbar */}
       <div className="relative z-10">
@@ -73,7 +71,7 @@ export default function BlogPostLayout({
           </div>
 
           {/* Blog Post Terminal Window */}
-          <div className="glass rounded-lg overflow-hidden shadow-2xl">
+          <div className="glass-pane rounded-lg overflow-hidden shadow-2xl">
             {/* Terminal Title Bar */}
             <div className="h-6 flex items-center space-x-2 px-4 border-b border-white/10">
               <div className="w-3 h-3 rounded-full bg-red-500"></div>

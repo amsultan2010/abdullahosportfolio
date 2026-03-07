@@ -3,6 +3,7 @@ import MobileDock from '../components/global/MobileDock';
 import DesktopDock from '../components/global/DesktopDock';
 import Nav from '../components/global/Nav';
 import BlogPostCard from '../components/BlogPostCard';
+import Background from '../components/portfolio/Background';
 
 interface BlogPost {
   title: string;
@@ -74,11 +75,8 @@ export default function BlogLayout({ posts, initialBg, backgroundMap, recentPost
 
   return (
     <div className="relative w-screen min-h-screen overflow-x-hidden">
-      {/* Background */}
-      <div
-        className="fixed inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${backgroundMap[currentBg]})` }}
-      />
+      {/* WebGL Background */}
+      <Background />
 
       {/* Navbar */}
       <div className="relative z-10">

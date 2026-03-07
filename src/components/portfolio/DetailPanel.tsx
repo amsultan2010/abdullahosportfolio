@@ -682,7 +682,7 @@ const RoleTimelineSection = ({ role, roleIndex, isLast, onUnlock }: {
         </p>
         <p style={{
           fontFamily: 'NeueMontreal-Light, sans-serif',
-          color: 'rgba(255,255,255,0.45)',
+          color: 'rgba(255,255,255,0.7)',
           fontSize: '0.85rem',
           margin: '0.15rem 0 0'
         }}>
@@ -1000,113 +1000,190 @@ const SingleRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =
 
 // ─── Project Detail ─────────────────────────────────────────
 
-const ProjectContent = ({ detail }: { detail: ProjectDetail }) => (
-  <div>
-    {/* Header — skip when video is showing on the left */}
-    {!detail.demoVideo && (
-      <div style={{
-        width: '100%',
-        height: '120px',
-        borderRadius: '12px',
-        background: detail.gradient,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: '1.5rem',
-        overflow: 'hidden'
-      }}>
-        {detail.coverImage ? (
-          <img
-            src={detail.coverImage}
-            alt={`${detail.title} preview`}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        ) : (
-          <h2 style={{
-            fontFamily: 'NeueMontreal-Medium, sans-serif',
-            fontSize: '2rem',
-            color: 'rgba(255,255,255,0.15)',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase'
-          }}>
-            {detail.title}
-          </h2>
-        )}
-      </div>
-    )}
+const ProjectContent = ({ detail }: { detail: ProjectDetail }) => {
+  const totalItems = detail.technicalChallenges.length + detail.lessonsLearned.length;
+  const challengeStart = 0.3;
+  const itemStagger = 0.07;
+  const challengeEnd = challengeStart + detail.technicalChallenges.length * itemStagger + 0.5;
+  const lessonsEnd = challengeEnd + 0.15 + detail.lessonsLearned.length * itemStagger + 0.5;
+  const techStart = lessonsEnd + 0.15;
+  const repoStart = techStart + detail.techStack.length * 0.05 + 0.4;
 
-    <h2 style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', fontSize: '1.5rem', color: 'white', margin: '0 0 1.5rem' }}>
-      {detail.title}
-    </h2>
+  return (
+    <div>
+      {/* Keyframes for project cascade */}
+      <style>{`
+        @keyframes projItemLightUp {
+          0% { opacity: 0.15; transform: translateX(-4px); }
+          100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes projSectionFadeIn {
+          0% { opacity: 0; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes projPillColorIn {
+          0% { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); color: rgba(255,255,255,0.25); }
+          100% { background: var(--pill-bg); border-color: var(--pill-border); color: var(--pill-text); }
+        }
+      `}</style>
 
-    {/* Architecture */}
-    {detail.architecture && (
-      <div style={{ marginBottom: '2rem' }}>
-        <h3 style={sectionTitleStyle}>Architecture</h3>
-        <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: '1.7', margin: 0 }}>
-          {detail.architecture}
-        </p>
-      </div>
-    )}
-
-    {/* Technical Challenges */}
-    {detail.technicalChallenges.length > 0 && (
-      <div style={{ marginBottom: '2rem' }}>
-        <h3 style={sectionTitleStyle}>Technical Challenges</h3>
-        <ol style={{ ...listStyle, paddingLeft: '1.25rem' }}>
-          {detail.technicalChallenges.map((c, i) => <li key={i} style={listItemStyle}>{c}</li>)}
-        </ol>
-      </div>
-    )}
-
-    {/* Lessons */}
-    {detail.lessonsLearned.length > 0 && (
-      <div style={{ marginBottom: '2rem' }}>
-        <h3 style={sectionTitleStyle}>Lessons Learned</h3>
-        <ul style={listStyle}>
-          {detail.lessonsLearned.map((l, i) => <li key={i} style={listItemStyle}>{l}</li>)}
-        </ul>
-      </div>
-    )}
-
-    {/* Tech Stack */}
-    {detail.techStack.length > 0 && (
-      <div style={{ marginBottom: '2rem' }}>
-        <h3 style={sectionTitleStyle}>Tech Stack</h3>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-          {detail.techStack.map((t, i) => <span key={i} style={tagStyle}>{t}</span>)}
-        </div>
-      </div>
-    )}
-
-    {/* Repo Link */}
-    {detail.repoUrl && (
-      <a
-        href={detail.repoUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          display: 'inline-flex',
+      {/* Header — skip when video is showing on the left */}
+      {!detail.demoVideo && (
+        <div style={{
+          width: '100%',
+          height: '120px',
+          borderRadius: '12px',
+          background: detail.gradient,
+          display: 'flex',
           alignItems: 'center',
-          gap: '0.5rem',
-          fontFamily: 'NeueMontreal-Medium, sans-serif',
-          color: 'rgba(255,255,255,0.7)',
-          fontSize: '0.9rem',
-          textDecoration: 'none',
-          padding: '0.6rem 1.2rem',
-          borderRadius: '8px',
-          border: '0.5px solid rgba(255,255,255,0.2)',
-          background: 'rgba(255,255,255,0.05)',
-          transition: 'all 0.2s ease'
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'white'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
-      >
-        View Repository →
-      </a>
-    )}
-  </div>
-);
+          justifyContent: 'center',
+          marginBottom: '1.5rem',
+          overflow: 'hidden'
+        }}>
+          {detail.coverImage ? (
+            <img
+              src={detail.coverImage}
+              alt={`${detail.title} preview`}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          ) : (
+            <h2 style={{
+              fontFamily: 'NeueMontreal-Medium, sans-serif',
+              fontSize: '2rem',
+              color: 'rgba(255,255,255,0.15)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase'
+            }}>
+              {detail.title}
+            </h2>
+          )}
+        </div>
+      )}
+
+      <h2 style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', fontSize: '1.5rem', color: 'white', margin: '0 0 1.5rem' }}>
+        {detail.title}
+      </h2>
+
+      {/* Architecture — fades in first */}
+      {detail.architecture && (
+        <div style={{
+          marginBottom: '2rem',
+          opacity: 0,
+          animation: `projSectionFadeIn 0.6s ease 0.15s forwards`
+        }}>
+          <h3 style={sectionTitleStyle}>Architecture</h3>
+          <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: '1.7', margin: 0 }}>
+            {detail.architecture}
+          </p>
+        </div>
+      )}
+
+      {/* Technical Challenges — cascade light-up */}
+      {detail.technicalChallenges.length > 0 && (
+        <div style={{ marginBottom: '2rem' }}>
+          <h3 style={{
+            ...sectionTitleStyle,
+            opacity: 0,
+            animation: `projSectionFadeIn 0.4s ease ${challengeStart - 0.1}s forwards`
+          }}>Technical Challenges</h3>
+          <ol style={{ ...listStyle, paddingLeft: '1.25rem' }}>
+            {detail.technicalChallenges.map((c, i) => (
+              <li key={i} style={{
+                ...listItemStyle,
+                opacity: 0.15,
+                animation: `projItemLightUp 0.5s ease ${challengeStart + i * itemStagger}s forwards`
+              }}>{c}</li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {/* Lessons Learned — cascade after challenges */}
+      {detail.lessonsLearned.length > 0 && (
+        <div style={{ marginBottom: '2rem' }}>
+          <h3 style={{
+            ...sectionTitleStyle,
+            opacity: 0,
+            animation: `projSectionFadeIn 0.4s ease ${challengeEnd}s forwards`
+          }}>Lessons Learned</h3>
+          <ul style={listStyle}>
+            {detail.lessonsLearned.map((l, i) => (
+              <li key={i} style={{
+                ...listItemStyle,
+                opacity: 0.15,
+                animation: `projItemLightUp 0.5s ease ${challengeEnd + 0.15 + i * itemStagger}s forwards`
+              }}>{l}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Tech Stack — pills light up with color */}
+      {detail.techStack.length > 0 && (
+        <div style={{
+          marginBottom: '2rem',
+          opacity: 0,
+          animation: `projSectionFadeIn 0.5s ease ${techStart}s forwards`
+        }}>
+          <h3 style={sectionTitleStyle}>Tech Stack</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {detail.techStack.map((t, i) => {
+              const tc = getTagColor(t);
+              return (
+                <span key={i} style={{
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
+                  fontSize: '0.8rem',
+                  padding: '0.3rem 0.75rem',
+                  borderRadius: '20px',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '0.5px solid rgba(255,255,255,0.08)',
+                  color: 'rgba(255,255,255,0.25)',
+                  // CSS custom properties for the target colors
+                  ['--pill-bg' as string]: tc.bg,
+                  ['--pill-border' as string]: tc.border,
+                  ['--pill-text' as string]: tc.text,
+                  animation: `projPillColorIn 0.5s ease ${techStart + 0.15 + i * 0.05}s forwards`,
+                }}>{t}</span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Repo Link — fades in last */}
+      {detail.repoUrl && (
+        <div style={{
+          opacity: 0,
+          animation: `projSectionFadeIn 0.5s ease ${repoStart}s forwards`
+        }}>
+          <a
+            href={detail.repoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontFamily: 'NeueMontreal-Medium, sans-serif',
+              color: 'rgba(255,255,255,0.7)',
+              fontSize: '0.9rem',
+              textDecoration: 'none',
+              padding: '0.6rem 1.2rem',
+              borderRadius: '8px',
+              border: '0.5px solid rgba(255,255,255,0.2)',
+              background: 'rgba(255,255,255,0.05)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'white'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+          >
+            View Repository →
+          </a>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ─── Shared Styles ──────────────────────────────────────────
 
