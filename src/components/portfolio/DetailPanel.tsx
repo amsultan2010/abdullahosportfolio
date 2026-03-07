@@ -267,8 +267,17 @@ const EducationContent = ({ detail }: { detail: EducationDetail }) => (
 
 const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
   const [hoveredIndex, setHoveredIndex] = useState(-1);
+  const [unlocked, setUnlocked] = useState(false);
   const entryRefs = useRef<(HTMLDivElement | null)[]>([]);
   const trackRef = useRef<HTMLDivElement>(null);
+
+  // Once the user reaches the last entry, lock the unlocked state permanently
+  const handleHover = (i: number) => {
+    setHoveredIndex(i);
+    if (i >= detail.timeline.length - 1) {
+      setUnlocked(true);
+    }
+  };
 
   // Calculate glow line height based on hovered entry position
   const getGlowHeight = () => {
@@ -306,7 +315,7 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
           <div
             ref={trackRef}
             className="timeline-track"
-            onMouseLeave={() => setHoveredIndex(-1)}
+            onMouseLeave={() => { if (!unlocked) setHoveredIndex(-1); }}
             style={{ position: 'relative', paddingLeft: '1.5rem' }}
           >
             {/* Static base line */}
@@ -324,23 +333,23 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
               left: '-1px',
               top: 0,
               width: '4px',
-              height: hoveredIndex >= 0 ? getGlowHeight() : '0px',
+              height: unlocked ? '100%' : (hoveredIndex >= 0 ? getGlowHeight() : '0px'),
               background: 'linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 60%, rgba(255,255,255,0.8) 100%)',
               filter: 'blur(1px)',
               transition: 'height 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
               borderRadius: '2px',
-              opacity: hoveredIndex >= 0 ? 1 : 0
+              opacity: (unlocked || hoveredIndex >= 0) ? 1 : 0
             }} />
 
             {detail.timeline.map((entry, i) => {
-              const isActive = hoveredIndex >= 0 && i <= hoveredIndex;
-              const isDirectHover = i === hoveredIndex;
+              const isActive = unlocked || (hoveredIndex >= 0 && i <= hoveredIndex);
+              const isDirectHover = unlocked || i === hoveredIndex;
 
               return (
                 <div
                   key={i}
                   ref={(el) => { entryRefs.current[i] = el; }}
-                  onMouseEnter={() => setHoveredIndex(i)}
+                  onMouseEnter={() => handleHover(i)}
                   style={{
                     marginBottom: '1.5rem',
                     position: 'relative',
@@ -394,7 +403,6 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
 
       {/* Reflection */}
       {detail.reflection && (() => {
-        const unlocked = hoveredIndex >= detail.timeline.length - 1;
         return (
           <div style={{ marginBottom: '2rem', transition: 'opacity 0.5s ease', opacity: unlocked ? 1 : 0.7 }}>
             <h3 style={{
@@ -418,7 +426,6 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
 
       {/* Skills + Tech */}
       {detail.skillsLearned.length > 0 && (() => {
-        const unlocked = hoveredIndex >= detail.timeline.length - 1;
         return (
           <div style={{ marginBottom: '1.5rem', transition: 'opacity 0.5s ease', opacity: unlocked ? 1 : 0.7 }}>
             <h3 style={{
@@ -448,7 +455,6 @@ const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
         );
       })()}
       {detail.techStack.length > 0 && (() => {
-        const unlocked = hoveredIndex >= detail.timeline.length - 1;
         return (
           <div style={{ transition: 'opacity 0.5s ease', opacity: unlocked ? 1 : 0.7 }}>
             <h3 style={{
