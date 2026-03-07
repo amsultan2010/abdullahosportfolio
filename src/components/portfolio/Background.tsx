@@ -117,7 +117,6 @@ SilkPlane.displayName = "SilkPlane";
 
 const Background = () => {
   const meshRef = useRef<THREE.Mesh>(null);
-  // Smoothed mouse position (lerped for fluid feel)
   const mouseTarget = useRef({ x: 0.5, y: 0.5 });
   const mouseCurrent = useRef({ x: 0.5, y: 0.5 });
 
@@ -138,7 +137,7 @@ const Background = () => {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       mouseTarget.current.x = e.clientX / window.innerWidth;
-      mouseTarget.current.y = 1.0 - e.clientY / window.innerHeight; // flip Y for GL
+      mouseTarget.current.y = 1.0 - e.clientY / window.innerHeight;
     };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
