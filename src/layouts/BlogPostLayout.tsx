@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import { FaRegFolderClosed } from 'react-icons/fa6';
 import MobileDock from '../components/global/MobileDock';
 import DesktopDock from '../components/global/DesktopDock';
@@ -43,11 +43,15 @@ export default function BlogPostLayout({
   backgroundMap,
   recentPosts,
 }: BlogPostLayoutProps) {
-  // Always use bg-1 (the sand/mountain background)
-  const currentBg = 'bg-1';
+  // Override body bg so WebGL silk shows through
+  useEffect(() => {
+    const prev = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = '#000';
+    return () => { document.body.style.backgroundColor = prev; };
+  }, []);
 
   return (
-    <div className="relative w-screen min-h-screen overflow-x-hidden">
+    <div className="relative w-screen min-h-screen">
       {/* WebGL Background */}
       <Background />
 
@@ -57,7 +61,7 @@ export default function BlogPostLayout({
       </div>
 
       {/* Main Content */}
-      <div className="relative z-0 pt-12 pb-32 px-4">
+      <div className="relative pt-12 pb-32 px-4">
         <div className="max-w-4xl mx-auto">
           {/* Back Button */}
           <div className="mb-6">

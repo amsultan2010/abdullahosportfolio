@@ -55,7 +55,7 @@ function formatDate(dateString: string) {
   description={caseStudy.data.summary}
   canonical={`https://ronnielgandhe.com/case-studies/${caseStudy.data.slug || caseStudy.id.replace('.md', '')}`}
 >
-  <div class="relative w-screen min-h-screen overflow-x-hidden">
+  <div class="relative w-screen min-h-screen">
     <!-- WebGL Background -->
     <Background client:only="react" />
 
@@ -65,7 +65,7 @@ function formatDate(dateString: string) {
     </div>
 
     <!-- Main Content -->
-    <div class="relative z-0 pt-12 pb-32 px-4">
+    <div class="relative pt-12 pb-32 px-4">
       <div class="max-w-none mx-auto" style="max-width: 90ch;">
         <!-- Back Button -->
         <div class="mb-6">
@@ -167,9 +167,14 @@ function formatDate(dateString: string) {
 </script>
 
 <style>
+  /* Override body bg so WebGL silk shows through */
+  :global(body) {
+    background-color: #000 !important;
+  }
+
   /* Glass pane */
   .glass-pane {
-    background: rgba(20, 20, 20, 0.85);
+    background: rgba(20, 20, 20, 0.75);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 0.5px solid rgba(255, 255, 255, 0.12);

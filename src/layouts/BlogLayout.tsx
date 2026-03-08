@@ -32,6 +32,13 @@ export default function BlogLayout({ posts, initialBg, backgroundMap, recentPost
   const [visiblePosts, setVisiblePosts] = useState<Set<string>>(new Set());
   const observerRef = useRef<IntersectionObserver | null>(null);
 
+  // Override body bg so WebGL silk shows through
+  useEffect(() => {
+    const prev = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = '#000';
+    return () => { document.body.style.backgroundColor = prev; };
+  }, []);
+
   useEffect(() => {
     // Set up intersection observer for scroll animations
     observerRef.current = new IntersectionObserver(
@@ -74,7 +81,7 @@ export default function BlogLayout({ posts, initialBg, backgroundMap, recentPost
   }, [posts]);
 
   return (
-    <div className="relative w-screen min-h-screen overflow-x-hidden">
+    <div className="relative w-screen min-h-screen">
       {/* WebGL Background */}
       <Background />
 
@@ -84,7 +91,7 @@ export default function BlogLayout({ posts, initialBg, backgroundMap, recentPost
       </div>
 
       {/* Main Content */}
-      <div className="relative z-0 pt-12 pb-32 px-4 overflow-y-auto">
+      <div className="relative pt-12 pb-32 px-4 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-12 mt-8 flex justify-center">

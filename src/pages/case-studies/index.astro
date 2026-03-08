@@ -40,7 +40,7 @@ function formatDate(dateString: string) {
   description='Business case studies exploring technical decisions at Netflix, Uber, and Spotify'
   canonical='https://ronnielgandhe.com/case-studies'
 >
-  <div class="relative w-screen min-h-screen overflow-x-hidden">
+  <div class="relative w-screen min-h-screen">
     <!-- WebGL Background -->
     <Background client:only="react" />
 
@@ -50,7 +50,7 @@ function formatDate(dateString: string) {
     </div>
 
     <!-- Main Content -->
-    <div class="relative z-0 pt-12 pb-32 px-4">
+    <div class="relative pt-12 pb-32 px-4">
       <div class="max-w-4xl mx-auto">
         <!-- Header -->
         <div class="mb-12 mt-8 flex justify-center">
@@ -135,3 +135,9 @@ function formatDate(dateString: string) {
     <DesktopDock client:load />
   </div>
 </Layout>
+
+<style>
+  :global(body) {
+    background-color: #000 !important;
+  }
+</style>

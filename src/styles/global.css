@@ -150,7 +150,7 @@
 
   /* Glass pane — used for blog/case-study terminal windows */
   .glass-pane {
-    background: rgba(20, 20, 20, 0.85);
+    background: rgba(20, 20, 20, 0.75);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 0.5px solid rgba(255, 255, 255, 0.12);
