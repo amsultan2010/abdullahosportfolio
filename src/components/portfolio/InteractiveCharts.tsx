@@ -587,6 +587,542 @@ export const BehavioralBiasesChart = () => {
   );
 };
 
+// ─── Chart 6: Motivation vs Discipline Over Time ────────────
+
+export const MotivationDecayChart = () => {
+  const [visible, setVisible] = useState(false);
+  const [hoveredDay, setHoveredDay] = useState<number | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setVisible(true); obs.disconnect(); }
+    }, { threshold: 0.3 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  const days = Array.from({ length: 91 }, (_, i) => i);
+  const motivation = days.map(d => {
+    const base = 92 * Math.exp(-d / 35);
+    const volatility = 18 * Math.sin(d * 0.45) * Math.exp(-d / 50);
+    return Math.max(5, Math.min(100, base + volatility));
+  });
+  const discipline = days.map(d => {
+    const base = 12 + 58 * (1 - Math.exp(-d / 45));
+    const noise = 2.5 * Math.sin(d * 0.25);
+    return Math.max(5, Math.min(100, base + noise));
+  });
+
+  const crossoverDay = days.find(d => discipline[d] >= motivation[d]) || 32;
+
+  const w = 580, h = 200;
+  const pL = 40, pR = 20, pT = 10, pB = 30;
+  const cW = w - pL - pR, cH = h - pT - pB;
+  const toX = (d: number) => pL + (d / 90) * cW;
+  const toY = (v: number) => pT + cH - (v / 100) * cH;
+
+  const motivPath = days.map((d, i) => `${i === 0 ? 'M' : 'L'} ${toX(d)} ${toY(motivation[d])}`).join(' ');
+  const discPath = days.map((d, i) => `${i === 0 ? 'M' : 'L'} ${toX(d)} ${toY(discipline[d])}`).join(' ');
+
+  const nearDay = hoveredDay ?? 45;
+
+  return (
+    <div ref={ref} style={chartContainer}>
+      <p style={chartTitle}>Figure 1 &mdash; Motivation vs Discipline Over 90 Days</p>
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        style={{ width: '100%', height: 'auto' }}
+        onMouseMove={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width) * w;
+          const day = Math.round(Math.max(0, Math.min(90, ((x - pL) / cW) * 90)));
+          setHoveredDay(day);
+        }}
+        onMouseLeave={() => setHoveredDay(null)}
+      >
+        {[0, 25, 50, 75, 100].map(v => (
+          <g key={v}>
+            <line x1={pL} y1={toY(v)} x2={w - pR} y2={toY(v)} stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+            <text x={pL - 4} y={toY(v) + 3} textAnchor="end" fill="rgba(255,255,255,0.25)" fontSize="7" fontFamily="monospace">{v}%</text>
+          </g>
+        ))}
+
+        {/* Crossover zone */}
+        <rect x={toX(crossoverDay) - 12} y={pT} width="24" height={cH} fill="rgba(45, 212, 191, 0.05)" rx="3" />
+        <text x={toX(crossoverDay)} y={pT + 8} fill="rgba(45, 212, 191, 0.5)" fontSize="6" fontFamily="monospace" textAnchor="middle">CROSSOVER</text>
+
+        {/* Motivation line */}
+        <path d={motivPath} fill="none" stroke="#FB923C" strokeWidth="2" opacity="0.8"
+          strokeDasharray={visible ? '0' : '2000'} strokeDashoffset={visible ? '0' : '2000'}
+          style={{ transition: 'stroke-dashoffset 2s ease-out' }} />
+
+        {/* Discipline line */}
+        <path d={discPath} fill="none" stroke="#2DD4BF" strokeWidth="2"
+          strokeDasharray={visible ? '0' : '2000'} strokeDashoffset={visible ? '0' : '2000'}
+          style={{ transition: 'stroke-dashoffset 2s ease-out 0.3s' }} />
+
+        {hoveredDay !== null && (
+          <>
+            <line x1={toX(hoveredDay)} y1={pT} x2={toX(hoveredDay)} y2={h - pB}
+              stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" strokeDasharray="3 3" />
+            <circle cx={toX(hoveredDay)} cy={toY(motivation[hoveredDay])} r="4" fill="#FB923C" />
+            <circle cx={toX(hoveredDay)} cy={toY(discipline[hoveredDay])} r="4" fill="#2DD4BF" />
+          </>
+        )}
+
+        {[0, 15, 30, 45, 60, 75, 90].map(d => (
+          <text key={d} x={toX(d)} y={h - 5} textAnchor="middle" fill="rgba(255,255,255,0.25)" fontSize="7" fontFamily="monospace">
+            Day {d}
+          </text>
+        ))}
+      </svg>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#FB923C' }} />
+          <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
+            Motivation: <strong style={{ color: '#FB923C' }}>{Math.round(motivation[nearDay])}%</strong>
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#2DD4BF' }} />
+          <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
+            Discipline: <strong style={{ color: '#2DD4BF' }}>{Math.round(discipline[nearDay])}%</strong>
+          </span>
+        </div>
+        <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)' }}>
+          Day {nearDay}
+        </span>
+      </div>
+      <div style={{
+        marginTop: '1rem', padding: '0.75rem 1rem',
+        background: 'rgba(45, 212, 191, 0.06)',
+        border: '0.5px solid rgba(45, 212, 191, 0.15)',
+        borderRadius: '8px',
+      }}>
+        <p style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', margin: 0 }}>
+          Motivation starts high but decays exponentially. Discipline starts low but compounds. Around day {crossoverDay}, discipline becomes the dominant force.
+        </p>
+      </div>
+      <p style={sourceText}>Model based on habituation research (Duhigg, 2012; Clear, 2018)</p>
+    </div>
+  );
+};
+
+// ─── Chart 7: The 1% Rule / Compound Discipline ─────────────
+
+export const CompoundDisciplineChart = () => {
+  const [visible, setVisible] = useState(false);
+  const [hoveredDay, setHoveredDay] = useState<number | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setVisible(true); obs.disconnect(); }
+    }, { threshold: 0.3 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  const totalDays = 365;
+  const samples = 74;
+  const days = Array.from({ length: samples + 1 }, (_, i) => Math.round(i * totalDays / samples));
+  const improve = days.map(d => Math.pow(1.01, d));
+  const decline = days.map(d => Math.pow(0.99, d));
+  const maxVal = improve[improve.length - 1];
+
+  const w = 580, h = 220;
+  const pL = 50, pR = 60, pT = 15, pB = 30;
+  const cW = w - pL - pR, cH = h - pT - pB;
+
+  const toY = (v: number) => {
+    const logV = Math.log(Math.max(v, 0.02));
+    const logMax = Math.log(maxVal * 1.1);
+    const logMin = Math.log(0.02);
+    return pT + cH - ((logV - logMin) / (logMax - logMin)) * cH;
+  };
+  const toX = (d: number) => pL + (d / totalDays) * cW;
+
+  const improvePath = days.map((d, i) => `${i === 0 ? 'M' : 'L'} ${toX(d)} ${toY(improve[i])}`).join(' ');
+  const stagnantPath = `M ${toX(0)} ${toY(1)} L ${toX(totalDays)} ${toY(1)}`;
+  const declinePath = days.map((d, i) => `${i === 0 ? 'M' : 'L'} ${toX(d)} ${toY(decline[i])}`).join(' ');
+
+  const nearIdx = hoveredDay !== null ? Math.min(Math.round((hoveredDay / totalDays) * samples), samples) : samples;
+  const nearDay = days[nearIdx];
+
+  return (
+    <div ref={ref} style={chartContainer}>
+      <p style={chartTitle}>Figure 2 &mdash; The 1% Rule: Marginal Gains vs Marginal Losses Over One Year</p>
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        style={{ width: '100%', height: 'auto' }}
+        onMouseMove={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width) * w;
+          const day = Math.round(Math.max(0, Math.min(totalDays, ((x - pL) / cW) * totalDays)));
+          setHoveredDay(day);
+        }}
+        onMouseLeave={() => setHoveredDay(null)}
+      >
+        {/* Grid */}
+        <line x1={pL} y1={toY(1)} x2={w - pR} y2={toY(1)} stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" strokeDasharray="4 4" />
+
+        {/* +1% line */}
+        <path d={improvePath} fill="none" stroke="#4ADE80" strokeWidth="2.5"
+          strokeDasharray={visible ? '0' : '2000'} strokeDashoffset={visible ? '0' : '2000'}
+          style={{ transition: 'stroke-dashoffset 2.5s ease-out' }} />
+
+        {/* Stagnant line */}
+        <path d={stagnantPath} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" strokeDasharray="4 4" />
+
+        {/* -1% line */}
+        <path d={declinePath} fill="none" stroke="#F87171" strokeWidth="2"
+          strokeDasharray={visible ? '0' : '2000'} strokeDashoffset={visible ? '0' : '2000'}
+          style={{ transition: 'stroke-dashoffset 2.5s ease-out 0.3s' }} />
+
+        {/* End labels */}
+        <text x={w - pR + 5} y={toY(improve[samples]) + 4} fill="#4ADE80" fontSize="9" fontFamily="monospace" fontWeight="bold">37.78x</text>
+        <text x={w - pR + 5} y={toY(1) + 4} fill="rgba(255,255,255,0.3)" fontSize="8" fontFamily="monospace">1.00x</text>
+        <text x={w - pR + 5} y={toY(decline[samples]) + 4} fill="#F87171" fontSize="9" fontFamily="monospace" fontWeight="bold">0.03x</text>
+
+        {/* Hover */}
+        {hoveredDay !== null && (
+          <>
+            <line x1={toX(nearDay)} y1={pT} x2={toX(nearDay)} y2={h - pB}
+              stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" strokeDasharray="3 3" />
+            <circle cx={toX(nearDay)} cy={toY(improve[nearIdx])} r="4" fill="#4ADE80" />
+            <circle cx={toX(nearDay)} cy={toY(decline[nearIdx])} r="4" fill="#F87171" />
+          </>
+        )}
+
+        {[0, 60, 120, 180, 240, 300, 365].map(d => (
+          <text key={d} x={toX(d)} y={h - 5} textAnchor="middle" fill="rgba(255,255,255,0.25)" fontSize="7" fontFamily="monospace">
+            {d === 0 ? 'Start' : `Day ${d}`}
+          </text>
+        ))}
+      </svg>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+        <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: '#4ADE80' }}>
+          +1%/day: {Math.pow(1.01, nearDay).toFixed(2)}x
+        </span>
+        <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: '#F87171' }}>
+          -1%/day: {Math.pow(0.99, nearDay).toFixed(4)}x
+        </span>
+        <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)' }}>
+          Day {nearDay}
+        </span>
+      </div>
+      <div style={{
+        marginTop: '1rem', padding: '0.75rem 1rem',
+        background: 'rgba(74, 222, 128, 0.06)',
+        border: '0.5px solid rgba(74, 222, 128, 0.15)',
+        borderRadius: '8px',
+      }}>
+        <p style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', margin: 0 }}>
+          After one year: the disciplined path is <strong style={{ color: '#4ADE80' }}>1,260x</strong> better than the declining path. Same starting point. Same daily magnitude. Opposite direction.
+        </p>
+      </div>
+      <p style={sourceText}>Based on James Clear's marginal gains framework, "Atomic Habits" (2018)</p>
+    </div>
+  );
+};
+
+// ─── Chart 8: The Dopamine Abandonment Loop ─────────────────
+
+export const DopamineCycleChart = () => {
+  const [activePhase, setActivePhase] = useState<number | null>(null);
+  const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setVisible(true); obs.disconnect(); }
+    }, { threshold: 0.3 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  const phases = [
+    { name: 'New Idea', desc: 'A fresh concept sparks excitement. The brain floods with dopamine at the novelty of pure possibility.', x: 60, y: 130, color: '#A78BFA' },
+    { name: 'Honeymoon', desc: 'Everything clicks. Progress feels effortless. This is what passion is supposed to feel like.', x: 155, y: 48, color: '#4ADE80' },
+    { name: 'Plateau', desc: 'The easy wins are gone. Progress slows. The work becomes repetitive and dopamine drops.', x: 270, y: 78, color: '#FBBF24' },
+    { name: 'The Valley', desc: 'Boredom. Self-doubt. "Maybe this is not the right path." The brain craves something new.', x: 370, y: 140, color: '#F87171' },
+    { name: 'Crisis Point', desc: '85% of people quit here. The pain of continuing feels greater than the pain of starting over.', x: 440, y: 155, color: '#EF4444' },
+    { name: 'Mastery', desc: 'The 15% who push through find compound growth. Discipline replaces motivation as the engine.', x: 530, y: 95, color: '#2DD4BF' },
+  ];
+
+  const curvePath = "M 60 130 C 90 85, 125 52, 155 48 C 195 40, 230 62, 270 78 C 310 95, 340 125, 370 140 C 400 152, 420 158, 440 155 C 465 148, 500 112, 530 95";
+
+  return (
+    <div ref={ref} style={chartContainer}>
+      <p style={chartTitle}>Figure 3 &mdash; The Dopamine Abandonment Loop (Interactive)</p>
+      <svg viewBox="0 0 580 200" style={{ width: '100%', height: 'auto' }}>
+        <line x1="40" y1="175" x2="560" y2="175" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+        <text x="30" y="48" fill="rgba(255,255,255,0.2)" fontSize="7" fontFamily="monospace" textAnchor="end">Drive</text>
+        <text x="560" y="190" fill="rgba(255,255,255,0.2)" fontSize="7" fontFamily="monospace" textAnchor="end">Time</text>
+
+        {/* Quit zone */}
+        <rect x="345" y="128" width="115" height="38" rx="4" fill="rgba(248,113,113,0.06)" stroke="rgba(248,113,113,0.15)" strokeWidth="0.5" strokeDasharray="3 3" />
+        <text x="403" y="175" fill="rgba(248,113,113,0.4)" fontSize="6" fontFamily="monospace" textAnchor="middle">85% QUIT HERE</text>
+
+        {/* Curve */}
+        <path d={curvePath} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2"
+          strokeDasharray={visible ? '0' : '1000'} strokeDashoffset={visible ? '0' : '1000'}
+          style={{ transition: 'stroke-dashoffset 2s ease-out' }} />
+
+        {phases.map((p, i) => (
+          <g key={p.name} onMouseEnter={() => setActivePhase(i)} onMouseLeave={() => setActivePhase(null)} style={{ cursor: 'pointer' }}>
+            <circle cx={p.x} cy={p.y} r={activePhase === i ? 8 : 5}
+              fill={activePhase === i ? p.color : `${p.color}88`}
+              stroke={p.color} strokeWidth="1.5"
+              style={{ transition: 'all 0.2s ease' }} />
+            <text x={p.x} y={p.y - 14} fill={activePhase === i ? p.color : 'rgba(255,255,255,0.35)'}
+              fontSize="7" fontFamily="monospace" textAnchor="middle" style={{ transition: 'fill 0.2s' }}>
+              {p.name}
+            </text>
+          </g>
+        ))}
+      </svg>
+
+      <div style={{
+        minHeight: '52px', padding: '0.75rem 1rem',
+        background: activePhase !== null ? `${phases[activePhase].color}08` : 'rgba(255,255,255,0.02)',
+        border: `0.5px solid ${activePhase !== null ? `${phases[activePhase].color}22` : 'rgba(255,255,255,0.06)'}`,
+        borderRadius: '8px', transition: 'all 0.3s ease', marginTop: '0.75rem',
+      }}>
+        {activePhase !== null ? (
+          <>
+            <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.8rem', color: phases[activePhase].color, fontWeight: 600 }}>
+              {phases[activePhase].name}
+            </span>
+            <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', margin: '0.3rem 0 0', lineHeight: 1.5 }}>
+              {phases[activePhase].desc}
+            </p>
+          </>
+        ) : (
+          <p style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', margin: 0 }}>
+            Hover over a phase to explore the cycle
+          </p>
+        )}
+      </div>
+      <p style={sourceText}>Adapted from Huberman Lab research on dopamine and motivation (2021)</p>
+    </div>
+  );
+};
+
+// ─── Chart 9: Grit Formula (Interactive) ────────────────────
+
+export const GritFormulaChart = () => {
+  const [visible, setVisible] = useState(false);
+  const [effort, setEffort] = useState(5);
+  const [talent, setTalent] = useState(3);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setVisible(true); obs.disconnect(); }
+    }, { threshold: 0.3 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  const skill = talent * effort;
+  const achievement = skill * effort;
+
+  return (
+    <div ref={ref} style={chartContainer}>
+      <p style={chartTitle}>Figure 4 &mdash; Duckworth's Grit Equation (Interactive)</p>
+
+      <div style={{
+        display: 'flex', flexDirection: 'column', gap: '1.25rem',
+        opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(12px)',
+        transition: 'all 0.8s ease-out',
+      }}>
+        {/* Equation 1 */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap',
+          justifyContent: 'center', padding: '1rem',
+          background: 'rgba(255,255,255,0.02)', borderRadius: '8px',
+          border: '0.5px solid rgba(255,255,255,0.08)',
+        }}>
+          <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '1rem', color: '#60A5FA' }}>
+            Talent ({talent})
+          </span>
+          <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '1.2rem', color: 'rgba(255,255,255,0.3)' }}>&times;</span>
+          <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '1rem', color: '#FBBF24', fontWeight: 'bold' }}>
+            Effort ({effort})
+          </span>
+          <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '1.2rem', color: 'rgba(255,255,255,0.3)' }}>=</span>
+          <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '1rem', color: '#A78BFA' }}>
+            Skill ({skill})
+          </span>
+        </div>
+
+        {/* Equation 2 */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap',
+          justifyContent: 'center', padding: '1rem',
+          background: 'rgba(255,255,255,0.02)', borderRadius: '8px',
+          border: '0.5px solid rgba(255,255,255,0.08)',
+        }}>
+          <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '1rem', color: '#A78BFA' }}>
+            Skill ({skill})
+          </span>
+          <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '1.2rem', color: 'rgba(255,255,255,0.3)' }}>&times;</span>
+          <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '1rem', color: '#FBBF24', fontWeight: 'bold' }}>
+            Effort ({effort})
+          </span>
+          <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '1.2rem', color: 'rgba(255,255,255,0.3)' }}>=</span>
+          <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '1.1rem', color: '#4ADE80', fontWeight: 'bold' }}>
+            Achievement ({achievement})
+          </span>
+        </div>
+
+        {/* Interactive sliders */}
+        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div style={{ flex: '1 1 200px', maxWidth: '250px' }}>
+            <label style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: '#60A5FA', display: 'block', marginBottom: '0.4rem' }}>
+              Talent: {talent}
+            </label>
+            <input type="range" min="1" max="10" value={talent} onChange={(e) => setTalent(Number(e.target.value))}
+              style={{ width: '100%', accentColor: '#60A5FA' }} />
+          </div>
+          <div style={{ flex: '1 1 200px', maxWidth: '250px' }}>
+            <label style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: '#FBBF24', display: 'block', marginBottom: '0.4rem' }}>
+              Effort: {effort}
+            </label>
+            <input type="range" min="1" max="10" value={effort} onChange={(e) => setEffort(Number(e.target.value))}
+              style={{ width: '100%', accentColor: '#FBBF24' }} />
+          </div>
+        </div>
+      </div>
+
+      <div style={{
+        marginTop: '1.25rem', padding: '0.75rem 1rem',
+        background: 'rgba(251, 191, 36, 0.06)',
+        border: '0.5px solid rgba(251, 191, 36, 0.15)',
+        borderRadius: '8px',
+      }}>
+        <p style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', margin: 0 }}>
+          <span style={{ color: '#FBBF24' }}>Effort appears in both equations.</span> Doubling effort quadruples achievement. Doubling talent only doubles it. The algebra is unambiguous: effort is the dominant variable.
+        </p>
+      </div>
+      <p style={sourceText}>Source: Angela Duckworth, "Grit: The Power of Passion and Perseverance" (2016)</p>
+    </div>
+  );
+};
+
+// ─── Chart 10: The Marshmallow Test / Delayed Gratification ──
+
+export const DelayedGratificationChart = () => {
+  const [visible, setVisible] = useState(false);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setVisible(true); obs.disconnect(); }
+    }, { threshold: 0.3 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} style={chartContainer}>
+      <p style={chartTitle}>Figure 5 &mdash; The Marshmallow Test: 40-Year Follow-Up</p>
+
+      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+        {/* Waited group */}
+        <div
+          onMouseEnter={() => setHovered('waited')}
+          onMouseLeave={() => setHovered(null)}
+          style={{
+            flex: '1 1 220px', padding: '1.25rem',
+            background: hovered === 'waited' ? 'rgba(74, 222, 128, 0.08)' : 'rgba(255,255,255,0.02)',
+            border: `0.5px solid ${hovered === 'waited' ? 'rgba(74, 222, 128, 0.25)' : 'rgba(255,255,255,0.08)'}`,
+            borderRadius: '10px', cursor: 'default', transition: 'all 0.3s ease',
+            opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(15px)',
+            transitionDelay: '0.2s',
+          }}
+        >
+          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: '0.4rem', letterSpacing: '0.2em' }}>
+              <span role="img" aria-label="marshmallow">&#x25CB;</span>
+              <span role="img" aria-label="marshmallow" style={{ marginLeft: '0.25rem' }}>&#x25CB;</span>
+            </div>
+            <p style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.8rem', color: '#4ADE80', margin: 0, fontWeight: 600 }}>
+              Waited (Delayed Gratification)
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {[
+              { metric: 'SAT Scores', value: '+210 points' },
+              { metric: 'College Graduation', value: '+36% rate' },
+              { metric: 'Income at 40', value: '+32% higher' },
+              { metric: 'BMI (Health)', value: '5 pts lower' },
+            ].map((m, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontFamily: 'NeueMontreal-Light, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>{m.metric}</span>
+                <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: '#4ADE80', fontWeight: 600 }}>{m.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Didn't wait group */}
+        <div
+          onMouseEnter={() => setHovered('ate')}
+          onMouseLeave={() => setHovered(null)}
+          style={{
+            flex: '1 1 220px', padding: '1.25rem',
+            background: hovered === 'ate' ? 'rgba(248, 113, 113, 0.08)' : 'rgba(255,255,255,0.02)',
+            border: `0.5px solid ${hovered === 'ate' ? 'rgba(248, 113, 113, 0.25)' : 'rgba(255,255,255,0.08)'}`,
+            borderRadius: '10px', cursor: 'default', transition: 'all 0.3s ease',
+            opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(15px)',
+            transitionDelay: '0.35s',
+          }}
+        >
+          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: '0.4rem' }}>
+              <span role="img" aria-label="marshmallow">&#x25CB;</span>
+            </div>
+            <p style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.8rem', color: '#F87171', margin: 0, fontWeight: 600 }}>
+              Ate Immediately (Instant Gratification)
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {[
+              { metric: 'SAT Scores', value: 'Baseline' },
+              { metric: 'College Graduation', value: 'Baseline' },
+              { metric: 'Income at 40', value: 'Baseline' },
+              { metric: 'BMI (Health)', value: 'Baseline' },
+            ].map((m, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontFamily: 'NeueMontreal-Light, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>{m.metric}</span>
+                <span style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: '#F87171' }}>{m.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{
+        marginTop: '1rem', padding: '0.75rem 1rem',
+        background: 'rgba(167, 139, 250, 0.06)',
+        border: '0.5px solid rgba(167, 139, 250, 0.15)',
+        borderRadius: '8px',
+      }}>
+        <p style={{ fontFamily: '"SF Mono", monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', margin: 0 }}>
+          The ability to delay gratification at age 4 predicted life outcomes more reliably than IQ, socioeconomic background, or parental education.
+        </p>
+      </div>
+      <p style={sourceText}>Source: Mischel et al. (1989), Shoda et al. (1990), Casey et al. (2011)</p>
+    </div>
+  );
+};
+
 // ─── Chart Registry ───────────────────────────────────────────
 
 export const chartRegistry: Record<string, React.FC> = {
@@ -595,4 +1131,9 @@ export const chartRegistry: Record<string, React.FC> = {
   'speculative-cycle': SpeculativeCycleChart,
   'spiva': SPIVAChart,
   'behavioral-biases': BehavioralBiasesChart,
+  'motivation-decay': MotivationDecayChart,
+  'compound-discipline': CompoundDisciplineChart,
+  'dopamine-cycle': DopamineCycleChart,
+  'grit-formula': GritFormulaChart,
+  'delayed-gratification': DelayedGratificationChart,
 };

@@ -17,6 +17,7 @@ const tagColorMap: Record<string, TagColor> = {
   'Enterprise': { bg: 'rgba(239, 68, 68, 0.15)', text: '#F87171', border: 'rgba(239, 68, 68, 0.3)' },
   'Behavioral Economics': { bg: 'rgba(251, 146, 60, 0.15)', text: '#FB923C', border: 'rgba(251, 146, 60, 0.3)' },
   'Research': { bg: 'rgba(99, 102, 241, 0.15)', text: '#818CF8', border: 'rgba(99, 102, 241, 0.3)' },
+  'Psychology': { bg: 'rgba(236, 72, 153, 0.15)', text: '#F472B6', border: 'rgba(236, 72, 153, 0.3)' },
   'SaaS': { bg: 'rgba(6, 182, 212, 0.15)', text: '#22D3EE', border: 'rgba(6, 182, 212, 0.3)' },
   'Architecture': { bg: 'rgba(99, 102, 241, 0.15)', text: '#818CF8', border: 'rgba(99, 102, 241, 0.3)' },
   'Microservices': { bg: 'rgba(168, 85, 247, 0.15)', text: '#C084FC', border: 'rgba(168, 85, 247, 0.3)' },
@@ -76,4 +77,5 @@ export const companyBrands: Record<string, { color: string; bgColor: string }> =
   'Uber': { color: '#FFFFFF', bgColor: 'rgba(255, 255, 255, 0.08)' },
   'Spotify': { color: '#1DB954', bgColor: 'rgba(29, 185, 84, 0.12)' },
   'NDX': { color: '#4FC3F7', bgColor: 'rgba(79, 195, 247, 0.12)' },
+  'IKIGAI': { color: '#FB923C', bgColor: 'rgba(251, 146, 60, 0.12)' },
 };

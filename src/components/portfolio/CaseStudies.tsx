@@ -19,9 +19,22 @@ const NasdaqLogo = ({ height = 28 }: { height?: number }) => {
   );
 };
 
+// Ikigai logo
+const IkigaiLogo = ({ height = 32 }: { height?: number }) => {
+  return (
+    <img
+      src="/ikigai.jpg"
+      alt="Ikigai"
+      height={height}
+      style={{ borderRadius: '4px', opacity: 0.85 }}
+    />
+  );
+};
+
 const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
   const [titleAnimated, setTitleAnimated] = useState(false);
   const [cardAnimated, setCardAnimated] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,19 +69,38 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
       summary: "Financial markets produce strong long-term returns, yet the average investor consistently earns far less. This paper investigates why this gap exists, and why it is driven by behavior, not poor asset selection.",
       tags: ["Finance", "Behavioral Economics", "Markets", "Research"],
       readingTime: 14
+    },
+    {
+      slug: "discipline-paradox",
+      company: "IKIGAI",
+      title: "The Discipline Paradox",
+      summary: "Why do insanely talented people fail while mediocre disciplined people win? The answer lies not in ability, but in the neurochemistry of consistency and the mathematics of showing up.",
+      tags: ["Psychology", "Behavioral Economics", "Research"],
+      readingTime: 16
     }
   ];
 
   const handleCardClick = () => {
-    const paper = researchPapers[0];
+    const paper = researchPapers[activeIndex];
     const data = contentMap[paper.slug];
     if (data && onContentClick) {
       onContentClick(data);
     }
   };
 
-  const paper = researchPapers[0];
-  const brand = companyBrands[paper.company];
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveIndex((prev) => (prev === 0 ? researchPapers.length - 1 : prev - 1));
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveIndex((prev) => (prev === researchPapers.length - 1 ? 0 : prev + 1));
+  };
+
+  const paper = researchPapers[activeIndex];
+
+  const LogoComponent = paper.company === 'IKIGAI' ? <IkigaiLogo height={32} /> : <NasdaqLogo height={28} />;
 
   return (
     <div
@@ -104,7 +136,7 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
         Deep Research
       </h2>
 
-      {/* Single research card */}
+      {/* Research card with carousel */}
       <div
         className={`cs-carousel glass-cs-carousel ${cardAnimated ? 'animated' : ''}`}
         style={{ position: 'relative' }}
@@ -121,11 +153,11 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
               animation: 'csFadeSlide 0.4s ease-out forwards'
             }}
           >
-            {/* Nasdaq logo */}
+            {/* Logo */}
             <div style={{
               marginBottom: '1rem'
             }}>
-              <NasdaqLogo height={28} />
+              {LogoComponent}
             </div>
 
             {/* Title */}
@@ -202,6 +234,52 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
             </div>
           </div>
         </div>
+
+        {/* Navigation arrows */}
+        <button
+          onClick={handlePrev}
+          className="cs-nav-btn cs-nav-prev"
+          aria-label="Previous paper"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <button
+          onClick={handleNext}
+          className="cs-nav-btn cs-nav-next"
+          aria-label="Next paper"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 6 15 12 9 18" />
+          </svg>
+        </button>
+
+        {/* Dot indicators */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '0.5rem',
+          paddingBottom: '1rem'
+        }}>
+          {researchPapers.map((_, i) => (
+            <button
+              key={i}
+              onClick={(e) => { e.stopPropagation(); setActiveIndex(i); }}
+              style={{
+                width: activeIndex === i ? '20px' : '6px',
+                height: '6px',
+                borderRadius: '3px',
+                background: activeIndex === i ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+              aria-label={`Go to paper ${i + 1}`}
+            />
+          ))}
+        </div>
       </div>
 
       <style>{`
@@ -231,9 +309,35 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
           from { opacity: 0; transform: translateX(20px); }
           to { opacity: 1; transform: translateX(0); }
         }
+        .cs-nav-btn {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          background: rgba(255, 255, 255, 0.06);
+          border: 0.5px solid rgba(255, 255, 255, 0.15);
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          color: rgba(255, 255, 255, 0.5);
+          transition: all 0.2s ease;
+          z-index: 2;
+        }
+        .cs-nav-btn:hover {
+          background: rgba(255, 255, 255, 0.12);
+          color: white;
+        }
+        .cs-nav-prev { left: 12px; }
+        .cs-nav-next { right: 12px; }
         @media (max-width: 768px) {
           .cs-container { width: calc(95% - 40px) !important; min-width: 300px !important; padding: 0 20px !important; }
           .cs-carousel-inner { padding: 1.5rem 2.5rem !important; }
+          .cs-nav-btn { width: 30px; height: 30px; }
+          .cs-nav-prev { left: 6px; }
+          .cs-nav-next { right: 6px; }
         }
         @media (max-width: 480px) {
           .cs-container { width: calc(98% - 40px) !important; min-width: 280px !important; padding: 0 20px !important; }

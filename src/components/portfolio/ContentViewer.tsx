@@ -59,6 +59,17 @@ const CompanyLogo = ({ company }: { company: string }) => {
     );
   }
 
+  if (company === 'IKIGAI') {
+    return (
+      <img
+        src="/ikigai.jpg"
+        alt="Ikigai"
+        height={48}
+        style={{ borderRadius: '6px', opacity: 0.9 }}
+      />
+    );
+  }
+
   return null;
 };
 
@@ -209,12 +220,12 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
             >
               {/* Header */}
               <header style={{ marginBottom: '2.5rem' }}>
-                {/* Nasdaq branding for deep research */}
-                {isDeepResearch && (
+                {/* Logo for deep research */}
+                {isDeepResearch && content.company && (
                   <div style={{
                     marginBottom: '1.75rem',
                   }}>
-                    <CompanyLogo company="NDX" />
+                    <CompanyLogo company={content.company} />
                   </div>
                 )}
                 {/* Company branding for case studies */}
