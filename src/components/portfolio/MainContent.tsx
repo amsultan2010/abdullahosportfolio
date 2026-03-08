@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const PHRASES = [
   'cloud infrastructure',
@@ -13,89 +13,79 @@ const PHRASES = [
   'React, Python, and prayers',
 ];
 
-const TYPING_SPEED = 60;    // ms per character typing
-const DELETING_SPEED = 35;  // ms per character deleting
-const PAUSE_AFTER_TYPE = 2000; // ms to hold the full phrase
-const PAUSE_AFTER_DELETE = 400; // ms before typing next phrase
+const TYPING_SPEED = 65;
+const DELETING_SPEED = 30;
+const PAUSE_AFTER_TYPE = 2000;
+const PAUSE_AFTER_DELETE = 400;
 
 const MainContent = () => {
   const [hasAnimated, setHasAnimated] = useState(false);
   const [displayText, setDisplayText] = useState('');
-  const [phraseIndex, setPhraseIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [showCursor, setShowCursor] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // All typewriter state lives in refs to avoid re-render timing issues
+  const phraseIdx = useRef(0);
+  const charIdx = useRef(0);
+  const deleting = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Initial fade-in
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setHasAnimated(true);
-    }, 2500);
+    const timer = setTimeout(() => setHasAnimated(true), 2500);
     return () => clearTimeout(timer);
   }, []);
 
   // Blinking cursor
   useEffect(() => {
-    const cursorInterval = setInterval(() => {
-      setShowCursor(prev => !prev);
-    }, 530);
-    return () => clearInterval(cursorInterval);
+    const id = setInterval(() => setShowCursor(p => !p), 530);
+    return () => clearInterval(id);
   }, []);
 
-  // Typewriter effect — starts after the initial fade-in
-  const tick = useCallback(() => {
-    const currentPhrase = PHRASES[phraseIndex];
+  // Single typewriter loop driven entirely by refs
+  useEffect(() => {
+    if (!hasAnimated) return;
 
-    if (!isDeleting) {
-      // Typing forward
-      if (displayText.length < currentPhrase.length) {
-        setDisplayText(currentPhrase.slice(0, displayText.length + 1));
-        timeoutRef.current = setTimeout(tick, TYPING_SPEED);
+    function step() {
+      const phrase = PHRASES[phraseIdx.current];
+
+      if (!deleting.current) {
+        // Typing forward
+        charIdx.current++;
+        setDisplayText(phrase.slice(0, charIdx.current));
+
+        if (charIdx.current >= phrase.length) {
+          // Done typing — pause then start deleting
+          timerRef.current = setTimeout(() => {
+            deleting.current = true;
+            step();
+          }, PAUSE_AFTER_TYPE);
+        } else {
+          timerRef.current = setTimeout(step, TYPING_SPEED);
+        }
       } else {
-        // Finished typing — pause, then start deleting
-        timeoutRef.current = setTimeout(() => {
-          setIsDeleting(true);
-          timeoutRef.current = setTimeout(tick, DELETING_SPEED);
-        }, PAUSE_AFTER_TYPE);
-      }
-    } else {
-      // Deleting
-      if (displayText.length > 0) {
-        setDisplayText(displayText.slice(0, -1));
-        timeoutRef.current = setTimeout(tick, DELETING_SPEED);
-      } else {
-        // Finished deleting — move to next phrase
-        setIsDeleting(false);
-        setPhraseIndex((phraseIndex + 1) % PHRASES.length);
-        timeoutRef.current = setTimeout(tick, PAUSE_AFTER_DELETE);
+        // Deleting
+        charIdx.current--;
+        setDisplayText(phrase.slice(0, charIdx.current));
+
+        if (charIdx.current <= 0) {
+          // Done deleting — move to next phrase
+          deleting.current = false;
+          phraseIdx.current = (phraseIdx.current + 1) % PHRASES.length;
+          timerRef.current = setTimeout(step, PAUSE_AFTER_DELETE);
+        } else {
+          timerRef.current = setTimeout(step, DELETING_SPEED);
+        }
       }
     }
-  }, [displayText, phraseIndex, isDeleting]);
 
-  useEffect(() => {
-    if (!hasAnimated) return;
-
-    // Start typewriter after fade-in completes + a small extra delay
-    const startDelay = setTimeout(() => {
-      timeoutRef.current = setTimeout(tick, 300);
-    }, 800);
+    // Kick off after fade-in settles
+    timerRef.current = setTimeout(step, 1000);
 
     return () => {
-      clearTimeout(startDelay);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [hasAnimated]);
-
-  // Re-schedule on every state change
-  useEffect(() => {
-    if (!hasAnimated) return;
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(tick, isDeleting ? DELETING_SPEED : TYPING_SPEED);
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, [displayText, phraseIndex, isDeleting, tick, hasAnimated]);
 
   return (
     <div
@@ -120,7 +110,6 @@ const MainContent = () => {
         <h1>
           Using{' '}
           <span
-            className="typing-span"
             style={{
               fontFamily: 'NeueMontreal-MediumItalic, sans-serif',
               fontStyle: 'italic',
@@ -129,10 +118,13 @@ const MainContent = () => {
           >
             {displayText}
             <span
-              className="cursor"
               style={{
                 opacity: showCursor ? 1 : 0,
                 transition: 'opacity 0.1s',
+                fontWeight: 300,
+                color: 'rgba(255, 255, 255, 0.6)',
+                marginLeft: '1px',
+                fontStyle: 'normal',
               }}
             >
               |
@@ -151,7 +143,6 @@ const MainContent = () => {
         </h1>
       </div>
 
-      {/* Responsive CSS */}
       <style>{`
         @font-face {
           font-family: 'NeueMontreal-MediumItalic';
@@ -185,13 +176,6 @@ const MainContent = () => {
 
         .main-content-text span {
           color: rgba(255, 255, 255, 0.9);
-        }
-
-        .main-content-text .cursor {
-          font-weight: 300;
-          color: rgba(255, 255, 255, 0.6);
-          margin-left: 1px;
-          font-style: normal;
         }
 
         @media (max-width: 1200px) {
