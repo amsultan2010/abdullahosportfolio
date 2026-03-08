@@ -30,10 +30,16 @@ const IkigaiLogo = ({ height = 28 }: { height?: number }) => {
   );
 };
 
+// Boost rgba alpha to match ContentViewer pill appearance
+function boostAlpha(rgba: string, factor: number): string {
+  return rgba.replace(/([\d.]+)\)$/, (_, a) => `${Math.min(1, parseFloat(a) * factor)})`);
+}
+
 const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
   const [titleAnimated, setTitleAnimated] = useState(false);
   const [cardAnimated, setCardAnimated] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isCardHovered, setIsCardHovered] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -139,6 +145,8 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
       <div className="cs-carousel-wrapper" style={{ position: 'relative' }}>
         <div
           className={`cs-carousel glass-cs-carousel ${cardAnimated ? 'animated' : ''}`}
+          onMouseEnter={() => setIsCardHovered(true)}
+          onMouseLeave={() => setIsCardHovered(false)}
         >
           {/* Content area - click to open */}
           <div
@@ -200,7 +208,7 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
                   {paper.tags.map((tag, i) => {
                     const tc = getTagColor(tag);
                     return (
-                      <span key={i} style={{
+                      <span key={i} className="cs-tag-pill" style={{
                         fontSize: '0.7rem',
                         fontFamily: 'NeueMontreal-Light, sans-serif',
                         color: tc.text,
@@ -215,26 +223,13 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
                   })}
                 </div>
 
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1.5rem'
+                <span style={{
+                  fontSize: '0.85rem',
+                  fontFamily: 'NeueMontreal-Medium, sans-serif',
+                  color: 'rgba(255, 255, 255, 0.5)'
                 }}>
-                  <span style={{
-                    fontSize: '0.8rem',
-                    fontFamily: 'NeueMontreal-Light, sans-serif',
-                    color: 'rgba(255, 255, 255, 0.35)'
-                  }}>
-                    {paper.readingTime} min read
-                  </span>
-                  <span style={{
-                    fontSize: '0.85rem',
-                    fontFamily: 'NeueMontreal-Medium, sans-serif',
-                    color: 'rgba(255, 255, 255, 0.5)'
-                  }}>
-                    Read &rarr;
-                  </span>
-                </div>
+                  Read &rarr;
+                </span>
               </div>
             </div>
           </div>
@@ -302,6 +297,23 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
           opacity: 1;
           transform: translateY(0);
           transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .glass-cs-carousel h3,
+        .glass-cs-carousel p,
+        .glass-cs-carousel span {
+          transition: color 0.3s ease !important;
+        }
+        .glass-cs-carousel:hover {
+          box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+          transition: box-shadow 0.3s ease;
+        }
+        .glass-cs-carousel:hover h3,
+        .glass-cs-carousel:hover p,
+        .glass-cs-carousel:hover span:not(.cs-tag-pill) {
+          color: rgb(255, 255, 255) !important;
+        }
+        .cs-tag-pill {
+          transition: all 0.3s ease !important;
         }
         .glass-cs-carousel::before {
           content: '';

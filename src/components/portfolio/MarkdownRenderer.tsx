@@ -49,7 +49,7 @@ function renderInline(text: string): React.ReactNode[] {
         remaining = remaining.slice(first.index + first.match[0].length);
         break;
       case 'italic':
-        parts.push(<em key={key++} style={{ color: 'rgba(255,255,255,0.8)' }}>{first.match[1]}</em>);
+        parts.push(<em key={key++} style={{ color: 'rgba(255,255,255,0.95)' }}>{first.match[1]}</em>);
         remaining = remaining.slice(first.index + first.match[0].length);
         break;
       case 'code':
@@ -60,7 +60,7 @@ function renderInline(text: string): React.ReactNode[] {
             padding: '0.15em 0.4em',
             borderRadius: '4px',
             background: 'rgba(255,255,255,0.08)',
-            color: 'rgba(255,255,255,0.8)'
+            color: 'rgba(255,255,255,0.95)'
           }}>{first.match[1]}</code>
         );
         remaining = remaining.slice(first.index + first.match[0].length);
@@ -133,7 +133,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
         }}>
           <code style={{
             fontFamily: '"SF Mono", "Fira Code", "Consolas", monospace',
-            color: 'rgba(255, 255, 255, 0.75)',
+            color: 'rgba(255, 255, 255, 0.92)',
             whiteSpace: 'pre'
           }}>
             {segment.content.trimEnd()}
@@ -169,7 +169,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           <h3 key={key++} style={{
             fontFamily: 'NeueMontreal-Medium, sans-serif',
             fontSize: '1.1rem',
-            color: 'rgba(255, 255, 255, 0.85)',
+            color: 'rgba(255, 255, 255, 0.95)',
             margin: '2rem 0 0.75rem',
             fontWeight: 500
           }}>
@@ -185,7 +185,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           <h2 key={key++} style={{
             fontFamily: 'NeueMontreal-Medium, sans-serif',
             fontSize: '1.35rem',
-            color: 'rgba(255, 255, 255, 0.9)',
+            color: 'white',
             margin: '2.5rem 0 1rem',
             fontWeight: 500,
             paddingBottom: '0.5rem',
@@ -210,7 +210,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
             borderLeft: '3px solid rgba(255,255,255,0.2)',
             paddingLeft: '1rem',
             margin: '1.5rem 0',
-            color: 'rgba(255,255,255,0.6)',
+            color: 'rgba(255,255,255,0.85)',
             fontStyle: 'italic',
             fontFamily: 'NeueMontreal-Light, sans-serif',
             lineHeight: '1.7'
@@ -250,7 +250,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
                       textAlign: 'left',
                       padding: '0.6rem 0.8rem',
                       borderBottom: '1px solid rgba(255,255,255,0.2)',
-                      color: 'rgba(255,255,255,0.8)',
+                      color: 'rgba(255,255,255,0.95)',
                       fontFamily: 'NeueMontreal-Medium, sans-serif',
                       fontWeight: 500,
                       whiteSpace: 'nowrap'
@@ -265,7 +265,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
                       <td key={ci} style={{
                         padding: '0.5rem 0.8rem',
                         borderBottom: '0.5px solid rgba(255,255,255,0.08)',
-                        color: 'rgba(255,255,255,0.6)',
+                        color: 'rgba(255,255,255,0.85)',
                         whiteSpace: 'nowrap'
                       }}>{renderInline(cell)}</td>
                     ))}
@@ -288,7 +288,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
         elements.push(
           <ul key={key++} style={{
             fontFamily: 'NeueMontreal-Light, sans-serif',
-            color: 'rgba(255,255,255,0.65)',
+            color: 'rgba(255,255,255,0.92)',
             fontSize: '0.9rem',
             lineHeight: '1.7',
             margin: '1rem 0',
@@ -312,7 +312,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
         elements.push(
           <ol key={key++} style={{
             fontFamily: 'NeueMontreal-Light, sans-serif',
-            color: 'rgba(255,255,255,0.65)',
+            color: 'rgba(255,255,255,0.92)',
             fontSize: '0.9rem',
             lineHeight: '1.7',
             margin: '1rem 0',
@@ -356,7 +356,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
             textAlign: 'center',
             fontFamily: '"Georgia", serif',
             fontSize: '1rem',
-            color: 'rgba(255, 255, 255, 0.75)',
+            color: 'rgba(255, 255, 255, 0.92)',
             fontStyle: 'italic'
           }}>
             {mathLines.join('\n')}
@@ -377,7 +377,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
         elements.push(
           <p key={key++} style={{
             fontFamily: 'NeueMontreal-Light, sans-serif',
-            color: 'rgba(255, 255, 255, 0.65)',
+            color: 'rgba(255, 255, 255, 0.92)',
             fontSize: '0.9rem',
             lineHeight: '1.8',
             margin: '1rem 0'

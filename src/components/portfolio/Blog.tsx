@@ -7,9 +7,15 @@ interface BlogProps {
   onContentClick?: (content: ContentViewData) => void;
 }
 
+// Boost rgba alpha to match ContentViewer pill appearance
+function boostAlpha(rgba: string, factor: number): string {
+  return rgba.replace(/([\d.]+)\)$/, (_, a) => `${Math.min(1, parseFloat(a) * factor)})`);
+}
+
 const Blog = ({ onContentClick }: BlogProps) => {
   const [titleAnimated, setTitleAnimated] = useState(false);
   const [animatedCards, setAnimatedCards] = useState(new Set<string>());
+  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -136,6 +142,8 @@ const Blog = ({ onContentClick }: BlogProps) => {
               data-blog-id={post.slug}
               className={`blog-card glass-blog-card ${isAnimated ? 'animated' : ''}`}
               onClick={() => handleCardClick(post.slug)}
+              onMouseEnter={() => setHoveredSlug(post.slug)}
+              onMouseLeave={() => setHoveredSlug(null)}
               style={{ cursor: 'pointer' }}
             >
               <h3 style={{
@@ -166,8 +174,9 @@ const Blog = ({ onContentClick }: BlogProps) => {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1rem' }}>
                 {post.tags.map((tag, i) => {
                   const tc = getTagColor(tag);
+                  const isHovered = hoveredSlug === post.slug;
                   return (
-                    <span key={i} style={{
+                    <span key={i} className="blog-tag-pill" style={{
                       fontSize: '0.7rem',
                       fontFamily: 'NeueMontreal-Light, sans-serif',
                       color: tc.text,
@@ -184,16 +193,9 @@ const Blog = ({ onContentClick }: BlogProps) => {
 
               <div style={{
                 display: 'flex',
-                justifyContent: 'space-between',
+                justifyContent: 'flex-end',
                 alignItems: 'center'
               }}>
-                <span style={{
-                  fontSize: '0.8rem',
-                  fontFamily: 'NeueMontreal-Light, sans-serif',
-                  color: 'rgba(255, 255, 255, 0.35)'
-                }}>
-                  {post.readingTime} min read
-                </span>
                 <span style={{
                   fontSize: '0.85rem',
                   fontFamily: 'NeueMontreal-Medium, sans-serif',
@@ -225,10 +227,23 @@ const Blog = ({ onContentClick }: BlogProps) => {
           transform: translateY(0);
           transition: opacity 0.8s ease-out, transform 0.8s ease-out;
         }
+        .glass-blog-card h3,
+        .glass-blog-card p,
+        .glass-blog-card span {
+          transition: color 0.3s ease !important;
+        }
         .glass-blog-card:hover {
           box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
           transform: translateZ(10px) scale(1.02);
           transition: all 0.3s ease;
+        }
+        .glass-blog-card:hover h3,
+        .glass-blog-card:hover p,
+        .glass-blog-card:hover span:not(.blog-tag-pill) {
+          color: rgb(255, 255, 255) !important;
+        }
+        .blog-tag-pill {
+          transition: all 0.3s ease !important;
         }
         .glass-blog-card::before {
           content: '';

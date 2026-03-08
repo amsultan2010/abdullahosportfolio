@@ -215,14 +215,14 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
 
             {/* Terminal Content */}
             <div
-              className=""
+              className="cv-terminal-content"
               style={{ padding: 'clamp(1.5rem, 3vw, 3rem)' }}
             >
               {/* Header */}
               <header style={{ marginBottom: '2.5rem' }}>
                 {/* Logo for deep research */}
                 {isDeepResearch && content.company && (
-                  <div style={{
+                  <div className="cv-cascade-item cv-cascade-0" style={{
                     marginBottom: '1.75rem',
                   }}>
                     <CompanyLogo company={content.company} />
@@ -230,7 +230,7 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
                 )}
                 {/* Company branding for case studies */}
                 {!isDeepResearch && content.company && brand && (
-                  <div style={{
+                  <div className="cv-cascade-item cv-cascade-0" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.75rem',
@@ -252,7 +252,7 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
                 )}
 
                 {/* Title */}
-                <h1 style={{
+                <h1 className="cv-cascade-item cv-cascade-1" style={{
                   fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
                   fontSize: 'clamp(1.4rem, 3.5vw, 2rem)',
                   color: 'white',
@@ -265,7 +265,7 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
                 </h1>
 
                 {/* Meta info */}
-                <div style={{
+                <div className="cv-cascade-item cv-cascade-2" style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '1rem',
@@ -273,18 +273,14 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
                   marginBottom: '1.25rem',
                   fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
                 }}>
-                  <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.4)' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)' }}>
                     <span style={{ color: 'rgb(74, 222, 128)' }}>$</span>{' '}
                     published {new Date(content.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                  </span>
-                  <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.3)' }}>•</span>
-                  <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.4)' }}>
-                    {content.readingTime} min read
                   </span>
                 </div>
 
                 {/* Tags */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                <div className="cv-cascade-item cv-cascade-3" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
                   {content.tags.map((tag, i) => {
                     const tc = getTagColor(tag);
                     return (
@@ -304,10 +300,10 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
                 </div>
 
                 {/* Summary */}
-                <p style={{
+                <p className="cv-cascade-item cv-cascade-4" style={{
                   fontFamily: 'NeueMontreal-Light, sans-serif',
                   fontSize: '1rem',
-                  color: 'rgba(255, 255, 255, 0.5)',
+                  color: 'rgba(255, 255, 255, 0.85)',
                   lineHeight: '1.7',
                   margin: 0,
                   paddingBottom: '1.5rem',
@@ -318,7 +314,9 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
               </header>
 
               {/* Markdown Body */}
-              <MarkdownRenderer content={content.markdown} />
+              <div className="cv-cascade-item cv-cascade-5">
+                <MarkdownRenderer content={content.markdown} />
+              </div>
             </div>
           </div>
         </div>
@@ -334,6 +332,21 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
           from { transform: translateY(30px); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
         }
+        @keyframes cvCascadeIn {
+          0% { opacity: 0.05; transform: translateY(8px); filter: brightness(0.3); }
+          100% { opacity: 1; transform: translateY(0); filter: brightness(1); }
+        }
+        .cv-cascade-item {
+          opacity: 0.05;
+          filter: brightness(0.3);
+          animation: cvCascadeIn 0.6s ease forwards;
+        }
+        .cv-cascade-0 { animation-delay: 0.15s; }
+        .cv-cascade-1 { animation-delay: 0.3s; }
+        .cv-cascade-2 { animation-delay: 0.45s; }
+        .cv-cascade-3 { animation-delay: 0.55s; }
+        .cv-cascade-4 { animation-delay: 0.65s; }
+        .cv-cascade-5 { animation-delay: 0.8s; }
         .content-viewer-panel::-webkit-scrollbar {
           width: 6px;
         }
