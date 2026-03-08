@@ -9,6 +9,17 @@ interface DetailCourse {
   grade?: string;
 }
 
+export interface PitchDeck {
+  title: string;
+  pdfUrl: string;
+  achievement: string;
+  competition: string;
+  year: number;
+  projectName: string;
+  description: string;
+  totalSlides: number;
+}
+
 export interface EducationDetail {
   type: 'education';
   id: number;
@@ -19,6 +30,7 @@ export interface EducationDetail {
   courses: DetailCourse[];
   activities: string[];
   achievements: string[];
+  pitchDeck?: PitchDeck;
   reflection?: string;
 }
 
@@ -344,6 +356,189 @@ const DetailPanel = ({ detail, onClose }: DetailPanelProps) => {
   );
 };
 
+// ─── Pitch Deck Mini Viewer ─────────────────────────────────
+
+const PitchDeckViewer = ({ deck, animDelay }: { deck: PitchDeck; animDelay: number }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  const placeColor = deck.achievement.includes('1st')
+    ? '#FFD700'
+    : deck.achievement.includes('2nd')
+    ? '#C0C0C0'
+    : '#CD7F32';
+
+  return (
+    <div style={{
+      opacity: 0.1,
+      animation: `sectionFadeIn 0.6s ease ${animDelay}s forwards`,
+    }}>
+      {/* Trophy card — always visible */}
+      <div
+        style={{
+          background: 'rgba(255, 255, 255, 0.04)',
+          border: `1px solid rgba(255, 255, 255, 0.1)`,
+          borderRadius: '12px',
+          padding: '1.25rem 1.5rem',
+          marginBottom: expanded ? '0' : '0',
+          borderBottomLeftRadius: expanded ? '0' : '12px',
+          borderBottomRightRadius: expanded ? '0' : '12px',
+          transition: 'all 0.3s ease',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {/* Trophy icon */}
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '10px',
+            background: `linear-gradient(135deg, ${placeColor}22, ${placeColor}11)`,
+            border: `1px solid ${placeColor}44`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.4rem',
+            flexShrink: 0,
+          }}>
+            {deck.achievement.includes('1st') ? '\uD83C\uDFC6' : '\uD83C\uDFC5'}
+          </div>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{
+              fontFamily: 'NeueMontreal-Medium, sans-serif',
+              color: placeColor,
+              fontSize: '0.8rem',
+              margin: '0 0 0.2rem',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+            }}>
+              {deck.achievement}
+            </p>
+            <p style={{
+              fontFamily: 'NeueMontreal-Medium, sans-serif',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontSize: '0.95rem',
+              margin: '0 0 0.2rem',
+              lineHeight: 1.3,
+            }}>
+              {deck.competition} {deck.year}
+            </p>
+            <p style={{
+              fontFamily: 'NeueMontreal-Light, sans-serif',
+              color: 'rgba(255, 255, 255, 0.5)',
+              fontSize: '0.8rem',
+              margin: 0,
+            }}>
+              {deck.projectName} &middot; {deck.totalSlides} slides
+            </p>
+          </div>
+        </div>
+
+        {/* Description */}
+        <p style={{
+          fontFamily: 'NeueMontreal-Light, sans-serif',
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontSize: '0.85rem',
+          lineHeight: 1.6,
+          margin: '1rem 0 1rem',
+        }}>
+          {deck.description}
+        </p>
+
+        {/* Expand / Collapse toggle */}
+        <button
+          onClick={() => setExpanded(!expanded)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: expanded ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: '8px',
+            padding: '0.55rem 1rem',
+            cursor: 'pointer',
+            fontFamily: '"SF Mono", "Fira Code", "Fira Mono", Menlo, monospace',
+            fontSize: '0.8rem',
+            color: 'rgba(255, 255, 255, 0.7)',
+            transition: 'all 0.2s ease',
+            width: '100%',
+            justifyContent: 'center',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = expanded ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.05)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+            e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+          }}
+        >
+          <span style={{
+            transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
+            transition: 'transform 0.25s ease',
+            display: 'inline-block',
+          }}>
+            &#9654;
+          </span>
+          {expanded ? '$ close deck' : '$ view deck'}
+        </button>
+      </div>
+
+      {/* Expandable PDF viewer */}
+      <div style={{
+        maxHeight: expanded ? '600px' : '0px',
+        opacity: expanded ? 1 : 0,
+        overflow: 'hidden',
+        transition: 'max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease',
+        background: 'rgba(0, 0, 0, 0.3)',
+        borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+        borderBottom: expanded ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+        borderBottomLeftRadius: '12px',
+        borderBottomRightRadius: '12px',
+      }}>
+        {/* Mini title bar for the embedded viewer */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          padding: '0.6rem 1rem',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'rgba(255, 255, 255, 0.03)',
+        }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ff5f57' }} />
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#febc2e' }} />
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#28c840' }} />
+          <span style={{
+            fontFamily: '"SF Mono", "Fira Code", monospace',
+            fontSize: '0.7rem',
+            color: 'rgba(255, 255, 255, 0.4)',
+            marginLeft: '0.5rem',
+          }}>
+            {deck.title}
+          </span>
+        </div>
+
+        {/* PDF iframe — only rendered when expanded to avoid heavy loading */}
+        {expanded && (
+          <iframe
+            src={`${deck.pdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+            style={{
+              width: '100%',
+              height: '520px',
+              border: 'none',
+              display: 'block',
+              background: '#111',
+            }}
+            title={deck.title}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ─── Education Detail ───────────────────────────────────────
 
 const EducationContent = ({ detail }: { detail: EducationDetail }) => {
@@ -480,12 +675,19 @@ const EducationContent = ({ detail }: { detail: EducationDetail }) => {
         </div>
       )}
 
+      {/* Pitch Deck — integrated mini presentation viewer */}
+      {detail.pitchDeck && (
+        <div style={{ marginBottom: '2rem' }}>
+          <PitchDeckViewer deck={detail.pitchDeck} animDelay={cascadeEnd + 0.25} />
+        </div>
+      )}
+
       {/* Reflection / Notes — fades in last */}
       {detail.reflection && (
         <div style={{
           marginBottom: '2rem',
           opacity: 0.1,
-          animation: `sectionFadeIn 0.6s ease ${cascadeEnd + 0.3}s forwards`,
+          animation: `sectionFadeIn 0.6s ease ${cascadeEnd + 0.4}s forwards`,
         }}>
           <h3 style={sectionTitleStyle}>Reflection</h3>
           <p style={{

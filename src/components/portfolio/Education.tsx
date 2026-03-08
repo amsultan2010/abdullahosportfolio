@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import ExperienceCard from './ExperienceCard';
-import type { EducationDetail, DetailContent } from './DetailPanel';
+import type { EducationDetail, DetailContent, PitchDeck } from './DetailPanel';
 
 interface EducationProps {
   onCardClick?: (detail: DetailContent) => void;
@@ -54,7 +54,19 @@ const Education = ({ onCardClick }: EducationProps) => {
           "Laurier Computing Society",
           "Laurier Entrepreneurship Club"
         ],
-        achievements: [],
+        achievements: [
+          "3rd Place — Real Estate Laurier Proposal Competition 2026"
+        ],
+        pitchDeck: {
+          title: "REL Case Competition Proposal",
+          pdfUrl: "/REL Case comp.pdf",
+          achievement: "3rd Place",
+          competition: "Real Estate Laurier Proposal Competition",
+          year: 2026,
+          projectName: "REL Case Comp",
+          description: "A real estate proposal developed for the Real Estate Laurier case competition, showcasing market analysis, financial modeling, and strategic recommendations.",
+          totalSlides: 15,
+        },
         reflection: "Transferring into Laurier's standalone CS program gave me the chance to go deeper into systems-level thinking — from OS internals and microprocessors to networking and algorithm design. The smaller cohort and hands-on labs helped me build stronger fundamentals."
       } satisfies EducationDetail
     }
@@ -109,8 +121,19 @@ const Education = ({ onCardClick }: EducationProps) => {
           "Laurier Entrepreneurs"
         ],
         achievements: [
+          "1st Place — New Venture BDO Pitch Competition 2024",
           "Completed double degree program spanning two universities"
         ],
+        pitchDeck: {
+          title: "PartyFlow — New Venture Pitch Deck",
+          pdfUrl: "/PartyFlow New Venture.pdf",
+          achievement: "1st Place",
+          competition: "New Venture BDO Pitch Competition",
+          year: 2024,
+          projectName: "PartyFlow",
+          description: "A venture pitch for PartyFlow, an event management platform. Presented at the BDO New Venture Competition, covering market opportunity, product design, revenue model, and growth strategy.",
+          totalSlides: 12,
+        },
         reflection: "The double degree was an intense two years — balancing proof-heavy math at Waterloo with case competitions at Laurier. It taught me how to context-switch between analytical and business thinking, and gave me a strong foundation in both CS theory and real-world problem framing."
       } satisfies EducationDetail
     }
