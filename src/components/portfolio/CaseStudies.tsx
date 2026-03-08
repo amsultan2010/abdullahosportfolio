@@ -115,7 +115,7 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
         width: '90%',
         maxWidth: '1200px',
         minWidth: '320px',
-        overflow: 'hidden'
+        overflow: 'visible'
       }}
     >
       <h2
@@ -135,111 +135,138 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
         Deep Research
       </h2>
 
-      {/* Research card with carousel */}
-      <div
-        className={`cs-carousel glass-cs-carousel ${cardAnimated ? 'animated' : ''}`}
-        style={{ position: 'relative' }}
-      >
-        {/* Content area - click to open */}
+      {/* Research card with carousel - wrapper for outside arrows */}
+      <div className="cs-carousel-wrapper" style={{ position: 'relative' }}>
         <div
-          onClick={handleCardClick}
-          style={{ cursor: 'pointer', padding: '2rem 3rem' }}
-          className="cs-carousel-inner"
+          className={`cs-carousel glass-cs-carousel ${cardAnimated ? 'animated' : ''}`}
         >
+          {/* Content area - click to open */}
           <div
-            key={paper.slug}
-            style={{
-              animation: 'csFadeSlide 0.4s ease-out forwards'
-            }}
+            onClick={handleCardClick}
+            style={{ cursor: 'pointer', padding: '2rem 3rem' }}
+            className="cs-carousel-inner"
           >
-            {/* Logo */}
-            <div style={{
-              marginBottom: '1rem',
-              height: '28px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-start',
-              overflow: 'visible'
-            }}>
-              {LogoComponent}
-            </div>
-
-            {/* Title */}
-            <h3 style={{
-              fontSize: 'clamp(1.1rem, 3vw, 1.5rem)',
-              color: 'rgba(255, 255, 255, 0.85)',
-              fontFamily: 'NeueMontreal-Medium, sans-serif',
-              margin: '0.5rem 0 1rem',
-              fontWeight: '500',
-              lineHeight: '1.4'
-            }}>
-              {paper.title}
-            </h3>
-
-            {/* Summary */}
-            <p style={{
-              color: 'rgba(255, 255, 255, 0.55)',
-              fontSize: '0.95rem',
-              fontFamily: 'NeueMontreal-Light, sans-serif',
-              lineHeight: '1.7',
-              margin: '0 0 1.25rem',
-              maxWidth: '800px'
-            }}>
-              {paper.summary}
-            </p>
-
-            {/* Tags + meta row */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '0.75rem'
-            }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                {paper.tags.map((tag, i) => {
-                  const tc = getTagColor(tag);
-                  return (
-                    <span key={i} style={{
-                      fontSize: '0.7rem',
-                      fontFamily: 'NeueMontreal-Light, sans-serif',
-                      color: tc.text,
-                      padding: '0.2rem 0.5rem',
-                      borderRadius: '12px',
-                      background: tc.bg,
-                      border: `0.5px solid ${tc.border}`
-                    }}>
-                      {tag}
-                    </span>
-                  );
-                })}
+            <div
+              key={paper.slug}
+              style={{
+                animation: 'csFadeSlide 0.4s ease-out forwards'
+              }}
+            >
+              {/* Logo */}
+              <div style={{
+                marginBottom: '1rem',
+                height: '28px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                overflow: 'visible'
+              }}>
+                {LogoComponent}
               </div>
 
+              {/* Title */}
+              <h3 style={{
+                fontSize: 'clamp(1.1rem, 3vw, 1.5rem)',
+                color: 'rgba(255, 255, 255, 0.85)',
+                fontFamily: 'NeueMontreal-Medium, sans-serif',
+                margin: '0.5rem 0 1rem',
+                fontWeight: '500',
+                lineHeight: '1.4'
+              }}>
+                {paper.title}
+              </h3>
+
+              {/* Summary */}
+              <p style={{
+                color: 'rgba(255, 255, 255, 0.55)',
+                fontSize: '0.95rem',
+                fontFamily: 'NeueMontreal-Light, sans-serif',
+                lineHeight: '1.7',
+                margin: '0 0 1.25rem',
+                maxWidth: '800px'
+              }}>
+                {paper.summary}
+              </p>
+
+              {/* Tags + meta row */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '1.5rem'
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.75rem'
               }}>
-                <span style={{
-                  fontSize: '0.8rem',
-                  fontFamily: 'NeueMontreal-Light, sans-serif',
-                  color: 'rgba(255, 255, 255, 0.35)'
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  {paper.tags.map((tag, i) => {
+                    const tc = getTagColor(tag);
+                    return (
+                      <span key={i} style={{
+                        fontSize: '0.7rem',
+                        fontFamily: 'NeueMontreal-Light, sans-serif',
+                        color: tc.text,
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: '12px',
+                        background: tc.bg,
+                        border: `0.5px solid ${tc.border}`
+                      }}>
+                        {tag}
+                      </span>
+                    );
+                  })}
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1.5rem'
                 }}>
-                  {paper.readingTime} min read
-                </span>
-                <span style={{
-                  fontSize: '0.85rem',
-                  fontFamily: 'NeueMontreal-Medium, sans-serif',
-                  color: 'rgba(255, 255, 255, 0.5)'
-                }}>
-                  Read &rarr;
-                </span>
+                  <span style={{
+                    fontSize: '0.8rem',
+                    fontFamily: 'NeueMontreal-Light, sans-serif',
+                    color: 'rgba(255, 255, 255, 0.35)'
+                  }}>
+                    {paper.readingTime} min read
+                  </span>
+                  <span style={{
+                    fontSize: '0.85rem',
+                    fontFamily: 'NeueMontreal-Medium, sans-serif',
+                    color: 'rgba(255, 255, 255, 0.5)'
+                  }}>
+                    Read &rarr;
+                  </span>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Dot indicators */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            paddingBottom: '1rem'
+          }}>
+            {researchPapers.map((_, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.stopPropagation(); setActiveIndex(i); }}
+                style={{
+                  width: activeIndex === i ? '20px' : '6px',
+                  height: '6px',
+                  borderRadius: '3px',
+                  background: activeIndex === i ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.2)',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                aria-label={`Go to paper ${i + 1}`}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Navigation arrows */}
+        {/* Navigation arrows - outside the glass card */}
         <button
           onClick={handlePrev}
           className="cs-nav-btn cs-nav-prev"
@@ -258,32 +285,6 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
             <polyline points="9 6 15 12 9 18" />
           </svg>
         </button>
-
-        {/* Dot indicators */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '0.5rem',
-          paddingBottom: '1rem'
-        }}>
-          {researchPapers.map((_, i) => (
-            <button
-              key={i}
-              onClick={(e) => { e.stopPropagation(); setActiveIndex(i); }}
-              style={{
-                width: activeIndex === i ? '20px' : '6px',
-                height: '6px',
-                borderRadius: '3px',
-                background: activeIndex === i ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.2)',
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-              aria-label={`Go to paper ${i + 1}`}
-            />
-          ))}
-        </div>
       </div>
 
       <style>{`
@@ -334,14 +335,14 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
           background: rgba(255, 255, 255, 0.12);
           color: white;
         }
-        .cs-nav-prev { left: 12px; }
-        .cs-nav-next { right: 12px; }
+        .cs-nav-prev { left: -48px; }
+        .cs-nav-next { right: -48px; }
         @media (max-width: 768px) {
           .cs-container { width: calc(95% - 40px) !important; min-width: 300px !important; padding: 0 20px !important; }
           .cs-carousel-inner { padding: 1.5rem 2.5rem !important; }
           .cs-nav-btn { width: 30px; height: 30px; }
-          .cs-nav-prev { left: 6px; }
-          .cs-nav-next { right: 6px; }
+          .cs-nav-prev { left: -40px; }
+          .cs-nav-next { right: -40px; }
         }
         @media (max-width: 480px) {
           .cs-container { width: calc(98% - 40px) !important; min-width: 280px !important; padding: 0 20px !important; }

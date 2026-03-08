@@ -502,8 +502,8 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           color: white;
         }
 
-        .proj-nav-prev { left: 12px; }
-        .proj-nav-next { right: 12px; }
+        .proj-nav-prev { left: -48px; }
+        .proj-nav-next { right: -48px; }
 
         .proj-nav-btn.proj-nav-hidden {
           opacity: 0;
@@ -552,8 +552,8 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
             padding: 0 20px 40px 20px !important;
           }
           .proj-nav-btn { width: 30px; height: 30px; }
-          .proj-nav-prev { left: 6px; }
-          .proj-nav-next { right: 6px; }
+          .proj-nav-prev { left: -40px; }
+          .proj-nav-next { right: -40px; }
           .view-switcher { display: none; }
         }
 

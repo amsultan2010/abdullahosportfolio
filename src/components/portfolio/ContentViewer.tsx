@@ -215,7 +215,7 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
 
             {/* Terminal Content */}
             <div
-              className={isDeepResearch ? 'deep-research-content' : ''}
+              className=""
               style={{ padding: 'clamp(1.5rem, 3vw, 3rem)' }}
             >
               {/* Header */}
@@ -324,34 +324,6 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
         </div>
       </div>
 
-      {/* White lightning cascade overlay for deep research */}
-      {isDeepResearch && (
-        <div className="lightning-cascade" style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          zIndex: 302,
-          pointerEvents: 'none',
-          animation: 'lightningCascade 1.6s ease-out forwards',
-        }}>
-          {/* White glow wash */}
-          <div style={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0, bottom: 0,
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 15%, rgba(255, 255, 255, 0.02) 35%, transparent 55%)',
-            animation: 'lightningWipe 1.2s ease-out forwards',
-          }} />
-          {/* Central white beam */}
-          <div style={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0,
-            height: '4px',
-            background: 'linear-gradient(90deg, transparent 10%, rgba(255, 255, 255, 0.5) 30%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0.5) 70%, transparent 90%)',
-            animation: 'lightningBeamSweep 1.2s ease-out forwards',
-            boxShadow: '0 0 30px rgba(255, 255, 255, 0.3), 0 0 60px rgba(255, 255, 255, 0.1)',
-          }} />
-        </div>
-      )}
-
       {/* Styles */}
       <style>{`
         @keyframes cvFadeIn {
@@ -361,29 +333,6 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
         @keyframes cvSlideUp {
           from { transform: translateY(30px); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes lightningCascade {
-          0% { opacity: 1; }
-          80% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-        @keyframes lightningWipe {
-          0% { transform: translateY(-100%); }
-          100% { transform: translateY(100%); }
-        }
-        @keyframes lightningBeamSweep {
-          0% { top: -4px; opacity: 1; }
-          90% { top: 100%; opacity: 0.6; }
-          100% { top: 100%; opacity: 0; }
-        }
-        .deep-research-content {
-          filter: brightness(0.35);
-          animation: contentIlluminate 1.4s ease-out 0.15s forwards;
-        }
-        @keyframes contentIlluminate {
-          0% { filter: brightness(0.35); }
-          60% { filter: brightness(0.85); }
-          100% { filter: brightness(1); }
         }
         .content-viewer-panel::-webkit-scrollbar {
           width: 6px;
