@@ -1,8 +1,10 @@
 import React from 'react';
+import { chartRegistry } from './InteractiveCharts';
 
 // Lightweight markdown-to-React renderer for blog posts and case studies
 // Handles: headings, paragraphs, bold, italic, inline code, code blocks,
-// blockquotes, lists, tables, horizontal rules, links, and custom callouts
+// blockquotes, lists, tables, horizontal rules, links, custom callouts,
+// and interactive chart embeds via {{chart:id}} syntax
 
 interface MarkdownRendererProps {
   content: string;
@@ -321,6 +323,17 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
             ))}
           </ol>
         );
+        continue;
+      }
+
+      // Interactive chart embed: {{chart:chartId}}
+      const chartMatch = line.match(/^\{\{chart:([a-z0-9-]+)\}\}$/);
+      if (chartMatch) {
+        const ChartComponent = chartRegistry[chartMatch[1]];
+        if (ChartComponent) {
+          elements.push(<ChartComponent key={key++} />);
+        }
+        i++;
         continue;
       }
 

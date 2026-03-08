@@ -200,7 +200,7 @@ const Navbar = () => {
           }}>
             Projects
           </a>
-          <a href="#case-studies" style={{
+          <a href="#deep-research" style={{
             color: 'rgba(255, 255, 255, 0.75)',
             textDecoration: 'none',
             fontSize: '1.25rem',
@@ -212,7 +212,7 @@ const Navbar = () => {
             margin: 0
           }} onClick={(e) => {
             e.preventDefault();
-            document.getElementById('case-studies')?.scrollIntoView({
+            document.getElementById('deep-research')?.scrollIntoView({
               behavior: 'smooth',
               block: 'center'
             });
@@ -223,7 +223,7 @@ const Navbar = () => {
           }} onMouseLeave={(e) => {
             (e.target as HTMLElement).style.color = 'rgba(255, 255, 255, 0.75)';
           }}>
-            Case Studies
+            Deep Research
           </a>
           <a href="#blog" style={{
             color: 'rgba(255, 255, 255, 0.75)',
@@ -415,7 +415,7 @@ const Navbar = () => {
           }}>
             projects
           </a>
-          <a href="#case-studies" style={{
+          <a href="#deep-research" style={{
             color: 'rgba(255, 255, 255, 0.75)',
             textDecoration: 'none',
             fontSize: '0.9rem',
@@ -428,7 +428,7 @@ const Navbar = () => {
             textAlign: 'left'
           }} onClick={(e) => {
             e.preventDefault();
-            document.getElementById('case-studies')?.scrollIntoView({
+            document.getElementById('deep-research')?.scrollIntoView({
               behavior: 'smooth',
               block: 'center'
             });
@@ -439,7 +439,7 @@ const Navbar = () => {
           }} onMouseLeave={(e) => {
             (e.target as HTMLElement).style.backgroundColor = 'transparent';
           }}>
-            case studies
+            deep research
           </a>
           <a href="#blog" style={{
             color: 'rgba(255, 255, 255, 0.75)',

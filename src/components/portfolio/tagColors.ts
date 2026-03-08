@@ -15,6 +15,8 @@ const tagColorMap: Record<string, TagColor> = {
   'Python': { bg: 'rgba(59, 130, 246, 0.15)', text: '#60A5FA', border: 'rgba(59, 130, 246, 0.3)' },
   'Markets': { bg: 'rgba(20, 184, 166, 0.15)', text: '#2DD4BF', border: 'rgba(20, 184, 166, 0.3)' },
   'Enterprise': { bg: 'rgba(239, 68, 68, 0.15)', text: '#F87171', border: 'rgba(239, 68, 68, 0.3)' },
+  'Behavioral Economics': { bg: 'rgba(251, 146, 60, 0.15)', text: '#FB923C', border: 'rgba(251, 146, 60, 0.3)' },
+  'Research': { bg: 'rgba(99, 102, 241, 0.15)', text: '#818CF8', border: 'rgba(99, 102, 241, 0.3)' },
   'SaaS': { bg: 'rgba(6, 182, 212, 0.15)', text: '#22D3EE', border: 'rgba(6, 182, 212, 0.3)' },
   'Architecture': { bg: 'rgba(99, 102, 241, 0.15)', text: '#818CF8', border: 'rgba(99, 102, 241, 0.3)' },
   'Microservices': { bg: 'rgba(168, 85, 247, 0.15)', text: '#C084FC', border: 'rgba(168, 85, 247, 0.3)' },
@@ -73,4 +75,5 @@ export const companyBrands: Record<string, { color: string; bgColor: string }> =
   'Netflix': { color: '#E50914', bgColor: 'rgba(229, 9, 20, 0.12)' },
   'Uber': { color: '#FFFFFF', bgColor: 'rgba(255, 255, 255, 0.08)' },
   'Spotify': { color: '#1DB954', bgColor: 'rgba(29, 185, 84, 0.12)' },
+  'NDX': { color: '#4FC3F7', bgColor: 'rgba(79, 195, 247, 0.12)' },
 };

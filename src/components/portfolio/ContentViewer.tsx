@@ -3,7 +3,7 @@ import MarkdownRenderer from './MarkdownRenderer';
 import { getTagColor, companyBrands } from './tagColors';
 
 export interface ContentViewData {
-  type: 'blog' | 'case-study';
+  type: 'blog' | 'case-study' | 'deep-research';
   slug: string;
   title: string;
   company?: string;
@@ -48,14 +48,28 @@ const CompanyLogo = ({ company }: { company: string }) => {
     );
   }
 
+  if (company === 'NDX') {
+    return (
+      <img
+        src="/NASDAQ_Logo.svg.png"
+        alt="Nasdaq"
+        height={40}
+        style={{ filter: 'brightness(0) invert(1)', opacity: 0.9 }}
+      />
+    );
+  }
+
   return null;
 };
 
 const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const brand = content.company ? companyBrands[content.company] : null;
+  const isDeepResearch = content.type === 'deep-research';
 
-  const titleBarLabel = content.type === 'case-study'
+  const titleBarLabel = content.type === 'deep-research'
+    ? `${content.slug}.research — deep research`
+    : content.type === 'case-study'
     ? `${content.slug}.case — ${content.company}`
     : `${content.slug} — blog post`;
 
@@ -113,33 +127,31 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
         }}>
           <button
             onClick={onClose}
+            className="cv-back-btn"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              background: 'rgba(255, 255, 255, 0.06)',
-              border: '0.5px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '8px',
-              padding: '0.5rem 1rem',
+              gap: '0.4rem',
+              background: 'none',
+              border: 'none',
+              padding: '0.4rem 0',
               cursor: 'pointer',
-              color: 'rgba(255, 255, 255, 0.6)',
-              fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
-              fontSize: '0.8rem',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              transition: 'all 0.2s ease'
+              color: 'rgba(255, 255, 255, 0.45)',
+              fontFamily: 'NeueMontreal-Light, sans-serif',
+              fontSize: '0.85rem',
+              transition: 'color 0.2s ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
               e.currentTarget.style.color = 'white';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.45)';
             }}
           >
-            <span style={{ color: 'rgb(74, 222, 128)' }}>$</span>
-            cd ..
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Back
           </button>
         </div>
 
@@ -191,11 +203,22 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
             </div>
 
             {/* Terminal Content */}
-            <div style={{ padding: 'clamp(1.5rem, 3vw, 3rem)' }}>
+            <div
+              className={isDeepResearch ? 'deep-research-content' : ''}
+              style={{ padding: 'clamp(1.5rem, 3vw, 3rem)' }}
+            >
               {/* Header */}
               <header style={{ marginBottom: '2.5rem' }}>
+                {/* Nasdaq branding for deep research */}
+                {isDeepResearch && (
+                  <div style={{
+                    marginBottom: '1.75rem',
+                  }}>
+                    <CompanyLogo company="NDX" />
+                  </div>
+                )}
                 {/* Company branding for case studies */}
-                {content.company && brand && (
+                {!isDeepResearch && content.company && brand && (
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -290,6 +313,34 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
         </div>
       </div>
 
+      {/* White lightning cascade overlay for deep research */}
+      {isDeepResearch && (
+        <div className="lightning-cascade" style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 302,
+          pointerEvents: 'none',
+          animation: 'lightningCascade 1.6s ease-out forwards',
+        }}>
+          {/* White glow wash */}
+          <div style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 15%, rgba(255, 255, 255, 0.02) 35%, transparent 55%)',
+            animation: 'lightningWipe 1.2s ease-out forwards',
+          }} />
+          {/* Central white beam */}
+          <div style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0,
+            height: '4px',
+            background: 'linear-gradient(90deg, transparent 10%, rgba(255, 255, 255, 0.5) 30%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0.5) 70%, transparent 90%)',
+            animation: 'lightningBeamSweep 1.2s ease-out forwards',
+            boxShadow: '0 0 30px rgba(255, 255, 255, 0.3), 0 0 60px rgba(255, 255, 255, 0.1)',
+          }} />
+        </div>
+      )}
+
       {/* Styles */}
       <style>{`
         @keyframes cvFadeIn {
@@ -299,6 +350,29 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
         @keyframes cvSlideUp {
           from { transform: translateY(30px); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes lightningCascade {
+          0% { opacity: 1; }
+          80% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes lightningWipe {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(100%); }
+        }
+        @keyframes lightningBeamSweep {
+          0% { top: -4px; opacity: 1; }
+          90% { top: 100%; opacity: 0.6; }
+          100% { top: 100%; opacity: 0; }
+        }
+        .deep-research-content {
+          filter: brightness(0.35);
+          animation: contentIlluminate 1.4s ease-out 0.15s forwards;
+        }
+        @keyframes contentIlluminate {
+          0% { filter: brightness(0.35); }
+          60% { filter: brightness(0.85); }
+          100% { filter: brightness(1); }
         }
         .content-viewer-panel::-webkit-scrollbar {
           width: 6px;
