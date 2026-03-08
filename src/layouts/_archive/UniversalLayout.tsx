@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react';
-import MobileDock from '../components/global/MobileDock';
-import DesktopDock from '../components/global/DesktopDock';
-import Nav from '../components/global/Nav';
+import MobileDock from '../../components/global/MobileDock';
+import DesktopDock from '../../components/global/DesktopDock';
+import Nav from '../../components/global/Nav';
 
 interface UniversalLayoutProps {
   currentPath: string;

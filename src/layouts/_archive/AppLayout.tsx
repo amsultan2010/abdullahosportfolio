@@ -1,7 +1,7 @@
-import MacTerminal from '../components/global/MacTerminal';
-import MobileDock from '../components/global/MobileDock';
-import DesktopDock from '../components/global/DesktopDock';
-import Nav from '../components/global/Nav';
+import MacTerminal from '../../components/global/MacTerminal';
+import MobileDock from '../../components/global/MobileDock';
+import DesktopDock from '../../components/global/DesktopDock';
+import Nav from '../../components/global/Nav';
 
 interface AppLayoutProps {
   initialBg: string;

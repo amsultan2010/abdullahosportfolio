@@ -1,6 +1,6 @@
-import MobileDock from '../components/global/MobileDock';
-import DesktopDock from '../components/global/DesktopDock';
-import Nav from '../components/global/Nav';
+import MobileDock from '../../components/global/MobileDock';
+import DesktopDock from '../../components/global/DesktopDock';
+import Nav from '../../components/global/Nav';
 import { useState } from 'react';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';

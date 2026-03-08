@@ -1,8 +1,8 @@
 import { type ReactNode } from 'react';
 import { FaRegFolderClosed } from 'react-icons/fa6';
-import MobileDock from '../components/global/MobileDock';
-import DesktopDock from '../components/global/DesktopDock';
-import Nav from '../components/global/Nav';
+import MobileDock from '../../components/global/MobileDock';
+import DesktopDock from '../../components/global/DesktopDock';
+import Nav from '../../components/global/Nav';
 
 interface ProjectDetailLayoutProps {
   title: string;

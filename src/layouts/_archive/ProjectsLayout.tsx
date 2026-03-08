@@ -1,7 +1,7 @@
-import MobileDock from '../components/global/MobileDock';
-import DesktopDock from '../components/global/DesktopDock';
-import Nav from '../components/global/Nav';
-import ProjectCarousel from '../components/ProjectCarousel';
+import MobileDock from '../../components/global/MobileDock';
+import DesktopDock from '../../components/global/DesktopDock';
+import Nav from '../../components/global/Nav';
+import ProjectCarousel from '../../components/ProjectCarousel';
 
 interface Project {
   title: string;

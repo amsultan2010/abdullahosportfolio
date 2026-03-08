@@ -1,9 +1,9 @@
 import { type ReactNode, useEffect } from 'react';
 import { FaRegFolderClosed } from 'react-icons/fa6';
-import MobileDock from '../components/global/MobileDock';
-import DesktopDock from '../components/global/DesktopDock';
-import Nav from '../components/global/Nav';
-import Background from '../components/portfolio/Background';
+import MobileDock from '../../components/global/MobileDock';
+import DesktopDock from '../../components/global/DesktopDock';
+import Nav from '../../components/global/Nav';
+import Background from '../../components/portfolio/Background';
 
 interface BlogPostLayoutProps {
   title: string;

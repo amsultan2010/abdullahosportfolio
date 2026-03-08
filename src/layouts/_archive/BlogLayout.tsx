@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import MobileDock from '../components/global/MobileDock';
-import DesktopDock from '../components/global/DesktopDock';
-import Nav from '../components/global/Nav';
-import BlogPostCard from '../components/BlogPostCard';
-import Background from '../components/portfolio/Background';
+import MobileDock from '../../components/global/MobileDock';
+import DesktopDock from '../../components/global/DesktopDock';
+import Nav from '../../components/global/Nav';
+import BlogPostCard from '../../components/BlogPostCard';
+import Background from '../../components/portfolio/Background';
 
 interface BlogPost {
   title: string;
