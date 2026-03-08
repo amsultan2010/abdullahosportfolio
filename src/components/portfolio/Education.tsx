@@ -59,7 +59,7 @@ const Education = ({ onCardClick }: EducationProps) => {
         ],
         pitchDeck: {
           title: "REL Case Competition Proposal",
-          pdfUrl: "/REL Case comp.pdf",
+          pdfUrl: "/REL-Case-Comp.pdf",
           achievement: "3rd Place",
           competition: "Real Estate Laurier Proposal Competition",
           year: 2026,
@@ -126,7 +126,7 @@ const Education = ({ onCardClick }: EducationProps) => {
         ],
         pitchDeck: {
           title: "PartyFlow — New Venture Pitch Deck",
-          pdfUrl: "/PartyFlow New Venture.pdf",
+          pdfUrl: "/PartyFlow-New-Venture.pdf",
           achievement: "1st Place",
           competition: "New Venture BDO Pitch Competition",
           year: 2024,
