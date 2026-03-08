@@ -11,6 +11,18 @@ const PHRASES = [
   'late nights and good music',
   'a mass amount of ambition',
   'React, Python, and prayers',
+  'vibes-based architecture',
+  'ctrl+c ctrl+v from Stack Overflow',
+  'approximately 47 browser tabs',
+  'one more "quick fix" at 2am',
+  'an mass amount of YAML files',
+  'a mass amount of JIRA tickets',
+  'whatever ChatGPT recommends',
+  'zero sleep and questionable decisions',
+  'microservices nobody asked for',
+  'a mass amount of Lambda functions',
+  'distributed systems and distributed sleep',
+  'a mass amount of git commits',
 ];
 
 const TYPING_SPEED = 65;

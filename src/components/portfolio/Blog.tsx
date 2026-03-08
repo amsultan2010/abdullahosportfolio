@@ -39,44 +39,44 @@ const Blog = ({ onContentClick }: BlogProps) => {
 
   const blogPosts = [
     {
-      slug: "waterloo-notes-coops-ai-wave",
-      title: "Notes from Waterloo Country: Co-ops, Campus Energy, and the AI Wrapper Wave",
-      summary: "What campus recruiting and the YC accelerator wave look like from inside a co-op program.",
-      tags: ["Learning", "Career", "AI"],
-      readingTime: 8,
-      publishedAt: "2025-10-17"
+      slug: "prestige-is-a-strong-drug",
+      title: "Prestige Is a Strong Drug",
+      summary: "What dropping out of one of Canada's best programs taught me about borrowed momentum and real growth.",
+      tags: ["Personal", "Career", "Psychology"],
+      readingTime: 5,
+      publishedAt: "2026-02-20"
     },
     {
-      slug: "agentification-3-phases",
-      title: "Agentification: The 3 Phases and Why Most Demos Are Phase 0.5",
-      summary: "Trying to understand what makes an AI system a real 'agent' vs. just a fancy API call.",
-      tags: ["AI", "Agents", "Systems"],
-      readingTime: 7,
-      publishedAt: "2025-10-13"
-    },
-    {
-      slug: "gold-vs-nasdaq",
-      title: "What Got Me Curious About Gold vs. the Nasdaq",
-      summary: "Why do gold and tech sometimes move opposite directions, and what does it tell us about market mood?",
-      tags: ["Finance", "Python", "Markets"],
-      readingTime: 7,
-      publishedAt: "2025-10-13"
-    },
-    {
-      slug: "risk-on-and-off-together",
-      title: "When Risk-On and Risk-Off Rally Together",
-      summary: "Some days both stocks and safe assets go up at the same time. What's happening on those days?",
-      tags: ["Finance", "Markets", "Python"],
+      slug: "trading-rabbit-hole",
+      title: "What Going Down the Trading Rabbit Hole Taught Me About Finance",
+      summary: "Anyone who gets interested in markets eventually falls into the same rabbit hole. Here is what I found at the bottom.",
+      tags: ["Finance", "Markets", "Learning"],
       readingTime: 6,
-      publishedAt: "2025-10-13"
+      publishedAt: "2026-01-28"
     },
     {
-      slug: "demystifying-enterprise-saas",
-      title: "What Makes Enterprise Software Sticky?",
-      summary: "Trying to understand why companies pay millions for software that seems like it could be a spreadsheet.",
-      tags: ["Enterprise", "SaaS", "Systems"],
-      readingTime: 9,
-      publishedAt: "2025-07-15"
+      slug: "vc-investing-in-myself",
+      title: "Roleplaying as a VC Investing in Myself",
+      summary: "What happens when you evaluate your own life using the logic of venture capital.",
+      tags: ["Productivity", "Psychology", "Personal"],
+      readingTime: 5,
+      publishedAt: "2026-01-15"
+    },
+    {
+      slug: "most-ai-startups-api-calls",
+      title: "Most AI Startups Are Just Fancy API Calls",
+      summary: "And why that is actually working for now. The wrapper critique misses something important.",
+      tags: ["AI", "Startups", "Systems"],
+      readingTime: 5,
+      publishedAt: "2025-12-10"
+    },
+    {
+      slug: "explaining-ai-agents",
+      title: "Explaining AI Agents With One Simple Analogy",
+      summary: "Every time I try explaining AI agents to someone who is not technical, the conversation usually starts the same way.",
+      tags: ["AI", "Agents", "Learning"],
+      readingTime: 5,
+      publishedAt: "2025-11-22"
     }
   ];
 
@@ -119,7 +119,7 @@ const Blog = ({ onContentClick }: BlogProps) => {
           transition: 'opacity 0.8s ease-out, transform 0.8s ease-out'
         }}
       >
-        Blog
+        My Thoughts
       </h2>
 
       <div style={{

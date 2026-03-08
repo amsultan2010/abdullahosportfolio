@@ -1,43 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 const NameHeader = () => {
   const fullName = "Ronniel Gandhe";
-  const [displayedText, setDisplayedText] = useState('');
-  const [showCursor, setShowCursor] = useState(true);
-  const [isTypingDone, setIsTypingDone] = useState(false);
-  const hasStarted = useRef(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (hasStarted.current) return;
-    hasStarted.current = true;
-
-    // Wait for splash screen to fade out (NameFlash hides at 3500ms)
-    const startDelay = setTimeout(() => {
-      let currentIndex = 0;
-      const typingInterval = setInterval(() => {
-        if (currentIndex < fullName.length) {
-          setDisplayedText(fullName.slice(0, currentIndex + 1));
-          currentIndex++;
-        } else {
-          clearInterval(typingInterval);
-          setTimeout(() => {
-            setIsTypingDone(true);
-          }, 2500);
-        }
-      }, 110);
-
-      return () => clearInterval(typingInterval);
-    }, 3600);
-
-    return () => clearTimeout(startDelay);
-  }, []);
-
-  // Cursor blink effect
-  useEffect(() => {
-    const blinkInterval = setInterval(() => {
-      setShowCursor(prev => !prev);
-    }, 500);
-    return () => clearInterval(blinkInterval);
+    // Wait for splash screen to fade out, then fade in the name
+    const timer = setTimeout(() => setIsVisible(true), 3600);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -55,21 +25,11 @@ const NameHeader = () => {
       padding: 0,
       display: 'flex',
       alignItems: 'center',
-      minHeight: '2.2rem'
+      minHeight: '2.2rem',
+      opacity: isVisible ? 1 : 0,
+      transition: 'opacity 0.8s ease-out'
     }}>
-      <span style={{ whiteSpace: 'pre' }}>{displayedText}</span>
-      <span
-        style={{
-          display: 'inline-block',
-          width: '2px',
-          height: '1.6em',
-          backgroundColor: 'rgba(255, 255, 255, 0.85)',
-          marginLeft: '3px',
-          opacity: isTypingDone ? 0 : (showCursor ? 1 : 0),
-          transition: isTypingDone ? 'opacity 0.8s ease' : 'none',
-          verticalAlign: 'middle'
-        }}
-      />
+      <span style={{ whiteSpace: 'pre' }}>{fullName}</span>
 
       <style>{`
         @font-face {

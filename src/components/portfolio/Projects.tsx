@@ -234,19 +234,8 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           transition: 'opacity 0.8s ease-out 0.15s, transform 0.8s ease-out 0.15s'
         }}
       >
-        {/* Row: [prev] [cards] [next] */}
+        {/* Cards with overlapping arrows */}
         <div className="projects-carousel-row">
-          {/* Prev Arrow */}
-          <button
-            onClick={(e) => { e.stopPropagation(); goPrev(); }}
-            aria-label="Previous projects"
-            className={`proj-nav-btn${safePageIndex === 0 ? ' proj-nav-hidden' : ''}`}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
-
           {/* Cards Grid */}
           <div
             key={`${safePageIndex}-${effectivePerPage}`}
@@ -325,11 +314,20 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
           ))}
           </div>
 
-          {/* Next Arrow */}
+          {/* Navigation arrows - absolute positioned */}
+          <button
+            onClick={(e) => { e.stopPropagation(); goPrev(); }}
+            aria-label="Previous projects"
+            className={`proj-nav-btn proj-nav-prev${safePageIndex === 0 ? ' proj-nav-hidden' : ''}`}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
           <button
             onClick={(e) => { e.stopPropagation(); goNext(); }}
             aria-label="Next projects"
-            className={`proj-nav-btn${safePageIndex >= totalPages - 1 ? ' proj-nav-hidden' : ''}`}
+            className={`proj-nav-btn proj-nav-next${safePageIndex >= totalPages - 1 ? ' proj-nav-hidden' : ''}`}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6" />
@@ -419,9 +417,7 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
         }
 
         .projects-carousel-row {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
+          position: relative;
         }
 
         .projects-page-grid {
@@ -483,26 +479,31 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
         }
 
         .proj-nav-btn {
-          flex-shrink: 0;
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
           width: 36px;
           height: 36px;
           border-radius: 50%;
-          border: 0.5px solid rgba(255, 255, 255, 0.2);
-          background: rgba(255, 255, 255, 0.08);
-          color: rgba(255, 255, 255, 0.6);
+          border: 0.5px solid rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.06);
+          color: rgba(255, 255, 255, 0.5);
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: all 0.25s ease;
+          transition: all 0.2s ease;
           padding: 0;
+          z-index: 2;
         }
 
         .proj-nav-btn:hover {
-          background: rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.12);
           color: white;
-          border-color: rgba(255, 255, 255, 0.35);
         }
+
+        .proj-nav-prev { left: 12px; }
+        .proj-nav-next { right: 12px; }
 
         .proj-nav-btn.proj-nav-hidden {
           opacity: 0;
@@ -550,7 +551,9 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
             min-width: 300px !important;
             padding: 0 20px 40px 20px !important;
           }
-          .proj-nav-btn { width: 32px; height: 32px; }
+          .proj-nav-btn { width: 30px; height: 30px; }
+          .proj-nav-prev { left: 6px; }
+          .proj-nav-next { right: 6px; }
           .view-switcher { display: none; }
         }
 

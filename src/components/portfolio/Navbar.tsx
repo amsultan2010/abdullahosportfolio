@@ -248,7 +248,7 @@ const Navbar = () => {
           }} onMouseLeave={(e) => {
             (e.target as HTMLElement).style.color = 'rgba(255, 255, 255, 0.75)';
           }}>
-            Blog
+            My Thoughts
           </a>
 
           {/* Desktop Social Icons */}
@@ -465,7 +465,7 @@ const Navbar = () => {
           }} onMouseLeave={(e) => {
             (e.target as HTMLElement).style.backgroundColor = 'transparent';
           }}>
-            blog
+            my thoughts
           </a>
 
           {/* Social Icons */}
