@@ -55,6 +55,10 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const brand = content.company ? companyBrands[content.company] : null;
 
+  const titleBarLabel = content.type === 'case-study'
+    ? `${content.slug}.case — ${content.company}`
+    : `${content.slug} — blog post`;
+
   // Escape key + body scroll lock
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -75,21 +79,21 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop — blurred so WebGL silk shows through */}
       <div
         onClick={onClose}
         style={{
           position: 'fixed',
           top: 0, left: 0, width: '100%', height: '100%',
-          background: 'rgba(0, 0, 0, 0.7)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
+          background: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
           zIndex: 300,
           animation: 'cvFadeIn 0.3s ease-out forwards'
         }}
       />
 
-      {/* Content Panel */}
+      {/* Scrollable container */}
       <div
         ref={panelRef}
         style={{
@@ -97,159 +101,193 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
           top: 0, left: 0, right: 0, bottom: 0,
           overflowY: 'auto',
           zIndex: 301,
-          background: 'rgba(18, 18, 18, 0.98)',
           animation: 'cvSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
         }}
         className="content-viewer-panel"
       >
-        {/* Back Button - sticky */}
+        {/* Back button */}
         <div style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
           padding: '1.25rem 2rem',
-          background: 'linear-gradient(to bottom, rgba(18, 18, 18, 0.98) 60%, transparent)',
           display: 'flex',
           alignItems: 'center'
         }}>
           <button
             onClick={onClose}
             style={{
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '0.5px solid rgba(255, 255, 255, 0.15)',
+              background: 'rgba(255, 255, 255, 0.06)',
+              border: '0.5px solid rgba(255, 255, 255, 0.12)',
               borderRadius: '8px',
               padding: '0.5rem 1rem',
               cursor: 'pointer',
-              color: 'rgba(255, 255, 255, 0.7)',
-              fontFamily: 'NeueMontreal-Medium, sans-serif',
-              fontSize: '0.85rem',
+              color: 'rgba(255, 255, 255, 0.6)',
+              fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
+              fontSize: '0.8rem',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
               e.currentTarget.style.color = 'white';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            Back
+            <span style={{ color: 'rgb(74, 222, 128)' }}>$</span>
+            cd ..
           </button>
         </div>
 
-        {/* Article Content */}
-        <article style={{
-          maxWidth: '720px',
-          margin: '0 auto',
-          padding: '0 2rem 4rem'
-        }} className="content-viewer-article">
-          {/* Header */}
-          <header style={{ marginBottom: '2.5rem' }}>
-            {/* Company branding for case studies */}
-            {content.company && brand && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                marginBottom: '1.25rem'
-              }}>
-                <CompanyLogo company={content.company} />
-                {/* Hide text label for Uber since its logo IS the wordmark */}
-                {content.company !== 'Uber' && (
-                  <span style={{
-                    fontFamily: 'NeueMontreal-Medium, sans-serif',
-                    fontSize: '1rem',
-                    color: brand.color,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.12em'
-                  }}>
-                    {content.company}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Title */}
-            <h1 style={{
-              fontFamily: 'NeueMontreal-Medium, sans-serif',
-              fontSize: 'clamp(1.5rem, 4vw, 2.2rem)',
-              color: 'white',
-              margin: '0 0 1rem',
-              fontWeight: 500,
-              lineHeight: '1.3'
-            }}>
-              {content.title}
-            </h1>
-
-            {/* Meta info */}
+        {/* Glass Pane Terminal Window */}
+        <div style={{
+          maxWidth: '90ch',
+          margin: '0 auto 4rem',
+          padding: '0 2rem',
+        }}>
+          <div style={{
+            background: 'rgba(20, 20, 20, 0.75)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '0.5px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.5), inset 0 0 0 0.5px rgba(255, 255, 255, 0.05)',
+            borderRadius: '12px',
+            overflow: 'hidden',
+          }}>
+            {/* Terminal Title Bar */}
             <div style={{
+              height: '28px',
               display: 'flex',
               alignItems: 'center',
-              gap: '1rem',
-              flexWrap: 'wrap',
-              marginBottom: '1.25rem'
+              gap: '8px',
+              padding: '0 16px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+              userSelect: 'none',
             }}>
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#FF5F57' }} />
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#FEBC2E' }} />
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#28C840' }} />
               <span style={{
-                fontFamily: 'NeueMontreal-Light, sans-serif',
-                fontSize: '0.85rem',
-                color: 'rgba(255, 255, 255, 0.4)'
+                flex: 1,
+                textAlign: 'center',
+                fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
+                fontSize: '0.75rem',
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontWeight: 500,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
               }}>
-                {new Date(content.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-              </span>
-              <span style={{
-                fontFamily: 'NeueMontreal-Light, sans-serif',
-                fontSize: '0.85rem',
-                color: 'rgba(255, 255, 255, 0.4)'
-              }}>
-                {content.readingTime} min read
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                </svg>
+                {titleBarLabel}
               </span>
             </div>
 
-            {/* Tags */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {content.tags.map((tag, i) => {
-                const tc = getTagColor(tag);
-                return (
-                  <span key={i} style={{
-                    fontSize: '0.75rem',
-                    fontFamily: 'NeueMontreal-Light, sans-serif',
-                    color: tc.text,
-                    padding: '0.25rem 0.6rem',
-                    borderRadius: '12px',
-                    background: tc.bg,
-                    border: `0.5px solid ${tc.border}`
+            {/* Terminal Content */}
+            <div style={{ padding: 'clamp(1.5rem, 3vw, 3rem)' }}>
+              {/* Header */}
+              <header style={{ marginBottom: '2.5rem' }}>
+                {/* Company branding for case studies */}
+                {content.company && brand && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    marginBottom: '1.25rem'
                   }}>
-                    {tag}
+                    <CompanyLogo company={content.company} />
+                    {content.company !== 'Uber' && (
+                      <span style={{
+                        fontFamily: 'NeueMontreal-Medium, sans-serif',
+                        fontSize: '1rem',
+                        color: brand.color,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.12em'
+                      }}>
+                        {content.company}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Title */}
+                <h1 style={{
+                  fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
+                  fontSize: 'clamp(1.4rem, 3.5vw, 2rem)',
+                  color: 'white',
+                  margin: '0 0 1rem',
+                  fontWeight: 600,
+                  lineHeight: '1.3',
+                  letterSpacing: '-0.02em',
+                }}>
+                  {content.title}
+                </h1>
+
+                {/* Meta info */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  flexWrap: 'wrap',
+                  marginBottom: '1.25rem',
+                  fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
+                }}>
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.4)' }}>
+                    <span style={{ color: 'rgb(74, 222, 128)' }}>$</span>{' '}
+                    published {new Date(content.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </span>
-                );
-              })}
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.3)' }}>•</span>
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.4)' }}>
+                    {content.readingTime} min read
+                  </span>
+                </div>
+
+                {/* Tags */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                  {content.tags.map((tag, i) => {
+                    const tc = getTagColor(tag);
+                    return (
+                      <span key={i} style={{
+                        fontSize: '0.7rem',
+                        fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
+                        color: tc.text,
+                        padding: '0.2rem 0.55rem',
+                        borderRadius: '12px',
+                        background: tc.bg,
+                        border: `0.5px solid ${tc.border}`
+                      }}>
+                        #{tag}
+                      </span>
+                    );
+                  })}
+                </div>
+
+                {/* Summary */}
+                <p style={{
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
+                  fontSize: '1rem',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  lineHeight: '1.7',
+                  margin: 0,
+                  paddingBottom: '1.5rem',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+                }}>
+                  {content.summary}
+                </p>
+              </header>
+
+              {/* Markdown Body */}
+              <MarkdownRenderer content={content.markdown} />
             </div>
-
-            {/* Summary */}
-            <p style={{
-              fontFamily: 'NeueMontreal-Light, sans-serif',
-              fontSize: '1.05rem',
-              color: 'rgba(255, 255, 255, 0.55)',
-              lineHeight: '1.7',
-              margin: '1.5rem 0 0',
-              fontStyle: 'italic',
-              paddingBottom: '1.5rem',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
-            }}>
-              {content.summary}
-            </p>
-          </header>
-
-          {/* Markdown Body */}
-          <MarkdownRenderer content={content.markdown} />
-        </article>
+          </div>
+        </div>
       </div>
 
       {/* Styles */}
@@ -273,8 +311,8 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
           border-radius: 3px;
         }
         @media (max-width: 768px) {
-          .content-viewer-article {
-            padding: 0 1.25rem 3rem !important;
+          .content-viewer-panel > div:last-of-type {
+            padding: 0 1rem !important;
           }
         }
       `}</style>
