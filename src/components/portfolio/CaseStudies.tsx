@@ -20,13 +20,12 @@ const NasdaqLogo = ({ height = 28 }: { height?: number }) => {
 };
 
 // Ikigai logo
-const IkigaiLogo = ({ height = 32 }: { height?: number }) => {
+const IkigaiLogo = ({ height = 28 }: { height?: number }) => {
   return (
     <img
-      src="/ikigai.jpg"
+      src="/ikigai.png"
       alt="Ikigai"
-      height={height}
-      style={{ borderRadius: '4px', opacity: 0.85 }}
+      style={{ height: height, width: 'auto', opacity: 0.85, marginLeft: '-2px' }}
     />
   );
 };
@@ -100,7 +99,7 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
 
   const paper = researchPapers[activeIndex];
 
-  const LogoComponent = paper.company === 'IKIGAI' ? <IkigaiLogo height={32} /> : <NasdaqLogo height={28} />;
+  const LogoComponent = paper.company === 'IKIGAI' ? <IkigaiLogo height={40} /> : <NasdaqLogo height={28} />;
 
   return (
     <div
@@ -155,7 +154,12 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
           >
             {/* Logo */}
             <div style={{
-              marginBottom: '1rem'
+              marginBottom: '1rem',
+              height: '28px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              overflow: 'visible'
             }}>
               {LogoComponent}
             </div>

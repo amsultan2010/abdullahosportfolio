@@ -62,10 +62,10 @@ const CompanyLogo = ({ company }: { company: string }) => {
   if (company === 'IKIGAI') {
     return (
       <img
-        src="/ikigai.jpg"
+        src="/ikigai.png"
         alt="Ikigai"
-        height={48}
-        style={{ borderRadius: '6px', opacity: 0.9 }}
+        height={90}
+        style={{ opacity: 0.9 }}
       />
     );
   }
