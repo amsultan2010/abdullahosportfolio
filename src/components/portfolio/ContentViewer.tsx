@@ -78,11 +78,7 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
   const brand = content.company ? companyBrands[content.company] : null;
   const isDeepResearch = content.type === 'deep-research';
 
-  const titleBarLabel = content.type === 'deep-research'
-    ? `${content.slug}.research — deep research`
-    : content.type === 'case-study'
-    ? `${content.slug}.case — ${content.company}`
-    : `${content.slug} — blog post`;
+
 
   // Escape key + body scroll lock
   useEffect(() => {
@@ -181,42 +177,10 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
             borderRadius: '12px',
             overflow: 'hidden',
           }}>
-            {/* Terminal Title Bar */}
-            <div style={{
-              height: '28px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '0 16px',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-              userSelect: 'none',
-            }}>
-              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#FF5F57' }} />
-              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#FEBC2E' }} />
-              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#28C840' }} />
-              <span style={{
-                flex: 1,
-                textAlign: 'center',
-                fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
-                fontSize: '0.75rem',
-                color: 'rgba(255, 255, 255, 0.5)',
-                fontWeight: 500,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-              }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                </svg>
-                {titleBarLabel}
-              </span>
-            </div>
-
-            {/* Terminal Content */}
+            {/* Content */}
             <div
               className="cv-terminal-content"
-              style={{ padding: 'clamp(1.5rem, 3vw, 3rem)' }}
+              style={{ padding: 'clamp(2rem, 3vw, 3.5rem)' }}
             >
               {/* Header */}
               <header style={{ marginBottom: '2.5rem' }}>
@@ -253,13 +217,12 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
 
                 {/* Title */}
                 <h1 className="cv-cascade-item cv-cascade-1" style={{
-                  fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
+                  fontFamily: 'NeueMontreal-Medium, sans-serif',
                   fontSize: 'clamp(1.4rem, 3.5vw, 2rem)',
                   color: 'white',
                   margin: '0 0 1rem',
-                  fontWeight: 600,
+                  fontWeight: 500,
                   lineHeight: '1.3',
-                  letterSpacing: '-0.02em',
                 }}>
                   {content.title}
                 </h1>
@@ -271,11 +234,9 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
                   gap: '1rem',
                   flexWrap: 'wrap',
                   marginBottom: '1.25rem',
-                  fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
                 }}>
-                  <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)' }}>
-                    <span style={{ color: 'rgb(74, 222, 128)' }}>$</span>{' '}
-                    published {new Date(content.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'NeueMontreal-Light, sans-serif' }}>
+                    {new Date(content.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </span>
                 </div>
 
@@ -286,7 +247,7 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
                     return (
                       <span key={i} style={{
                         fontSize: '0.7rem',
-                        fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
+                        fontFamily: 'NeueMontreal-Light, sans-serif',
                         color: tc.text,
                         padding: '0.2rem 0.55rem',
                         borderRadius: '12px',
