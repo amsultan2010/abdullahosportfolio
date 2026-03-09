@@ -75,9 +75,9 @@ const CompanyLogo = ({ company }: { company: string }) => {
 
 const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
+  const markdownRef = useRef<HTMLDivElement>(null);
   const brand = content.company ? companyBrands[content.company] : null;
   const isDeepResearch = content.type === 'deep-research';
-
 
 
   // Escape key + body scroll lock
@@ -96,6 +96,35 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
   // Scroll to top on mount
   useEffect(() => {
     panelRef.current?.scrollTo(0, 0);
+  }, [content.slug]);
+
+  // Scroll-based light-up for markdown body elements
+  useEffect(() => {
+    const container = markdownRef.current;
+    const scrollRoot = panelRef.current;
+    if (!container || !scrollRoot) return;
+
+    const timer = setTimeout(() => {
+      const elements = container.querySelectorAll('p, h2, h3, blockquote, ul, ol, pre, table, hr, div.callout');
+      elements.forEach(el => el.classList.add('cv-scroll-reveal'));
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('cv-scroll-revealed');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { root: scrollRoot, threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+      );
+
+      elements.forEach(el => observer.observe(el));
+      return () => observer.disconnect();
+    }, 1200); // Wait for cascade animation to finish
+
+    return () => clearTimeout(timer);
   }, [content.slug]);
 
   return (
@@ -275,7 +304,7 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
               </header>
 
               {/* Markdown Body */}
-              <div className="cv-cascade-item cv-cascade-5">
+              <div ref={markdownRef} className="cv-cascade-item cv-cascade-5">
                 <MarkdownRenderer content={content.markdown} />
               </div>
             </div>
@@ -308,6 +337,17 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
         .cv-cascade-3 { animation-delay: 0.55s; }
         .cv-cascade-4 { animation-delay: 0.65s; }
         .cv-cascade-5 { animation-delay: 0.8s; }
+        .cv-scroll-reveal {
+          opacity: 0.12;
+          filter: brightness(0.3);
+          transform: translateY(6px);
+          transition: opacity 0.6s ease, filter 0.6s ease, transform 0.6s ease;
+        }
+        .cv-scroll-revealed {
+          opacity: 1 !important;
+          filter: brightness(1) !important;
+          transform: translateY(0) !important;
+        }
         .content-viewer-panel::-webkit-scrollbar {
           width: 6px;
         }
