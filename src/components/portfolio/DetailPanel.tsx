@@ -692,16 +692,18 @@ const EducationContent = ({ detail }: { detail: EducationDetail }) => {
           animation: `sectionFadeIn 0.6s ease ${cascadeEnd + 0.4}s forwards`,
         }}>
           <h3 style={sectionTitleStyle}>Reflection</h3>
-          <p style={{
-            fontFamily: 'NeueMontreal-Light, sans-serif',
-            color: 'rgba(255,255,255,0.75)',
-            fontSize: '0.9rem',
-            lineHeight: '1.7',
-            margin: 0,
-            fontStyle: 'italic',
-          }}>
-            {detail.reflection}
-          </p>
+          {detail.reflection.split('\n\n').map((para, i) => (
+            <p key={i} style={{
+              fontFamily: 'NeueMontreal-Light, sans-serif',
+              color: 'rgba(255,255,255,0.75)',
+              fontSize: '0.9rem',
+              lineHeight: '1.7',
+              margin: i === 0 ? 0 : '1rem 0 0',
+              fontStyle: 'italic',
+            }}>
+              {para}
+            </p>
+          ))}
         </div>
       )}
     </div>
@@ -1130,16 +1132,18 @@ const SingleRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =
             color: unlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
             transition: 'color 0.5s ease'
           }}>Reflection</h3>
-          <p style={{
-            fontFamily: 'NeueMontreal-Light, sans-serif',
-            color: unlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)',
-            fontSize: '0.9rem',
-            lineHeight: '1.7',
-            margin: 0,
-            transition: 'color 0.5s ease'
-          }}>
-            {detail.reflection}
-          </p>
+          {detail.reflection.split('\n\n').map((para, i) => (
+            <p key={i} style={{
+              fontFamily: 'NeueMontreal-Light, sans-serif',
+              color: unlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)',
+              fontSize: '0.9rem',
+              lineHeight: '1.7',
+              margin: i === 0 ? 0 : '1rem 0 0',
+              transition: 'color 0.5s ease'
+            }}>
+              {para}
+            </p>
+          ))}
         </div>
       )}
 
