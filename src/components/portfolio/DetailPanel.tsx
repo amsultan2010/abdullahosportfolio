@@ -767,18 +767,20 @@ const MultiRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =>
             color: allUnlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
             transition: 'color 0.5s ease'
           }}>Reflection</h3>
-          {allReflections.map((r, i) => (
-            <p key={i} style={{
-              fontFamily: 'NeueMontreal-Light, sans-serif',
-              color: allUnlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)',
-              fontSize: '0.9rem',
-              lineHeight: '1.7',
-              margin: i > 0 ? '1rem 0 0' : 0,
-              transition: 'color 0.5s ease'
-            }}>
-              {r}
-            </p>
-          ))}
+          {allReflections.flatMap((r, ri) =>
+            r.split('\n\n').map((para, pi) => (
+              <p key={`${ri}-${pi}`} style={{
+                fontFamily: 'NeueMontreal-Light, sans-serif',
+                color: allUnlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)',
+                fontSize: '0.9rem',
+                lineHeight: '1.7',
+                margin: (ri === 0 && pi === 0) ? 0 : '1rem 0 0',
+                transition: 'color 0.5s ease'
+              }}>
+                {para}
+              </p>
+            ))
+          )}
         </div>
       )}
 
