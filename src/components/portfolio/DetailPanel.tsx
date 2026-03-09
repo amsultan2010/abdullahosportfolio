@@ -1217,27 +1217,60 @@ const ProjectContent = ({ detail }: { detail: ProjectDetail }) => {
     const container = projRef.current;
     if (!container) return;
 
+    // Find the closest scrollable ancestor (the panel or video-split-right div)
+    let scrollParent: Element | null = container.parentElement;
+    while (scrollParent) {
+      const style = getComputedStyle(scrollParent);
+      if (style.overflowY === 'auto' || style.overflowY === 'scroll') break;
+      scrollParent = scrollParent.parentElement;
+    }
+
     let observer: IntersectionObserver | null = null;
+    const staggerTimers: ReturnType<typeof setTimeout>[] = [];
 
     const timer = setTimeout(() => {
-      const elements = container.querySelectorAll('.proj-scroll-item');
+      const elements = Array.from(container.querySelectorAll('.proj-scroll-item'));
+      const scrollRect = scrollParent?.getBoundingClientRect();
 
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('proj-scroll-revealed');
-              observer?.unobserve(entry.target);
-            }
-          });
-        },
-        { root: null, threshold: 0.1, rootMargin: '0px 0px -20px 0px' }
-      );
-      elements.forEach(el => observer!.observe(el));
-    }, 300);
+      // Separate initially visible items from below-fold ones
+      const initiallyVisible: Element[] = [];
+      const belowFold: Element[] = [];
+      elements.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (scrollRect && rect.top < scrollRect.bottom - 40) {
+          initiallyVisible.push(el);
+        } else {
+          belowFold.push(el);
+        }
+      });
+
+      // Stagger-reveal items already in view
+      initiallyVisible.forEach((el, i) => {
+        staggerTimers.push(setTimeout(() => {
+          el.classList.add('proj-scroll-revealed');
+        }, i * 180));
+      });
+
+      // IntersectionObserver for items below the fold
+      if (belowFold.length > 0) {
+        observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('proj-scroll-revealed');
+                observer?.unobserve(entry.target);
+              }
+            });
+          },
+          { root: scrollParent, threshold: 0.1, rootMargin: '0px 0px -20px 0px' }
+        );
+        belowFold.forEach(el => observer!.observe(el));
+      }
+    }, 400); // Wait for panel slide-in animation
 
     return () => {
       clearTimeout(timer);
+      staggerTimers.forEach(t => clearTimeout(t));
       observer?.disconnect();
     };
   }, [detail.title]);

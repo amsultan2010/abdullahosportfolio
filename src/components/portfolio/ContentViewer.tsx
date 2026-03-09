@@ -101,31 +101,57 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
   // Scroll-based light-up for markdown body elements
   useEffect(() => {
     const container = markdownRef.current;
-    if (!container) return;
+    const scrollRoot = panelRef.current;
+    if (!container || !scrollRoot) return;
 
     let observer: IntersectionObserver | null = null;
+    const staggerTimers: ReturnType<typeof setTimeout>[] = [];
 
     const timer = setTimeout(() => {
-      const elements = container.querySelectorAll('p, h2, h3, blockquote, ul, ol, pre, table, hr, div.callout');
+      const elements = Array.from(container.querySelectorAll('p, h2, h3, blockquote, ul, ol, pre, table, hr, div.callout'));
       elements.forEach(el => el.classList.add('cv-scroll-reveal'));
 
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('cv-scroll-revealed');
-              observer?.unobserve(entry.target);
-            }
-          });
-        },
-        { root: null, threshold: 0.1, rootMargin: '0px 0px -30px 0px' }
-      );
+      const scrollRect = scrollRoot.getBoundingClientRect();
 
-      elements.forEach(el => observer!.observe(el));
-    }, 1500);
+      // Separate initially visible from below-fold
+      const initiallyVisible: Element[] = [];
+      const belowFold: Element[] = [];
+      elements.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < scrollRect.bottom - 40) {
+          initiallyVisible.push(el);
+        } else {
+          belowFold.push(el);
+        }
+      });
+
+      // Stagger-reveal items already in view
+      initiallyVisible.forEach((el, i) => {
+        staggerTimers.push(setTimeout(() => {
+          el.classList.add('cv-scroll-revealed');
+        }, i * 120));
+      });
+
+      // IntersectionObserver for items below the fold
+      if (belowFold.length > 0) {
+        observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('cv-scroll-revealed');
+                observer?.unobserve(entry.target);
+              }
+            });
+          },
+          { root: scrollRoot, threshold: 0.1, rootMargin: '0px 0px -30px 0px' }
+        );
+        belowFold.forEach(el => observer!.observe(el));
+      }
+    }, 1500); // Wait for cascade animation to finish
 
     return () => {
       clearTimeout(timer);
+      staggerTimers.forEach(t => clearTimeout(t));
       observer?.disconnect();
     };
   }, [content.slug]);
@@ -341,9 +367,9 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
         .cv-cascade-4 { animation-delay: 0.65s; }
         .cv-cascade-5 { animation-delay: 0.8s; }
         .cv-scroll-reveal {
-          opacity: 0.12;
-          filter: brightness(0.3);
-          transform: translateY(6px);
+          opacity: 0.3;
+          filter: brightness(0.5);
+          transform: translateY(4px);
           transition: opacity 0.6s ease, filter 0.6s ease, transform 0.6s ease;
         }
         .cv-scroll-revealed {
