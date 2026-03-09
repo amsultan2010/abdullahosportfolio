@@ -272,7 +272,7 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
                   <img
                     src={project.coverImage}
                     alt={`${project.title} preview`}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
                   />
                 ) : (
                   <span style={{

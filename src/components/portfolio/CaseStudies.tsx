@@ -190,8 +190,7 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
                 fontSize: '0.95rem',
                 fontFamily: 'NeueMontreal-Light, sans-serif',
                 lineHeight: '1.7',
-                margin: '0 0 1.25rem',
-                maxWidth: '800px'
+                margin: '0 0 1.25rem'
               }}>
                 {paper.summary}
               </p>

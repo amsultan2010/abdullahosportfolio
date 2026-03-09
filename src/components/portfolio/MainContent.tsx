@@ -15,7 +15,6 @@ const PHRASES = [
   'ctrl+c ctrl+v from Stack Overflow',
   'approximately 47 browser tabs',
   'one more "quick fix" at 2am',
-  'an mass amount of YAML files',
   'a mass amount of JIRA tickets',
   'whatever ChatGPT recommends',
   'zero sleep and questionable decisions',
