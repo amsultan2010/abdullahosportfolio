@@ -121,8 +121,7 @@ const Education = ({ onCardClick }: EducationProps) => {
           "Laurier Entrepreneurs"
         ],
         achievements: [
-          "1st Place — New Venture BDO Pitch Competition 2024",
-          "Completed double degree program spanning two universities"
+          "1st Place — New Venture BDO Pitch Competition 2024"
         ],
         pitchDeck: {
           title: "PartyFlow — New Venture Pitch Deck",

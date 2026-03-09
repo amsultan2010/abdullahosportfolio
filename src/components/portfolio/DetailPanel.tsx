@@ -228,10 +228,11 @@ const DetailPanel = ({ detail, onClose }: DetailPanelProps) => {
               maxWidth: '480px',
               height: '100%',
               overflowY: 'auto',
-              background: 'rgba(30, 30, 30, 0.95)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              borderLeft: '0.5px solid rgba(255, 255, 255, 0.15)',
+              background: 'rgba(20, 20, 20, 0.75)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              borderLeft: '0.5px solid rgba(255, 255, 255, 0.12)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.5), inset 0 0 0 0.5px rgba(255, 255, 255, 0.05)',
               animation: 'detailSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards'
             }}
           >
@@ -310,10 +311,11 @@ const DetailPanel = ({ detail, onClose }: DetailPanelProps) => {
           height: '100%',
           overflowY: 'auto',
           zIndex: 201,
-          background: 'rgba(30, 30, 30, 0.95)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderLeft: '0.5px solid rgba(255, 255, 255, 0.15)',
+          background: 'rgba(20, 20, 20, 0.75)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          borderLeft: '0.5px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.5), inset 0 0 0 0.5px rgba(255, 255, 255, 0.05)',
           animation: 'detailSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
           outline: 'none'
         }}
@@ -481,7 +483,7 @@ const PitchDeckViewer = ({ deck, animDelay }: { deck: PitchDeck; animDelay: numb
           }}>
             &#9654;
           </span>
-          {expanded ? '$ close deck' : '$ view deck'}
+          {expanded ? ' close deck' : ' view deck'}
         </button>
       </div>
 
