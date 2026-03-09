@@ -67,7 +67,7 @@ const Education = ({ onCardClick }: EducationProps) => {
           description: "A real estate proposal developed for the Real Estate Laurier case competition, showcasing market analysis, financial modeling, and strategic recommendations.",
           totalSlides: 15,
         },
-        reflection: "Transferring into Laurier's standalone CS program gave me the chance to go deeper into systems-level thinking — from OS internals and microprocessors to networking and algorithm design. The smaller cohort and hands-on labs helped me build stronger fundamentals."
+        reflection: "Moving into Laurier's standalone CS program gave me the space to slow down and actually understand what I was learning. Instead of just trying to survive the pace of a massive program, I've been able to spend more time digging into how systems actually work. Most of my time lately has gone into operating systems, networking, algorithms, and low level architecture. The smaller environment has made it easier to ask questions, build things, and focus on understanding the fundamentals instead of just getting through the next assignment."
       } satisfies EducationDetail
     }
   ];
@@ -133,7 +133,7 @@ const Education = ({ onCardClick }: EducationProps) => {
           description: "A venture pitch for PartyFlow, an event management platform. Presented at the BDO New Venture Competition, covering market opportunity, product design, revenue model, and growth strategy.",
           totalSlides: 12,
         },
-        reflection: "The double degree was an intense two years — balancing proof-heavy math at Waterloo with case competitions at Laurier. It taught me how to context-switch between analytical and business thinking, and gave me a strong foundation in both CS theory and real-world problem framing."
+        reflection: "Those two years were intense. The workload was heavy and the expectations were high, but it forced me to grow quickly. Being around people who were extremely capable pushed me to think harder about how I approach problems and how I learn new systems. It also exposed me to both sides of the equation. Deep technical thinking from Waterloo and practical business framing from Laurier. That combination changed how I look at problems and how I try to solve them."
       } satisfies EducationDetail
     }
   ];
