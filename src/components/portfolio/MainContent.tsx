@@ -208,6 +208,10 @@ const MainContent = () => {
           .main-content-text h1 {
             font-size: clamp(20px, 5vw, 32px);
           }
+
+          .main-content-text h1:first-child {
+            min-height: 2.8em; /* Reserve 2 lines to prevent layout shift from typing animation */
+          }
         }
 
         @media (max-width: 480px) {
