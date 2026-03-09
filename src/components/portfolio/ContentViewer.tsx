@@ -168,7 +168,7 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
 
         {/* Glass Pane Terminal Window */}
         <div style={{
-          maxWidth: '90ch',
+          maxWidth: content.type === 'deep-research' ? '110ch' : '90ch',
           margin: '0 auto 4rem',
           padding: '0 2rem',
         }}>

@@ -374,15 +374,18 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
         i++;
       }
       if (paraLines.length > 0) {
+        const joined = paraLines.join(' ');
+        const isFullyBold = joined.startsWith('**') && joined.endsWith('**') && !joined.slice(2, -2).includes('**');
         elements.push(
           <p key={key++} style={{
-            fontFamily: 'NeueMontreal-Light, sans-serif',
-            color: 'rgba(255, 255, 255, 0.92)',
-            fontSize: '0.9rem',
-            lineHeight: '1.8',
-            margin: '1rem 0'
+            fontFamily: isFullyBold ? 'NeueMontreal-Medium, sans-serif' : 'NeueMontreal-Light, sans-serif',
+            color: isFullyBold ? 'white' : 'rgba(255, 255, 255, 0.92)',
+            fontSize: isFullyBold ? '1.35rem' : '0.9rem',
+            lineHeight: isFullyBold ? '1.4' : '1.8',
+            margin: isFullyBold ? '2.5rem 0 1rem' : '1rem 0',
+            fontWeight: isFullyBold ? 500 : undefined
           }}>
-            {renderInline(paraLines.join(' '))}
+            {isFullyBold ? joined.slice(2, -2) : renderInline(joined)}
           </p>
         );
       }
