@@ -1214,26 +1214,30 @@ const ProjectContent = ({ detail }: { detail: ProjectDetail }) => {
   useEffect(() => {
     const container = projRef.current;
     if (!container) return;
-    const scrollParent = container.closest('[style*="overflow"]') || container.closest('.video-split-right') || container.closest('.detail-panel');
+
+    let observer: IntersectionObserver | null = null;
 
     const timer = setTimeout(() => {
       const elements = container.querySelectorAll('.proj-scroll-item');
-      const observer = new IntersectionObserver(
+
+      observer = new IntersectionObserver(
         (entries) => {
           entries.forEach(entry => {
             if (entry.isIntersecting) {
               entry.target.classList.add('proj-scroll-revealed');
-              observer.unobserve(entry.target);
+              observer?.unobserve(entry.target);
             }
           });
         },
-        { root: scrollParent as Element || null, threshold: 0.1, rootMargin: '0px 0px -20px 0px' }
+        { root: null, threshold: 0.1, rootMargin: '0px 0px -20px 0px' }
       );
-      elements.forEach(el => observer.observe(el));
-      return () => observer.disconnect();
-    }, 200);
+      elements.forEach(el => observer!.observe(el));
+    }, 300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      observer?.disconnect();
+    };
   }, [detail.title]);
 
   return (

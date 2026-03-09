@@ -101,30 +101,33 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
   // Scroll-based light-up for markdown body elements
   useEffect(() => {
     const container = markdownRef.current;
-    const scrollRoot = panelRef.current;
-    if (!container || !scrollRoot) return;
+    if (!container) return;
+
+    let observer: IntersectionObserver | null = null;
 
     const timer = setTimeout(() => {
       const elements = container.querySelectorAll('p, h2, h3, blockquote, ul, ol, pre, table, hr, div.callout');
       elements.forEach(el => el.classList.add('cv-scroll-reveal'));
 
-      const observer = new IntersectionObserver(
+      observer = new IntersectionObserver(
         (entries) => {
           entries.forEach(entry => {
             if (entry.isIntersecting) {
               entry.target.classList.add('cv-scroll-revealed');
-              observer.unobserve(entry.target);
+              observer?.unobserve(entry.target);
             }
           });
         },
-        { root: scrollRoot, threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+        { root: null, threshold: 0.1, rootMargin: '0px 0px -30px 0px' }
       );
 
-      elements.forEach(el => observer.observe(el));
-      return () => observer.disconnect();
-    }, 1200); // Wait for cascade animation to finish
+      elements.forEach(el => observer!.observe(el));
+    }, 1500);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      observer?.disconnect();
+    };
   }, [content.slug]);
 
   return (
