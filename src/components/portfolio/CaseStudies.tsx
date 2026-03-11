@@ -32,8 +32,8 @@ const researchPapers = [
 ];
 
 const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
-  const [titleAnimated, setTitleAnimated] = useState(false);
-  const [cardAnimated, setCardAnimated] = useState(false);
+  const [titleAnimated, setTitleAnimated] = useState(!!windowMode);
+  const [cardAnimated, setCardAnimated] = useState(!!windowMode);
   const [activeSection, setActiveSection] = useState('All');
   const sectionRef = useRef<HTMLDivElement>(null);
 
@@ -76,21 +76,25 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
     />;
   }
 
-  // ── Apple Books Window Mode ──
+  // ── Apple Books Window Mode (Translucent Light Pane) ──
   return (
     <div ref={sectionRef} style={{
       display: 'flex', width: '100%', height: '100%',
       fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif",
-      background: '#fff', color: 'rgba(0,0,0,0.85)',
+      background: 'transparent', color: 'rgba(0,0,0,0.85)',
     }}>
-      {/* ── Left Sidebar ── */}
+      {/* ── Left Sidebar — light frosted glass ── */}
       <div style={{
-        width: '190px', minWidth: '190px', borderRight: '0.5px solid rgba(0,0,0,0.1)',
-        background: '#f2f2f2', padding: '14px 0', display: 'flex', flexDirection: 'column',
+        width: '190px', minWidth: '190px',
+        borderRight: '0.5px solid rgba(0,0,0,0.08)',
+        background: 'rgba(255,255,255,0.38)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        padding: '14px 0', display: 'flex', flexDirection: 'column',
         fontSize: '13px',
       }}>
         {/* Apple Books section */}
-        <div style={{ padding: '0 14px 10px', fontSize: '11px', fontWeight: 600, color: 'rgba(0,0,0,0.35)', letterSpacing: '0.02em' }}>
+        <div style={{ padding: '0 14px 10px', fontSize: '11px', fontWeight: 600, color: 'rgba(0,0,0,0.5)', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
           Deep Research
         </div>
 
@@ -98,7 +102,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
         <SidebarItem icon="📚" label="Book Store" active={activeSection === 'Store'} onClick={() => setActiveSection('Store')} />
 
         <div style={{ height: '16px' }} />
-        <div style={{ padding: '0 14px 6px', fontSize: '11px', fontWeight: 600, color: 'rgba(0,0,0,0.35)', letterSpacing: '0.02em' }}>
+        <div style={{ padding: '0 14px 6px', fontSize: '11px', fontWeight: 600, color: 'rgba(0,0,0,0.5)', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
           Library
         </div>
 
@@ -111,7 +115,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
         <div style={{ flex: 1 }} />
 
         <div style={{ height: '16px' }} />
-        <div style={{ padding: '0 14px 6px', fontSize: '11px', fontWeight: 600, color: 'rgba(0,0,0,0.35)', letterSpacing: '0.02em' }}>
+        <div style={{ padding: '0 14px 6px', fontSize: '11px', fontWeight: 600, color: 'rgba(0,0,0,0.5)', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
           My Collections
         </div>
 
@@ -119,10 +123,10 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
       </div>
 
       {/* ── Main Content: Book Grid ── */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px', background: 'rgba(255,255,255,0.25)' }}>
         {/* Section title */}
         <h1 style={{
-          fontSize: '28px', fontWeight: 700, color: '#1a1a1a', margin: '0 0 28px',
+          fontSize: '28px', fontWeight: 700, color: 'rgba(0,0,0,0.8)', margin: '0 0 28px',
           fontFamily: "'SF Pro Display', -apple-system, sans-serif",
         }}>
           All
@@ -249,12 +253,12 @@ function BookCard({ paper, onClick }: {
       }}>
         <span style={{
           fontSize: '11px', fontWeight: 600, color: '#007aff',
-          padding: '2px 6px', borderRadius: '3px', background: 'rgba(0,122,255,0.08)',
+          padding: '2px 6px', borderRadius: '3px', background: 'rgba(0,122,255,0.1)',
         }}>
           NEW
         </span>
         <span style={{
-          fontSize: '16px', color: 'rgba(0,0,0,0.3)', cursor: 'pointer',
+          fontSize: '16px', color: 'rgba(0,0,0,0.25)', cursor: 'pointer',
           letterSpacing: '2px',
         }}>
           •••
@@ -276,7 +280,7 @@ function SidebarItem({ icon, label, active, onClick, count, subtle }: {
         display: 'flex', alignItems: 'center', gap: '8px',
         padding: '5px 14px', margin: '1px 8px', borderRadius: '6px', cursor: 'default',
         background: active ? 'rgba(59,130,246,0.12)' : 'transparent',
-        color: subtle ? 'rgba(0,0,0,0.4)' : active ? '#007AFF' : 'rgba(0,0,0,0.75)',
+        color: subtle ? 'rgba(0,0,0,0.3)' : active ? '#007AFF' : 'rgba(0,0,0,0.7)',
         fontWeight: active ? 500 : 400, fontSize: '13px',
         transition: 'background 0.15s',
       }}

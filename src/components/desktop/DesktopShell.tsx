@@ -1168,6 +1168,7 @@ function Desktop() {
             const titleBarBgMap: Record<string, string> = {
               projects: '#252526',
               blog: '#f0f0f0',
+              'deep-research': 'rgba(255,255,255,0.44)',
             };
             const titleBarBg = titleBarBgMap[win.id];
             if (win.id === 'detail' && state.activeDetail) {

@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 
 export const GET: APIRoute = async () => {
-  const symbols = ['SPY', 'QQQ', 'BTC-USD', 'AAPL', 'NVDA', 'TSLA'];
+  const symbols = ['SPY', 'QQQ', 'BTC-USD', 'AAPL', 'NVDA', 'TSLA', 'AMZN', 'GOOG', 'META', 'MSFT', 'AMD', 'ETH-USD', 'COIN'];
   try {
     const results = await Promise.all(
       symbols.map(async (s) => {
@@ -18,6 +18,8 @@ export const GET: APIRoute = async () => {
         const nameMap: Record<string, string> = {
           SPY: 'S&P 500', QQQ: 'Nasdaq', 'BTC-USD': 'Bitcoin',
           AAPL: 'Apple', NVDA: 'NVIDIA', TSLA: 'Tesla',
+          AMZN: 'Amazon', GOOG: 'Google', META: 'Meta',
+          MSFT: 'Microsoft', AMD: 'AMD', 'ETH-USD': 'Ethereum', COIN: 'Coinbase',
         };
         return {
           symbol: s.replace('-USD', ''),
