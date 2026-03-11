@@ -1,6 +1,6 @@
 ---
 import { AstroSeo } from '@astrolib/seo';
-import PortfolioApp from '../components/portfolio/PortfolioApp';
+import DesktopShell from '../components/desktop/DesktopShell';
 ---
 
 <html lang="en">
@@ -24,7 +24,7 @@ import PortfolioApp from '../components/portfolio/PortfolioApp';
 
     <link rel="icon" type="image/png" href="/icons/baseheadlogo.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/baseheadlogo.png" />
-    <meta name="theme-color" content="#242424" />
+    <meta name="theme-color" content="#0b1220" />
     <link rel="sitemap" href="/sitemap-index.xml" />
 
     <style is:global>
@@ -35,7 +35,7 @@ import PortfolioApp from '../components/portfolio/PortfolioApp';
       }
 
       html {
-        background-color: #242424;
+        background-color: #0b1220;
         overflow-x: hidden;
         max-width: 100vw;
         min-height: 100vh;
@@ -72,6 +72,6 @@ import PortfolioApp from '../components/portfolio/PortfolioApp';
     </style>
   </head>
   <body>
-    <PortfolioApp client:only="react" />
+    <DesktopShell client:only="react" />
   </body>
 </html>

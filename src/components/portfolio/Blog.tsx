@@ -5,10 +5,11 @@ import { contentMap } from './contentData';
 
 interface BlogProps {
   onContentClick?: (content: ContentViewData) => void;
+  windowMode?: boolean;
 }
 
-const Blog = ({ onContentClick }: BlogProps) => {
-  const [titleAnimated, setTitleAnimated] = useState(false);
+const Blog = ({ onContentClick, windowMode }: BlogProps) => {
+  const [titleAnimated, setTitleAnimated] = useState(windowMode ?? false);
   const [animatedCards, setAnimatedCards] = useState(new Set<string>());
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
   const [activeRow, setActiveRow] = useState(0);
@@ -66,6 +67,11 @@ const Blog = ({ onContentClick }: BlogProps) => {
   const currentRow = rows[activeRow] || [];
 
   useEffect(() => {
+    if (windowMode) {
+      setTitleAnimated(true);
+      blogPosts.forEach(p => setAnimatedCards(prev => new Set([...prev, p.slug])));
+      return;
+    }
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -88,7 +94,7 @@ const Blog = ({ onContentClick }: BlogProps) => {
     if (cards) cards.forEach(c => observer.observe(c));
 
     return () => observer.disconnect();
-  }, [animatedCards, activeRow]);
+  }, [animatedCards, activeRow, windowMode]);
 
   // Re-trigger card animations on row change
   useEffect(() => {
@@ -119,15 +125,16 @@ const Blog = ({ onContentClick }: BlogProps) => {
       className="blog-container"
       style={{
         position: 'relative',
-        marginTop: '80px',
+        marginTop: windowMode ? '0' : '80px',
         marginLeft: 'auto',
         marginRight: 'auto',
         zIndex: 10,
-        width: '90%',
-        maxWidth: '1200px',
-        minWidth: '320px',
+        width: windowMode ? '100%' : '90%',
+        maxWidth: windowMode ? 'none' : '1200px',
+        minWidth: windowMode ? 'auto' : '320px',
         overflow: 'hidden',
-        paddingBottom: '80px'
+        padding: windowMode ? '20px' : undefined,
+        paddingBottom: windowMode ? '20px' : '80px'
       }}
     >
       <h2

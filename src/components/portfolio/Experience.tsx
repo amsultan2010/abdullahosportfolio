@@ -4,19 +4,21 @@ import type { ExperienceDetail, DetailContent } from './DetailPanel';
 
 interface ExperienceProps {
   onCardClick?: (detail: DetailContent) => void;
+  windowMode?: boolean;
 }
 
-const Experience = ({ onCardClick }: ExperienceProps) => {
-  const [hasAnimated, setHasAnimated] = useState(false);
+const Experience = ({ onCardClick, windowMode }: ExperienceProps) => {
+  const [hasAnimated, setHasAnimated] = useState(windowMode ?? false);
   const experienceRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (windowMode) return;
     const timer = setTimeout(() => {
       setHasAnimated(true);
     }, 2700);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [windowMode]);
 
   const experiences = [
     {
@@ -107,13 +109,14 @@ const Experience = ({ onCardClick }: ExperienceProps) => {
       className="experience-container"
       style={{
         position: 'relative',
-        marginTop: '80px',
+        marginTop: windowMode ? '0' : '80px',
         marginLeft: 'auto',
         marginRight: 'auto',
         zIndex: 10,
-        width: '90%',
-        maxWidth: '1200px',
-        minWidth: '320px',
+        width: windowMode ? '100%' : '90%',
+        maxWidth: windowMode ? 'none' : '1200px',
+        minWidth: windowMode ? 'auto' : '320px',
+        padding: windowMode ? '20px' : undefined,
         opacity: hasAnimated ? 1 : 0,
         transform: hasAnimated ? 'translateY(0)' : 'translateY(20px)',
         transition: 'opacity 0.8s ease-out, transform 0.8s ease-out'

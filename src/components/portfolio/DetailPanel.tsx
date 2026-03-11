@@ -85,6 +85,7 @@ export type DetailContent = EducationDetail | ExperienceDetail | ProjectDetail;
 interface DetailPanelProps {
   detail: DetailContent;
   onClose: () => void;
+  windowMode?: boolean;
 }
 
 const CloseButton = ({ onClose }: { onClose: () => void }) => (
@@ -124,12 +125,13 @@ const CloseButton = ({ onClose }: { onClose: () => void }) => (
   </button>
 );
 
-const DetailPanel = ({ detail, onClose }: DetailPanelProps) => {
+const DetailPanel = ({ detail, onClose, windowMode }: DetailPanelProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const hasVideo = detail.type === 'project' && !!(detail as ProjectDetail).demoVideo;
 
-  // Escape key + body scroll lock
+  // Escape key + body scroll lock (skip in windowMode)
   useEffect(() => {
+    if (windowMode) return;
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -140,12 +142,43 @@ const DetailPanel = ({ detail, onClose }: DetailPanelProps) => {
       document.removeEventListener('keydown', handleEsc);
       document.body.style.overflow = '';
     };
-  }, [onClose]);
+  }, [onClose, windowMode]);
 
   // Focus panel on mount
   useEffect(() => {
     panelRef.current?.focus();
   }, []);
+
+  // ── Window mode: render inline without overlay ──
+  if (windowMode) {
+    return (
+      <div
+        ref={panelRef}
+        style={{ overflowY: 'auto', height: '100%', padding: '1.5rem 2rem' }}
+      >
+        {detail.type === 'project' && hasVideo && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <video
+              autoPlay loop muted playsInline
+              style={{ width: '100%', borderRadius: '12px', objectFit: 'contain', border: '0.5px solid rgba(255,255,255,0.1)' }}
+            >
+              <source src={(detail as ProjectDetail).demoVideo} type="video/quicktime" />
+              <source src={(detail as ProjectDetail).demoVideo} type="video/mp4" />
+            </video>
+          </div>
+        )}
+        {detail.type === 'education' && <EducationContent detail={detail} />}
+        {detail.type === 'experience' && <ExperienceContent detail={detail} />}
+        {detail.type === 'project' && <ProjectContent detail={detail} />}
+        <style>{`
+          @keyframes sectionFadeIn {
+            from { opacity: 0.1; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   // ── Video split layout (CreatorScope) ──
   if (hasVideo) {

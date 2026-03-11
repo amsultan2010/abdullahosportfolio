@@ -3,9 +3,10 @@ import type { ProjectDetail, DetailContent } from './DetailPanel';
 
 interface ProjectsProps {
   onCardClick?: (detail: DetailContent) => void;
+  windowMode?: boolean;
 }
 
-const Projects = ({ onCardClick }: ProjectsProps) => {
+const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
   const [pageIndex, setPageIndex] = useState(0);
   const [perPage, setPerPage] = useState(2);
   const [isMobile, setIsMobile] = useState(false);
@@ -24,6 +25,11 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
 
   // Intersection observer for scroll-triggered animation
   useEffect(() => {
+    if (windowMode) {
+      setTitleAnimated(true);
+      setCardAnimated(true);
+      return;
+    }
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -45,7 +51,7 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
     if (carousel) observer.observe(carousel);
 
     return () => observer.disconnect();
-  }, []);
+  }, [windowMode]);
 
   const projects = [
     {
@@ -199,13 +205,14 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
       className="projects-container"
       style={{
         position: 'relative',
-        marginTop: '80px',
+        marginTop: windowMode ? '0' : '80px',
         marginLeft: 'auto',
         marginRight: 'auto',
         zIndex: 10,
-        width: '90%',
-        maxWidth: '1200px',
-        minWidth: '320px'
+        width: windowMode ? '100%' : '90%',
+        maxWidth: windowMode ? 'none' : '1200px',
+        minWidth: windowMode ? 'auto' : '320px',
+        padding: windowMode ? '20px' : undefined,
       }}
     >
       {/* Section Title */}

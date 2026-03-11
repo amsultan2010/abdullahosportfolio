@@ -5,6 +5,7 @@ import { contentMap } from './contentData';
 
 interface CaseStudiesProps {
   onContentClick?: (content: ContentViewData) => void;
+  windowMode?: boolean;
 }
 
 // Nasdaq logo, inverted white for dark backgrounds
@@ -35,7 +36,7 @@ function boostAlpha(rgba: string, factor: number): string {
   return rgba.replace(/([\d.]+)\)$/, (_, a) => `${Math.min(1, parseFloat(a) * factor)})`);
 }
 
-const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
+const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
   const [titleAnimated, setTitleAnimated] = useState(false);
   const [cardAnimated, setCardAnimated] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -43,6 +44,11 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (windowMode) {
+      setTitleAnimated(true);
+      setCardAnimated(true);
+      return;
+    }
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -64,7 +70,7 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
     if (carousel) observer.observe(carousel);
 
     return () => observer.disconnect();
-  }, []);
+  }, [windowMode]);
 
   const researchPapers = [
     {
@@ -114,13 +120,14 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
       className="cs-container"
       style={{
         position: 'relative',
-        marginTop: '80px',
+        marginTop: windowMode ? '0' : '80px',
         marginLeft: 'auto',
         marginRight: 'auto',
         zIndex: 10,
-        width: '90%',
-        maxWidth: '1200px',
-        minWidth: '320px',
+        width: windowMode ? '100%' : '90%',
+        maxWidth: windowMode ? 'none' : '1200px',
+        minWidth: windowMode ? 'auto' : '320px',
+        padding: windowMode ? '20px' : undefined,
         overflow: 'visible'
       }}
     >
