@@ -157,7 +157,7 @@ const Calendar = ({ windowMode }: CalendarProps) => {
           </button>
           <span style={{ flex: 1 }} />
           <span style={{ fontSize: '13px', color: '#666', fontWeight: 500 }}>
-            Book a Meeting with Ronnie
+            Book a Meeting with Ronniel
           </span>
           <span style={{ flex: 1 }} />
           <span style={{ width: '120px' }} />

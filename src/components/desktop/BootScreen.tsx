@@ -244,9 +244,8 @@ export default function BootScreen() {
         }
 
         @keyframes morphIn {
-          from { opacity: 0; transform: scale(0.4) rotate(180deg); filter: brightness(0) invert(1) blur(8px); }
-          50% { opacity: 0.7; transform: scale(1.1) rotate(10deg); filter: brightness(0) invert(1) blur(2px); }
-          to { opacity: 1; transform: scale(1) rotate(0deg); filter: brightness(0) invert(1) blur(0px); }
+          from { opacity: 0; transform: scale(0.6); filter: brightness(0) invert(1) blur(4px); }
+          to { opacity: 1; transform: scale(1); filter: brightness(0) invert(1) blur(0px); }
         }
 
         @keyframes progressFadeIn {

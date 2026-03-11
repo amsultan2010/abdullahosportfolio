@@ -141,11 +141,11 @@ function TerminalContent() {
     } else if (cmd === 'help') {
       newLines.push({ type: 'system', text: '\nAvailable commands:\n' });
       Object.entries(COMMANDS).forEach(([name, { desc }]) => {
-        newLines.push({ type: 'output', text: `  ${name.padEnd(15)}${desc}` });
+        newLines.push({ type: 'output', text: `  \x1b[cmd]${name}\x1b[/cmd]${' '.repeat(Math.max(1, 15 - name.length))}${desc}` });
       });
       newLines.push({ type: 'output', text: '' });
-      newLines.push({ type: 'output', text: '  help           Show this list again' });
-      newLines.push({ type: 'output', text: '  clear          Clear terminal' });
+      newLines.push({ type: 'output', text: '  \x1b[cmd]help\x1b[/cmd]           Show this list again' });
+      newLines.push({ type: 'output', text: '  \x1b[cmd]clear\x1b[/cmd]          Clear terminal' });
       newLines.push({ type: 'output', text: '' });
     } else if (cmd === 'clear') {
       setHistory([]);
@@ -241,12 +241,21 @@ function TerminalContent() {
     }
   };
 
+  const renderColoredLine = (text: string) => {
+    const parts = text.split(/\x1b\[cmd\]|\x1b\[\/cmd\]/);
+    return parts.map((part, idx) => (
+      idx % 2 === 1
+        ? <span key={idx} style={{ color: '#2563eb', fontWeight: 700 }}>{part}</span>
+        : <span key={idx} style={{ color: 'rgba(0,0,0,0.65)' }}>{part}</span>
+    ));
+  };
+
   const getLineColor = (line: TerminalLine) => {
     switch (line.type) {
-      case 'prompt': return '#1d7a3e';
+      case 'prompt': return '#1a6b33';
       case 'error': return '#c41a5e';
-      case 'system': return '#1a7a8a';
-      default: return 'rgba(0,0,0,0.55)';
+      case 'system': return '#0e6070';
+      default: return 'rgba(0,0,0,0.8)';
     }
   };
 
@@ -272,24 +281,24 @@ function TerminalContent() {
         fontSize: 'inherit',
         lineHeight: 'inherit',
         whiteSpace: 'pre-wrap',
-        color: 'rgba(0,0,0,0.55)',
+        color: 'rgba(0,0,0,0.8)',
       }}>
         {introText.split('\n').map((line, i) => {
           // Colorize intro lines
           if (i === 0) return <div key={i} style={{ fontWeight: 'bold', fontSize: '15px', color: '#000' }}>{line}</div>;
-          if (line.startsWith('Location:')) return <div key={i}><span style={{ color: '#c41a5e' }}>Location:</span>{line.replace('Location:', '')}</div>;
-          if (line.startsWith('Email:')) return <div key={i}><span style={{ color: '#8a6d00' }}>Email:</span>{line.replace('Email:', '')}</div>;
-          if (line.startsWith('GitHub:')) return <div key={i}><span style={{ color: '#1a7a8a' }}>GitHub:</span>{line.replace('GitHub:', '')}</div>;
-          if (line.startsWith('"')) return <div key={i} style={{ fontStyle: 'italic', color: 'rgba(0,0,0,0.4)' }}>{line}</div>;
-          if (line.startsWith('Available commands:')) return <div key={i} style={{ color: '#1d7a3e', fontWeight: 600 }}>{line}</div>;
-          if (line.startsWith('Type a command')) return <div key={i} style={{ color: 'rgba(0,0,0,0.45)' }}>{line}</div>;
+          if (line.startsWith('Location:')) return <div key={i}><span style={{ color: '#d4376e', fontWeight: 600 }}>Location: </span><span style={{ color: 'rgba(0,0,0,0.85)', fontWeight: 500 }}>{line.replace('Location: ', '')}</span></div>;
+          if (line.startsWith('Email:')) return <div key={i}><span style={{ color: '#b8860b', fontWeight: 600 }}>Email: </span><span style={{ color: 'rgba(0,0,0,0.85)', fontWeight: 500 }}>{line.replace('Email: ', '')}</span></div>;
+          if (line.startsWith('GitHub:')) return <div key={i}><span style={{ color: '#0e7490', fontWeight: 600 }}>GitHub: </span><span style={{ color: 'rgba(0,0,0,0.85)', fontWeight: 500 }}>{line.replace('GitHub: ', '')}</span></div>;
+          if (line.startsWith('"')) return <div key={i} style={{ fontStyle: 'italic', color: 'rgba(0,0,0,0.6)' }}>{line}</div>;
+          if (line.startsWith('Available commands:')) return <div key={i} style={{ color: '#16803c', fontWeight: 700 }}>{line}</div>;
+          if (line.startsWith('Type a command')) return <div key={i} style={{ color: 'rgba(0,0,0,0.65)' }}>{line}</div>;
           if (line.match(/^\s{2}\w/)) {
             const parts = line.match(/^(\s{2})(\S+)(\s+)(.+)$/);
             if (parts) {
-              return <div key={i}>{parts[1]}<span style={{ color: '#007AFF', fontWeight: 500 }}>{parts[2]}</span>{parts[3]}<span style={{ color: 'rgba(0,0,0,0.4)' }}>{parts[4]}</span></div>;
+              return <div key={i}>{parts[1]}<span style={{ color: '#2563eb', fontWeight: 700 }}>{parts[2]}</span>{parts[3]}<span style={{ color: 'rgba(0,0,0,0.65)' }}>{parts[4]}</span></div>;
             }
           }
-          if (line.startsWith('——')) return <div key={i} style={{ color: 'rgba(0,0,0,0.12)' }}>{line}</div>;
+          if (line.startsWith('——')) return <div key={i} style={{ color: 'rgba(0,0,0,0.15)' }}>{line}</div>;
           return <div key={i}>{line}</div>;
         })}
       </pre>
@@ -299,9 +308,11 @@ function TerminalContent() {
         <div key={i} style={{ color: getLineColor(line), whiteSpace: 'pre-wrap' }}>
           {line.type === 'prompt' ? (
             <>
-              <span style={{ color: '#1d7a3e', fontWeight: 600 }}>{prompt}</span>
-              <span style={{ color: '#1d1d1f' }}>{line.command}</span>
+              <span style={{ color: '#16803c', fontWeight: 700 }}>{prompt}</span>
+              <span style={{ color: '#1d1d1f', fontWeight: 500 }}>{line.command}</span>
             </>
+          ) : line.text.includes('\x1b[cmd]') ? (
+            renderColoredLine(line.text)
           ) : (
             line.text
           )}
@@ -311,7 +322,7 @@ function TerminalContent() {
       {/* Active prompt */}
       {introDone && (
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ color: '#1d7a3e', fontWeight: 600, whiteSpace: 'pre' }}>{prompt}</span>
+          <span style={{ color: '#16803c', fontWeight: 700, whiteSpace: 'pre' }}>{prompt}</span>
           <input
             ref={inputRef}
             value={input}
@@ -400,9 +411,15 @@ function Desktop() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [state.focusedWindowId, dispatch]);
 
-  // Mobile fallback — lazy import the old SPA
+  // Mobile — show boot animation, then mobile layout
   if (isMobile) {
-    return <MobileFallback />;
+    return (
+      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0b1220' }}>
+        <MacBackground />
+        <BootScreen />
+        {state.bootComplete && <MobileLayout />}
+      </div>
+    );
   }
 
   const openWindows = Object.values(state.windows).filter(w => w.isOpen);
@@ -488,15 +505,108 @@ function Desktop() {
   );
 }
 
-function MobileFallback() {
-  const [MobileShell, setMobileShell] = useState<React.ComponentType | null>(null);
+function MobileLayout() {
+  return (
+    <div style={{
+      position: 'absolute',
+      inset: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '40px 24px',
+      fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif",
+      animation: 'mobileFadeIn 0.8s ease-out',
+    }}>
+      {/* Glass card */}
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.2)',
+        backdropFilter: 'saturate(180%) blur(24px)',
+        WebkitBackdropFilter: 'saturate(180%) blur(24px)',
+        borderRadius: '20px',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        padding: '32px 24px',
+        width: '100%',
+        maxWidth: '360px',
+        textAlign: 'center',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+      }}>
+        <div style={{
+          fontSize: '48px',
+          fontWeight: 200,
+          color: 'white',
+          fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+          letterSpacing: '-1px',
+          marginBottom: '4px',
+        }}>
+          RG
+        </div>
+        <div style={{
+          fontSize: '20px',
+          fontWeight: 600,
+          color: 'white',
+          marginBottom: '4px',
+        }}>
+          Ronniel Gandhe
+        </div>
+        <div style={{
+          fontSize: '14px',
+          color: 'rgba(255,255,255,0.6)',
+          marginBottom: '24px',
+        }}>
+          Software Engineer
+        </div>
 
-  useEffect(() => {
-    import('./MobileShell').then(mod => setMobileShell(() => mod.default));
-  }, []);
+        <div style={{
+          fontSize: '13px',
+          color: 'rgba(255,255,255,0.5)',
+          lineHeight: 1.6,
+          marginBottom: '28px',
+        }}>
+          This portfolio is built as an interactive macOS desktop experience. Please visit on a laptop or desktop for the full experience.
+        </div>
 
-  if (!MobileShell) return <div style={{ background: '#0b1220', width: '100vw', height: '100vh' }} />;
-  return <MobileShell />;
+        {/* Quick links */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <MobileLink href="https://github.com/ronnielgandhe" label="GitHub" />
+          <MobileLink href="mailto:ronnielgandhe@gmail.com" label="Email Me" />
+          <MobileLink href="https://calendly.com/ronnielgandhe" label="Book a Meeting" />
+          <MobileLink href="https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8" label="Dev Playlist" />
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes mobileFadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function MobileLink({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      target={href.startsWith('mailto:') ? undefined : '_blank'}
+      rel="noopener noreferrer"
+      style={{
+        display: 'block',
+        padding: '12px 16px',
+        borderRadius: '12px',
+        background: 'rgba(255, 255, 255, 0.12)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        color: 'white',
+        textDecoration: 'none',
+        fontSize: '14px',
+        fontWeight: 500,
+        transition: 'background 0.15s',
+      }}
+    >
+      {label}
+    </a>
+  );
 }
 
 export default function DesktopShell() {

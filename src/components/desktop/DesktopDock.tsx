@@ -29,7 +29,7 @@ export default function DesktopDock() {
     { id: 'projects', label: 'Projects', icon: <DockImage src="/vscode.png" alt="VS Code" /> },
     { id: 'deep-research', label: 'Deep Research', icon: <BooksIcon /> },
     { id: 'blog', label: 'My Thoughts', icon: <DockImage src="/notes.png" alt="Notes" /> },
-    { id: 'calendar', label: 'Book a Meeting', icon: <DockImage src="/calandar.png" alt="Calendar" /> },
+    { id: 'calendar', label: 'Book a Meeting', icon: <CalendarIcon /> },
   ];
 
   const externalItems: DockItem[] = [
@@ -278,6 +278,64 @@ function AppIcon({ gradient, iconEl }: { gradient: string; iconEl: React.ReactNo
       boxShadow: '0 2px 8px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.1) inset',
     }}>
       {iconEl}
+    </div>
+  );
+}
+
+function CalendarIcon() {
+  const now = new Date();
+  const monthStr = now.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  const dayNum = now.getDate();
+  const s = BASE_SIZE - 6;
+  return (
+    <div style={{
+      width: `${s}px`,
+      height: `${s}px`,
+      borderRadius: '11px',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.1) inset',
+      background: '#fff',
+    }}>
+      {/* Red header with month */}
+      <div style={{
+        height: '15px',
+        background: 'linear-gradient(180deg, #ea4335 0%, #d62d20 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <span style={{
+          fontSize: '8.5px',
+          fontWeight: 800,
+          color: 'white',
+          fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+          letterSpacing: '0.8px',
+          lineHeight: 1,
+        }}>
+          {monthStr}
+        </span>
+      </div>
+      {/* White body with date number */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(180deg, #fff 0%, #f8f8f8 100%)',
+      }}>
+        <span style={{
+          fontSize: '20px',
+          fontWeight: 300,
+          color: '#1a1a1a',
+          fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+          lineHeight: 1,
+          marginTop: '-1px',
+        }}>
+          {dayNum}
+        </span>
+      </div>
     </div>
   );
 }

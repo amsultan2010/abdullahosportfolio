@@ -160,11 +160,11 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
         {/* Company Name */}
         <h3 style={{
           fontSize: 'clamp(1rem, 2.5vw, 1.3rem)',
-          color: 'rgba(0, 0, 0, 0.9)',
-          fontFamily: 'NeueMontreal-Medium, sans-serif',
+          color: '#1d1d1f',
+          fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Medium, sans-serif',
           fontStyle: 'normal',
           margin: 0,
-          fontWeight: '500',
+          fontWeight: '600',
           wordWrap: 'break-word',
           overflowWrap: 'break-word',
           wordBreak: 'break-word',
@@ -221,10 +221,10 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
                   }} />
                   <p style={{
                     fontSize: 'clamp(0.95rem, 2.3vw, 1.1rem)',
-                    color: 'rgba(0, 0, 0, 0.85)',
-                    fontFamily: 'NeueMontreal-Light, sans-serif',
+                    color: '#1d1d1f',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
                     margin: 0,
-                    fontWeight: '300',
+                    fontWeight: '500',
                     lineHeight: '1.4',
                     userSelect: 'none',
                     WebkitUserSelect: 'none'
@@ -233,10 +233,10 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
                   </p>
                   <p style={{
                     fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)',
-                    color: 'rgba(0, 0, 0, 0.7)',
-                    fontFamily: 'NeueMontreal-Light, sans-serif',
+                    color: '#86868b',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
                     margin: '0.1rem 0 0',
-                    fontWeight: '300',
+                    fontWeight: '400',
                     userSelect: 'none',
                     WebkitUserSelect: 'none'
                   }}>
@@ -245,10 +245,10 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
                   {r.description && (
                     <p style={{
                       fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
-                      color: 'rgba(0, 0, 0, 0.7)',
-                      fontFamily: 'NeueMontreal-Light, sans-serif',
+                      color: '#424245',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
                       margin: '0.4rem 0 0',
-                      fontWeight: '300',
+                      fontWeight: '400',
                       lineHeight: '1.5',
                       userSelect: 'none',
                       WebkitUserSelect: 'none'
@@ -265,10 +265,10 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
           <>
             <p style={{
               fontSize: 'clamp(0.95rem, 2.3vw, 1.15rem)',
-              color: 'rgba(0, 0, 0, 0.75)',
-              fontFamily: 'NeueMontreal-Light, sans-serif',
+              color: '#424245',
+              fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
               margin: 0,
-              fontWeight: '300',
+              fontWeight: '500',
               lineHeight: '1.4',
               wordWrap: 'break-word',
               overflowWrap: 'break-word',
@@ -282,10 +282,10 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
             {experience.date && (
               <p style={{
                 fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
-                color: 'rgba(0, 0, 0, 0.7)',
-                fontFamily: 'NeueMontreal-Light, sans-serif',
+                color: '#86868b',
+                fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
                 margin: '0.15rem 0 0',
-                fontWeight: '300',
+                fontWeight: '400',
                 userSelect: 'none',
                 WebkitUserSelect: 'none'
               }}>
@@ -296,10 +296,10 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
             {/* Location */}
             <p style={{
               fontSize: 'clamp(0.9rem, 2.2vw, 1rem)',
-              color: 'rgba(0, 0, 0, 0.65)',
-              fontFamily: 'NeueMontreal-Light, sans-serif',
+              color: '#86868b',
+              fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
               margin: 0,
-              fontWeight: '300',
+              fontWeight: '400',
               wordWrap: 'break-word',
               overflowWrap: 'break-word',
               wordBreak: 'break-word',
@@ -312,12 +312,12 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
             {/* Description */}
             <p style={{
               fontSize: 'clamp(0.95rem, 2.3vw, 1.1rem)',
-              color: 'rgba(0, 0, 0, 0.75)',
-              fontFamily: 'NeueMontreal-Light, sans-serif',
+              color: '#424245',
+              fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
               lineHeight: '1.6',
               margin: 0,
               marginTop: '0.75rem',
-              fontWeight: '300',
+              fontWeight: '400',
               wordWrap: 'break-word',
               overflowWrap: 'break-word',
               wordBreak: 'break-word',
@@ -350,21 +350,22 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
 
         .glass-experience-card {
           position: relative;
-          background: rgba(255, 255, 255, 0.45);
-          border-radius: 16px;
-          border: 0.5px solid rgba(0, 0, 0, 0.08);
+          background: rgba(255, 255, 255, 0.82);
+          border-radius: 12px;
+          border: 0.5px solid rgba(0, 0, 0, 0.06);
           padding: 1.5rem;
           overflow: hidden;
           transition: all 0.3s ease;
           cursor: pointer;
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
         }
 
         .glass-experience-card:hover {
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-          transform: translateZ(10px) scale(1.02);
-          background: rgba(255, 255, 255, 0.55);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+          transform: translateY(-1px);
+          background: rgba(255, 255, 255, 0.9);
         }
 
         .glass-experience-card h3,

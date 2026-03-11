@@ -86,7 +86,7 @@ function groupByDate(posts: typeof blogPosts) {
 }
 
 const folders = [
-  { name: 'All Notes', icon: '📁', count: blogPosts.length },
+  { name: 'All Notes', icon: '📓', count: blogPosts.length },
   { name: 'Personal', icon: '💭', count: blogPosts.filter(p => p.folder === 'Personal').length },
   { name: 'Finance', icon: '📈', count: blogPosts.filter(p => p.folder === 'Finance').length },
   { name: 'Tech', icon: '💻', count: blogPosts.filter(p => p.folder === 'Tech').length },
@@ -327,8 +327,8 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
                     fontSize: '11px',
                     color: isSelected ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.3)',
                   }}>
-                    <span>📁</span>
-                    <span>Notes</span>
+                    <span>📓</span>
+                    <span>{post.folder}</span>
                   </div>
                 </div>
               );

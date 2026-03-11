@@ -124,11 +124,11 @@ const Experience = ({ onCardClick, windowMode }: ExperienceProps) => {
     >
       <h2 style={{
         fontSize: '1.5rem',
-        color: 'rgba(0, 0, 0, 0.8)',
-        fontFamily: 'NeueMontreal-MediumItalic, sans-serif',
+        color: '#1d1d1f',
+        fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-MediumItalic, sans-serif',
         fontStyle: 'italic',
         margin: '0 0 1rem 0',
-        fontWeight: '500'
+        fontWeight: '600'
       }}>
         Experience
       </h2>
