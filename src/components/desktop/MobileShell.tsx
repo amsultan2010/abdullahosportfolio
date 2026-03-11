@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import hollywoodBackground from '../../assets/images/hollywood-background.png';
 import Education from '../portfolio/Education';
 import Experience from '../portfolio/Experience';
 import Projects from '../portfolio/Projects';
@@ -46,7 +45,7 @@ export default function MobileShell() {
       <div style={{
         position: 'fixed',
         inset: 0,
-        backgroundImage: `url(${hollywoodBackground.src})`,
+        backgroundImage: `url(/background.png)`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         zIndex: 0,

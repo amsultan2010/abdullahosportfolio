@@ -1,12 +1,7 @@
 ---
 import '../../styles/global.css';
 import { AstroSeo } from '@astrolib/seo';
-import { getImage } from 'astro:assets';
-import hollywoodBackground from '../../assets/images/hollywood-background.png';
-
-const backgrounds = await Promise.all([
-  getImage({ src: hollywoodBackground, width: 3500 }),
-]);
+const backgrounds = [{ src: '/background.png' }];
 ---
 
 <!-- Core meta tags -->
