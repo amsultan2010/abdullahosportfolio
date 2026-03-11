@@ -524,13 +524,13 @@ function CyclingStock() {
           {scrambledPct}
         </span>
       </div>
-      <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: 'block', marginTop: '4px' }}>
+      <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" overflow="visible" style={{ display: 'block', marginTop: '4px' }}>
         <defs>
           <linearGradient id="spark-grad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={latestColor} stopOpacity="0.12" />
             <stop offset="100%" stopColor={latestColor} stopOpacity="0" />
           </linearGradient>
-          <filter id="glow">
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
@@ -542,8 +542,8 @@ function CyclingStock() {
           <>
             <path d={linePath + ` L${dot.x.toFixed(1)},${h} L${pts[0].x.toFixed(1)},${h} Z`} fill="url(#spark-grad)" />
             <path d={linePath} fill="none" stroke={latestColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx={dot.x} cy={dot.y} r="4" fill={latestColor} filter="url(#glow)">
-              <animate attributeName="r" values="3;5;3" dur="1.2s" repeatCount="indefinite" />
+            <circle cx={dot.x} cy={dot.y} r="5" fill={latestColor} filter="url(#glow)">
+              <animate attributeName="r" values="4;6;4" dur="1.2s" repeatCount="indefinite" />
             </circle>
           </>
         )}
