@@ -112,7 +112,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
             />
           ) : (
             <span style={{
-              color: 'rgba(255, 255, 255, 0.6)',
+              color: 'rgba(0, 0, 0, 0.65)',
               fontSize: '1.5rem',
               fontFamily: 'NeueMontreal-Light, sans-serif',
               fontWeight: '300'
@@ -160,7 +160,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
         {/* Company Name */}
         <h3 style={{
           fontSize: 'clamp(1rem, 2.5vw, 1.3rem)',
-          color: 'rgba(255, 255, 255, 0.95)',
+          color: 'rgba(0, 0, 0, 0.9)',
           fontFamily: 'NeueMontreal-Medium, sans-serif',
           fontStyle: 'normal',
           margin: 0,
@@ -184,7 +184,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
               top: '8px',
               bottom: '8px',
               width: '2px',
-              background: 'rgba(255, 255, 255, 0.2)'
+              background: 'rgba(0, 0, 0, 0.12)'
             }} />
             {/* Glow vertical line — grows as roles light up */}
             <div style={{
@@ -193,7 +193,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
               top: '8px',
               width: '4px',
               height: litIndex >= experience.roles.length - 1 ? 'calc(100% - 16px)' : litIndex >= 0 ? `${((litIndex + 1) / experience.roles.length) * 100}%` : '0%',
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.5) 100%)',
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.25) 100%)',
               filter: 'blur(1.5px)',
               borderRadius: '2px',
               transition: 'height 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -212,16 +212,16 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
                     width: '10px',
                     height: '10px',
                     borderRadius: '50%',
-                    background: isLit ? 'rgba(255, 255, 255, 0.95)' : (i === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.4)'),
-                    border: `2px solid ${isLit ? 'rgba(255, 255, 255, 0.7)' : (i === 0 ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.2)')}`,
+                    background: isLit ? 'rgba(0, 0, 0, 0.7)' : (i === 0 ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.25)'),
+                    border: `2px solid ${isLit ? 'rgba(0, 0, 0, 0.5)' : (i === 0 ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.15)')}`,
                     boxShadow: isLit
-                      ? '0 0 10px rgba(255,255,255,0.6), 0 0 20px rgba(255,255,255,0.2)'
-                      : (i === 0 ? '0 0 8px rgba(255,255,255,0.3)' : 'none'),
+                      ? '0 0 8px rgba(0,0,0,0.2)'
+                      : (i === 0 ? '0 0 6px rgba(0,0,0,0.15)' : 'none'),
                     transition: 'all 0.35s ease'
                   }} />
                   <p style={{
                     fontSize: 'clamp(0.95rem, 2.3vw, 1.1rem)',
-                    color: 'rgba(255, 255, 255, 0.9)',
+                    color: 'rgba(0, 0, 0, 0.85)',
                     fontFamily: 'NeueMontreal-Light, sans-serif',
                     margin: 0,
                     fontWeight: '300',
@@ -233,7 +233,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
                   </p>
                   <p style={{
                     fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)',
-                    color: 'rgba(255, 255, 255, 0.5)',
+                    color: 'rgba(0, 0, 0, 0.7)',
                     fontFamily: 'NeueMontreal-Light, sans-serif',
                     margin: '0.1rem 0 0',
                     fontWeight: '300',
@@ -245,7 +245,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
                   {r.description && (
                     <p style={{
                       fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
-                      color: 'rgba(255, 255, 255, 0.7)',
+                      color: 'rgba(0, 0, 0, 0.7)',
                       fontFamily: 'NeueMontreal-Light, sans-serif',
                       margin: '0.4rem 0 0',
                       fontWeight: '300',
@@ -265,7 +265,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
           <>
             <p style={{
               fontSize: 'clamp(0.95rem, 2.3vw, 1.15rem)',
-              color: 'rgba(255, 255, 255, 0.9)',
+              color: 'rgba(0, 0, 0, 0.75)',
               fontFamily: 'NeueMontreal-Light, sans-serif',
               margin: 0,
               fontWeight: '300',
@@ -282,7 +282,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
             {experience.date && (
               <p style={{
                 fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
-                color: 'rgba(255, 255, 255, 0.5)',
+                color: 'rgba(0, 0, 0, 0.7)',
                 fontFamily: 'NeueMontreal-Light, sans-serif',
                 margin: '0.15rem 0 0',
                 fontWeight: '300',
@@ -296,7 +296,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
             {/* Location */}
             <p style={{
               fontSize: 'clamp(0.9rem, 2.2vw, 1rem)',
-              color: 'rgba(255, 255, 255, 0.6)',
+              color: 'rgba(0, 0, 0, 0.65)',
               fontFamily: 'NeueMontreal-Light, sans-serif',
               margin: 0,
               fontWeight: '300',
@@ -312,7 +312,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
             {/* Description */}
             <p style={{
               fontSize: 'clamp(0.95rem, 2.3vw, 1.1rem)',
-              color: 'rgba(255, 255, 255, 0.9)',
+              color: 'rgba(0, 0, 0, 0.75)',
               fontFamily: 'NeueMontreal-Light, sans-serif',
               lineHeight: '1.6',
               margin: 0,
@@ -350,18 +350,21 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
 
         .glass-experience-card {
           position: relative;
-          background: rgba(128, 128, 128, 0.12);
-          border-radius: 20px;
-          border: 0.5px solid rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.45);
+          border-radius: 16px;
+          border: 0.5px solid rgba(0, 0, 0, 0.08);
           padding: 1.5rem;
           overflow: hidden;
           transition: all 0.3s ease;
           cursor: pointer;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
         }
 
         .glass-experience-card:hover {
-          box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
           transform: translateZ(10px) scale(1.02);
+          background: rgba(255, 255, 255, 0.55);
         }
 
         .glass-experience-card h3,
@@ -370,10 +373,8 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
           transition: color 0.3s ease !important;
         }
 
-        .glass-experience-card:hover h3,
-        .glass-experience-card:hover p,
-        .glass-experience-card:hover span {
-          color: rgb(255, 255, 255) !important;
+        .glass-experience-card:hover h3 {
+          color: rgba(0, 0, 0, 0.95) !important;
         }
 
         .glass-experience-card::before {
@@ -383,7 +384,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
           left: 0;
           right: 0;
           height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+          background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.08), transparent);
         }
 
         .glass-experience-card::after {
@@ -393,7 +394,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
           left: 0;
           width: 1px;
           height: 100%;
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent, rgba(255, 255, 255, 0.1));
+          background: linear-gradient(180deg, rgba(0, 0, 0, 0.06), transparent, rgba(0, 0, 0, 0.03));
         }
 
         .glass-experience-card * {

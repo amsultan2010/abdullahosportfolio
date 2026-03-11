@@ -162,7 +162,7 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
     >
       <h2 style={{
         fontSize: '1.5rem',
-        color: 'rgba(255, 255, 255, 0.75)',
+        color: 'rgba(0, 0, 0, 0.8)',
         fontFamily: 'NeueMontreal-MediumItalic, sans-serif',
         fontStyle: 'italic',
         margin: '0 0 1rem 0',

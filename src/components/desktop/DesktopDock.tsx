@@ -1,12 +1,9 @@
 import { useState, useRef, useCallback } from 'react';
 import { useDesktop } from './DesktopContext';
 import type { WindowId } from './types';
-import { BsGithub, BsSpotify } from 'react-icons/bs';
-import { RiTerminalFill } from 'react-icons/ri';
+import { BsGithub } from 'react-icons/bs';
 import { HiAcademicCap } from 'react-icons/hi2';
 import { BsBriefcaseFill } from 'react-icons/bs';
-import { FaCode, FaMicroscope } from 'react-icons/fa6';
-import { HiPencilSquare } from 'react-icons/hi2';
 
 interface DockItem {
   id: WindowId | 'github' | 'email' | 'spotify';
@@ -26,18 +23,18 @@ export default function DesktopDock() {
   const dockRef = useRef<HTMLDivElement>(null);
 
   const windowItems: DockItem[] = [
-    { id: 'terminal', label: 'Terminal', icon: <TerminalIcon /> },
+    { id: 'terminal', label: 'Terminal', icon: <DockImage src="/terminal.png" alt="Terminal" /> },
     { id: 'education', label: 'Education', icon: <AppIcon gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" iconEl={<HiAcademicCap size={24} color="white" />} /> },
     { id: 'experience', label: 'Experience', icon: <AppIcon gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" iconEl={<BsBriefcaseFill size={22} color="white" />} /> },
-    { id: 'projects', label: 'Projects', icon: <AppIcon gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" iconEl={<FaCode size={22} color="white" />} /> },
-    { id: 'deep-research', label: 'Deep Research', icon: <AppIcon gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" iconEl={<FaMicroscope size={22} color="white" />} /> },
-    { id: 'blog', label: 'My Thoughts', icon: <AppIcon gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)" iconEl={<HiPencilSquare size={22} color="white" />} /> },
+    { id: 'projects', label: 'Projects', icon: <DockImage src="/vscode.png" alt="VS Code" /> },
+    { id: 'deep-research', label: 'Deep Research', icon: <BooksIcon /> },
+    { id: 'blog', label: 'My Thoughts', icon: <DockImage src="/notes.png" alt="Notes" /> },
   ];
 
   const externalItems: DockItem[] = [
     { id: 'github', label: 'GitHub', icon: <AppIcon gradient="linear-gradient(135deg, #2d2d2d 0%, #434343 100%)" iconEl={<BsGithub size={24} color="white" />} />, isExternal: true, href: 'https://github.com/ronnielgandhe' },
     { id: 'email', label: 'Email Me', icon: <AppIcon gradient="linear-gradient(135deg, #34d399 0%, #059669 100%)" iconEl={<span style={{ fontSize: '22px', lineHeight: 1 }}>✉</span>} />, isExternal: true, href: 'mailto:ronnielgandhe@gmail.com' },
-    { id: 'spotify', label: 'Dev Playlist', icon: <AppIcon gradient="linear-gradient(135deg, #1DB954 0%, #1aa34a 100%)" iconEl={<BsSpotify size={24} color="white" />} />, isExternal: true, href: 'https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8' },
+    { id: 'spotify', label: 'Dev Playlist', icon: <DockImage src="/spotify.png" alt="Spotify" />, isExternal: true, href: 'https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8' },
   ];
 
   const allItems = [...windowItems, { id: 'divider' as any, label: '', icon: null }, ...externalItems];
@@ -250,6 +247,23 @@ function DockButton({ item, scale, isOpen, onClick }: {
 
 // ── Icon Components ────────────────────────────────────────────
 
+function DockImage({ src, alt }: { src: string; alt: string }) {
+  return (
+    <img
+      src={src}
+      alt={alt}
+      draggable={false}
+      style={{
+        width: `${BASE_SIZE - 6}px`,
+        height: `${BASE_SIZE - 6}px`,
+        borderRadius: '11px',
+        objectFit: 'cover',
+        pointerEvents: 'none',
+      }}
+    />
+  );
+}
+
 function AppIcon({ gradient, iconEl }: { gradient: string; iconEl: React.ReactNode }) {
   return (
     <div style={{
@@ -267,28 +281,26 @@ function AppIcon({ gradient, iconEl }: { gradient: string; iconEl: React.ReactNo
   );
 }
 
-function TerminalIcon() {
+function BooksIcon() {
+  const s = BASE_SIZE - 6;
   return (
     <div style={{
-      width: `${BASE_SIZE - 6}px`,
-      height: `${BASE_SIZE - 6}px`,
+      width: `${s}px`,
+      height: `${s}px`,
       borderRadius: '11px',
-      overflow: 'hidden',
-      position: 'relative',
-      background: 'linear-gradient(180deg, #555 0%, #2a2a2a 100%)',
+      background: 'linear-gradient(180deg, #f5a623 0%, #e88b10 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
       boxShadow: '0 2px 8px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.1) inset',
     }}>
-      <div style={{
-        position: 'absolute',
-        inset: '2px',
-        borderRadius: '9px',
-        background: 'linear-gradient(180deg, #1a1a1a 0%, #000 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <RiTerminalFill size={22} color="#4ade80" />
-      </div>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5V4.5A2.5 2.5 0 016.5 2z" stroke="white" strokeWidth="1.8" fill="rgba(255,255,255,0.15)" />
+        <line x1="8" y1="7" x2="16" y2="7" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.8" />
+        <line x1="8" y1="10" x2="14" y2="10" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.6" />
+        <line x1="8" y1="13" x2="12" y2="13" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.4" />
+      </svg>
     </div>
   );
 }

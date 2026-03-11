@@ -141,7 +141,7 @@
 @layer utilities {
   /* INCREASED BLUR - To revert: blur(18px) -> blur(38px) for .glass and blur(18px) -> blur(32px) for .glass-menu */
   .glass {
-    background: rgba(10, 15, 26, 0.38);
+    background: rgba(30, 30, 30, 0.38);
     backdrop-filter: saturate(140%) blur(38px);
     -webkit-backdrop-filter: saturate(140%) blur(38px);
     border: 1px solid rgba(255, 255, 255, 0.06);
@@ -159,7 +159,7 @@
 
   /* Apple-style menu panel */
   .glass-menu {
-    background: rgba(11, 18, 32, 0.55);
+    background: rgba(30, 30, 30, 0.55);
     backdrop-filter: blur(32px);
     -webkit-backdrop-filter: blur(32px);
     border: 1px solid rgba(255, 255, 255, 0.08);

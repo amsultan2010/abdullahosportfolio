@@ -15,7 +15,7 @@ const NasdaqLogo = ({ height = 28 }: { height?: number }) => {
       src="/NASDAQ_Logo.svg.png"
       alt="Nasdaq"
       height={height}
-      style={{ filter: 'brightness(0) invert(1)', opacity: 0.85 }}
+      style={{ opacity: 0.85 }}
     />
   );
 };
@@ -135,7 +135,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
         className="cs-title"
         style={{
           fontSize: '1.5rem',
-          color: 'rgba(255, 255, 255, 0.75)',
+          color: 'rgba(0, 0, 0, 0.65)',
           fontFamily: 'NeueMontreal-MediumItalic, sans-serif',
           fontStyle: 'italic',
           margin: '0 0 1rem 0',
@@ -182,7 +182,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
               {/* Title */}
               <h3 style={{
                 fontSize: 'clamp(1.1rem, 3vw, 1.5rem)',
-                color: 'rgba(255, 255, 255, 0.85)',
+                color: 'rgba(0, 0, 0, 0.8)',
                 fontFamily: 'NeueMontreal-Medium, sans-serif',
                 margin: '0.5rem 0 1rem',
                 fontWeight: '500',
@@ -193,7 +193,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
 
               {/* Summary */}
               <p style={{
-                color: 'rgba(255, 255, 255, 0.55)',
+                color: 'rgba(0, 0, 0, 0.5)',
                 fontSize: '0.95rem',
                 fontFamily: 'NeueMontreal-Light, sans-serif',
                 lineHeight: '1.7',
@@ -232,7 +232,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
                 <span style={{
                   fontSize: '0.85rem',
                   fontFamily: 'NeueMontreal-Medium, sans-serif',
-                  color: 'rgba(255, 255, 255, 0.5)'
+                  color: 'rgba(0, 0, 0, 0.45)'
                 }}>
                   Read &rarr;
                 </span>
@@ -255,7 +255,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
                   width: activeIndex === i ? '20px' : '6px',
                   height: '6px',
                   borderRadius: '3px',
-                  background: activeIndex === i ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.2)',
+                  background: activeIndex === i ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.15)',
                   border: 'none',
                   padding: 0,
                   cursor: 'pointer',
@@ -291,9 +291,9 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
       <style>{`
         .glass-cs-carousel {
           position: relative;
-          background: rgba(128, 128, 128, 0.12);
-          border-radius: 20px;
-          border: 0.5px solid rgba(255, 255, 255, 0.2);
+          background: rgba(0, 0, 0, 0.04);
+          border-radius: 16px;
+          border: 0.5px solid rgba(0, 0, 0, 0.1);
           overflow: hidden;
           box-sizing: border-box;
           opacity: 0;
@@ -310,13 +310,12 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
           transition: color 0.3s ease !important;
         }
         .glass-cs-carousel:hover {
-          box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
           transition: box-shadow 0.3s ease;
+          background: rgba(0, 0, 0, 0.06);
         }
-        .glass-cs-carousel:hover h3,
-        .glass-cs-carousel:hover p,
-        .glass-cs-carousel:hover span:not(.cs-tag-pill) {
-          color: rgb(255, 255, 255) !important;
+        .glass-cs-carousel:hover h3 {
+          color: rgba(0, 0, 0, 0.95) !important;
         }
         .cs-tag-pill {
           transition: all 0.3s ease !important;
@@ -326,7 +325,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
           position: absolute;
           top: 0; left: 0; right: 0;
           height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(79, 195, 247, 0.4), transparent);
+          background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.06), transparent);
         }
         @keyframes csFadeSlide {
           from { opacity: 0; transform: translateX(20px); }
@@ -336,8 +335,8 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
-          background: rgba(255, 255, 255, 0.06);
-          border: 0.5px solid rgba(255, 255, 255, 0.15);
+          background: rgba(0, 0, 0, 0.04);
+          border: 0.5px solid rgba(0, 0, 0, 0.12);
           border-radius: 50%;
           width: 36px;
           height: 36px;
@@ -345,13 +344,13 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          color: rgba(255, 255, 255, 0.5);
+          color: rgba(0, 0, 0, 0.4);
           transition: all 0.2s ease;
           z-index: 2;
         }
         .cs-nav-btn:hover {
-          background: rgba(255, 255, 255, 0.12);
-          color: white;
+          background: rgba(0, 0, 0, 0.08);
+          color: rgba(0, 0, 0, 0.7);
         }
         .cs-nav-prev { left: -48px; }
         .cs-nav-next { right: -48px; }

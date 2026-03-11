@@ -129,13 +129,13 @@ export default function AppWindow({ windowState, children }: AppWindowProps) {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        background: 'rgba(10, 15, 26, 0.78)',
-        backdropFilter: 'saturate(140%) blur(38px)',
-        WebkitBackdropFilter: 'saturate(140%) blur(38px)',
-        border: windowState.isFullscreen ? 'none' : isFocused ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.06)',
+        background: 'rgba(255, 255, 255, 0.32)',
+        backdropFilter: 'saturate(180%) blur(32px)',
+        WebkitBackdropFilter: 'saturate(180%) blur(32px)',
+        border: windowState.isFullscreen ? 'none' : isFocused ? '1px solid rgba(0, 0, 0, 0.18)' : '1px solid rgba(0, 0, 0, 0.1)',
         boxShadow: windowState.isFullscreen ? 'none' : isFocused
-          ? '0 1px 0 rgba(255,255,255,0.05) inset, 0 25px 60px rgba(0,0,0,0.6), 0 0 80px rgba(0,0,0,0.2)'
-          : '0 1px 0 rgba(255,255,255,0.03) inset, 0 18px 50px rgba(0,0,0,0.45)',
+          ? '0 25px 60px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.12)'
+          : '0 18px 50px rgba(0,0,0,0.2)',
         opacity: entering ? 0 : 1,
         transform: entering ? 'scale(0.92)' : 'scale(1)',
         transition: 'opacity 0.25s ease-out, transform 0.25s ease-out, box-shadow 0.2s ease, border-color 0.2s ease, border-radius 0.2s ease, left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease',
@@ -152,10 +152,10 @@ export default function AppWindow({ windowState, children }: AppWindowProps) {
           display: 'flex',
           alignItems: 'center',
           padding: '0 12px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
           cursor: windowState.isFullscreen ? 'default' : 'grab',
           userSelect: 'none',
-          background: 'rgba(0, 0, 0, 0.12)',
+          background: 'rgba(0, 0, 0, 0.02)',
         }}
       >
         {/* Traffic lights */}
@@ -196,7 +196,7 @@ export default function AppWindow({ windowState, children }: AppWindowProps) {
           textAlign: 'center',
           fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
           fontSize: '13px',
-          color: isFocused ? 'rgba(255, 255, 255, 0.7)' : 'rgba(255, 255, 255, 0.35)',
+          color: isFocused ? 'rgba(0, 0, 0, 0.65)' : 'rgba(0, 0, 0, 0.3)',
           letterSpacing: '0.02em',
           transition: 'color 0.15s ease',
           overflow: 'hidden',
@@ -211,10 +211,11 @@ export default function AppWindow({ windowState, children }: AppWindowProps) {
       </div>
 
       {/* Content area — scrollable */}
-      <div style={{
+      <div className="light-window" style={{
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
+        background: 'rgba(255, 255, 255, 0.06)',
       }}>
         {children}
       </div>
@@ -251,8 +252,8 @@ function TrafficButton({ color, isFocused, isHovered, symbol, onClick, label }: 
         width: '12px',
         height: '12px',
         borderRadius: '50%',
-        background: isFocused ? color : 'rgba(255,255,255,0.15)',
-        border: isFocused ? `0.5px solid ${color}88` : '0.5px solid rgba(255,255,255,0.08)',
+        background: isFocused ? color : 'rgba(0,0,0,0.08)',
+        border: isFocused ? `0.5px solid ${color}88` : '0.5px solid rgba(0,0,0,0.04)',
         padding: 0,
         cursor: 'pointer',
         transition: 'background 0.15s ease',

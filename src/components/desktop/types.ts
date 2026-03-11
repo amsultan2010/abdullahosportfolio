@@ -47,14 +47,15 @@ export type DesktopAction =
   | { type: 'CLOSE_DETAIL' }
   | { type: 'OPEN_CONTENT'; content: ContentViewData }
   | { type: 'CLOSE_CONTENT' }
-  | { type: 'DESELECT_ALL' };
+  | { type: 'DESELECT_ALL' }
+  | { type: 'LOCK_SCREEN' };
 
 // Default window configs
 export const WINDOW_DEFAULTS: Record<WindowId, { title: string; width: number; height: number; x: number; y: number }> = {
   terminal:        { title: 'ronnielgandhe.com — zsh',      width: 800, height: 500, x: 80,  y: 60 },
   education:       { title: 'Education — Finder',           width: 720, height: 580, x: 120, y: 50 },
   experience:      { title: 'Experience — Finder',          width: 720, height: 580, x: 160, y: 70 },
-  projects:        { title: 'Projects — Finder',            width: 900, height: 650, x: 100, y: 40 },
+  projects:        { title: 'Projects — Visual Studio Code', width: 960, height: 680, x: 80, y: 35 },
   'deep-research': { title: 'Deep Research — Preview',      width: 950, height: 680, x: 140, y: 50 },
   blog:            { title: 'My Thoughts — Notes',          width: 900, height: 620, x: 110, y: 60 },
   detail:          { title: 'Detail',                       width: 650, height: 600, x: 200, y: 80 },

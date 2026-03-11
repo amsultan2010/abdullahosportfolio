@@ -4,6 +4,11 @@ import { WINDOW_DEFAULTS } from './types';
 
 function createWindow(id: WindowId, zIndex: number, titleOverride?: string): WindowState {
   const defaults = WINDOW_DEFAULTS[id];
+  // Center window on screen
+  const screenW = typeof window !== 'undefined' ? window.innerWidth : 1440;
+  const screenH = typeof window !== 'undefined' ? window.innerHeight : 900;
+  const x = Math.max(0, Math.round((screenW - defaults.width) / 2));
+  const y = Math.max(28, Math.round((screenH - defaults.height) / 2));
   return {
     id,
     title: titleOverride || defaults.title,
@@ -11,7 +16,7 @@ function createWindow(id: WindowId, zIndex: number, titleOverride?: string): Win
     isMinimized: false,
     isFullscreen: false,
     zIndex,
-    position: { x: defaults.x, y: defaults.y },
+    position: { x, y },
     size: { width: defaults.width, height: defaults.height },
   };
 }
@@ -213,6 +218,9 @@ function desktopReducer(state: DesktopState, action: DesktopAction): DesktopStat
 
     case 'DESELECT_ALL':
       return { ...state, focusedWindowId: null };
+
+    case 'LOCK_SCREEN':
+      return { ...initialState };
 
     default:
       return state;
