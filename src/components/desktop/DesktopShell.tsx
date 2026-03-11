@@ -245,17 +245,17 @@ function TerminalContent() {
     const parts = text.split(/\x1b\[cmd\]|\x1b\[\/cmd\]/);
     return parts.map((part, idx) => (
       idx % 2 === 1
-        ? <span key={idx} style={{ color: '#2563eb', fontWeight: 700 }}>{part}</span>
-        : <span key={idx} style={{ color: 'rgba(0,0,0,0.65)' }}>{part}</span>
+        ? <span key={idx} style={{ color: '#60a5fa', fontWeight: 700 }}>{part}</span>
+        : <span key={idx} style={{ color: 'rgba(255,255,255,0.55)' }}>{part}</span>
     ));
   };
 
   const getLineColor = (line: TerminalLine) => {
     switch (line.type) {
-      case 'prompt': return '#1a6b33';
-      case 'error': return '#c41a5e';
-      case 'system': return '#0e6070';
-      default: return 'rgba(0,0,0,0.8)';
+      case 'prompt': return '#4ade80';
+      case 'error': return '#f87171';
+      case 'system': return '#22d3ee';
+      default: return 'rgba(255,255,255,0.75)';
     }
   };
 
@@ -267,11 +267,13 @@ function TerminalContent() {
         padding: '16px 20px',
         fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
         fontSize: '13px',
-        color: '#1d1d1f',
+        color: '#e0e0e0',
         lineHeight: 1.65,
         height: '100%',
         overflowY: 'auto',
         cursor: 'text',
+        background: 'rgba(30, 30, 30, 0.88)',
+        borderRadius: '0 0 12px 12px',
       }}
     >
       {/* Intro text */}
@@ -281,24 +283,24 @@ function TerminalContent() {
         fontSize: 'inherit',
         lineHeight: 'inherit',
         whiteSpace: 'pre-wrap',
-        color: 'rgba(0,0,0,0.8)',
+        color: 'rgba(255,255,255,0.7)',
       }}>
         {introText.split('\n').map((line, i) => {
           // Colorize intro lines
-          if (i === 0) return <div key={i} style={{ fontWeight: 'bold', fontSize: '15px', color: '#000' }}>{line}</div>;
-          if (line.startsWith('Location:')) return <div key={i}><span style={{ color: '#d4376e', fontWeight: 600 }}>Location: </span><span style={{ color: 'rgba(0,0,0,0.85)', fontWeight: 500 }}>{line.replace('Location: ', '')}</span></div>;
-          if (line.startsWith('Email:')) return <div key={i}><span style={{ color: '#b8860b', fontWeight: 600 }}>Email: </span><span style={{ color: 'rgba(0,0,0,0.85)', fontWeight: 500 }}>{line.replace('Email: ', '')}</span></div>;
-          if (line.startsWith('GitHub:')) return <div key={i}><span style={{ color: '#0e7490', fontWeight: 600 }}>GitHub: </span><span style={{ color: 'rgba(0,0,0,0.85)', fontWeight: 500 }}>{line.replace('GitHub: ', '')}</span></div>;
-          if (line.startsWith('"')) return <div key={i} style={{ fontStyle: 'italic', color: 'rgba(0,0,0,0.6)' }}>{line}</div>;
-          if (line.startsWith('Available commands:')) return <div key={i} style={{ color: '#16803c', fontWeight: 700 }}>{line}</div>;
-          if (line.startsWith('Type a command')) return <div key={i} style={{ color: 'rgba(0,0,0,0.65)' }}>{line}</div>;
+          if (i === 0) return <div key={i} style={{ fontWeight: 'bold', fontSize: '15px', color: '#fff' }}>{line}</div>;
+          if (line.startsWith('Location:')) return <div key={i}><span style={{ color: '#ff6b9d', fontWeight: 600 }}>Location: </span><span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{line.replace('Location: ', '')}</span></div>;
+          if (line.startsWith('Email:')) return <div key={i}><span style={{ color: '#fbbf24', fontWeight: 600 }}>Email: </span><span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{line.replace('Email: ', '')}</span></div>;
+          if (line.startsWith('GitHub:')) return <div key={i}><span style={{ color: '#22d3ee', fontWeight: 600 }}>GitHub: </span><span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{line.replace('GitHub: ', '')}</span></div>;
+          if (line.startsWith('"')) return <div key={i} style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.45)' }}>{line}</div>;
+          if (line.startsWith('Available commands:')) return <div key={i} style={{ color: '#4ade80', fontWeight: 700 }}>{line}</div>;
+          if (line.startsWith('Type a command')) return <div key={i} style={{ color: 'rgba(255,255,255,0.5)' }}>{line}</div>;
           if (line.match(/^\s{2}\w/)) {
             const parts = line.match(/^(\s{2})(\S+)(\s+)(.+)$/);
             if (parts) {
-              return <div key={i}>{parts[1]}<span style={{ color: '#2563eb', fontWeight: 700 }}>{parts[2]}</span>{parts[3]}<span style={{ color: 'rgba(0,0,0,0.65)' }}>{parts[4]}</span></div>;
+              return <div key={i}>{parts[1]}<span style={{ color: '#60a5fa', fontWeight: 700 }}>{parts[2]}</span>{parts[3]}<span style={{ color: 'rgba(255,255,255,0.55)' }}>{parts[4]}</span></div>;
             }
           }
-          if (line.startsWith('——')) return <div key={i} style={{ color: 'rgba(0,0,0,0.15)' }}>{line}</div>;
+          if (line.startsWith('——')) return <div key={i} style={{ color: 'rgba(255,255,255,0.15)' }}>{line}</div>;
           return <div key={i}>{line}</div>;
         })}
       </pre>
@@ -308,8 +310,8 @@ function TerminalContent() {
         <div key={i} style={{ color: getLineColor(line), whiteSpace: 'pre-wrap' }}>
           {line.type === 'prompt' ? (
             <>
-              <span style={{ color: '#16803c', fontWeight: 700 }}>{prompt}</span>
-              <span style={{ color: '#1d1d1f', fontWeight: 500 }}>{line.command}</span>
+              <span style={{ color: '#4ade80', fontWeight: 700 }}>{prompt}</span>
+              <span style={{ color: '#fff', fontWeight: 500 }}>{line.command}</span>
             </>
           ) : line.text.includes('\x1b[cmd]') ? (
             renderColoredLine(line.text)
@@ -322,7 +324,7 @@ function TerminalContent() {
       {/* Active prompt */}
       {introDone && (
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ color: '#16803c', fontWeight: 700, whiteSpace: 'pre' }}>{prompt}</span>
+          <span style={{ color: '#4ade80', fontWeight: 700, whiteSpace: 'pre' }}>{prompt}</span>
           <input
             ref={inputRef}
             value={input}
@@ -336,10 +338,10 @@ function TerminalContent() {
               border: 'none',
               outline: 'none',
               font: 'inherit',
-              color: '#1d1d1f',
+              color: '#fff',
               padding: 0,
               margin: 0,
-              caretColor: '#4d4d4d',
+              caretColor: '#4ade80',
             }}
           />
         </div>
@@ -351,7 +353,7 @@ function TerminalContent() {
           display: 'inline-block',
           width: '8px',
           height: '15px',
-          background: '#4d4d4d',
+          background: '#4ade80',
           verticalAlign: 'text-bottom',
           animation: 'blink 1s step-end infinite',
         }} />

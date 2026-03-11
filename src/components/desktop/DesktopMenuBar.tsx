@@ -94,7 +94,7 @@ export default function DesktopMenuBar() {
       backdropFilter: 'saturate(160%) blur(28px)', WebkitBackdropFilter: 'saturate(160%) blur(28px)',
       borderBottom: '1px solid rgba(255,255,255,0.06)',
       fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif",
-      fontSize: '13px', color: 'rgba(255,255,255,0.85)', userSelect: 'none',
+      fontSize: '13px', color: 'rgba(255,255,255,0.95)', userSelect: 'none',
     }}>
       {/* ── Left: Logo + Menus ── */}
       <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
@@ -108,7 +108,7 @@ export default function DesktopMenuBar() {
               background: activeMenu === 'apple' ? 'rgba(255,255,255,0.15)' : 'transparent',
             }}
           >
-            <img src="/icons/rglogo.png" alt="RG" style={{ height: '16px', filter: 'brightness(0) invert(1)', opacity: 0.9 }} />
+            <img src="/icons/rglogo.png" alt="RG" style={{ height: '16px', filter: 'brightness(0) invert(1)', opacity: 1 }} />
           </div>
           {activeMenu === 'apple' && (
             <div style={{ ...panelStyle, left: 0, minWidth: '240px' }}>
@@ -192,7 +192,7 @@ export default function DesktopMenuBar() {
           <SoundPanel spotify={spotify} />
         </TrayDropdown>
 
-        <span style={{ fontSize: '12.5px', color: 'rgba(255,255,255,0.75)', marginLeft: '6px' }}>
+        <span style={{ fontSize: '12.5px', color: 'rgba(255,255,255,0.95)', fontWeight: 450, marginLeft: '6px' }}>
           {date}&ensp;{time}
         </span>
       </div>
