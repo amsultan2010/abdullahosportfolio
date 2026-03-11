@@ -23,7 +23,7 @@ export default function DesktopDock() {
   const dockRef = useRef<HTMLDivElement>(null);
 
   const windowItems: DockItem[] = [
-    { id: 'terminal', label: 'Terminal', icon: <DockImage src="/terminal.png" alt="Terminal" /> },
+    { id: 'terminal', label: 'Terminal', icon: <TerminalIcon /> },
     { id: 'education', label: 'Education', icon: <AppIcon gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" iconEl={<HiAcademicCap size={24} color="white" />} /> },
     { id: 'experience', label: 'Experience', icon: <AppIcon gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" iconEl={<BsBriefcaseFill size={22} color="white" />} /> },
     { id: 'projects', label: 'Projects', icon: <DockImage src="/vscode.png" alt="VS Code" /> },
@@ -278,6 +278,51 @@ function AppIcon({ gradient, iconEl }: { gradient: string; iconEl: React.ReactNo
       boxShadow: '0 2px 8px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.1) inset',
     }}>
       {iconEl}
+    </div>
+  );
+}
+
+function TerminalIcon() {
+  const s = BASE_SIZE - 6;
+  return (
+    <div style={{
+      width: `${s}px`,
+      height: `${s}px`,
+      borderRadius: '11px',
+      overflow: 'hidden',
+      position: 'relative',
+      background: 'linear-gradient(180deg, #d4d4d4 0%, #a8a8a8 100%)',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.1) inset',
+    }}>
+      {/* Inner black screen */}
+      <div style={{
+        position: 'absolute',
+        inset: '3px',
+        borderRadius: '8px',
+        background: 'linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '2px',
+      }}>
+        {/* > prompt */}
+        <span style={{
+          color: '#fff',
+          fontSize: '18px',
+          fontWeight: 300,
+          fontFamily: "'SF Mono', Menlo, monospace",
+          lineHeight: 1,
+          marginBottom: '2px',
+        }}>{'>'}</span>
+        {/* _ cursor */}
+        <span style={{
+          display: 'inline-block',
+          width: '8px',
+          height: '2px',
+          background: '#fff',
+          marginTop: '6px',
+        }} />
+      </div>
     </div>
   );
 }
