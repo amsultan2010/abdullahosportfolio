@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import ExperienceCard from './ExperienceCard';
+import { EducationContent } from './DetailPanel';
 import type { EducationDetail, DetailContent, PitchDeck } from './DetailPanel';
 
 interface EducationProps {
@@ -9,7 +10,10 @@ interface EducationProps {
 
 const Education = ({ onCardClick, windowMode }: EducationProps) => {
   const [hasAnimated, setHasAnimated] = useState(windowMode ?? false);
+  const [selectedDetail, setSelectedDetail] = useState<EducationDetail | null>(null);
+  const [viewState, setViewState] = useState<'list' | 'fading-out' | 'detail' | 'fading-back'>('list');
   const educationRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (windowMode) return;
@@ -162,13 +166,22 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
       }}
     >
       {windowMode ? (
-        /* Window mode: dark pane fills the entire window content area */
-        <div style={{
+        /* Window mode: inline page transitions */
+        <div ref={scrollRef} style={{
           height: '100%',
           overflowY: 'auto',
-          padding: 'clamp(1.5rem, 3vw, 2.5rem)',
+          position: 'relative',
         }}>
-          <div>
+          {/* ── LIST VIEW ── */}
+          <div style={{
+            padding: 'clamp(1.5rem, 3vw, 2.5rem)',
+            opacity: viewState === 'list' ? 1 : viewState === 'fading-out' ? 0 : 0,
+            transform: viewState === 'list' ? 'scale(1)' : 'scale(0.97)',
+            transition: 'opacity 0.3s ease, transform 0.3s ease',
+            pointerEvents: (viewState === 'list') ? 'auto' : 'none',
+            position: (viewState === 'detail' || viewState === 'fading-back') ? 'absolute' : 'relative',
+            inset: 0,
+          }}>
             <h2 style={{
               fontSize: '1.5rem',
               color: 'rgba(255, 255, 255, 0.9)',
@@ -186,7 +199,14 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
                   key={edu.id}
                   experience={edu}
                   clickable={true}
-                  onDetailClick={onCardClick ? () => onCardClick(edu.detail) : undefined}
+                  onDetailClick={() => {
+                    setSelectedDetail(edu.detail);
+                    setViewState('fading-out');
+                    setTimeout(() => {
+                      setViewState('detail');
+                      scrollRef.current?.scrollTo({ top: 0 });
+                    }, 300);
+                  }}
                   darkMode
                 />
               ))}
@@ -198,12 +218,57 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
                   key={edu.id}
                   experience={edu}
                   clickable={true}
-                  onDetailClick={onCardClick ? () => onCardClick(edu.detail) : undefined}
+                  onDetailClick={() => {
+                    setSelectedDetail(edu.detail);
+                    setViewState('fading-out');
+                    setTimeout(() => {
+                      setViewState('detail');
+                      scrollRef.current?.scrollTo({ top: 0 });
+                    }, 300);
+                  }}
                   darkMode
                 />
               ))}
             </div>
           </div>
+
+          {/* ── DETAIL VIEW ── */}
+          {selectedDetail && (viewState === 'detail' || viewState === 'fading-back') && (
+            <div style={{
+              padding: 'clamp(1.5rem, 3vw, 2.5rem)',
+              opacity: viewState === 'detail' ? 1 : 0,
+              transform: viewState === 'detail' ? 'translateY(0)' : 'translateY(12px)',
+              transition: 'opacity 0.35s ease, transform 0.35s ease',
+            }}>
+              {/* Back button */}
+              <button
+                onClick={() => {
+                  setViewState('fading-back');
+                  setTimeout(() => {
+                    setSelectedDetail(null);
+                    setViewState('list');
+                  }, 300);
+                }}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'rgba(255,255,255,0.5)', fontSize: '13px',
+                  fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+                  padding: '4px 0', marginBottom: '1.25rem',
+                  transition: 'color 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.9)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                Education
+              </button>
+
+              <EducationContent detail={selectedDetail} />
+            </div>
+          )}
         </div>
       ) : (
         /* Non-window mode: original light layout */

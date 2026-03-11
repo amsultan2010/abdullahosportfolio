@@ -582,7 +582,7 @@ const PitchDeckViewer = ({ deck, animDelay }: { deck: PitchDeck; animDelay: numb
 
 // ─── Education Detail ───────────────────────────────────────
 
-const EducationContent = ({ detail }: { detail: EducationDetail }) => {
+export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
   const totalCourses = detail.courses.length;
   // Time (s) when the last course finishes its animation
   const cascadeEnd = 0.3 + totalCourses * 0.055 + 0.5; // start delay + stagger + animation duration
