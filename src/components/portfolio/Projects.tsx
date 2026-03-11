@@ -425,11 +425,25 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
                   {isExpanded && proj.files.map((file, fi) => {
                     const { icon, color } = getFileIcon(file);
                     const isDir = file.endsWith('/');
+                    const isReadme = file === 'README.md';
                     const isActiveFile = activeTab?.projectIdx === idx && activeTab?.fileName === file;
+
+                    const handleFileClick = () => {
+                      if (isDir) return;
+                      if (isReadme) {
+                        // README opens the rich project view tab
+                        openFile(idx, file);
+                      } else {
+                        // All other files open on GitHub directly
+                        const slug = repoSlug(proj.repoUrl);
+                        window.open(`https://github.com/${slug}/blob/main/${file}`, '_blank');
+                      }
+                    };
+
                     return (
                       <div
                         key={fi}
-                        onClick={() => { if (!isDir) openFile(idx, file); }}
+                        onClick={handleFileClick}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -455,6 +469,9 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
                           }}>{icon}</span>
                         )}
                         <span>{file}</span>
+                        {!isDir && !isReadme && (
+                          <span style={{ fontSize: '10px', color: '#555', marginLeft: 'auto' }}>↗</span>
+                        )}
                       </div>
                     );
                   })}
@@ -561,17 +578,10 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
               minHeight: 0,
             }}
           >
-            {/* README.md — show the rich project view */}
+            {/* README.md — always show the rich project view with demos & details */}
             {activeTab?.fileName === 'README.md' ? (
               <div className="vsc-readme">
-                {/* Show fetched GitHub README if available */}
-                {activeTab.content ? (
-                  <MarkdownRenderer content={activeTab.content} />
-                ) : activeTab.loading ? (
-                  <div style={{ color: '#666', fontSize: '13px', padding: '20px 0' }}>Loading README from GitHub...</div>
-                ) : (
                   <>
-                    {/* Fallback: Show rich project content */}
                     {detail.demoVideo && (
                       <div key={detail.demoVideo} style={{
                         width: '100%', borderRadius: '8px', overflow: 'hidden',
@@ -649,7 +659,6 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
                       </>
                     )}
                   </>
-                )}
               </div>
             ) : (
               /* Non-README file: show as code/text */

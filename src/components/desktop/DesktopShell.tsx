@@ -846,8 +846,8 @@ function TerminalContent() {
           </div>
           <div style={{ display: 'flex', gap: '16px', fontSize: '11.5px', flexWrap: 'wrap' }}>
             <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
-            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fbbf24', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
-            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#22d3ee', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
+            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
           </div>
         </div>
 
@@ -893,8 +893,8 @@ function TerminalContent() {
           {/* Info row */}
           <div style={{ display: 'flex', gap: '20px', fontSize: '12px', fontFamily: "'SF Mono', monospace", marginBottom: '24px' }}>
             <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
-            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fbbf24', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
-            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#22d3ee', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
+            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
           </div>
 
           {/* Command pills — horizontal */}
@@ -954,8 +954,8 @@ function TerminalContent() {
           <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '6px' }}>Software Engineer · <RotatingWords /></div>
           <div style={{ display: 'flex', gap: '16px', fontSize: '11.5px', fontFamily: "'SF Mono', monospace", marginBottom: '20px' }}>
             <span style={{ color: 'rgba(255,255,255,0.4)' }}>📍 Waterloo</span>
-            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fbbf24', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
-            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#22d3ee', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
+            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
           </div>
 
           {/* Glass cards row */}
@@ -1023,10 +1023,10 @@ function TerminalContent() {
           transition: 'all 0.5s ease-out', fontFamily: "'SF Mono', monospace", fontSize: '13px',
         }}>
           <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
-          <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fbbf24', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+          <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
             ✉️ ronnielgandhe@gmail.com
           </a>
-          <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#22d3ee', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+          <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
             🐙 github.com/ronnielgandhe
           </a>
         </div>
@@ -1112,7 +1112,7 @@ function Desktop() {
     }
   }, [dispatch]);
 
-  // Terminal slide-over: when Education or Experience opens, terminal fills the left column top-to-bottom
+  // Terminal slide-over: when Education or Experience opens, slide terminal left (keep same size)
   useEffect(() => {
     const terminal = state.windows['terminal'];
     if (!terminal || terminal.isMinimized || !terminal.isOpen || terminal.isFullscreen) return;
@@ -1127,30 +1127,27 @@ function Desktop() {
     const screenH = window.innerHeight;
     const menuBarH = 28;
     const dockH = 72;
-    const gap = 8;
+    const gap = 10;
 
     if (openSideWindow) {
       const sideWin = state.windows[openSideWindow]!;
 
-      // Terminal fills left column — full height from menu bar to above dock
-      const termW = Math.min(480, Math.round(screenW * 0.36));
-      const termH = screenH - menuBarH - dockH - gap * 2;
+      // Terminal keeps its normal size — just slides to the left edge
       const termX = gap;
       const termY = menuBarH + gap;
 
       // Only move if not already positioned there
-      if (Math.abs(terminal.position.x - termX) > 10 || Math.abs(terminal.size.width - termW) > 10 || Math.abs(terminal.size.height - termH) > 20) {
-        dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: { width: termW, height: termH } });
+      if (Math.abs(terminal.position.x - termX) > 10) {
         dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: termX, y: termY } });
       }
 
-      // Side window fills the right column — also full height
-      const sideW = screenW - termW - gap * 3;
-      const sideH = termH;
-      const sideX = termW + gap * 2;
-      const sideY = termY;
+      // Side window goes to the right of the terminal
+      const sideW = Math.min(sideWin.size.width, screenW - terminal.size.width - gap * 3);
+      const sideH = screenH - menuBarH - dockH - gap * 2;
+      const sideX = terminal.size.width + gap * 2;
+      const sideY = menuBarH + gap;
 
-      if (Math.abs(sideWin.position.x - sideX) > 10 || Math.abs(sideWin.size.width - sideW) > 10) {
+      if (Math.abs(sideWin.position.x - sideX) > 10 || Math.abs(sideWin.size.height - sideH) > 20) {
         dispatch({ type: 'RESIZE_WINDOW', id: openSideWindow, size: { width: sideW, height: sideH } });
         dispatch({ type: 'MOVE_WINDOW', id: openSideWindow, position: { x: sideX, y: sideY } });
       }
@@ -1160,9 +1157,7 @@ function Desktop() {
       const centerX = Math.max(0, Math.round((screenW - defaults.width) / 2));
       const centerY = Math.max(28, Math.round((screenH - defaults.height) / 2));
 
-      if (terminal.size.width < 500 && terminal.position.x < 30) {
-        // Only restore if it was slid over (small width, near left edge)
-        dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: defaults });
+      if (terminal.position.x < 30 && Math.abs(terminal.position.x - centerX) > 30) {
         dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: centerX, y: centerY } });
       }
     }
