@@ -71,108 +71,100 @@ const COMMANDS: Record<string, { window: WindowId; desc: string }> = {
   'calendar':      { window: 'calendar',        desc: 'Book a meeting with me' },
 };
 
-// ── Rotating words component ──
+const SMART_COMMANDS: Record<string, { window: WindowId; output: string }> = {
+  'npm run experience':    { window: 'experience',    output: '> ronniel@1.0.0 experience\n> Loading professional history...' },
+  'git log --education':   { window: 'education',     output: 'commit a1b2c3d (HEAD → main)\nFetching academic records...' },
+  'brew install projects': { window: 'projects',      output: '==> Fetching ronniel/projects\n==> Pouring projects-1.0.0...' },
+  'cat mythoughts.md':     { window: 'blog',          output: '# My Thoughts\nOpening blog posts...' },
+  'cd deepresearch':       { window: 'deep-research', output: '~/deepresearch $\nLoading case studies...' },
+  'open calendar.app':     { window: 'calendar',      output: 'Opening Calendar.app...' },
+};
+
+// ── Rotating words component (character-by-character typing) ──
 function RotatingWords() {
-  const words = ['deep learning', 'fullstack development', 'systems engineering', 'quantitative finance', 'product design'];
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsAnimating(true);
-      setTimeout(() => {
-        setCurrentIdx(prev => (prev + 1) % words.length);
-        setIsAnimating(false);
-      }, 400);
-    }, 2800);
-    return () => clearInterval(interval);
-  }, []);
-
-  const wordColors = ['#60a5fa', '#c084fc', '#4ade80', '#fbbf24', '#f472b6'];
-
-  return (
-    <span style={{ position: 'relative', display: 'inline-block', verticalAlign: 'bottom' }}>
-      <span style={{
-        display: 'inline-block',
-        color: wordColors[currentIdx],
-        fontWeight: 700,
-        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        opacity: isAnimating ? 0 : 1,
-        transform: isAnimating ? 'translateY(-8px)' : 'translateY(0)',
-        filter: isAnimating ? 'blur(4px)' : 'blur(0)',
-      }}>
-        {words[currentIdx]}
-      </span>
-    </span>
-  );
-}
-
-// ── World Clock component ──
-function WorldClock() {
-  const [time, setTime] = useState(new Date());
-  useEffect(() => {
-    const id = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const cities = [
-    { name: 'New York', tz: 'America/New_York', abbr: 'EST' },
-    { name: 'London', tz: 'Europe/London', abbr: 'GMT' },
-    { name: 'Dubai', tz: 'Asia/Dubai', abbr: 'GST' },
-    { name: 'Tokyo', tz: 'Asia/Tokyo', abbr: 'JST' },
-    { name: 'Sydney', tz: 'Australia/Sydney', abbr: 'AEDT' },
+  const words = [
+    'deep learning', 'fullstack development',
+    'systems engineering', 'quantitative finance',
+    'product design', 'cloud infrastructure',
+    'data science', 'too much caffeine',
+    'sheer willpower', 'duct tape and dreams',
+    'late nights and vibes', 'raw ambition',
+    'Python and prayers', 'Stack Overflow wisdom',
+    '47 open browser tabs', 'one more quick fix',
+    'too many JIRA tickets', 'ChatGPT and hope',
+    'zero sleep', 'rogue microservices',
+    'Lambda functions', 'distributed sleep',
+    'git commits and coffee', 'caffeine and chaos',
+    'good intentions', 'pure stubbornness',
   ];
 
-  const formatTime = (tz: string) => {
-    return time.toLocaleTimeString('en-US', {
-      timeZone: tz,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    });
-  };
+  const wordColors = [
+    '#60a5fa', '#c084fc', '#4ade80', '#fbbf24', '#f472b6',
+    '#22d3ee', '#fb923c', '#a78bfa', '#34d399', '#f87171',
+    '#38bdf8', '#e879f9', '#86efac', '#fcd34d', '#fb7185',
+    '#67e8f9', '#fdba74', '#c4b5fd', '#6ee7b7', '#fca5a5',
+    '#7dd3fc', '#d946ef', '#4ade80', '#facc15', '#f472b6',
+    '#2dd4bf',
+  ];
 
-  const formatDate = (tz: string) => {
-    return time.toLocaleDateString('en-US', {
-      timeZone: tz,
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [displayText, setDisplayText] = useState('');
+  const [phase, setPhase] = useState<'delay' | 'typing' | 'showing' | 'erasing'>('delay');
+
+  useEffect(() => {
+    const word = words[currentIdx];
+
+    if (phase === 'delay') {
+      // Brief pause before typing starts (initial load)
+      const timer = setTimeout(() => setPhase('typing'), 600);
+      return () => clearTimeout(timer);
+    }
+
+    if (phase === 'typing') {
+      if (displayText.length < word.length) {
+        const timer = setTimeout(() => {
+          setDisplayText(word.slice(0, displayText.length + 1));
+        }, 45);
+        return () => clearTimeout(timer);
+      } else {
+        // Word fully typed — hold it on screen
+        const timer = setTimeout(() => setPhase('erasing'), 2200);
+        return () => clearTimeout(timer);
+      }
+    }
+
+    if (phase === 'erasing') {
+      if (displayText.length > 0) {
+        const timer = setTimeout(() => {
+          setDisplayText(displayText.slice(0, -1));
+        }, 25);
+        return () => clearTimeout(timer);
+      } else {
+        // Move to next word and start typing
+        setCurrentIdx(prev => (prev + 1) % words.length);
+        setPhase('typing');
+      }
+    }
+
+    if (phase === 'showing') {
+      setPhase('typing');
+    }
+  }, [displayText, phase, currentIdx]);
+
+  const color = wordColors[currentIdx % wordColors.length];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '4px' }}>
-        WORLD CLOCK
-      </div>
-      {cities.map(city => {
-        const hrs = parseInt(formatTime(city.tz).split(':')[0]);
-        const isNight = hrs >= 20 || hrs < 6;
-        return (
-          <div key={city.name} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '3px 0',
-            borderBottom: '0.5px solid rgba(255,255,255,0.04)',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '11px' }}>{isNight ? '🌙' : '☀️'}</span>
-              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', width: '70px' }}>{city.name}</span>
-            </div>
-            <span style={{
-              fontFamily: "'SF Mono', monospace",
-              fontSize: '12px',
-              color: '#fff',
-              fontWeight: 500,
-              letterSpacing: '0.02em',
-            }}>
-              {formatTime(city.tz)}
-            </span>
-          </div>
-        );
-      })}
-    </div>
+    <span style={{ position: 'relative', display: 'inline' }}>
+      <span style={{ color, fontWeight: 700 }}>
+        {displayText}
+      </span>
+      <span style={{
+        display: 'inline-block', width: '2px', height: '1em',
+        background: color, marginLeft: '1px',
+        animation: 'blink 1s step-end infinite',
+        verticalAlign: 'text-bottom',
+      }} />
+    </span>
   );
 }
 
@@ -264,6 +256,271 @@ function StockTickers() {
   );
 }
 
+// ── World Clock (all cities side by side) ──
+function WorldClock() {
+  const [time, setTime] = useState(new Date());
+
+  const cities = [
+    { label: 'LDN', tz: 'Europe/London' },
+    { label: 'SF', tz: 'America/Los_Angeles' },
+    { label: 'TOR', tz: 'America/Toronto' },
+  ];
+
+  useEffect(() => {
+    const id = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const font = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif";
+  const dateStr = time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+  return (
+    <div style={{ fontFamily: font }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        {cities.map(city => {
+          const t = time.toLocaleTimeString('en-US', {
+            timeZone: city.tz, hour: 'numeric', minute: '2-digit', hour12: true,
+          });
+          const hrs = parseInt(time.toLocaleTimeString('en-US', { timeZone: city.tz, hour: '2-digit', hour12: false }));
+          const isNight = hrs >= 20 || hrs < 6;
+          return (
+            <div key={city.label} style={{ textAlign: 'center' }}>
+              <div style={{ color: '#fff', fontSize: '10px', fontWeight: 500, marginBottom: '4px' }}>
+                {isNight ? '🌙' : '☀️'} {city.label}
+              </div>
+              <div style={{ fontSize: '15px', fontWeight: 300, color: '#fff', letterSpacing: '-0.3px', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+                {t}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Cycling Stock with Animated Sparkline ──
+interface StockData {
+  symbol: string; name: string; price: number; change: number; pct: number; history: number[];
+}
+
+function CyclingStock() {
+  const [stocks, setStocks] = useState<StockData[]>([]);
+  const [activeIdx, setActiveIdx] = useState(0);
+  // Animation states
+  const [phase, setPhase] = useState<'typing' | 'drawing' | 'holding' | 'clearing'>('typing');
+  const [typedChars, setTypedChars] = useState(0);
+  const [drawProgress, setDrawProgress] = useState(0);
+  const [priceRevealed, setPriceRevealed] = useState(false);
+
+  const generateFallback = (): StockData[] => {
+    const bases = [
+      { symbol: 'SPY', name: 'S&P 500', base: 590.32 },
+      { symbol: 'QQQ', name: 'Nasdaq', base: 512.18 },
+      { symbol: 'BTC', name: 'Bitcoin', base: 87245 },
+      { symbol: 'AAPL', name: 'Apple', base: 228.54 },
+      { symbol: 'NVDA', name: 'NVIDIA', base: 118.72 },
+      { symbol: 'TSLA', name: 'Tesla', base: 272.64 },
+    ];
+    return bases.map(b => {
+      const history: number[] = [b.base];
+      for (let i = 1; i < 80; i++) {
+        history.push(history[i - 1] + (Math.random() - 0.48) * b.base * 0.002);
+      }
+      const price = history[history.length - 1];
+      return { symbol: b.symbol, name: b.name, price, change: price - b.base, pct: ((price - b.base) / b.base) * 100, history };
+    });
+  };
+
+  useEffect(() => {
+    fetch('/api/stocks')
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((data: StockData[]) => {
+        if (Array.isArray(data) && data.length > 0) setStocks(data);
+        else setStocks(generateFallback());
+      })
+      .catch(() => setStocks(generateFallback()));
+  }, []);
+
+  // Phase machine: typing → drawing → holding → clearing → next stock → typing
+  const stock = stocks[activeIdx] || null;
+  const tickerFull = stock ? `${stock.symbol} ${stock.name}` : '';
+
+  useEffect(() => {
+    if (!stock) return;
+    // Reset for new stock
+    setTypedChars(0);
+    setDrawProgress(0);
+    setPriceRevealed(false);
+    setPhase('typing');
+  }, [activeIdx, stocks.length]);
+
+  // Typing phase
+  useEffect(() => {
+    if (phase !== 'typing' || !stock) return;
+    if (typedChars >= tickerFull.length) {
+      setPriceRevealed(true);
+      setTimeout(() => setPhase('drawing'), 200);
+      return;
+    }
+    const id = setTimeout(() => setTypedChars(prev => prev + 1), 40);
+    return () => clearTimeout(id);
+  }, [phase, typedChars, tickerFull]);
+
+  // Drawing phase — animate sparkline
+  useEffect(() => {
+    if (phase !== 'drawing' || !stock) return;
+    if (drawProgress >= 1) {
+      setPhase('holding');
+      return;
+    }
+    const id = requestAnimationFrame(() => {
+      setDrawProgress(prev => Math.min(prev + 0.018, 1));
+    });
+    return () => cancelAnimationFrame(id);
+  }, [phase, drawProgress]);
+
+  // Holding phase — wait then move to next
+  useEffect(() => {
+    if (phase !== 'holding') return;
+    const id = setTimeout(() => setPhase('clearing'), 3500);
+    return () => clearTimeout(id);
+  }, [phase]);
+
+  // Clearing phase — fade out then advance
+  useEffect(() => {
+    if (phase !== 'clearing') return;
+    const id = setTimeout(() => {
+      setActiveIdx(prev => (prev + 1) % (stocks.length || 1));
+    }, 350);
+    return () => clearTimeout(id);
+  }, [phase, stocks.length]);
+
+  // Sparkline SVG renderer with draw progress
+  const renderSparkline = (history: number[], isUp: boolean, progress: number) => {
+    if (history.length < 2) return null;
+    const w = 220, h = 44;
+    const min = Math.min(...history);
+    const max = Math.max(...history);
+    const range = max - min || 1;
+    const pts = history.map((p, i) => ({
+      x: (i / (history.length - 1)) * w,
+      y: h - 2 - ((p - min) / range) * (h - 4),
+    }));
+
+    // Only draw up to the progress point
+    const visibleCount = Math.max(2, Math.floor(pts.length * progress));
+    const visible = pts.slice(0, visibleCount);
+
+    const linePath = visible.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    const fillPath = linePath + ` L${visible[visible.length - 1].x.toFixed(1)},${h} L0,${h} Z`;
+    const color = isUp ? '#4ade80' : '#f87171';
+    const gradId = `sg-${isUp ? 'u' : 'd'}-${activeIdx}`;
+    const lastPt = visible[visible.length - 1];
+
+    return (
+      <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: 'block', marginTop: '4px' }}>
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.12" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={fillPath} fill={`url(#${gradId})`} />
+        <path d={linePath} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        {progress < 1 && (
+          <circle cx={lastPt.x} cy={lastPt.y} r="2.5" fill={color}>
+            <animate attributeName="opacity" values="1;0.3;1" dur="0.8s" repeatCount="indefinite" />
+          </circle>
+        )}
+      </svg>
+    );
+  };
+
+  if (!stock) return <div style={{ height: '90px' }} />;
+  const isUp = stock.change >= 0;
+  const fmtPrice = stock.symbol === 'BTC'
+    ? stock.price.toLocaleString('en-US', { maximumFractionDigits: 0 })
+    : stock.price.toFixed(2);
+  const pctStr = `${isUp ? '▲' : '▼'} ${Math.abs(stock.pct).toFixed(2)}%`;
+  const isClearing = phase === 'clearing';
+
+  return (
+    <div style={{ transition: 'opacity 0.3s ease', opacity: isClearing ? 0 : 1 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+        <div style={{ fontFamily: "'SF Mono', monospace" }}>
+          <span style={{ color: '#fff', fontWeight: 700, fontSize: '13px' }}>
+            {tickerFull.slice(0, typedChars)}
+          </span>
+          {phase === 'typing' && (
+            <span style={{ color: '#fff', animation: 'blink 0.8s step-end infinite' }}>▎</span>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: '3px' }}>
+          {stocks.map((_, i) => (
+            <div key={i} style={{
+              width: '3px', height: '3px', borderRadius: '50%',
+              background: i === activeIdx ? '#fff' : 'rgba(255,255,255,0.12)',
+              transition: 'background 0.3s',
+            }} />
+          ))}
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', opacity: priceRevealed ? 1 : 0, transition: 'opacity 0.3s ease' }}>
+        <span style={{ fontSize: '22px', fontWeight: 600, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+          {fmtPrice}
+        </span>
+        <span style={{ color: isUp ? '#4ade80' : '#f87171', fontSize: '12px', fontWeight: 600 }}>
+          {pctStr}
+        </span>
+      </div>
+      {renderSparkline(stock.history, isUp, drawProgress)}
+    </div>
+  );
+}
+
+// ── Compact inline clocks (for Big Type ticker bar) ──
+function CompactClocks() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => { const id = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(id); }, []);
+  const cities = [
+    { name: 'NY', tz: 'America/New_York' },
+    { name: 'LDN', tz: 'Europe/London' },
+    { name: 'TYO', tz: 'Asia/Tokyo' },
+    { name: 'SYD', tz: 'Australia/Sydney' },
+  ];
+  return (
+    <span style={{ display: 'inline-flex', gap: '12px' }}>
+      {cities.map(c => {
+        const t = time.toLocaleTimeString('en-US', { timeZone: c.tz, hour: '2-digit', minute: '2-digit', hour12: true }).replace(' ', '');
+        return <span key={c.name}><span style={{ color: 'rgba(255,255,255,0.3)' }}>{c.name}</span> <span style={{ color: 'rgba(255,255,255,0.6)' }}>{t}</span></span>;
+      })}
+    </span>
+  );
+}
+
+// ── Compact inline tickers (for Big Type ticker bar) ──
+function CompactTickers() {
+  const [tickers, setTickers] = useState<{ symbol: string; pct: number }[]>([]);
+  useEffect(() => {
+    const bases = [{ symbol: 'SPY', base: 590 }, { symbol: 'BTC', base: 87245 }, { symbol: 'AAPL', base: 228 }, { symbol: 'NVDA', base: 118 }];
+    const init = bases.map(b => ({ symbol: b.symbol, pct: (Math.random() - 0.45) * 1.5 }));
+    setTickers(init);
+    const id = setInterval(() => setTickers(prev => prev.map(t => ({ ...t, pct: t.pct + (Math.random() - 0.5) * 0.05 }))), 2000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <span style={{ display: 'inline-flex', gap: '10px' }}>
+      {tickers.map(t => (
+        <span key={t.symbol}>
+          <span style={{ color: 'rgba(255,255,255,0.3)' }}>{t.symbol}</span>{' '}
+          <span style={{ color: t.pct >= 0 ? '#4ade80' : '#f87171' }}>{t.pct >= 0 ? '▲' : '▼'}{Math.abs(t.pct).toFixed(2)}%</span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
 function TerminalContent() {
   const { dispatch } = useDesktop();
   const [history, setHistory] = useState<TerminalLine[]>([]);
@@ -271,43 +528,18 @@ function TerminalContent() {
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [introDone, setIntroDone] = useState(false);
-  const [introText, setIntroText] = useState('');
   const [showRotating, setShowRotating] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
   const [showCommands, setShowCommands] = useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
-  // Auto-type intro
+  // Stagger-in elements (text is static, only rotating words animate)
   useEffect(() => {
-    const lines = [
-      'Ronniel Gandhe',
-      'Software Engineer',
-      '',
-      'Using __ROTATING__ to create',
-      'elegant and scalable solutions',
-      'to real world problems.',
-    ];
-    const full = lines.join('\n');
-    let i = 0;
-    const speed = 18;
-    const interval = setInterval(() => {
-      if (i < full.length) {
-        setIntroText(full.slice(0, i + 1));
-        // Show rotating words when we reach that line
-        if (full.slice(0, i + 1).includes('__ROTATING__')) {
-          setShowRotating(true);
-        }
-        i++;
-      } else {
-        clearInterval(interval);
-        // Stagger in the links and commands
-        setTimeout(() => setShowLinks(true), 300);
-        setTimeout(() => setShowCommands(true), 800);
-        setTimeout(() => setIntroDone(true), 1200);
-      }
-    }, speed);
-    return () => clearInterval(interval);
+    setShowRotating(true);
+    setTimeout(() => setShowLinks(true), 400);
+    setTimeout(() => setShowCommands(true), 700);
+    setTimeout(() => setIntroDone(true), 1000);
   }, []);
 
   useEffect(() => {
@@ -344,6 +576,11 @@ function TerminalContent() {
       setHistory([]);
       setInput('');
       return;
+    } else if (SMART_COMMANDS[cmd]) {
+      // Check smart commands FIRST (before cd/open handlers that would partially match)
+      const { window: win, output } = SMART_COMMANDS[cmd];
+      newLines.push({ type: 'system', text: output });
+      dispatch({ type: 'OPEN_WINDOW', id: win });
     } else if (COMMANDS[cmd]) {
       const { window, desc } = COMMANDS[cmd];
       newLines.push({ type: 'system', text: `Opening ${desc.toLowerCase()}...` });
@@ -459,183 +696,319 @@ function TerminalContent() {
     { cmd: 'calendar', emoji: '📅', label: 'Book a Meeting', color: '#22d3ee' },
   ];
 
-  return (
-    <div style={{
-      display: 'flex', height: '100%', background: 'transparent', overflow: 'hidden',
-    }}>
-      {/* ── Left: Terminal Content ── */}
-      <div
-        ref={scrollRef}
-        onClick={() => inputRef.current?.focus()}
-        style={{
-          flex: 1,
-          padding: '20px 22px',
-          fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
-          fontSize: '12.5px',
-          color: '#e0e0e0',
-          lineHeight: 1.6,
-          overflowY: 'auto',
-          cursor: 'text',
-          display: 'flex',
-          flexDirection: 'column',
-          borderRight: '1px solid rgba(255,255,255,0.04)',
-        }}
-      >
-        {/* Hero intro */}
-        <div style={{ marginBottom: '8px' }}>
-          {introText.split('\n').map((line, i) => {
-            if (line === '__ROTATING__' || line.includes('__ROTATING__')) {
-              // Line with rotating words
-              const before = line.split('__ROTATING__')[0];
-              const after = line.split('__ROTATING__')[1] || '';
-              return (
-                <div key={i} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>
-                  {before}{showRotating && <RotatingWords />}{showRotating ? after : ''}
-                </div>
-              );
-            }
-            if (i === 0) return <div key={i} style={{ fontWeight: 700, fontSize: '18px', color: '#fff', letterSpacing: '-0.3px', lineHeight: 1.3, marginBottom: '2px' }}>{line}</div>;
-            if (i === 1) return <div key={i} style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', fontWeight: 400, marginBottom: '10px' }}>{line}</div>;
-            if (line === '') return <div key={i} style={{ height: '4px' }} />;
-            return <div key={i} style={{ color: 'rgba(255,255,255,0.7)' }}>{line}</div>;
-          })}
+  const smartCommandLinks = [
+    { cmd: 'npm run experience', color: '#c084fc' },
+    { cmd: 'git log --education', color: '#60a5fa' },
+    { cmd: 'brew install projects', color: '#4ade80' },
+    { cmd: 'cat mythoughts.md', color: '#fbbf24' },
+    { cmd: 'cd deepresearch', color: '#f472b6' },
+    { cmd: 'open calendar.app', color: '#22d3ee' },
+  ];
+
+  // ============= DESIGN MODE =============
+  // Change to preview: 'bento' | 'bigtype' | 'dashboard' | 'split'
+  const DESIGN_MODE = 'split';
+
+  // Shared terminal prompt + history renderer
+  const renderTerminal = (compact?: boolean, mono?: boolean) => (
+    <div style={{ fontFamily: mono !== false ? "'SF Mono', 'JetBrains Mono', 'Menlo', monospace" : 'inherit', fontSize: compact ? '11.5px' : '12.5px', lineHeight: 1.5 }}>
+      {history.map((line, i) => (
+        <div key={i} style={{ color: getLineColor(line), whiteSpace: 'pre-wrap' }}>
+          {line.type === 'prompt' ? (
+            <><span style={{ color: '#4ade80', fontWeight: 700 }}>{prompt}</span><span style={{ color: '#fff', fontWeight: 500 }}>{line.command}</span></>
+          ) : line.text.includes('\x1b[cmd]') ? renderColoredLine(line.text) : line.text}
+        </div>
+      ))}
+      {introDone && (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <span style={{ color: '#4ade80', fontWeight: 700, whiteSpace: 'pre', fontFamily: "'SF Mono', monospace", fontSize: compact ? '11.5px' : '12.5px' }}>{prompt}</span>
+          <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown}
+            spellCheck={false} autoComplete="off"
+            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontFamily: "'SF Mono', monospace", fontSize: compact ? '11.5px' : '12.5px', color: '#fff', padding: 0, margin: 0, caretColor: '#4ade80' }} />
+        </div>
+      )}
+      {!introDone && <span style={{ display: 'inline-block', width: '8px', height: '14px', background: '#4ade80', animation: 'blink 1s step-end infinite' }} />}
+    </div>
+  );
+
+  // Shared command grid renderer
+  const renderCommandGrid = (cols?: number, small?: boolean) => (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols || 2}, 1fr)`, gap: small ? '4px' : '4px' }}>
+      {commandLinks.map((item) => (
+        <div key={item.cmd} onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: small ? '6px' : '8px',
+            padding: small ? '5px 8px' : '6px 10px', borderRadius: '8px', cursor: 'pointer',
+            background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)',
+            transition: 'all 0.2s ease', fontSize: small ? '11px' : '12px',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = item.color + '40'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+        >
+          <span style={{ fontSize: small ? '12px' : '14px' }}>{item.emoji}</span>
+          <span style={{ color: item.color, fontWeight: 600 }}>{item.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  // ═══════════════ BENTO GRID ═══════════════
+  if (DESIGN_MODE === 'bento') {
+    return (
+      <div ref={scrollRef} onClick={() => inputRef.current?.focus()} style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 240px',
+        gridTemplateRows: 'auto 1fr auto',
+        height: '100%',
+        fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
+        fontSize: '12.5px', color: '#e0e0e0', lineHeight: 1.6,
+        cursor: 'text', overflow: 'hidden',
+      }}>
+        {/* Hero tile — top left */}
+        <div style={{ gridRow: '1', padding: '24px 24px 16px', overflowY: 'auto' }}>
+          <div style={{ fontWeight: 700, fontSize: '22px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.2 }}>Ronniel Gandhe</div>
+          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', marginBottom: '14px' }}>Software Engineer</div>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.5, marginBottom: '16px' }}>
+            Using <RotatingWords /> to create<br />elegant and scalable solutions<br />to real world problems.
+          </div>
+          <div style={{ display: 'flex', gap: '16px', fontSize: '11.5px', flexWrap: 'wrap' }}>
+            <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
+            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fbbf24', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#22d3ee', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
+          </div>
         </div>
 
-        {/* Quick links */}
-        {showLinks && (
-          <div style={{
-            display: 'flex', flexDirection: 'column', gap: '2px', margin: '12px 0 8px',
-            opacity: showLinks ? 1 : 0,
-            transform: showLinks ? 'translateY(0)' : 'translateY(10px)',
-            transition: 'all 0.5s ease-out',
-          }}>
-            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '6px' }}>
-              QUICK LINKS
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px' }}>
-              <span>📍</span>
-              <span style={{ color: 'rgba(255,255,255,0.65)' }}>Waterloo, ON</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px' }}>
-              <span>✉️</span>
-              <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fbbf24', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
-                ronnielgandhe@gmail.com
-              </a>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px' }}>
-              <span>🐙</span>
-              <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#22d3ee', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
-                github.com/ronnielgandhe
-              </a>
-            </div>
-          </div>
-        )}
+        {/* Right column — clock + stocks stacked */}
+        <div style={{ gridRow: '1 / 3', borderLeft: '1px solid rgba(255,255,255,0.04)', padding: '20px 16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <WorldClock />
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)' }} />
+          <StockTickers />
+        </div>
 
-        {/* Command grid */}
-        {showCommands && (
-          <div style={{
-            margin: '12px 0 16px',
-            opacity: showCommands ? 1 : 0,
-            transform: showCommands ? 'translateY(0)' : 'translateY(10px)',
-            transition: 'all 0.6s ease-out 0.1s',
-          }}>
-            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '8px' }}>
-              EXPLORE
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px' }}>
-              {commandLinks.map((item) => (
-                <div
-                  key={item.cmd}
-                  onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    padding: '6px 10px', borderRadius: '8px', cursor: 'pointer',
-                    background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)',
-                    transition: 'all 0.2s ease',
-                    fontSize: '12px',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = item.color + '40'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
-                >
-                  <span style={{ fontSize: '14px' }}>{item.emoji}</span>
-                  <span style={{ color: item.color, fontWeight: 600 }}>{item.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Command tiles — middle left */}
+        <div style={{ padding: '0 24px 16px' }}>
+          <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.1em', marginBottom: '8px' }}>EXPLORE</div>
+          {renderCommandGrid(3, true)}
+        </div>
 
-        {/* Separator */}
-        {showCommands && (
-          <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 0 12px' }} />
-        )}
+        {/* Terminal prompt strip — full bottom */}
+        <div style={{ gridColumn: '1 / -1', borderTop: '1px solid rgba(255,255,255,0.04)', padding: '8px 24px', overflowY: 'auto', maxHeight: '120px' }}>
+          {renderTerminal(true)}
+        </div>
 
-        {/* Command history */}
-        {history.map((line, i) => (
-          <div key={i} style={{ color: getLineColor(line), whiteSpace: 'pre-wrap' }}>
-            {line.type === 'prompt' ? (
-              <>
-                <span style={{ color: '#4ade80', fontWeight: 700 }}>{prompt}</span>
-                <span style={{ color: '#fff', fontWeight: 500 }}>{line.command}</span>
-              </>
-            ) : line.text.includes('\x1b[cmd]') ? (
-              renderColoredLine(line.text)
-            ) : (
-              line.text
-            )}
-          </div>
-        ))}
-
-        {/* Active prompt */}
-        {introDone && (
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ color: '#4ade80', fontWeight: 700, whiteSpace: 'pre' }}>{prompt}</span>
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              spellCheck={false}
-              autoComplete="off"
-              style={{
-                flex: 1, background: 'transparent', border: 'none',
-                outline: 'none', font: 'inherit', color: '#fff',
-                padding: 0, margin: 0, caretColor: '#4ade80',
-              }}
-            />
-          </div>
-        )}
-
-        {/* Blinking cursor during intro */}
-        {!introDone && (
-          <span style={{
-            display: 'inline-block', width: '8px', height: '15px',
-            background: '#4ade80', verticalAlign: 'text-bottom',
-            animation: 'blink 1s step-end infinite',
-          }} />
-        )}
+        <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
       </div>
+    );
+  }
 
-      {/* ── Right: Info Sidebar (Clock + Tickers) ── */}
-      <div style={{
-        width: '220px',
-        minWidth: '200px',
-        padding: '18px 16px',
-        overflowY: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '20px',
+  // ═══════════════ BIG TYPE HERO ═══════════════
+  if (DESIGN_MODE === 'bigtype') {
+    return (
+      <div ref={scrollRef} onClick={() => inputRef.current?.focus()} style={{
+        display: 'flex', flexDirection: 'column', height: '100%', cursor: 'text', overflow: 'hidden',
       }}>
-        <WorldClock />
-        <StockTickers />
+        {/* Hero area — centered, fills most space */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '24px 32px 0', minHeight: 0 }}>
+          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '52px', fontWeight: 800, letterSpacing: '0.12em', color: '#fff', lineHeight: 1, textTransform: 'uppercase' }}>Ronniel</div>
+          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '52px', fontWeight: 800, letterSpacing: '0.12em', color: '#fff', lineHeight: 1, textTransform: 'uppercase', marginBottom: '12px' }}>Gandhe</div>
+          <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '14px', color: 'rgba(255,255,255,0.4)', fontWeight: 400, marginBottom: '4px' }}>Software Engineer</div>
+          <div style={{ fontFamily: "'SF Mono', monospace", fontSize: '13px', marginBottom: '20px' }}>
+            <RotatingWords />
+          </div>
+          <div style={{ width: '40px', height: '1px', background: 'rgba(255,255,255,0.12)', marginBottom: '20px' }} />
+
+          {/* Info row */}
+          <div style={{ display: 'flex', gap: '20px', fontSize: '12px', fontFamily: "'SF Mono', monospace", marginBottom: '24px' }}>
+            <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
+            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fbbf24', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#22d3ee', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
+          </div>
+
+          {/* Command pills — horizontal */}
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '520px' }}>
+            {commandLinks.map(item => (
+              <div key={item.cmd} onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '20px', cursor: 'pointer',
+                  background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.08)', transition: 'all 0.2s', fontSize: '12px',
+                  fontFamily: "'SF Mono', monospace",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor = item.color + '50'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+              >
+                <span style={{ fontSize: '13px' }}>{item.emoji}</span>
+                <span style={{ color: item.color, fontWeight: 600 }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Data ticker bar */}
+        <div style={{
+          display: 'flex', justifyContent: 'center', gap: '20px', padding: '10px 24px',
+          borderTop: '1px solid rgba(255,255,255,0.04)', fontFamily: "'SF Mono', monospace", fontSize: '11px',
+          color: 'rgba(255,255,255,0.35)', flexWrap: 'wrap',
+        }}>
+          <CompactClocks />
+          <span style={{ color: 'rgba(255,255,255,0.08)' }}>│</span>
+          <CompactTickers />
+        </div>
+
+        {/* Terminal prompt */}
+        <div style={{
+          borderTop: '1px solid rgba(255,255,255,0.04)', padding: '8px 24px', maxHeight: '100px', overflowY: 'auto',
+          fontFamily: "'SF Mono', monospace",
+        }}>
+          {renderTerminal(true)}
+        </div>
+
+        <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
+      </div>
+    );
+  }
+
+  // ═══════════════ DASHBOARD CARDS ═══════════════
+  if (DESIGN_MODE === 'dashboard') {
+    return (
+      <div ref={scrollRef} onClick={() => inputRef.current?.focus()} style={{
+        display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'center',
+        padding: '0', cursor: 'text', overflow: 'hidden',
+      }}>
+        {/* Top hero section */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 32px', width: '100%', minHeight: 0, overflowY: 'auto' }}>
+          <img src="/icons/rglogo.png" alt="RG" style={{ width: '44px', opacity: 0.7, filter: 'brightness(0) invert(1)', marginBottom: '12px' }} />
+          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '26px', fontWeight: 700, color: '#fff', letterSpacing: '-0.5px' }}>Ronniel Gandhe</div>
+          <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '6px' }}>Software Engineer · <RotatingWords /></div>
+          <div style={{ display: 'flex', gap: '16px', fontSize: '11.5px', fontFamily: "'SF Mono', monospace", marginBottom: '20px' }}>
+            <span style={{ color: 'rgba(255,255,255,0.4)' }}>📍 Waterloo</span>
+            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fbbf24', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#22d3ee', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
+          </div>
+
+          {/* Glass cards row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', width: '100%', maxWidth: '520px', marginBottom: '16px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.06)', padding: '14px 16px' }}>
+              <WorldClock />
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.06)', padding: '14px 16px' }}>
+              <StockTickers />
+            </div>
+          </div>
+
+          {/* Explore cards */}
+          <div style={{ width: '100%', maxWidth: '520px' }}>
+            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.1em', marginBottom: '8px' }}>EXPLORE</div>
+            {renderCommandGrid(3, true)}
+          </div>
+        </div>
+
+        {/* Terminal prompt */}
+        <div style={{
+          borderTop: '1px solid rgba(255,255,255,0.04)', padding: '8px 24px', width: '100%',
+          maxHeight: '100px', overflowY: 'auto', fontFamily: "'SF Mono', monospace",
+        }}>
+          {renderTerminal(true)}
+        </div>
+
+        <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
+      </div>
+    );
+  }
+
+  // ═══════════════ SPLIT PANELS (default) ═══════════════
+  return (
+    <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+      {/* Left — hero + links */}
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        padding: '24px 24px 8px 28px', borderRight: '1px solid rgba(255,255,255,0.04)',
+        minWidth: 0,
+      }}>
+        {/* Static hero text — only RotatingWords animates */}
+        <div style={{ fontFamily: "'SF Mono', 'JetBrains Mono', monospace", fontSize: '13px', lineHeight: 1.6, color: '#e0e0e0' }}>
+          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '30px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '2px' }}>
+            Ronniel Gandhe
+          </div>
+          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: 400, marginBottom: '14px' }}>
+            Software Engineer
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.6, whiteSpace: 'nowrap', overflow: 'hidden' }}>
+            Using {showRotating && <RotatingWords />}
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.6 }}>
+            to create elegant and scalable
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.6 }}>
+            solutions to real world problems.
+          </div>
+        </div>
+
+        {/* Quick links — stagger in */}
+        <div style={{
+          display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '18px',
+          opacity: showLinks ? 1 : 0, transform: showLinks ? 'translateY(0)' : 'translateY(8px)',
+          transition: 'all 0.5s ease-out', fontFamily: "'SF Mono', monospace", fontSize: '13px',
+        }}>
+          <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
+          <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fbbf24', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+            ✉️ ronnielgandhe@gmail.com
+          </a>
+          <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#22d3ee', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+            🐙 github.com/ronnielgandhe
+          </a>
+        </div>
+
+        {/* Clock — pushed to bottom of left panel */}
+        <div style={{ marginTop: 'auto' }}>
+          <WorldClock />
+        </div>
       </div>
 
-      <style>{`
-        @keyframes blink {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0; }
-        }
-      `}</style>
+      {/* Right — widgets stacked */}
+      <div ref={scrollRef} onClick={() => inputRef.current?.focus()} style={{
+        flex: 1, display: 'flex', flexDirection: 'column', cursor: 'text',
+        fontFamily: "'SF Mono', monospace", overflowX: 'hidden', overflowY: 'hidden',
+      }}>
+        {/* Date — top right corner */}
+        <div style={{ padding: '8px 14px 0', textAlign: 'right', color: '#fff', fontSize: '11px', fontWeight: 400, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+        </div>
+        {/* Stock ticker with chart */}
+        <div style={{ padding: '8px 14px 8px' }}>
+          <CyclingStock />
+        </div>
+        <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)', margin: '0 14px' }} />
+
+        {/* Smart commands */}
+        <div style={{ padding: '8px 14px' }}>
+          <div style={{ color: '#fff', fontSize: '10px', fontWeight: 600, letterSpacing: '0.1em', marginBottom: '4px' }}>EXPLORE</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            {smartCommandLinks.map(item => (
+              <div
+                key={item.cmd}
+                onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
+                style={{
+                  padding: '3px 6px', borderRadius: '4px', cursor: 'pointer',
+                  fontSize: '11.5px', transition: 'all 0.15s',
+                  color: item.color, opacity: 0.5,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.opacity = '1'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.opacity = '0.5'; }}
+              >
+                <span style={{ color: '#4ade80', marginRight: '4px' }}>$</span>{item.cmd}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)', margin: '0 14px' }} />
+
+        {/* Terminal prompt */}
+        <div style={{ padding: '6px 14px', flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+          {renderTerminal(true)}
+        </div>
+      </div>
+
+      <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
     </div>
   );
 }
