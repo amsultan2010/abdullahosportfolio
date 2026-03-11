@@ -155,7 +155,7 @@ function RotatingWords() {
 
   return (
     <span style={{ position: 'relative', display: 'inline' }}>
-      <span style={{ color, fontWeight: 700 }}>
+      <span style={{ color, fontWeight: 700, fontSize: '18px' }}>
         {displayText}
       </span>
       <span style={{
@@ -256,35 +256,60 @@ function StockTickers() {
   );
 }
 
-// ── World Clock (all cities side by side) ──
+// ── World Clock (rotating groups of 3 cities) ──
 function WorldClock() {
   const [time, setTime] = useState(new Date());
+  const [groupIdx, setGroupIdx] = useState(0);
+  const [fading, setFading] = useState(false);
 
-  const cities = [
+  const allCities = [
     { label: 'LDN', tz: 'Europe/London' },
     { label: 'SF', tz: 'America/Los_Angeles' },
     { label: 'TOR', tz: 'America/Toronto' },
+    { label: 'TYO', tz: 'Asia/Tokyo' },
+    { label: 'SYD', tz: 'Australia/Sydney' },
+    { label: 'PAR', tz: 'Europe/Paris' },
+    { label: 'NYC', tz: 'America/New_York' },
+    { label: 'DXB', tz: 'Asia/Dubai' },
+    { label: 'SIN', tz: 'Asia/Singapore' },
   ];
+
+  // Groups of 3
+  const groups: typeof allCities[] = [];
+  for (let i = 0; i < allCities.length; i += 3) {
+    groups.push(allCities.slice(i, i + 3));
+  }
 
   useEffect(() => {
     const id = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    const id = setInterval(() => {
+      setFading(true);
+      setTimeout(() => {
+        setGroupIdx(prev => (prev + 1) % groups.length);
+        setFading(false);
+      }, 300);
+    }, 6000);
+    return () => clearInterval(id);
+  }, [groups.length]);
+
   const font = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif";
-  const dateStr = time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const currentGroup = groups[groupIdx];
 
   return (
-    <div style={{ fontFamily: font }}>
+    <div style={{ fontFamily: font, transition: 'opacity 0.3s ease', opacity: fading ? 0 : 1 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        {cities.map(city => {
+        {currentGroup.map(city => {
           const t = time.toLocaleTimeString('en-US', {
             timeZone: city.tz, hour: 'numeric', minute: '2-digit', hour12: true,
           });
           const hrs = parseInt(time.toLocaleTimeString('en-US', { timeZone: city.tz, hour: '2-digit', hour12: false }));
           const isNight = hrs >= 20 || hrs < 6;
           return (
-            <div key={city.label} style={{ textAlign: 'center' }}>
+            <div key={city.label} style={{ textAlign: 'center', minWidth: '70px' }}>
               <div style={{ color: '#fff', fontSize: '10px', fontWeight: 500, marginBottom: '4px' }}>
                 {isNight ? '🌙' : '☀️'} {city.label}
               </div>
@@ -299,7 +324,55 @@ function WorldClock() {
   );
 }
 
-// ── Cycling Stock with Animated Sparkline ──
+// ── Scramble Text Hook ──
+function useScrambleText(target: string, trigger: number) {
+  const [display, setDisplay] = useState('');
+  const prevTarget = useRef('');
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789&#$%';
+
+  useEffect(() => {
+    if (!target) { setDisplay(''); return; }
+    // Skip scramble if this is the very first text (just show it)
+    if (!prevTarget.current) {
+      prevTarget.current = target;
+      setDisplay(target);
+      return;
+    }
+    prevTarget.current = target;
+
+    const len = Math.max(display.length, target.length);
+    const resolveOrder: number[] = [];
+    for (let i = 0; i < len; i++) resolveOrder.push(i);
+    for (let i = resolveOrder.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [resolveOrder[i], resolveOrder[j]] = [resolveOrder[j], resolveOrder[i]];
+    }
+
+    let step = 0;
+    const totalSteps = len + 8;
+    const id = setInterval(() => {
+      step++;
+      const result: string[] = [];
+      for (let i = 0; i < target.length; i++) {
+        const resolveAt = resolveOrder.indexOf(i);
+        if (step > resolveAt + 6) {
+          result.push(target[i]);
+        } else if (target[i] === ' ') {
+          result.push(' ');
+        } else {
+          result.push(chars[Math.floor(Math.random() * chars.length)]);
+        }
+      }
+      setDisplay(result.join(''));
+      if (step >= totalSteps + 4) clearInterval(id);
+    }, 35);
+    return () => clearInterval(id);
+  }, [target, trigger]);
+
+  return display || target;
+}
+
+// ── Stock Ticker with Scramble Text + Connected Line ──
 interface StockData {
   symbol: string; name: string; price: number; change: number; pct: number; history: number[];
 }
@@ -307,11 +380,11 @@ interface StockData {
 function CyclingStock() {
   const [stocks, setStocks] = useState<StockData[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
-  // Animation states
-  const [phase, setPhase] = useState<'typing' | 'drawing' | 'holding' | 'clearing'>('typing');
-  const [typedChars, setTypedChars] = useState(0);
   const [drawProgress, setDrawProgress] = useState(0);
-  const [priceRevealed, setPriceRevealed] = useState(false);
+  const [phase, setPhase] = useState<'draw' | 'hold' | 'transition'>('draw');
+  // Connected line: buffer of all drawn points (normalized 0-1)
+  const [lineBuffer, setLineBuffer] = useState<{ y: number; isUp: boolean }[]>([]);
+  const bufferMax = 100;
 
   const generateFallback = (): StockData[] => {
     const bases = [
@@ -342,119 +415,96 @@ function CyclingStock() {
       .catch(() => setStocks(generateFallback()));
   }, []);
 
-  // Phase machine: typing → drawing → holding → clearing → next stock → typing
   const stock = stocks[activeIdx] || null;
   const tickerFull = stock ? `${stock.symbol} ${stock.name}` : '';
+  const isUp = stock ? stock.change >= 0 : true;
+  const fmtPrice = stock
+    ? (stock.symbol === 'BTC' ? stock.price.toLocaleString('en-US', { maximumFractionDigits: 0 }) : stock.price.toFixed(2))
+    : '';
+  const pctStr = stock ? `${isUp ? '▲' : '▼'} ${Math.abs(stock.pct).toFixed(2)}%` : '';
+  const priceAndPct = `${fmtPrice}  ${pctStr}`;
 
-  useEffect(() => {
-    if (!stock) return;
-    // Reset for new stock
-    setTypedChars(0);
-    setDrawProgress(0);
-    setPriceRevealed(false);
-    setPhase('typing');
-  }, [activeIdx, stocks.length]);
+  const scrambledText = useScrambleText(tickerFull, activeIdx);
+  const scrambledPrice = useScrambleText(fmtPrice, activeIdx);
+  const scrambledPct = useScrambleText(pctStr, activeIdx);
 
-  // Typing phase
-  useEffect(() => {
-    if (phase !== 'typing' || !stock) return;
-    if (typedChars >= tickerFull.length) {
-      setPriceRevealed(true);
-      setTimeout(() => setPhase('drawing'), 200);
-      return;
-    }
-    const id = setTimeout(() => setTypedChars(prev => prev + 1), 40);
-    return () => clearTimeout(id);
-  }, [phase, typedChars, tickerFull]);
+  // Normalize history to 0-1
+  const normalize = (hist: number[]) => {
+    const mn = Math.min(...hist), mx = Math.max(...hist), r = mx - mn || 1;
+    return hist.map(v => (v - mn) / r);
+  };
 
-  // Drawing phase — animate sparkline
+  // Draw phase — glowing dot traces the line slowly
   useEffect(() => {
-    if (phase !== 'drawing' || !stock) return;
+    if (phase !== 'draw' || !stock) return;
     if (drawProgress >= 1) {
-      setPhase('holding');
+      setPhase('hold');
       return;
     }
+    const norm = normalize(stock.history);
+    const isUp = stock.change >= 0;
     const id = requestAnimationFrame(() => {
-      setDrawProgress(prev => Math.min(prev + 0.018, 1));
+      const newProg = Math.min(drawProgress + 0.007, 1);
+      setDrawProgress(newProg);
+      // Add point to connected buffer
+      const ptIdx = Math.floor(newProg * (norm.length - 1));
+      const lastBufferY = lineBuffer.length > 0 ? lineBuffer[lineBuffer.length - 1].y : norm[0];
+      // Smoothly bridge from last buffer point to current stock's normalized value
+      const targetY = norm[ptIdx];
+      const blendedY = lineBuffer.length < 5
+        ? lastBufferY + (targetY - lastBufferY) * (lineBuffer.length / 5) // smooth bridge over first 5 pts
+        : targetY;
+      setLineBuffer(prev => {
+        const next = [...prev, { y: blendedY, isUp }];
+        return next.length > bufferMax ? next.slice(next.length - bufferMax) : next;
+      });
     });
     return () => cancelAnimationFrame(id);
-  }, [phase, drawProgress]);
+  }, [phase, drawProgress, stock]);
 
-  // Holding phase — wait then move to next
+  // Hold phase
   useEffect(() => {
-    if (phase !== 'holding') return;
-    const id = setTimeout(() => setPhase('clearing'), 3500);
+    if (phase !== 'hold') return;
+    const id = setTimeout(() => setPhase('transition'), 2000);
     return () => clearTimeout(id);
   }, [phase]);
 
-  // Clearing phase — fade out then advance
+  // Transition phase — scramble text, then advance
   useEffect(() => {
-    if (phase !== 'clearing') return;
+    if (phase !== 'transition') return;
     const id = setTimeout(() => {
       setActiveIdx(prev => (prev + 1) % (stocks.length || 1));
-    }, 350);
+      setDrawProgress(0);
+      setPhase('draw');
+    }, 600);
     return () => clearTimeout(id);
   }, [phase, stocks.length]);
 
-  // Sparkline SVG renderer with draw progress
-  const renderSparkline = (history: number[], isUp: boolean, progress: number) => {
-    if (history.length < 2) return null;
-    const w = 220, h = 44;
-    const min = Math.min(...history);
-    const max = Math.max(...history);
-    const range = max - min || 1;
-    const pts = history.map((p, i) => ({
-      x: (i / (history.length - 1)) * w,
-      y: h - 2 - ((p - min) / range) * (h - 4),
-    }));
+  if (!stock) return <div style={{ height: '140px' }} />;
+  const color = isUp ? '#4ade80' : '#f87171';
 
-    // Only draw up to the progress point
-    const visibleCount = Math.max(2, Math.floor(pts.length * progress));
-    const visible = pts.slice(0, visibleCount);
+  // Render connected sparkline from buffer
+  const w = 220, h = 110;
+  const bufLen = lineBuffer.length;
+  const latestColor = bufLen > 0 && lineBuffer[bufLen - 1].isUp ? '#4ade80' : '#f87171';
 
-    const linePath = visible.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-    const fillPath = linePath + ` L${visible[visible.length - 1].x.toFixed(1)},${h} L0,${h} Z`;
-    const color = isUp ? '#4ade80' : '#f87171';
-    const gradId = `sg-${isUp ? 'u' : 'd'}-${activeIdx}`;
-    const lastPt = visible[visible.length - 1];
+  const pts = lineBuffer.map((p, i) => ({
+    x: (i / (bufferMax - 1)) * w,
+    y: h - 4 - p.y * (h - 8),
+  }));
 
-    return (
-      <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: 'block', marginTop: '4px' }}>
-        <defs>
-          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.12" />
-            <stop offset="100%" stopColor={color} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d={fillPath} fill={`url(#${gradId})`} />
-        <path d={linePath} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        {progress < 1 && (
-          <circle cx={lastPt.x} cy={lastPt.y} r="2.5" fill={color}>
-            <animate attributeName="opacity" values="1;0.3;1" dur="0.8s" repeatCount="indefinite" />
-          </circle>
-        )}
-      </svg>
-    );
-  };
-
-  if (!stock) return <div style={{ height: '90px' }} />;
-  const isUp = stock.change >= 0;
-  const fmtPrice = stock.symbol === 'BTC'
-    ? stock.price.toLocaleString('en-US', { maximumFractionDigits: 0 })
-    : stock.price.toFixed(2);
-  const pctStr = `${isUp ? '▲' : '▼'} ${Math.abs(stock.pct).toFixed(2)}%`;
-  const isClearing = phase === 'clearing';
+  const linePath = pts.length > 1
+    ? pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+    : '';
+  const dot = pts.length > 0 ? pts[pts.length - 1] : { x: 0, y: h / 2 };
 
   return (
-    <div style={{ transition: 'opacity 0.3s ease', opacity: isClearing ? 0 : 1 }}>
+    <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-        <div style={{ fontFamily: "'SF Mono', monospace" }}>
+        <div style={{ fontFamily: "'SF Mono', monospace", minHeight: '18px' }}>
           <span style={{ color: '#fff', fontWeight: 700, fontSize: '13px' }}>
-            {tickerFull.slice(0, typedChars)}
+            {scrambledText}
           </span>
-          {phase === 'typing' && (
-            <span style={{ color: '#fff', animation: 'blink 0.8s step-end infinite' }}>▎</span>
-          )}
         </div>
         <div style={{ display: 'flex', gap: '3px' }}>
           {stocks.map((_, i) => (
@@ -466,15 +516,38 @@ function CyclingStock() {
           ))}
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', opacity: priceRevealed ? 1 : 0, transition: 'opacity 0.3s ease' }}>
-        <span style={{ fontSize: '22px', fontWeight: 600, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-          {fmtPrice}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+        <span style={{ fontSize: '22px', fontWeight: 600, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontVariantNumeric: 'tabular-nums' }}>
+          {scrambledPrice}
         </span>
-        <span style={{ color: isUp ? '#4ade80' : '#f87171', fontSize: '12px', fontWeight: 600 }}>
-          {pctStr}
+        <span style={{ color, fontSize: '12px', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+          {scrambledPct}
         </span>
       </div>
-      {renderSparkline(stock.history, isUp, drawProgress)}
+      <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: 'block', marginTop: '4px' }}>
+        <defs>
+          <linearGradient id="spark-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={latestColor} stopOpacity="0.12" />
+            <stop offset="100%" stopColor={latestColor} stopOpacity="0" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        {linePath && (
+          <>
+            <path d={linePath + ` L${dot.x.toFixed(1)},${h} L${pts[0].x.toFixed(1)},${h} Z`} fill="url(#spark-grad)" />
+            <path d={linePath} fill="none" stroke={latestColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx={dot.x} cy={dot.y} r="4" fill={latestColor} filter="url(#glow)">
+              <animate attributeName="r" values="3;5;3" dur="1.2s" repeatCount="indefinite" />
+            </circle>
+          </>
+        )}
+      </svg>
     </div>
   );
 }
@@ -929,16 +1002,16 @@ function TerminalContent() {
           <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '30px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '2px' }}>
             Ronniel Gandhe
           </div>
-          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: 400, marginBottom: '14px' }}>
+          <div style={{ fontSize: '13px', color: '#fff', fontWeight: 400, marginBottom: '14px' }}>
             Software Engineer
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.6, whiteSpace: 'nowrap', overflow: 'hidden' }}>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '16px', lineHeight: 1.6, whiteSpace: 'nowrap', overflow: 'hidden' }}>
             Using {showRotating && <RotatingWords />}
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.6 }}>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '16px', lineHeight: 1.6 }}>
             to create elegant and scalable
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.6 }}>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '16px', lineHeight: 1.6 }}>
             solutions to real world problems.
           </div>
         </div>
