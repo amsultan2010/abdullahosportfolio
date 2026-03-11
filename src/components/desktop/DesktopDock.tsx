@@ -176,26 +176,41 @@ function DockButton({ item, scale, isOpen, onClick }: {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Tooltip */}
+      {/* Tooltip — Apple-style speech bubble above icon */}
       {hovered && (
         <div style={{
           position: 'absolute',
-          bottom: `${size + 14}px`,
-          padding: '5px 12px',
-          borderRadius: '8px',
-          background: 'rgba(30, 30, 30, 0.9)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          color: 'white',
-          fontSize: '12px',
+          bottom: `${size + 16 + Math.abs(translateY)}px`,
+          padding: '4px 12px',
+          borderRadius: '4px',
+          background: 'rgba(40, 40, 40, 0.95)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '0.5px solid rgba(255,255,255,0.08)',
+          color: 'rgba(255,255,255,0.95)',
+          fontSize: '13px',
           fontWeight: 500,
           fontFamily: "'SF Pro Text', -apple-system, sans-serif",
           whiteSpace: 'nowrap',
           pointerEvents: 'none',
           zIndex: 10,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.35)',
+          lineHeight: '18px',
+          letterSpacing: '-0.01em',
         }}>
           {item.label}
+          {/* Downward triangle */}
+          <div style={{
+            position: 'absolute',
+            bottom: '-5px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 0,
+            height: 0,
+            borderLeft: '6px solid transparent',
+            borderRight: '6px solid transparent',
+            borderTop: '6px solid rgba(40, 40, 40, 0.95)',
+          }} />
         </div>
       )}
 

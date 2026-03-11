@@ -247,7 +247,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
         width: '180px',
         minWidth: '180px',
         borderRight: '0.5px solid rgba(0,0,0,0.1)',
-        background: 'rgba(0,0,0,0.02)',
+        background: 'rgba(255,255,255,0.3)',
         padding: '12px 0',
         overflowY: 'auto',
         display: 'flex',
@@ -331,7 +331,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
         minWidth: '240px',
         borderRight: '0.5px solid rgba(0,0,0,0.1)',
         overflowY: 'auto',
-        background: 'rgba(255,255,255,0.3)',
+        background: 'rgba(255,255,255,0.4)',
       }}>
         {/* Notes grouped by date */}
         {grouped.map(group => (

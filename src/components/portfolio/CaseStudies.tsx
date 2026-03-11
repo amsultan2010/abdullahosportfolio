@@ -9,13 +9,13 @@ interface CaseStudiesProps {
 }
 
 // Nasdaq logo, inverted white for dark backgrounds
-const NasdaqLogo = ({ height = 28 }: { height?: number }) => {
+const NasdaqLogo = ({ height = 28, white }: { height?: number; white?: boolean }) => {
   return (
     <img
       src="/NASDAQ_Logo.svg.png"
       alt="Nasdaq"
       height={height}
-      style={{ opacity: 0.85 }}
+      style={{ opacity: 0.9, filter: white ? 'brightness(0) invert(1)' : 'none' }}
     />
   );
 };
@@ -111,7 +111,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
 
   const paper = researchPapers[activeIndex];
 
-  const LogoComponent = paper.company === 'IKIGAI' ? <IkigaiLogo height={40} /> : <NasdaqLogo height={28} />;
+  const LogoComponent = paper.company === 'IKIGAI' ? <IkigaiLogo height={40} /> : <NasdaqLogo height={28} white={windowMode} />;
 
   return (
     <div
