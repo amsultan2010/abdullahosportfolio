@@ -751,7 +751,7 @@ export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
 
 // ─── Experience Detail ──────────────────────────────────────
 
-const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
+export const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
   // If multi-role, render each role as a separate section
   if (detail.roles && detail.roles.length > 0) {
     return <MultiRoleExperienceContent detail={detail} />;

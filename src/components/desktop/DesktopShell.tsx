@@ -484,7 +484,7 @@ function CyclingStock() {
   const color = isUp ? '#4ade80' : '#f87171';
 
   // Render connected sparkline from buffer
-  const w = 220, h = 110;
+  const w = 220, h = 140;
   const bufLen = lineBuffer.length;
   const latestColor = bufLen > 0 && lineBuffer[bufLen - 1].isUp ? '#4ade80' : '#f87171';
 

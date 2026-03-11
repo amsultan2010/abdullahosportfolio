@@ -1,5 +1,6 @@
 import { useDesktop } from './DesktopContext';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import NotificationCenter from './NotificationCenter';
 
 /* ── Types ─────────────────────────────────────────── */
 
@@ -30,7 +31,11 @@ export default function DesktopMenuBar() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [spotify, setSpotify] = useState<SpotifyData | null>(null);
   const [location, setLocation] = useState<LocationData | null>(null);
+  const [ncOpen, setNcOpen] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
+
+  const toggleNC = useCallback(() => { setNcOpen(p => !p); setActiveMenu(null); }, []);
+  const closeNC = useCallback(() => setNcOpen(false), []);
 
   // Clock
   useEffect(() => {
@@ -80,7 +85,7 @@ export default function DesktopMenuBar() {
     return () => document.removeEventListener('mousedown', h);
   }, []);
 
-  const toggle = (id: string) => setActiveMenu(p => p === id ? null : id);
+  const toggle = (id: string) => { setActiveMenu(p => p === id ? null : id); setNcOpen(false); };
   const hover = (id: string) => { if (activeMenu !== null) setActiveMenu(id); };
   const close = () => setActiveMenu(null);
 
@@ -179,10 +184,26 @@ export default function DesktopMenuBar() {
           <SoundPanel spotify={spotify} />
         </TrayDropdown>
 
-        <span style={{ fontSize: '12.5px', color: '#fff', fontWeight: 450, marginLeft: '6px' }}>
+        <span
+          onClick={toggleNC}
+          style={{
+            fontSize: '12.5px',
+            color: '#fff',
+            fontWeight: 450,
+            marginLeft: '6px',
+            padding: '2px 8px',
+            borderRadius: '4px',
+            cursor: 'default',
+            background: ncOpen ? 'rgba(255,255,255,0.15)' : 'transparent',
+            transition: 'background 0.15s',
+          }}
+        >
           {date}&ensp;{time}
         </span>
       </div>
+
+      {/* Notification Center */}
+      <NotificationCenter open={ncOpen} onClose={closeNC} location={location} />
     </div>
   );
 }
