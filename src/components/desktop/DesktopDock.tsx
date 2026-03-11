@@ -29,6 +29,7 @@ export default function DesktopDock() {
     { id: 'projects', label: 'Projects', icon: <DockImage src="/vscode.png" alt="VS Code" /> },
     { id: 'deep-research', label: 'Deep Research', icon: <BooksIcon /> },
     { id: 'blog', label: 'My Thoughts', icon: <DockImage src="/notes.png" alt="Notes" /> },
+    { id: 'calendar', label: 'Book a Meeting', icon: <DockImage src="/calandar.png" alt="Calendar" /> },
   ];
 
   const externalItems: DockItem[] = [

@@ -13,6 +13,7 @@ import Experience from '../portfolio/Experience';
 import Projects from '../portfolio/Projects';
 import CaseStudies from '../portfolio/CaseStudies';
 import Blog from '../portfolio/Blog';
+import Calendar from '../portfolio/Calendar';
 import DetailPanel from '../portfolio/DetailPanel';
 import ContentViewer from '../portfolio/ContentViewer';
 import type { DetailContent } from '../portfolio/DetailPanel';
@@ -42,6 +43,8 @@ function WindowContent({ id }: { id: WindowId }) {
       return <CaseStudies onContentClick={handleContentClick} windowMode />;
     case 'blog':
       return <Blog onContentClick={handleContentClick} windowMode />;
+    case 'calendar':
+      return <Calendar windowMode />;
     default:
       return null;
   }
@@ -59,6 +62,7 @@ const COMMANDS: Record<string, { window: WindowId; desc: string }> = {
   'projects':      { window: 'projects',        desc: 'Side projects & builds' },
   'mythoughts':    { window: 'blog',            desc: 'Blog posts & notes' },
   'deepresearch':  { window: 'deep-research',   desc: 'Case studies & deep dives' },
+  'calendar':      { window: 'calendar',        desc: 'Book a meeting with me' },
 };
 
 function TerminalContent() {
