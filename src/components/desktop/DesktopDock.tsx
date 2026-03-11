@@ -2,8 +2,6 @@ import { useState, useRef, useCallback } from 'react';
 import { useDesktop } from './DesktopContext';
 import type { WindowId } from './types';
 import { BsGithub } from 'react-icons/bs';
-import { HiAcademicCap } from 'react-icons/hi2';
-import { BsBriefcaseFill } from 'react-icons/bs';
 
 interface DockItem {
   id: WindowId | 'github' | 'email' | 'spotify';
@@ -24,17 +22,16 @@ export default function DesktopDock() {
 
   const windowItems: DockItem[] = [
     { id: 'terminal', label: 'Terminal', icon: <DockImage src="/terminal.png" alt="Terminal" contain /> },
-    { id: 'education', label: 'Education', icon: <AppIcon gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" iconEl={<HiAcademicCap size={24} color="white" />} /> },
-    { id: 'experience', label: 'Experience', icon: <AppIcon gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" iconEl={<BsBriefcaseFill size={22} color="white" />} /> },
     { id: 'projects', label: 'Projects', icon: <DockImage src="/vscode.png" alt="VS Code" /> },
-    { id: 'deep-research', label: 'Deep Research', icon: <BooksIcon /> },
+    { id: 'deep-research', label: 'Deep Research', icon: <DockImage src="/books.png" alt="Books" cropScale={1.18} /> },
     { id: 'blog', label: 'My Thoughts', icon: <DockImage src="/notes.png" alt="Notes" /> },
+    { id: 'photos', label: 'Photos', icon: <DockImage src="/icons/photos.png" alt="Photos" /> },
     { id: 'calendar', label: 'Book a Meeting', icon: <CalendarIcon /> },
   ];
 
   const externalItems: DockItem[] = [
     { id: 'github', label: 'GitHub', icon: <AppIcon gradient="linear-gradient(135deg, #2d2d2d 0%, #434343 100%)" iconEl={<BsGithub size={24} color="white" />} />, isExternal: true, href: 'https://github.com/ronnielgandhe' },
-    { id: 'email', label: 'Email Me', icon: <AppIcon gradient="linear-gradient(135deg, #34d399 0%, #059669 100%)" iconEl={<span style={{ fontSize: '22px', lineHeight: 1 }}>✉</span>} />, isExternal: true, href: 'mailto:ronnielgandhe@gmail.com' },
+    { id: 'email' as any, label: 'Email Me', icon: <DockImage src="/mail.png" alt="Mail" cropScale={1.18} /> },
     { id: 'spotify', label: 'Dev Playlist', icon: <DockImage src="/spotify.png" alt="Spotify" />, isExternal: true, href: 'https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8' },
   ];
 
@@ -248,15 +245,43 @@ function DockButton({ item, scale, isOpen, onClick }: {
 
 // ── Icon Components ────────────────────────────────────────────
 
-function DockImage({ src, alt, contain }: { src: string; alt: string; contain?: boolean }) {
+function DockImage({ src, alt, contain, cropScale }: { src: string; alt: string; contain?: boolean; cropScale?: number }) {
+  const s = contain ? BASE_SIZE - 2 : BASE_SIZE - 6;
+  if (cropScale) {
+    // Wrap in overflow:hidden container and scale image to crop dark edges
+    return (
+      <div style={{
+        width: `${s}px`,
+        height: `${s}px`,
+        borderRadius: '11px',
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <img
+          src={src}
+          alt={alt}
+          draggable={false}
+          style={{
+            width: `${s * cropScale}px`,
+            height: `${s * cropScale}px`,
+            objectFit: 'cover',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+    );
+  }
   return (
     <img
       src={src}
       alt={alt}
       draggable={false}
       style={{
-        width: `${BASE_SIZE - 6}px`,
-        height: `${BASE_SIZE - 6}px`,
+        width: `${s}px`,
+        height: `${s}px`,
         borderRadius: '11px',
         objectFit: contain ? 'contain' : 'cover',
         pointerEvents: 'none',

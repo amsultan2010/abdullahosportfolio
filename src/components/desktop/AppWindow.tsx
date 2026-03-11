@@ -5,9 +5,10 @@ import type { WindowState } from './types';
 interface AppWindowProps {
   windowState: WindowState;
   children: React.ReactNode;
+  darkMode?: boolean;
 }
 
-export default function AppWindow({ windowState, children }: AppWindowProps) {
+export default function AppWindow({ windowState, children, darkMode }: AppWindowProps) {
   const { state, dispatch } = useDesktop();
   const dragRef = useRef<{ startX: number; startY: number; winX: number; winY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number; edge: string } | null>(null);
@@ -129,10 +130,12 @@ export default function AppWindow({ windowState, children }: AppWindowProps) {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        background: 'rgba(255, 255, 255, 0.32)',
+        background: darkMode ? 'rgba(30, 30, 35, 0.72)' : 'rgba(255, 255, 255, 0.32)',
         backdropFilter: 'saturate(180%) blur(32px)',
         WebkitBackdropFilter: 'saturate(180%) blur(32px)',
-        border: windowState.isFullscreen ? 'none' : isFocused ? '1px solid rgba(0, 0, 0, 0.18)' : '1px solid rgba(0, 0, 0, 0.1)',
+        border: windowState.isFullscreen ? 'none' : darkMode
+          ? (isFocused ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.06)')
+          : (isFocused ? '1px solid rgba(0, 0, 0, 0.18)' : '1px solid rgba(0, 0, 0, 0.1)'),
         boxShadow: windowState.isFullscreen ? 'none' : isFocused
           ? '0 25px 60px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.12)'
           : '0 18px 50px rgba(0,0,0,0.2)',
@@ -152,10 +155,10 @@ export default function AppWindow({ windowState, children }: AppWindowProps) {
           display: 'flex',
           alignItems: 'center',
           padding: '0 12px',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+          borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid rgba(0, 0, 0, 0.08)',
           cursor: windowState.isFullscreen ? 'default' : 'grab',
           userSelect: 'none',
-          background: 'rgba(0, 0, 0, 0.02)',
+          background: darkMode ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.02)',
         }}
       >
         {/* Traffic lights */}
@@ -168,6 +171,7 @@ export default function AppWindow({ windowState, children }: AppWindowProps) {
             color="#ff5f57"
             isFocused={isFocused}
             isHovered={trafficHover}
+            darkMode={darkMode}
             symbol="×"
             onClick={(e) => { e.stopPropagation(); dispatch({ type: 'CLOSE_WINDOW', id: windowState.id }); }}
             label="Close window"
@@ -176,6 +180,7 @@ export default function AppWindow({ windowState, children }: AppWindowProps) {
             color="#febc2e"
             isFocused={isFocused}
             isHovered={trafficHover}
+            darkMode={darkMode}
             symbol="−"
             onClick={(e) => { e.stopPropagation(); dispatch({ type: 'MINIMIZE_WINDOW', id: windowState.id }); }}
             label="Minimize window"
@@ -184,6 +189,7 @@ export default function AppWindow({ windowState, children }: AppWindowProps) {
             color="#28c840"
             isFocused={isFocused}
             isHovered={trafficHover}
+            darkMode={darkMode}
             symbol="⤢"
             onClick={(e) => { e.stopPropagation(); dispatch({ type: 'TOGGLE_FULLSCREEN', id: windowState.id }); }}
             label="Fullscreen"
@@ -196,7 +202,9 @@ export default function AppWindow({ windowState, children }: AppWindowProps) {
           textAlign: 'center',
           fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
           fontSize: '13px',
-          color: isFocused ? 'rgba(0, 0, 0, 0.65)' : 'rgba(0, 0, 0, 0.3)',
+          color: darkMode
+            ? (isFocused ? 'rgba(255, 255, 255, 0.7)' : 'rgba(255, 255, 255, 0.3)')
+            : (isFocused ? 'rgba(0, 0, 0, 0.65)' : 'rgba(0, 0, 0, 0.3)'),
           letterSpacing: '0.02em',
           transition: 'color 0.15s ease',
           overflow: 'hidden',
@@ -211,11 +219,11 @@ export default function AppWindow({ windowState, children }: AppWindowProps) {
       </div>
 
       {/* Content area — scrollable */}
-      <div className="light-window" style={{
+      <div className={darkMode ? 'dark-window' : 'light-window'} style={{
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
-        background: 'rgba(255, 255, 255, 0.06)',
+        background: darkMode ? 'transparent' : 'rgba(255, 255, 255, 0.06)',
       }}>
         {children}
       </div>
@@ -236,10 +244,11 @@ export default function AppWindow({ windowState, children }: AppWindowProps) {
 
 // ── Traffic Light Button ──
 
-function TrafficButton({ color, isFocused, isHovered, symbol, onClick, label }: {
+function TrafficButton({ color, isFocused, isHovered, darkMode, symbol, onClick, label }: {
   color: string;
   isFocused: boolean;
   isHovered: boolean;
+  darkMode?: boolean;
   symbol: string;
   onClick: (e: React.MouseEvent) => void;
   label: string;
@@ -252,8 +261,8 @@ function TrafficButton({ color, isFocused, isHovered, symbol, onClick, label }: 
         width: '12px',
         height: '12px',
         borderRadius: '50%',
-        background: isFocused ? color : 'rgba(0,0,0,0.08)',
-        border: isFocused ? `0.5px solid ${color}88` : '0.5px solid rgba(0,0,0,0.04)',
+        background: isFocused ? color : darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+        border: isFocused ? `0.5px solid ${color}88` : darkMode ? '0.5px solid rgba(255,255,255,0.06)' : '0.5px solid rgba(0,0,0,0.04)',
         padding: 0,
         cursor: 'pointer',
         transition: 'background 0.15s ease',

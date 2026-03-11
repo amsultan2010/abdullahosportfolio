@@ -372,7 +372,7 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
           {/* Tab bar */}
-          <div style={{
+          <div className="vsc-tab-bar" style={{
             display: 'flex',
             alignItems: 'stretch',
             height: '35px',
@@ -395,13 +395,12 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
                     fontSize: '12px',
                     cursor: 'pointer',
                     background: isActive ? '#1e1e1e' : '#2d2d2d',
-                    color: isActive ? '#ffffff' : '#969696',
                     borderRight: '1px solid #1e1e1e',
                     position: 'relative',
                     minWidth: 0,
                     whiteSpace: 'nowrap',
                   }}
-                  className="vsc-tab"
+                  className={`vsc-tab ${isActive ? 'vsc-tab-active' : 'vsc-tab-inactive'}`}
                 >
                   <span style={{ fontSize: '9px', fontWeight: 700, color: '#519aba' }}>M</span>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>README.md</span>
@@ -469,7 +468,7 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
             <div className="vsc-readme">
               {/* Demo video */}
               {detail.demoVideo && (
-                <div style={{
+                <div key={detail.demoVideo} style={{
                   width: '100%',
                   borderRadius: '8px',
                   overflow: 'hidden',
@@ -776,6 +775,26 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
         }
         .vsc-tree-item:hover {
           background: rgba(255,255,255,0.05) !important;
+        }
+        .vsc-tab-active {
+          color: #ffffff;
+          transition: color 0.15s ease;
+        }
+        .vsc-tab-inactive {
+          color: #969696;
+          transition: color 0.15s ease;
+        }
+        /* When hovering any tab, that tab glows white */
+        .vsc-tab:hover {
+          color: #ffffff !important;
+        }
+        /* When hovering over the tab bar, fade the active tab... */
+        .vsc-tab-bar:hover .vsc-tab-active {
+          color: #969696 !important;
+        }
+        /* ...unless the active tab itself is being hovered */
+        .vsc-tab-bar:hover .vsc-tab-active:hover {
+          color: #ffffff !important;
         }
         .vsc-tab:hover .vsc-tab-close {
           color: #ccc !important;

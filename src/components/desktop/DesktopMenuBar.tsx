@@ -136,33 +136,17 @@ export default function DesktopMenuBar() {
 
         <div style={{ ...barItem, fontWeight: 600, padding: '0 14px 0 0' }}>Ronniel Gandhe</div>
 
-        <BarDropdown label="File" id="file" active={activeMenu} toggle={toggle} hover={hover}>
-          <DropItem label="New Window" shortcut="⌘N" disabled />
-          <DropItem label="Open" shortcut="⌘O" disabled />
-          <DropDivider />
-          <DropItem label="Close Window" shortcut="⌘W" disabled={!hasFocused}
-            onClick={() => { if (state.focusedWindowId) dispatch({ type: 'CLOSE_WINDOW', id: state.focusedWindowId }); close(); }} />
-        </BarDropdown>
+        <div
+          onMouseDown={() => { dispatch({ type: 'OPEN_WINDOW', id: 'education' }); close(); }}
+          onMouseEnter={() => hover('_edu')}
+          style={{ ...barItem, padding: '0 10px' }}
+        >Education</div>
 
-        <BarDropdown label="Edit" id="edit" active={activeMenu} toggle={toggle} hover={hover}>
-          <DropItem label="Undo" shortcut="⌘Z" disabled />
-          <DropItem label="Redo" shortcut="⇧⌘Z" disabled />
-          <DropDivider />
-          <DropItem label="Cut" shortcut="⌘X" disabled />
-          <DropItem label="Copy" shortcut="⌘C" disabled />
-          <DropItem label="Paste" shortcut="⌘V" disabled />
-          <DropItem label="Select All" shortcut="⌘A" disabled />
-        </BarDropdown>
-
-        <BarDropdown label="View" id="view" active={activeMenu} toggle={toggle} hover={hover}>
-          <DropItem label="Enter Full Screen" shortcut="⌃⌘F" disabled={!hasFocused}
-            onClick={() => { if (state.focusedWindowId) dispatch({ type: 'TOGGLE_FULLSCREEN', id: state.focusedWindowId }); close(); }} />
-          <DropDivider />
-          <DropItem label="Show All Windows" onClick={() => {
-            Object.keys(state.windows).forEach(id => dispatch({ type: 'RESTORE_WINDOW', id: id as any }));
-            close();
-          }} />
-        </BarDropdown>
+        <div
+          onMouseDown={() => { dispatch({ type: 'OPEN_WINDOW', id: 'experience' }); close(); }}
+          onMouseEnter={() => hover('_exp')}
+          style={{ ...barItem, padding: '0 10px' }}
+        >Experience</div>
 
         <div
           onMouseDown={() => window.open('/Ronniel_Gandhe_Resume.pdf', '_blank')}
@@ -175,6 +159,9 @@ export default function DesktopMenuBar() {
             onClick={() => { if (state.focusedWindowId) dispatch({ type: 'MINIMIZE_WINDOW', id: state.focusedWindowId }); close(); }} />
           <DropItem label="Zoom" disabled={!hasFocused}
             onClick={() => { if (state.focusedWindowId) dispatch({ type: 'TOGGLE_FULLSCREEN', id: state.focusedWindowId }); close(); }} />
+          <DropDivider />
+          <DropItem label="Close Window" shortcut="⌘W" disabled={!hasFocused}
+            onClick={() => { if (state.focusedWindowId) dispatch({ type: 'CLOSE_WINDOW', id: state.focusedWindowId }); close(); }} />
           <DropDivider />
           <DropItem label="Bring All to Front" onClick={close} />
         </BarDropdown>
@@ -302,12 +289,13 @@ function DropDivider() {
 
 function WifiPanel({ location }: { location: LocationData | null }) {
   return (
-    <div style={{ padding: '4px 0', minWidth: '260px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 14px 8px' }}>
-        <span style={{ fontWeight: 600, fontSize: '13px', color: 'rgba(0,0,0,0.85)' }}>Wi-Fi</span>
-        <div style={{ width: '36px', height: '20px', borderRadius: '10px', background: '#34c759', position: 'relative' }}>
+    <div style={{ padding: '4px 0', minWidth: '280px' }}>
+      {/* Wi-Fi header with blue toggle */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 14px 10px' }}>
+        <span style={{ fontWeight: 600, fontSize: '14px', color: 'rgba(0,0,0,0.85)' }}>Wi-Fi</span>
+        <div style={{ width: '38px', height: '22px', borderRadius: '11px', background: '#007aff', position: 'relative', cursor: 'default' }}>
           <div style={{
-            width: '16px', height: '16px', borderRadius: '50%', background: 'white',
+            width: '18px', height: '18px', borderRadius: '50%', background: 'white',
             position: 'absolute', top: '2px', right: '2px',
             boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
           }} />
@@ -316,28 +304,88 @@ function WifiPanel({ location }: { location: LocationData | null }) {
 
       <DropDivider />
 
-      <div style={{ padding: '6px 14px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M10 3L4.5 8.5 2 6" stroke="#34c759" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Known Network - Connected */}
+      <div style={{ padding: '8px 14px 4px' }}>
+        <span style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(0,0,0,0.35)', letterSpacing: '0.02em' }}>Known Network</span>
+      </div>
+
+      <div style={{ padding: '4px 14px 4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Blue wifi icon */}
+          <div style={{
+            width: '28px', height: '28px', borderRadius: '50%', background: '#007aff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <svg width="14" height="12" viewBox="0 0 16 14" fill="none">
+              <path d="M8 12.5a1 1 0 100-2 1 1 0 000 2z" fill="white" />
+              <path d="M5.17 9.17a4 4 0 015.66 0" stroke="white" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+              <path d="M2.93 6.93a7 7 0 0110.14 0" stroke="white" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+            </svg>
+          </div>
+          <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(0,0,0,0.85)', flex: 1 }}>Ronniel's Network</span>
+          {/* Lock icon */}
+          <svg width="12" height="14" viewBox="0 0 12 16" fill="none" style={{ opacity: 0.35, flexShrink: 0 }}>
+            <rect x="1" y="7" width="10" height="8" rx="2" fill="rgba(0,0,0,0.65)" />
+            <path d="M3 7V5a3 3 0 016 0v2" stroke="rgba(0,0,0,0.65)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
           </svg>
-          <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(0,0,0,0.85)' }}>Ronniel's Network</span>
-          <span style={{ marginLeft: 'auto' }}><WifiIconDark /></span>
         </div>
+      </div>
+
+      {location && (
+        <div style={{ padding: '2px 14px 6px', paddingLeft: '52px' }}>
+          <span style={{ fontSize: '11px', color: 'rgba(0,0,0,0.35)' }}>
+            Connected from {location.city}, {location.region}
+          </span>
+        </div>
+      )}
+
+      <DropDivider />
+
+      {/* Known Networks - Places visited */}
+      <div style={{ padding: '8px 14px 4px' }}>
+        <span style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(0,0,0,0.35)', letterSpacing: '0.02em' }}>Known Networks</span>
+      </div>
+
+      {[
+        { name: 'New York City', flag: '🗽' },
+        { name: 'Palo Alto', flag: '🌉' },
+        { name: 'Dubai', flag: '🇦🇪' },
+        { name: 'Mumbai, India', flag: '🇮🇳' },
+        { name: 'United Kingdom', flag: '🇬🇧' },
+      ].map((place) => (
+        <div key={place.name} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '3px 14px' }}>
+          <span style={{ fontSize: '14px', width: '20px', textAlign: 'center' }}>{place.flag}</span>
+          <span style={{ fontSize: '12.5px', color: 'rgba(0,0,0,0.55)', flex: 1 }}>{place.name}</span>
+          <svg width="12" height="10" viewBox="0 0 16 14" fill="none" style={{ opacity: 0.25, flexShrink: 0 }}>
+            <path d="M8 12.5a1 1 0 100-2 1 1 0 000 2z" fill="rgba(0,0,0,0.5)" />
+            <path d="M5.17 9.17a4 4 0 015.66 0" stroke="rgba(0,0,0,0.4)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+            <path d="M2.93 6.93a7 7 0 0110.14 0" stroke="rgba(0,0,0,0.3)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+          </svg>
+        </div>
+      ))}
+
+      <div style={{ padding: '4px 0' }} />
+
+      <DropDivider />
+
+      {/* Other Networks */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '6px 14px', cursor: 'default',
+      }}>
+        <span style={{ fontSize: '13px', color: 'rgba(0,0,0,0.85)' }}>Other Networks</span>
+        <svg width="8" height="12" viewBox="0 0 8 14" fill="none" style={{ opacity: 0.3 }}>
+          <path d="M1 1l6 6-6 6" stroke="rgba(0,0,0,0.65)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </div>
 
       <DropDivider />
 
-      <div style={{ padding: '8px 14px' }}>
-        <div style={{ fontSize: '11px', color: 'rgba(0,0,0,0.4)', marginBottom: '6px', letterSpacing: '0.02em' }}>
-          Ronniel is currently connected from
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '14px' }}>📍</span>
-          <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(0,0,0,0.75)' }}>
-            {location ? `${location.city}, ${location.region}` : 'Locating...'}
-          </span>
-        </div>
+      {/* Wi-Fi Settings */}
+      <div style={{
+        padding: '6px 14px', cursor: 'default', fontSize: '13px', color: 'rgba(0,0,0,0.85)',
+      }}>
+        Wi-Fi Settings...
       </div>
     </div>
   );

@@ -125,11 +125,123 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
   return (
     <div style={{
       display: 'flex',
+      flexDirection: 'column',
       height: '100%',
       fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif",
       color: 'rgba(0,0,0,0.85)',
       fontSize: '13px',
     }}>
+      {/* ── Notes Toolbar (full-width, Apple-style) ── */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
+        padding: '6px 12px',
+        borderBottom: '0.5px solid rgba(0,0,0,0.1)',
+        background: 'rgba(0,0,0,0.015)',
+        minHeight: '32px',
+      }}>
+        {/* Sidebar toggle */}
+        <NotesToolbarBtn>
+          <svg width="15" height="14" viewBox="0 0 18 16" fill="none">
+            <rect x="1" y="1" width="16" height="14" rx="2" stroke="currentColor" strokeWidth="1.2" />
+            <line x1="6" y1="1" x2="6" y2="15" stroke="currentColor" strokeWidth="1.2" />
+          </svg>
+        </NotesToolbarBtn>
+
+        <div style={{ width: '1px', height: '16px', background: 'rgba(0,0,0,0.08)', margin: '0 4px' }} />
+
+        {/* List / Grid view */}
+        <NotesToolbarBtn active>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="2" width="14" height="2" rx="0.5" fill="currentColor" />
+            <rect x="1" y="7" width="14" height="2" rx="0.5" fill="currentColor" />
+            <rect x="1" y="12" width="14" height="2" rx="0.5" fill="currentColor" />
+          </svg>
+        </NotesToolbarBtn>
+        <NotesToolbarBtn>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" />
+            <rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" />
+            <rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" />
+            <rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" />
+          </svg>
+        </NotesToolbarBtn>
+
+        <div style={{ width: '1px', height: '16px', background: 'rgba(0,0,0,0.08)', margin: '0 4px' }} />
+
+        {/* Delete */}
+        <NotesToolbarBtn>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <polyline points="3,4 4,14 12,14 13,4" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" fill="none" />
+            <line x1="2" y1="4" x2="14" y2="4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <path d="M6 4V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5V4" stroke="currentColor" strokeWidth="1.2" />
+          </svg>
+        </NotesToolbarBtn>
+
+        {/* Compose */}
+        <NotesToolbarBtn>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.2" />
+            <line x1="5" y1="8" x2="11" y2="8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="5" y1="5.5" x2="11" y2="5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="5" y1="10.5" x2="8" y2="10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+        </NotesToolbarBtn>
+
+        <div style={{ width: '1px', height: '16px', background: 'rgba(0,0,0,0.08)', margin: '0 4px' }} />
+
+        {/* Aa formatting */}
+        <NotesToolbarBtn>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'currentColor', lineHeight: 1 }}>Aa</span>
+        </NotesToolbarBtn>
+
+        {/* Adjustments */}
+        <NotesToolbarBtn>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <line x1="2" y1="4" x2="14" y2="4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="2" y1="12" x2="14" y2="12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <circle cx="5" cy="4" r="1.5" fill="rgba(0,0,0,0.04)" stroke="currentColor" strokeWidth="1" />
+            <circle cx="10" cy="8" r="1.5" fill="rgba(0,0,0,0.04)" stroke="currentColor" strokeWidth="1" />
+            <circle cx="7" cy="12" r="1.5" fill="rgba(0,0,0,0.04)" stroke="currentColor" strokeWidth="1" />
+          </svg>
+        </NotesToolbarBtn>
+
+        {/* Table */}
+        <NotesToolbarBtn>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.2" />
+            <line x1="1" y1="5.5" x2="15" y2="5.5" stroke="currentColor" strokeWidth="1" />
+            <line x1="1" y1="10.5" x2="15" y2="10.5" stroke="currentColor" strokeWidth="1" />
+            <line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" strokeWidth="1" />
+            <line x1="10.5" y1="1" x2="10.5" y2="15" stroke="currentColor" strokeWidth="1" />
+          </svg>
+        </NotesToolbarBtn>
+
+        <div style={{ flex: 1 }} />
+
+        {/* Share */}
+        <NotesToolbarBtn>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M4 9v4a1 1 0 001 1h6a1 1 0 001-1V9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <polyline points="5,5 8,2 11,5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <line x1="8" y1="2" x2="8" y2="10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+        </NotesToolbarBtn>
+
+        {/* Search */}
+        <NotesToolbarBtn>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.2" />
+            <line x1="10" y1="10" x2="14" y2="14" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+        </NotesToolbarBtn>
+      </div>
+
+      {/* ── Three-panel layout below toolbar ── */}
+      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+
       {/* ── Left Sidebar: Folders ── */}
       <div style={{
         width: '180px',
@@ -221,51 +333,6 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
         overflowY: 'auto',
         background: 'rgba(255,255,255,0.3)',
       }}>
-        {/* Toolbar */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '12px',
-          padding: '8px 12px',
-          borderBottom: '0.5px solid rgba(0,0,0,0.08)',
-        }}>
-          {/* List/Grid toggle */}
-          <NotesToolbarBtn active>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <rect x="1" y="2" width="14" height="2" rx="0.5" fill="currentColor" />
-              <rect x="1" y="7" width="14" height="2" rx="0.5" fill="currentColor" />
-              <rect x="1" y="12" width="14" height="2" rx="0.5" fill="currentColor" />
-            </svg>
-          </NotesToolbarBtn>
-          <NotesToolbarBtn>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" />
-              <rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" />
-              <rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" />
-              <rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" />
-            </svg>
-          </NotesToolbarBtn>
-          <div style={{ flex: 1 }} />
-          {/* Compose button */}
-          <NotesToolbarBtn>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.2" />
-              <line x1="5" y1="8" x2="11" y2="8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-              <line x1="5" y1="5.5" x2="11" y2="5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-              <line x1="5" y1="10.5" x2="8" y2="10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            </svg>
-          </NotesToolbarBtn>
-          {/* Delete button */}
-          <NotesToolbarBtn>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <polyline points="3,4 4,14 12,14 13,4" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" fill="none" />
-              <line x1="2" y1="4" x2="14" y2="4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-              <path d="M6 4V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5V4" stroke="currentColor" strokeWidth="1.2" />
-            </svg>
-          </NotesToolbarBtn>
-        </div>
-
         {/* Notes grouped by date */}
         {grouped.map(group => (
           <div key={group.label}>
@@ -400,6 +467,8 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
           </div>
         )}
       </div>
+
+      </div>{/* close three-panel layout */}
 
       <style>{`
         /* Override MarkdownRenderer dark-theme inline styles */

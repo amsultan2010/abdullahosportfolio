@@ -127,19 +127,22 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
         width: windowMode ? '100%' : '90%',
         maxWidth: windowMode ? 'none' : '1200px',
         minWidth: windowMode ? 'auto' : '320px',
-        padding: windowMode ? '20px' : undefined,
-        overflow: 'visible'
+        padding: windowMode ? 'clamp(1.5rem, 3vw, 2.5rem)' : undefined,
+        height: windowMode ? '100%' : undefined,
+        overflow: windowMode ? 'auto' : 'visible'
       }}
     >
       <h2
         className="cs-title"
         style={{
           fontSize: '1.5rem',
-          color: 'rgba(0, 0, 0, 0.65)',
-          fontFamily: 'NeueMontreal-MediumItalic, sans-serif',
+          color: windowMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.65)',
+          fontFamily: windowMode
+            ? '-apple-system, BlinkMacSystemFont, NeueMontreal-MediumItalic, sans-serif'
+            : 'NeueMontreal-MediumItalic, sans-serif',
           fontStyle: 'italic',
           margin: '0 0 1rem 0',
-          fontWeight: '500',
+          fontWeight: windowMode ? '600' : '500',
           opacity: titleAnimated ? 1 : 0,
           transform: titleAnimated ? 'translateY(0)' : 'translateY(20px)',
           transition: 'opacity 0.8s ease-out, transform 0.8s ease-out'
@@ -151,7 +154,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
       {/* Research card with carousel - wrapper for outside arrows */}
       <div className="cs-carousel-wrapper" style={{ position: 'relative' }}>
         <div
-          className={`cs-carousel glass-cs-carousel ${cardAnimated ? 'animated' : ''}`}
+          className={`cs-carousel ${windowMode ? 'dark-cs-carousel' : 'glass-cs-carousel'} ${cardAnimated ? 'animated' : ''}`}
           onMouseEnter={() => setIsCardHovered(true)}
           onMouseLeave={() => setIsCardHovered(false)}
         >
@@ -182,7 +185,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
               {/* Title */}
               <h3 style={{
                 fontSize: 'clamp(1.1rem, 3vw, 1.5rem)',
-                color: 'rgba(0, 0, 0, 0.8)',
+                color: windowMode ? 'rgba(255, 255, 255, 0.95)' : 'rgba(0, 0, 0, 0.8)',
                 fontFamily: 'NeueMontreal-Medium, sans-serif',
                 margin: '0.5rem 0 1rem',
                 fontWeight: '500',
@@ -193,7 +196,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
 
               {/* Summary */}
               <p style={{
-                color: 'rgba(0, 0, 0, 0.5)',
+                color: windowMode ? 'rgba(255, 255, 255, 0.55)' : 'rgba(0, 0, 0, 0.5)',
                 fontSize: '0.95rem',
                 fontFamily: 'NeueMontreal-Light, sans-serif',
                 lineHeight: '1.7',
@@ -232,7 +235,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
                 <span style={{
                   fontSize: '0.85rem',
                   fontFamily: 'NeueMontreal-Medium, sans-serif',
-                  color: 'rgba(0, 0, 0, 0.45)'
+                  color: windowMode ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 0, 0, 0.45)'
                 }}>
                   Read &rarr;
                 </span>
@@ -255,7 +258,9 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
                   width: activeIndex === i ? '20px' : '6px',
                   height: '6px',
                   borderRadius: '3px',
-                  background: activeIndex === i ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.15)',
+                  background: windowMode
+                    ? (activeIndex === i ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.15)')
+                    : (activeIndex === i ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.15)'),
                   border: 'none',
                   padding: 0,
                   cursor: 'pointer',
@@ -270,7 +275,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
         {/* Navigation arrows - outside the glass card */}
         <button
           onClick={handlePrev}
-          className="cs-nav-btn cs-nav-prev"
+          className={`cs-nav-btn cs-nav-prev ${windowMode ? 'cs-nav-dark' : ''}`}
           aria-label="Previous paper"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -279,7 +284,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
         </button>
         <button
           onClick={handleNext}
-          className="cs-nav-btn cs-nav-next"
+          className={`cs-nav-btn cs-nav-next ${windowMode ? 'cs-nav-dark' : ''}`}
           aria-label="Next paper"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -352,6 +357,38 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
           background: rgba(0, 0, 0, 0.08);
           color: rgba(0, 0, 0, 0.7);
         }
+        .cs-nav-dark {
+          background: rgba(255, 255, 255, 0.06) !important;
+          border-color: rgba(255, 255, 255, 0.1) !important;
+          color: rgba(255, 255, 255, 0.4) !important;
+        }
+        .cs-nav-dark:hover {
+          background: rgba(255, 255, 255, 0.12) !important;
+          color: rgba(255, 255, 255, 0.8) !important;
+        }
+        .dark-cs-carousel {
+          position: relative;
+          background: rgba(255, 255, 255, 0.04);
+          border-radius: 16px;
+          border: none;
+          overflow: hidden;
+          box-sizing: border-box;
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        .dark-cs-carousel.animated {
+          opacity: 1;
+          transform: translateY(0);
+          transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .dark-cs-carousel:hover {
+          background: rgba(255, 255, 255, 0.08);
+          transition: background 0.3s ease;
+        }
+        .dark-cs-carousel:hover h3 {
+          color: rgba(255, 255, 255, 1) !important;
+        }
+        .dark-cs-carousel::before { display: none; }
         .cs-nav-prev { left: -48px; }
         .cs-nav-next { right: -48px; }
         @media (max-width: 768px) {

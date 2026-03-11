@@ -163,16 +163,13 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
     return (
       <div
         ref={panelRef}
-        style={{ overflowY: 'auto', height: '100%' }}
+        style={{
+          overflowY: 'auto',
+          height: '100%',
+        }}
         className="content-viewer-panel"
       >
-        <div style={{ padding: '0 1rem', maxWidth: content.type === 'deep-research' ? '120ch' : '90ch', margin: '0 auto' }}>
-          <div style={{
-            background: 'rgba(20, 20, 20, 0.5)',
-            border: '0.5px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: '8px',
-            overflow: 'hidden',
-          }}>
+        <div style={{ maxWidth: content.type === 'deep-research' ? '120ch' : '90ch', margin: '0 auto' }}>
             <div className="cv-terminal-content" style={{ padding: 'clamp(1.5rem, 3vw, 2.5rem)' }}>
               <header style={{ marginBottom: '2rem' }}>
                 {isDeepResearch && content.company && (
@@ -216,7 +213,6 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
                 <MarkdownRenderer content={content.markdown} />
               </div>
             </div>
-          </div>
         </div>
         <style>{`
           @keyframes cvCascadeIn {

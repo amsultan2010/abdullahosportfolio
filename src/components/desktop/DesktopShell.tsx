@@ -14,6 +14,8 @@ import Projects from '../portfolio/Projects';
 import CaseStudies from '../portfolio/CaseStudies';
 import Blog from '../portfolio/Blog';
 import Calendar from '../portfolio/Calendar';
+import EmailCompose from '../portfolio/EmailCompose';
+import Photos from '../portfolio/Photos';
 import DetailPanel from '../portfolio/DetailPanel';
 import ContentViewer from '../portfolio/ContentViewer';
 import type { DetailContent } from '../portfolio/DetailPanel';
@@ -45,6 +47,10 @@ function WindowContent({ id }: { id: WindowId }) {
       return <Blog onContentClick={handleContentClick} windowMode />;
     case 'calendar':
       return <Calendar windowMode />;
+    case 'email':
+      return <EmailCompose windowMode />;
+    case 'photos':
+      return <Photos windowMode />;
     default:
       return null;
   }
@@ -272,8 +278,7 @@ function TerminalContent() {
         height: '100%',
         overflowY: 'auto',
         cursor: 'text',
-        background: 'rgba(15, 15, 20, 0.72)',
-        borderRadius: '0 0 12px 12px',
+        background: 'transparent',
       }}
     >
       {/* Intro text */}
@@ -446,9 +451,11 @@ function Desktop() {
 
           {/* Windows */}
           {openWindows.map(win => {
+            const darkWindows: string[] = ['education', 'experience', 'detail', 'terminal', 'email', 'photos', 'deep-research', 'content', 'projects'];
+            const isDark = darkWindows.includes(win.id);
             if (win.id === 'detail' && state.activeDetail) {
               return (
-                <AppWindow key={win.id} windowState={win}>
+                <AppWindow key={win.id} windowState={win} darkMode={isDark}>
                   <DetailPanel
                     detail={state.activeDetail}
                     onClose={() => dispatch({ type: 'CLOSE_DETAIL' })}
@@ -459,7 +466,7 @@ function Desktop() {
             }
             if (win.id === 'content' && state.activeContent) {
               return (
-                <AppWindow key={win.id} windowState={win}>
+                <AppWindow key={win.id} windowState={win} darkMode={isDark}>
                   <ContentViewer
                     content={state.activeContent}
                     onClose={() => dispatch({ type: 'CLOSE_CONTENT' })}
@@ -469,7 +476,7 @@ function Desktop() {
               );
             }
             return (
-              <AppWindow key={win.id} windowState={win}>
+              <AppWindow key={win.id} windowState={win} darkMode={isDark}>
                 <WindowContent id={win.id} />
               </AppWindow>
             );

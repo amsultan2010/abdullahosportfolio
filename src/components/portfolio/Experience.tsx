@@ -116,33 +116,71 @@ const Experience = ({ onCardClick, windowMode }: ExperienceProps) => {
         width: windowMode ? '100%' : '90%',
         maxWidth: windowMode ? 'none' : '1200px',
         minWidth: windowMode ? 'auto' : '320px',
-        padding: windowMode ? '20px' : undefined,
+        padding: windowMode ? '0' : undefined,
+        height: windowMode ? '100%' : undefined,
         opacity: hasAnimated ? 1 : 0,
         transform: hasAnimated ? 'translateY(0)' : 'translateY(20px)',
         transition: 'opacity 0.8s ease-out, transform 0.8s ease-out'
       }}
     >
-      <h2 style={{
-        fontSize: '1.5rem',
-        color: '#1d1d1f',
-        fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-MediumItalic, sans-serif',
-        fontStyle: 'italic',
-        margin: '0 0 1rem 0',
-        fontWeight: '600'
-      }}>
-        Experience
-      </h2>
+      {windowMode ? (
+        /* Window mode: dark pane fills the entire window content area */
+        <div style={{
+          height: '100%',
+          overflowY: 'auto',
+          padding: 'clamp(1.5rem, 3vw, 2.5rem)',
+        }}>
+          <div>
+            <h2 style={{
+              fontSize: '1.5rem',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-MediumItalic, sans-serif',
+              fontStyle: 'italic',
+              margin: '0 0 1.25rem 0',
+              fontWeight: '600'
+            }}>
+              Experience
+            </h2>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
-        {experiences.map((experience) => (
-          <ExperienceCard
-            key={experience.id}
-            experience={experience}
-            clickable={true}
-            onDetailClick={onCardClick ? () => onCardClick(experience.detail) : undefined}
-          />
-        ))}
-      </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
+              {experiences.map((experience) => (
+                <ExperienceCard
+                  key={experience.id}
+                  experience={experience}
+                  clickable={true}
+                  onDetailClick={onCardClick ? () => onCardClick(experience.detail) : undefined}
+                  darkMode
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Non-window mode: original light layout */
+        <>
+          <h2 style={{
+            fontSize: '1.5rem',
+            color: '#1d1d1f',
+            fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-MediumItalic, sans-serif',
+            fontStyle: 'italic',
+            margin: '0 0 1rem 0',
+            fontWeight: '600'
+          }}>
+            Experience
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
+            {experiences.map((experience) => (
+              <ExperienceCard
+                key={experience.id}
+                experience={experience}
+                clickable={true}
+                onDetailClick={onCardClick ? () => onCardClick(experience.detail) : undefined}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       <style>{`
         @font-face {
