@@ -111,7 +111,7 @@ const Calendar = ({ windowMode }: CalendarProps) => {
       {/* Toolbar — matches Apple Calendar chrome */}
       <div style={{
         height: '38px', minHeight: '38px', display: 'flex', alignItems: 'center',
-        padding: '0 14px', borderBottom: '1px solid #d6d6d6', background: '#f6f6f6', gap: '8px',
+        padding: '0 14px', borderBottom: '1px solid #d6d6d6', background: '#ececec', gap: '8px',
       }}>
         {/* Left: toolbar icons */}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>

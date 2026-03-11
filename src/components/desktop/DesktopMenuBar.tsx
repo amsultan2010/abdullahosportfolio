@@ -94,7 +94,7 @@ export default function DesktopMenuBar() {
       backdropFilter: 'saturate(160%) blur(28px)', WebkitBackdropFilter: 'saturate(160%) blur(28px)',
       borderBottom: '1px solid rgba(255,255,255,0.06)',
       fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif",
-      fontSize: '13px', color: 'rgba(255,255,255,0.95)', userSelect: 'none',
+      fontSize: '13px', color: '#fff', userSelect: 'none',
     }}>
       {/* ── Left: Logo + Menus ── */}
       <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
@@ -179,7 +179,7 @@ export default function DesktopMenuBar() {
           <SoundPanel spotify={spotify} />
         </TrayDropdown>
 
-        <span style={{ fontSize: '12.5px', color: 'rgba(255,255,255,0.95)', fontWeight: 450, marginLeft: '6px' }}>
+        <span style={{ fontSize: '12.5px', color: '#fff', fontWeight: 450, marginLeft: '6px' }}>
           {date}&ensp;{time}
         </span>
       </div>

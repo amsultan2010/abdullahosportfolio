@@ -137,7 +137,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
         alignItems: 'center',
         padding: '4px 10px',
         borderBottom: '0.5px solid rgba(0,0,0,0.12)',
-        background: '#ececec',
+        background: '#f0f0f0',
         minHeight: '34px',
         gap: '0px',
       }}>

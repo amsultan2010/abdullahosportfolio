@@ -6,9 +6,10 @@ interface AppWindowProps {
   windowState: WindowState;
   children: React.ReactNode;
   darkMode?: boolean;
+  titleBarBg?: string;
 }
 
-export default function AppWindow({ windowState, children, darkMode }: AppWindowProps) {
+export default function AppWindow({ windowState, children, darkMode, titleBarBg }: AppWindowProps) {
   const { state, dispatch } = useDesktop();
   const dragRef = useRef<{ startX: number; startY: number; winX: number; winY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number; edge: string } | null>(null);
@@ -158,7 +159,7 @@ export default function AppWindow({ windowState, children, darkMode }: AppWindow
           borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid rgba(0, 0, 0, 0.08)',
           cursor: windowState.isFullscreen ? 'default' : 'grab',
           userSelect: 'none',
-          background: darkMode ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.02)',
+          background: titleBarBg || (darkMode ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.02)'),
         }}
       >
         {/* Traffic lights */}

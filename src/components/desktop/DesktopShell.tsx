@@ -71,6 +71,199 @@ const COMMANDS: Record<string, { window: WindowId; desc: string }> = {
   'calendar':      { window: 'calendar',        desc: 'Book a meeting with me' },
 };
 
+// ── Rotating words component ──
+function RotatingWords() {
+  const words = ['deep learning', 'fullstack development', 'systems engineering', 'quantitative finance', 'product design'];
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentIdx(prev => (prev + 1) % words.length);
+        setIsAnimating(false);
+      }, 400);
+    }, 2800);
+    return () => clearInterval(interval);
+  }, []);
+
+  const wordColors = ['#60a5fa', '#c084fc', '#4ade80', '#fbbf24', '#f472b6'];
+
+  return (
+    <span style={{ position: 'relative', display: 'inline-block', verticalAlign: 'bottom' }}>
+      <span style={{
+        display: 'inline-block',
+        color: wordColors[currentIdx],
+        fontWeight: 700,
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        opacity: isAnimating ? 0 : 1,
+        transform: isAnimating ? 'translateY(-8px)' : 'translateY(0)',
+        filter: isAnimating ? 'blur(4px)' : 'blur(0)',
+      }}>
+        {words[currentIdx]}
+      </span>
+    </span>
+  );
+}
+
+// ── World Clock component ──
+function WorldClock() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const cities = [
+    { name: 'New York', tz: 'America/New_York', abbr: 'EST' },
+    { name: 'London', tz: 'Europe/London', abbr: 'GMT' },
+    { name: 'Dubai', tz: 'Asia/Dubai', abbr: 'GST' },
+    { name: 'Tokyo', tz: 'Asia/Tokyo', abbr: 'JST' },
+    { name: 'Sydney', tz: 'Australia/Sydney', abbr: 'AEDT' },
+  ];
+
+  const formatTime = (tz: string) => {
+    return time.toLocaleTimeString('en-US', {
+      timeZone: tz,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+  };
+
+  const formatDate = (tz: string) => {
+    return time.toLocaleDateString('en-US', {
+      timeZone: tz,
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '4px' }}>
+        WORLD CLOCK
+      </div>
+      {cities.map(city => {
+        const hrs = parseInt(formatTime(city.tz).split(':')[0]);
+        const isNight = hrs >= 20 || hrs < 6;
+        return (
+          <div key={city.name} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '3px 0',
+            borderBottom: '0.5px solid rgba(255,255,255,0.04)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '11px' }}>{isNight ? '🌙' : '☀️'}</span>
+              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', width: '70px' }}>{city.name}</span>
+            </div>
+            <span style={{
+              fontFamily: "'SF Mono', monospace",
+              fontSize: '12px',
+              color: '#fff',
+              fontWeight: 500,
+              letterSpacing: '0.02em',
+            }}>
+              {formatTime(city.tz)}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Stock Ticker component ──
+function StockTickers() {
+  const [tickers, setTickers] = useState<{ symbol: string; price: number; change: number; pct: number }[]>([]);
+
+  useEffect(() => {
+    // Base prices for simulation
+    const bases: { symbol: string; base: number }[] = [
+      { symbol: 'SPY', base: 590.32 },
+      { symbol: 'QQQ', base: 512.18 },
+      { symbol: 'BTC', base: 87245 },
+      { symbol: 'AAPL', base: 228.54 },
+      { symbol: 'NVDA', base: 118.72 },
+      { symbol: 'TSLA', base: 272.64 },
+    ];
+
+    // Initialize with random offsets
+    const initial = bases.map(b => {
+      const change = (Math.random() - 0.45) * b.base * 0.015;
+      return { symbol: b.symbol, price: b.base + change, change, pct: (change / b.base) * 100 };
+    });
+    setTickers(initial);
+
+    // Simulate small live movements
+    const id = setInterval(() => {
+      setTickers(prev => prev.map((t, i) => {
+        const tick = (Math.random() - 0.5) * bases[i].base * 0.0003;
+        const newPrice = t.price + tick;
+        const totalChange = newPrice - bases[i].base;
+        return { ...t, price: newPrice, change: totalChange, pct: (totalChange / bases[i].base) * 100 };
+      }));
+    }, 2000);
+
+    return () => clearInterval(id);
+  }, []);
+
+  if (tickers.length === 0) return null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '4px' }}>
+        MARKETS
+      </div>
+      {tickers.map(t => {
+        const isUp = t.change >= 0;
+        const color = isUp ? '#4ade80' : '#f87171';
+        const arrow = isUp ? '▲' : '▼';
+        const fmt = t.symbol === 'BTC'
+          ? t.price.toLocaleString('en-US', { maximumFractionDigits: 0 })
+          : t.price.toFixed(2);
+        return (
+          <div key={t.symbol} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '3px 0',
+            borderBottom: '0.5px solid rgba(255,255,255,0.04)',
+          }}>
+            <span style={{
+              color: 'rgba(255,255,255,0.7)',
+              fontSize: '11px',
+              fontWeight: 600,
+              fontFamily: "'SF Mono', monospace",
+              width: '40px',
+            }}>{t.symbol}</span>
+            <span style={{
+              fontFamily: "'SF Mono', monospace",
+              fontSize: '11.5px',
+              color: '#fff',
+              fontWeight: 500,
+              flex: 1,
+              textAlign: 'right',
+              marginRight: '8px',
+            }}>{fmt}</span>
+            <span style={{
+              fontFamily: "'SF Mono', monospace",
+              fontSize: '10.5px',
+              color,
+              fontWeight: 500,
+              minWidth: '55px',
+              textAlign: 'right',
+            }}>
+              {arrow} {Math.abs(t.pct).toFixed(2)}%
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function TerminalContent() {
   const { dispatch } = useDesktop();
   const [history, setHistory] = useState<TerminalLine[]>([]);
@@ -79,61 +272,54 @@ function TerminalContent() {
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [introDone, setIntroDone] = useState(false);
   const [introText, setIntroText] = useState('');
+  const [showRotating, setShowRotating] = useState(false);
+  const [showLinks, setShowLinks] = useState(false);
+  const [showCommands, setShowCommands] = useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   // Auto-type intro
   useEffect(() => {
     const lines = [
-      'Ronniel Gandhe — Software Engineer',
+      'Ronniel Gandhe',
+      'Software Engineer',
       '',
-      'Location: Waterloo, ON',
-      'Email: ronnielgandhe@gmail.com',
-      'GitHub: github.com/ronnielgandhe',
-      '',
-      '"I build systems that think, design that feels,',
-      ' and code that connects ideas to impact."',
-      '',
-      '—————————————————————————————————————————',
-      '',
-      'Available commands:',
-      '',
-      '  education      Academic background & coursework',
-      '  experience     Work experience & internships',
-      '  projects       Side projects & builds',
-      '  mythoughts     Blog posts & notes',
-      '  deepresearch   Case studies & deep dives',
-      '  calendar       Book a meeting with me',
-      '',
-      '  help           Show this list again',
-      '  clear          Clear terminal',
-      '',
-      'Type a command and press Enter to explore.',
-      '—————————————————————————————————————————',
+      'Using __ROTATING__ to create',
+      'elegant and scalable solutions',
+      'to real world problems.',
     ];
     const full = lines.join('\n');
     let i = 0;
-    const speed = 8;
+    const speed = 18;
     const interval = setInterval(() => {
       if (i < full.length) {
         setIntroText(full.slice(0, i + 1));
+        // Show rotating words when we reach that line
+        if (full.slice(0, i + 1).includes('__ROTATING__')) {
+          setShowRotating(true);
+        }
         i++;
       } else {
         clearInterval(interval);
-        setIntroDone(true);
+        // Stagger in the links and commands
+        setTimeout(() => setShowLinks(true), 300);
+        setTimeout(() => setShowCommands(true), 800);
+        setTimeout(() => setIntroDone(true), 1200);
       }
     }, speed);
     return () => clearInterval(interval);
   }, []);
 
-  // Focus input & scroll on change
   useEffect(() => {
     if (introDone) inputRef.current?.focus();
   }, [introDone]);
 
+  // Only auto-scroll on command history updates, not during intro typing
   useEffect(() => {
-    scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight);
-  }, [history, introText]);
+    if (history.length > 0) {
+      scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight);
+    }
+  }, [history]);
 
   const prompt = 'ronniel@MacBookPro ~ % ';
 
@@ -190,8 +376,6 @@ function TerminalContent() {
       newLines.push({ type: 'output', text: 'ronniel' });
     } else if (cmd === 'pwd') {
       newLines.push({ type: 'output', text: '/Users/ronniel/portfolio' });
-    } else if (cmd === 'echo hello' || cmd === 'echo "hello"') {
-      newLines.push({ type: 'output', text: 'hello 👋' });
     } else if (cmd.startsWith('echo ')) {
       newLines.push({ type: 'output', text: raw.replace(/^echo\s+/i, '').replace(/^["']|["']$/g, '') });
     } else {
@@ -218,28 +402,22 @@ function TerminalContent() {
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (historyIdx > 0) {
-        const newIdx = historyIdx - 1;
-        setHistoryIdx(newIdx);
-        setInput(cmdHistory[newIdx]);
+        setHistoryIdx(historyIdx - 1);
+        setInput(cmdHistory[historyIdx - 1]);
       } else {
         setHistoryIdx(-1);
         setInput('');
       }
     } else if (e.key === 'Tab') {
       e.preventDefault();
-      // Auto-complete
       if (input.trim()) {
         const partial = input.trim().toLowerCase();
         const prefix = partial.startsWith('cd ') ? partial.replace('cd ', '') : partial.startsWith('open ') ? partial.replace('open ', '') : partial;
         const match = Object.keys(COMMANDS).find(c => c.startsWith(prefix));
         if (match) {
-          if (partial.startsWith('cd ') || input.trim().toLowerCase().startsWith('cd ')) {
-            setInput('cd ' + match);
-          } else if (input.trim().toLowerCase().startsWith('open ')) {
-            setInput('open ' + match);
-          } else {
-            setInput(match);
-          }
+          if (partial.startsWith('cd ')) setInput('cd ' + match);
+          else if (partial.startsWith('open ')) setInput('open ' + match);
+          else setInput(match);
         }
       }
     } else if (e.key === 'l' && e.ctrlKey) {
@@ -266,115 +444,191 @@ function TerminalContent() {
     }
   };
 
+  const cmdColors: Record<string, string> = {
+    education: '#60a5fa', experience: '#c084fc', projects: '#4ade80',
+    mythoughts: '#fbbf24', deepresearch: '#f472b6', calendar: '#22d3ee',
+    help: '#94a3b8', clear: '#94a3b8',
+  };
+
+  const commandLinks = [
+    { cmd: 'education', emoji: '🎓', label: 'Education', color: '#60a5fa' },
+    { cmd: 'experience', emoji: '💼', label: 'Experience', color: '#c084fc' },
+    { cmd: 'projects', emoji: '⚡', label: 'Projects', color: '#4ade80' },
+    { cmd: 'mythoughts', emoji: '✍️', label: 'My Thoughts', color: '#fbbf24' },
+    { cmd: 'deepresearch', emoji: '🔬', label: 'Deep Research', color: '#f472b6' },
+    { cmd: 'calendar', emoji: '📅', label: 'Book a Meeting', color: '#22d3ee' },
+  ];
+
   return (
-    <div
-      ref={scrollRef}
-      onClick={() => inputRef.current?.focus()}
-      style={{
-        padding: '16px 20px',
-        fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
-        fontSize: '13px',
-        color: '#e0e0e0',
-        lineHeight: 1.65,
-        height: '100%',
-        overflowY: 'auto',
-        cursor: 'text',
-        background: 'transparent',
-      }}
-    >
-      {/* Intro text */}
-      <pre style={{
-        margin: 0,
-        fontFamily: 'inherit',
-        fontSize: 'inherit',
-        lineHeight: 'inherit',
-        whiteSpace: 'pre-wrap',
-        color: 'rgba(255,255,255,0.7)',
-      }}>
-        {introText.split('\n').map((line, i) => {
-          // Colorize intro lines
-          if (i === 0) return <div key={i} style={{ fontWeight: 'bold', fontSize: '15px', color: '#fff' }}>{line}</div>;
-          if (line.startsWith('Location:')) return <div key={i}><span style={{ color: '#ff6b9d', fontWeight: 600 }}>Location: </span><span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{line.replace('Location: ', '')}</span></div>;
-          if (line.startsWith('Email:')) return <div key={i}><span style={{ color: '#fbbf24', fontWeight: 600 }}>Email: </span><span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{line.replace('Email: ', '')}</span></div>;
-          if (line.startsWith('GitHub:')) return <div key={i}><span style={{ color: '#22d3ee', fontWeight: 600 }}>GitHub: </span><span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{line.replace('GitHub: ', '')}</span></div>;
-          if (line.startsWith('"')) return <div key={i} style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.45)' }}>{line}</div>;
-          if (line.startsWith('Available commands:')) return <div key={i} style={{ color: '#4ade80', fontWeight: 700 }}>{line}</div>;
-          if (line.startsWith('Type a command')) return <div key={i} style={{ color: 'rgba(255,255,255,0.5)' }}>{line}</div>;
-          if (line.match(/^\s{2}\w/)) {
-            const parts = line.match(/^(\s{2})(\S+)(\s+)(.+)$/);
-            if (parts) {
-              const cmdColors: Record<string, string> = {
-                education: '#60a5fa',    // blue
-                experience: '#c084fc',   // purple
-                projects: '#4ade80',     // green
-                mythoughts: '#fbbf24',   // amber
-                deepresearch: '#f472b6', // pink
-                calendar: '#22d3ee',     // cyan
-                help: '#94a3b8',         // slate
-                clear: '#94a3b8',        // slate
-              };
-              const cmdColor = cmdColors[parts[2]] || '#60a5fa';
-              return <div key={i}>{parts[1]}<span style={{ color: cmdColor, fontWeight: 700 }}>{parts[2]}</span>{parts[3]}<span style={{ color: 'rgba(255,255,255,0.55)' }}>{parts[4]}</span></div>;
+    <div style={{
+      display: 'flex', height: '100%', background: 'transparent', overflow: 'hidden',
+    }}>
+      {/* ── Left: Terminal Content ── */}
+      <div
+        ref={scrollRef}
+        onClick={() => inputRef.current?.focus()}
+        style={{
+          flex: 1,
+          padding: '20px 22px',
+          fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
+          fontSize: '12.5px',
+          color: '#e0e0e0',
+          lineHeight: 1.6,
+          overflowY: 'auto',
+          cursor: 'text',
+          display: 'flex',
+          flexDirection: 'column',
+          borderRight: '1px solid rgba(255,255,255,0.04)',
+        }}
+      >
+        {/* Hero intro */}
+        <div style={{ marginBottom: '8px' }}>
+          {introText.split('\n').map((line, i) => {
+            if (line === '__ROTATING__' || line.includes('__ROTATING__')) {
+              // Line with rotating words
+              const before = line.split('__ROTATING__')[0];
+              const after = line.split('__ROTATING__')[1] || '';
+              return (
+                <div key={i} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>
+                  {before}{showRotating && <RotatingWords />}{showRotating ? after : ''}
+                </div>
+              );
             }
-          }
-          if (line.startsWith('——')) return <div key={i} style={{ color: 'rgba(255,255,255,0.15)' }}>{line}</div>;
-          return <div key={i}>{line}</div>;
-        })}
-      </pre>
-
-      {/* Command history */}
-      {history.map((line, i) => (
-        <div key={i} style={{ color: getLineColor(line), whiteSpace: 'pre-wrap' }}>
-          {line.type === 'prompt' ? (
-            <>
-              <span style={{ color: '#4ade80', fontWeight: 700 }}>{prompt}</span>
-              <span style={{ color: '#fff', fontWeight: 500 }}>{line.command}</span>
-            </>
-          ) : line.text.includes('\x1b[cmd]') ? (
-            renderColoredLine(line.text)
-          ) : (
-            line.text
-          )}
+            if (i === 0) return <div key={i} style={{ fontWeight: 700, fontSize: '18px', color: '#fff', letterSpacing: '-0.3px', lineHeight: 1.3, marginBottom: '2px' }}>{line}</div>;
+            if (i === 1) return <div key={i} style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', fontWeight: 400, marginBottom: '10px' }}>{line}</div>;
+            if (line === '') return <div key={i} style={{ height: '4px' }} />;
+            return <div key={i} style={{ color: 'rgba(255,255,255,0.7)' }}>{line}</div>;
+          })}
         </div>
-      ))}
 
-      {/* Active prompt */}
-      {introDone && (
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ color: '#4ade80', fontWeight: 700, whiteSpace: 'pre' }}>{prompt}</span>
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            spellCheck={false}
-            autoComplete="off"
-            style={{
-              flex: 1,
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              font: 'inherit',
-              color: '#fff',
-              padding: 0,
-              margin: 0,
-              caretColor: '#4ade80',
-            }}
-          />
-        </div>
-      )}
+        {/* Quick links */}
+        {showLinks && (
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: '2px', margin: '12px 0 8px',
+            opacity: showLinks ? 1 : 0,
+            transform: showLinks ? 'translateY(0)' : 'translateY(10px)',
+            transition: 'all 0.5s ease-out',
+          }}>
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '6px' }}>
+              QUICK LINKS
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px' }}>
+              <span>📍</span>
+              <span style={{ color: 'rgba(255,255,255,0.65)' }}>Waterloo, ON</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px' }}>
+              <span>✉️</span>
+              <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fbbf24', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                ronnielgandhe@gmail.com
+              </a>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px' }}>
+              <span>🐙</span>
+              <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#22d3ee', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                github.com/ronnielgandhe
+              </a>
+            </div>
+          </div>
+        )}
 
-      {/* Blinking cursor during intro */}
-      {!introDone && (
-        <span style={{
-          display: 'inline-block',
-          width: '8px',
-          height: '15px',
-          background: '#4ade80',
-          verticalAlign: 'text-bottom',
-          animation: 'blink 1s step-end infinite',
-        }} />
-      )}
+        {/* Command grid */}
+        {showCommands && (
+          <div style={{
+            margin: '12px 0 16px',
+            opacity: showCommands ? 1 : 0,
+            transform: showCommands ? 'translateY(0)' : 'translateY(10px)',
+            transition: 'all 0.6s ease-out 0.1s',
+          }}>
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '8px' }}>
+              EXPLORE
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px' }}>
+              {commandLinks.map((item) => (
+                <div
+                  key={item.cmd}
+                  onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '6px 10px', borderRadius: '8px', cursor: 'pointer',
+                    background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)',
+                    transition: 'all 0.2s ease',
+                    fontSize: '12px',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = item.color + '40'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+                >
+                  <span style={{ fontSize: '14px' }}>{item.emoji}</span>
+                  <span style={{ color: item.color, fontWeight: 600 }}>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Separator */}
+        {showCommands && (
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 0 12px' }} />
+        )}
+
+        {/* Command history */}
+        {history.map((line, i) => (
+          <div key={i} style={{ color: getLineColor(line), whiteSpace: 'pre-wrap' }}>
+            {line.type === 'prompt' ? (
+              <>
+                <span style={{ color: '#4ade80', fontWeight: 700 }}>{prompt}</span>
+                <span style={{ color: '#fff', fontWeight: 500 }}>{line.command}</span>
+              </>
+            ) : line.text.includes('\x1b[cmd]') ? (
+              renderColoredLine(line.text)
+            ) : (
+              line.text
+            )}
+          </div>
+        ))}
+
+        {/* Active prompt */}
+        {introDone && (
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span style={{ color: '#4ade80', fontWeight: 700, whiteSpace: 'pre' }}>{prompt}</span>
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              spellCheck={false}
+              autoComplete="off"
+              style={{
+                flex: 1, background: 'transparent', border: 'none',
+                outline: 'none', font: 'inherit', color: '#fff',
+                padding: 0, margin: 0, caretColor: '#4ade80',
+              }}
+            />
+          </div>
+        )}
+
+        {/* Blinking cursor during intro */}
+        {!introDone && (
+          <span style={{
+            display: 'inline-block', width: '8px', height: '15px',
+            background: '#4ade80', verticalAlign: 'text-bottom',
+            animation: 'blink 1s step-end infinite',
+          }} />
+        )}
+      </div>
+
+      {/* ── Right: Info Sidebar (Clock + Tickers) ── */}
+      <div style={{
+        width: '220px',
+        minWidth: '200px',
+        padding: '18px 16px',
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px',
+      }}>
+        <WorldClock />
+        <StockTickers />
+      </div>
 
       <style>{`
         @keyframes blink {
@@ -465,9 +719,14 @@ function Desktop() {
           {openWindows.map(win => {
             const darkWindows: string[] = ['education', 'experience', 'detail', 'terminal', 'email', 'photos', 'content', 'projects'];
             const isDark = darkWindows.includes(win.id);
+            const titleBarBgMap: Record<string, string> = {
+              projects: '#252526',
+              blog: '#f0f0f0',
+            };
+            const titleBarBg = titleBarBgMap[win.id];
             if (win.id === 'detail' && state.activeDetail) {
               return (
-                <AppWindow key={win.id} windowState={win} darkMode={isDark}>
+                <AppWindow key={win.id} windowState={win} darkMode={isDark} titleBarBg={titleBarBg}>
                   <DetailPanel
                     detail={state.activeDetail}
                     onClose={() => dispatch({ type: 'CLOSE_DETAIL' })}
@@ -478,7 +737,7 @@ function Desktop() {
             }
             if (win.id === 'content' && state.activeContent) {
               return (
-                <AppWindow key={win.id} windowState={win} darkMode={isDark}>
+                <AppWindow key={win.id} windowState={win} darkMode={isDark} titleBarBg={titleBarBg}>
                   <ContentViewer
                     content={state.activeContent}
                     onClose={() => dispatch({ type: 'CLOSE_CONTENT' })}
@@ -488,7 +747,7 @@ function Desktop() {
               );
             }
             return (
-              <AppWindow key={win.id} windowState={win} darkMode={isDark}>
+              <AppWindow key={win.id} windowState={win} darkMode={isDark} titleBarBg={titleBarBg}>
                 <WindowContent id={win.id} />
               </AppWindow>
             );
