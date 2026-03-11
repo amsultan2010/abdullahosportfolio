@@ -1,0 +1,76 @@
+---
+import { AstroSeo } from '@astrolib/seo';
+import PortfolioApp from '../components/portfolio/PortfolioApp';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="author" content="Ronniel Gandhe" />
+
+    <AstroSeo
+      title="Ronniel Gandhe — Portfolio"
+      description="Software Engineer based in Waterloo, ON specializing in cloud infrastructure and scalable systems"
+      canonical="https://ronnielgandhe.com/portfolio"
+      openGraph={{
+        url: 'https://ronnielgandhe.com/portfolio',
+        title: 'Ronniel Gandhe — Portfolio',
+        description: 'Software Engineer based in Waterloo, ON specializing in cloud infrastructure and scalable systems',
+        site_name: 'Ronniel Gandhe',
+      }}
+    />
+
+    <link rel="icon" type="image/png" href="/icons/baseheadlogo.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/baseheadlogo.png" />
+    <meta name="theme-color" content="#0b1220" />
+
+    <style is:global>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        background-color: #0b1220;
+        overflow-x: hidden;
+        max-width: 100vw;
+        min-height: 100vh;
+      }
+
+      body {
+        margin: 0;
+        display: flex;
+        place-items: center;
+        min-width: 320px;
+        background: transparent;
+        overflow-x: hidden;
+        min-height: 100vh;
+      }
+
+      ::-webkit-scrollbar {
+        width: 0px;
+        background: transparent;
+      }
+
+      canvas {
+        display: block !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+      }
+
+      a {
+        color: #646cff;
+        text-decoration: inherit;
+      }
+      a:hover {
+        color: #535bf2;
+      }
+    </style>
+  </head>
+  <body>
+    <PortfolioApp client:only="react" />
+  </body>
+</html>

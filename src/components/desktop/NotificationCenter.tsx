@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 /* ── Types ─────────────────────────────────────────── */
 
@@ -26,12 +26,12 @@ interface NotificationCenterProps {
   location: { city: string; region: string; country: string } | null;
 }
 
-/* ── Main Panel ────────────────────────────────────── */
+/* ── Main — Floating Widgets (no panel, no background) ── */
 
 export default function NotificationCenter({ open, onClose, location }: NotificationCenterProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [news, setNews] = useState<NewsItem[]>([]);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Fetch weather
   useEffect(() => {
@@ -55,57 +55,52 @@ export default function NotificationCenter({ open, onClose, location }: Notifica
   useEffect(() => {
     if (!open) return;
     const h = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         onClose();
       }
     };
-    // Delay to avoid closing from the same click that opens
     const t = setTimeout(() => document.addEventListener('mousedown', h), 50);
     return () => { clearTimeout(t); document.removeEventListener('mousedown', h); };
   }, [open, onClose]);
 
   return (
     <div
-      ref={panelRef}
+      ref={containerRef}
       style={{
         position: 'fixed',
-        top: '28px',
-        right: '0px',
-        width: '360px',
-        height: 'calc(100vh - 28px)',
+        top: '36px',
+        right: '16px',
+        width: '320px',
+        maxHeight: 'calc(100vh - 52px)',
         zIndex: 9998,
-        background: 'rgba(246, 246, 246, 0.78)',
-        backdropFilter: 'saturate(180%) blur(40px)',
-        WebkitBackdropFilter: 'saturate(180%) blur(40px)',
-        borderLeft: '0.5px solid rgba(0,0,0,0.1)',
-        boxShadow: '-8px 0 40px rgba(0,0,0,0.12)',
-        transform: open ? 'translateX(0)' : 'translateX(100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        pointerEvents: open ? 'auto' : 'none',
         opacity: open ? 1 : 0,
-        transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease',
+        transform: open ? 'translateY(0)' : 'translateY(-8px)',
+        transition: 'opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         overflowY: 'auto',
         overflowX: 'hidden',
         fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif",
+        /* scrollbar hide */
+        scrollbarWidth: 'none',
       }}
     >
-      <div style={{ padding: '16px 16px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        {/* ── Clock Widget ── */}
-        <AnalogClock />
+      {/* ── Analog Clock ── */}
+      <AnalogClock />
 
-        {/* ── Weather Widget ── */}
-        <WeatherWidget weather={weather} city={location?.city || 'Toronto'} />
+      {/* ── Weather ── */}
+      <WeatherText weather={weather} city={location?.city || 'Toronto'} />
 
-        {/* ── News Widget ── */}
-        <NewsWidget news={news} />
-
-        {/* ── Flappy Bird ── */}
-        <FlappyBirdWidget />
-      </div>
+      {/* ── News ── */}
+      <NewsList news={news} />
     </div>
   );
 }
 
 /* ══════════════════════════════════════════════════════
-   ANALOG CLOCK — Old-school Apple style
+   ANALOG CLOCK — Floating, no card background
    ══════════════════════════════════════════════════════ */
 
 function AnalogClock() {
@@ -123,7 +118,7 @@ function AnalogClock() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const size = 160;
+    const size = 140;
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
@@ -131,55 +126,52 @@ function AnalogClock() {
 
     const cx = size / 2;
     const cy = size / 2;
-    const radius = 68;
+    const radius = 60;
 
     ctx.clearRect(0, 0, size, size);
 
-    // Clock face
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffffff';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Shadow
+    // Clock face — white circle with subtle shadow
     ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.shadowColor = 'rgba(0,0,0,0.12)';
-    ctx.shadowBlur = 20;
+    ctx.shadowColor = 'rgba(0,0,0,0.2)';
+    ctx.shadowBlur = 24;
     ctx.shadowOffsetY = 4;
-    ctx.fillStyle = 'transparent';
+    ctx.fillStyle = '#ffffff';
     ctx.fill();
     ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
 
     // Hour markers
     for (let i = 0; i < 12; i++) {
       const angle = (i * 30 - 90) * (Math.PI / 180);
       const isMain = i % 3 === 0;
-      const innerR = radius - (isMain ? 14 : 10);
-      const outerR = radius - 4;
+      const innerR = radius - (isMain ? 12 : 8);
+      const outerR = radius - 3;
       ctx.beginPath();
       ctx.moveTo(cx + innerR * Math.cos(angle), cy + innerR * Math.sin(angle));
       ctx.lineTo(cx + outerR * Math.cos(angle), cy + outerR * Math.sin(angle));
       ctx.strokeStyle = 'rgba(0,0,0,0.7)';
-      ctx.lineWidth = isMain ? 2.5 : 1;
+      ctx.lineWidth = isMain ? 2.2 : 0.8;
       ctx.lineCap = 'round';
       ctx.stroke();
     }
 
-    // Minute tick marks
+    // Minute ticks
     for (let i = 0; i < 60; i++) {
       if (i % 5 === 0) continue;
       const angle = (i * 6 - 90) * (Math.PI / 180);
-      const innerR = radius - 6;
-      const outerR = radius - 4;
+      const innerR = radius - 5;
+      const outerR = radius - 3;
       ctx.beginPath();
       ctx.moveTo(cx + innerR * Math.cos(angle), cy + innerR * Math.sin(angle));
       ctx.lineTo(cx + outerR * Math.cos(angle), cy + outerR * Math.sin(angle));
-      ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+      ctx.strokeStyle = 'rgba(0,0,0,0.12)';
       ctx.lineWidth = 0.5;
       ctx.stroke();
     }
@@ -191,43 +183,42 @@ function AnalogClock() {
     // Hour hand
     const hAngle = ((hours + minutes / 60) * 30 - 90) * (Math.PI / 180);
     ctx.beginPath();
-    ctx.moveTo(cx - 8 * Math.cos(hAngle), cy - 8 * Math.sin(hAngle));
-    ctx.lineTo(cx + 38 * Math.cos(hAngle), cy + 38 * Math.sin(hAngle));
+    ctx.moveTo(cx - 7 * Math.cos(hAngle), cy - 7 * Math.sin(hAngle));
+    ctx.lineTo(cx + 32 * Math.cos(hAngle), cy + 32 * Math.sin(hAngle));
     ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.stroke();
 
     // Minute hand
     const mAngle = ((minutes + seconds / 60) * 6 - 90) * (Math.PI / 180);
     ctx.beginPath();
-    ctx.moveTo(cx - 8 * Math.cos(mAngle), cy - 8 * Math.sin(mAngle));
-    ctx.lineTo(cx + 52 * Math.cos(mAngle), cy + 52 * Math.sin(mAngle));
+    ctx.moveTo(cx - 7 * Math.cos(mAngle), cy - 7 * Math.sin(mAngle));
+    ctx.lineTo(cx + 46 * Math.cos(mAngle), cy + 46 * Math.sin(mAngle));
     ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     ctx.stroke();
 
-    // Second hand — orange like classic Apple
+    // Second hand — orange
     const sAngle = (seconds * 6 - 90) * (Math.PI / 180);
     ctx.beginPath();
-    ctx.moveTo(cx - 14 * Math.cos(sAngle), cy - 14 * Math.sin(sAngle));
-    ctx.lineTo(cx + 56 * Math.cos(sAngle), cy + 56 * Math.sin(sAngle));
+    ctx.moveTo(cx - 12 * Math.cos(sAngle), cy - 12 * Math.sin(sAngle));
+    ctx.lineTo(cx + 50 * Math.cos(sAngle), cy + 50 * Math.sin(sAngle));
     ctx.strokeStyle = '#FF9500';
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1;
     ctx.lineCap = 'round';
     ctx.stroke();
 
     // Center dot
     ctx.beginPath();
-    ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 3, 0, Math.PI * 2);
     ctx.fillStyle = '#FF9500';
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(cx, cy, 1.5, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 1.2, 0, Math.PI * 2);
     ctx.fillStyle = '#fff';
     ctx.fill();
-
   }, [time]);
 
   const timeStr = time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -235,32 +226,31 @@ function AnalogClock() {
 
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.75)',
-      borderRadius: '16px',
-      padding: '20px',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+      padding: '4px 0',
     }}>
       <canvas
         ref={canvasRef}
-        style={{ width: '160px', height: '160px' }}
+        style={{ width: '140px', height: '140px' }}
       />
       <div style={{
-        marginTop: '12px',
-        fontSize: '28px',
+        marginTop: '10px',
+        fontSize: '26px',
         fontWeight: 300,
-        color: 'rgba(0,0,0,0.85)',
+        color: '#fff',
         letterSpacing: '-0.02em',
         fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+        textShadow: '0 1px 8px rgba(0,0,0,0.3)',
       }}>
         {timeStr}
       </div>
       <div style={{
         fontSize: '13px',
-        color: 'rgba(0,0,0,0.4)',
+        color: 'rgba(255,255,255,0.7)',
         marginTop: '2px',
+        textShadow: '0 1px 4px rgba(0,0,0,0.25)',
       }}>
         {dayStr}
       </div>
@@ -269,122 +259,195 @@ function AnalogClock() {
 }
 
 /* ══════════════════════════════════════════════════════
-   WEATHER WIDGET
+   WEATHER ICON — Apple SF Symbols-style SVG
    ══════════════════════════════════════════════════════ */
 
-function WeatherWidget({ weather, city }: { weather: WeatherData | null; city: string }) {
+function WeatherIcon({ description }: { description: string }) {
+  const d = description.toLowerCase();
+  const s: React.CSSProperties = { filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.2))' };
+
+  // Sun
+  if (d.includes('clear')) return (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style={s}>
+      <circle cx="14" cy="14" r="5.5" stroke="#FFD60A" strokeWidth="1.8" fill="none" />
+      <line x1="14" y1="2" x2="14" y2="5.5" stroke="#FFD60A" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="14" y1="22.5" x2="14" y2="26" stroke="#FFD60A" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="2" y1="14" x2="5.5" y2="14" stroke="#FFD60A" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="22.5" y1="14" x2="26" y2="14" stroke="#FFD60A" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="5.5" y1="5.5" x2="8" y2="8" stroke="#FFD60A" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="20" y1="20" x2="22.5" y2="22.5" stroke="#FFD60A" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="22.5" y1="5.5" x2="20" y2="8" stroke="#FFD60A" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="8" y1="20" x2="5.5" y2="22.5" stroke="#FFD60A" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+
+  // Partly cloudy / mainly clear
+  if (d.includes('partly') || d.includes('mainly')) return (
+    <svg width="32" height="26" viewBox="0 0 32 26" fill="none" style={s}>
+      <circle cx="22" cy="8" r="4.5" stroke="#FFD60A" strokeWidth="1.5" fill="none" />
+      <line x1="22" y1="0.5" x2="22" y2="2.5" stroke="#FFD60A" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="28.5" y1="8" x2="30" y2="8" stroke="#FFD60A" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="26.6" y1="3.4" x2="27.8" y2="2.2" stroke="#FFD60A" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="27.8" y1="13.8" x2="26.6" y2="12.6" stroke="#FFD60A" strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M8 22c-3.3 0-6-2.2-6-5s2.7-5 6-5c.4-3.3 3.4-6 7-6 3.9 0 7 2.9 7 6.5 0 .2 0 .3 0 .5 2.3.5 4 2.4 4 4.5 0 2.5-2.2 4.5-5 4.5H8z" stroke="rgba(255,255,255,0.8)" strokeWidth="1.5" fill="none" />
+    </svg>
+  );
+
+  // Overcast / cloudy
+  if (d.includes('overcast') || d.includes('cloud')) return (
+    <svg width="30" height="22" viewBox="0 0 30 22" fill="none" style={s}>
+      <path d="M7 19c-3.3 0-6-2.2-6-5s2.7-5 6-5c.4-3.3 3.4-6 7-6 3.9 0 7 2.9 7 6.5 0 .2 0 .3 0 .5 2.3.5 4 2.4 4 4.5 0 2.5-2.2 4.5-5 4.5H7z" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5" fill="none" />
+    </svg>
+  );
+
+  // Rain / showers / drizzle
+  if (d.includes('rain') || d.includes('shower') || d.includes('drizzle')) return (
+    <svg width="30" height="28" viewBox="0 0 30 28" fill="none" style={s}>
+      <path d="M7 16c-3.3 0-6-2.2-6-5s2.7-5 6-5c.4-3.3 3.4-6 7-6 3.9 0 7 2.9 7 6.5 0 .2 0 .3 0 .5 2.3.5 4 2.4 4 4.5 0 2.5-2.2 4.5-5 4.5H7z" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5" fill="none" />
+      <line x1="10" y1="20" x2="8" y2="25" stroke="#64D2FF" strokeWidth="1.3" strokeLinecap="round" />
+      <line x1="15" y1="20" x2="13" y2="25" stroke="#64D2FF" strokeWidth="1.3" strokeLinecap="round" />
+      <line x1="20" y1="20" x2="18" y2="25" stroke="#64D2FF" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+
+  // Snow
+  if (d.includes('snow') || d.includes('ice') || d.includes('freezing')) return (
+    <svg width="30" height="28" viewBox="0 0 30 28" fill="none" style={s}>
+      <path d="M7 16c-3.3 0-6-2.2-6-5s2.7-5 6-5c.4-3.3 3.4-6 7-6 3.9 0 7 2.9 7 6.5 0 .2 0 .3 0 .5 2.3.5 4 2.4 4 4.5 0 2.5-2.2 4.5-5 4.5H7z" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5" fill="none" />
+      <circle cx="10" cy="22" r="1.2" fill="#BFF0FF" />
+      <circle cx="15" cy="24" r="1.2" fill="#BFF0FF" />
+      <circle cx="20" cy="21.5" r="1.2" fill="#BFF0FF" />
+    </svg>
+  );
+
+  // Thunderstorm
+  if (d.includes('thunder')) return (
+    <svg width="30" height="28" viewBox="0 0 30 28" fill="none" style={s}>
+      <path d="M7 16c-3.3 0-6-2.2-6-5s2.7-5 6-5c.4-3.3 3.4-6 7-6 3.9 0 7 2.9 7 6.5 0 .2 0 .3 0 .5 2.3.5 4 2.4 4 4.5 0 2.5-2.2 4.5-5 4.5H7z" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5" fill="none" />
+      <path d="M16 18l-3 5h4l-3 5" stroke="#FFD60A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  );
+
+  // Fog
+  if (d.includes('fog')) return (
+    <svg width="30" height="20" viewBox="0 0 30 20" fill="none" style={s}>
+      <line x1="3" y1="5" x2="27" y2="5" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="5" y1="10" x2="25" y2="10" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="3" y1="15" x2="27" y2="15" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+
+  // Fallback — generic cloud
+  return (
+    <svg width="30" height="22" viewBox="0 0 30 22" fill="none" style={s}>
+      <path d="M7 19c-3.3 0-6-2.2-6-5s2.7-5 6-5c.4-3.3 3.4-6 7-6 3.9 0 7 2.9 7 6.5 0 .2 0 .3 0 .5 2.3.5 4 2.4 4 4.5 0 2.5-2.2 4.5-5 4.5H7z" stroke="rgba(255,255,255,0.65)" strokeWidth="1.5" fill="none" />
+    </svg>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   WEATHER — Apple-style floating, no background
+   ══════════════════════════════════════════════════════ */
+
+function WeatherText({ weather, city }: { weather: WeatherData | null; city: string }) {
   if (!weather) {
     return (
       <div style={{
-        background: 'linear-gradient(135deg, #4A90D9 0%, #74B9FF 100%)',
-        borderRadius: '16px',
-        padding: '20px',
-        color: '#fff',
-        minHeight: '80px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        textAlign: 'center',
+        fontSize: '12px',
+        color: 'rgba(255,255,255,0.45)',
+        padding: '4px 0',
+        textShadow: '0 1px 4px rgba(0,0,0,0.2)',
       }}>
-        <div style={{ fontSize: '13px', opacity: 0.7 }}>Loading weather...</div>
+        Loading weather...
       </div>
     );
   }
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #4A90D9 0%, #74B9FF 100%)',
-      borderRadius: '16px',
-      padding: '18px 20px',
-      color: '#fff',
-      position: 'relative',
-      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '0 0 4px',
     }}>
-      {/* Background icon */}
+      {/* Location */}
       <div style={{
-        position: 'absolute',
-        right: '-10px',
-        top: '-10px',
-        fontSize: '100px',
-        opacity: 0.15,
-        lineHeight: 1,
+        fontSize: '13px',
+        fontWeight: 400,
+        color: 'rgba(255,255,255,0.65)',
+        textShadow: '0 1px 4px rgba(0,0,0,0.2)',
+        marginBottom: '4px',
+        fontFamily: "'SF Pro Text', -apple-system, sans-serif",
       }}>
-        {weather.icon}
+        {city}
       </div>
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ fontSize: '12px', fontWeight: 500, opacity: 0.8, marginBottom: '4px' }}>
-              {city}
-            </div>
-            <div style={{
-              fontSize: '48px',
-              fontWeight: 200,
-              lineHeight: 1,
-              letterSpacing: '-0.04em',
-              fontFamily: "'SF Pro Display', -apple-system, sans-serif",
-            }}>
-              {weather.temp}°
-            </div>
-          </div>
-          <div style={{ fontSize: '44px', marginTop: '4px' }}>
-            {weather.icon}
-          </div>
-        </div>
-
-        <div style={{
-          fontSize: '13px',
-          fontWeight: 500,
-          marginTop: '8px',
-          opacity: 0.9,
+      {/* Icon + Temperature row */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+      }}>
+        <WeatherIcon description={weather.description} />
+        <span style={{
+          fontSize: '48px',
+          fontWeight: 200,
+          color: '#fff',
+          lineHeight: 1,
+          letterSpacing: '-0.04em',
+          fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+          textShadow: '0 2px 12px rgba(0,0,0,0.2)',
         }}>
-          {weather.description}
-        </div>
+          {weather.temp}°
+        </span>
+      </div>
 
-        <div style={{
-          display: 'flex',
-          gap: '16px',
-          marginTop: '8px',
-          fontSize: '12px',
-          opacity: 0.7,
-        }}>
-          <span>H:{weather.high}° L:{weather.low}°</span>
-          <span>Feels {weather.feelsLike}°</span>
-          <span>💧 {weather.humidity}%</span>
-        </div>
+      {/* Condition */}
+      <div style={{
+        fontSize: '14px',
+        fontWeight: 400,
+        color: 'rgba(255,255,255,0.75)',
+        marginTop: '6px',
+        textShadow: '0 1px 4px rgba(0,0,0,0.2)',
+        fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+      }}>
+        {weather.description}
+      </div>
+
+      {/* High / Low */}
+      <div style={{
+        display: 'flex',
+        gap: '6px',
+        marginTop: '3px',
+        fontSize: '13px',
+        color: 'rgba(255,255,255,0.5)',
+        textShadow: '0 1px 4px rgba(0,0,0,0.15)',
+        fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+      }}>
+        <span>H:{weather.high}°</span>
+        <span style={{ color: 'rgba(255,255,255,0.25)' }}>|</span>
+        <span>L:{weather.low}°</span>
       </div>
     </div>
   );
 }
 
 /* ══════════════════════════════════════════════════════
-   NEWS WIDGET
+   NEWS — Floating list, no card background
    ══════════════════════════════════════════════════════ */
 
-function NewsWidget({ news }: { news: NewsItem[] }) {
+function NewsList({ news }: { news: NewsItem[] }) {
   if (news.length === 0) {
     return (
       <div style={{
-        background: 'rgba(255,255,255,0.75)',
-        borderRadius: '16px',
-        padding: '20px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        textAlign: 'center',
+        fontSize: '12px',
+        color: 'rgba(255,255,255,0.4)',
+        padding: '8px 0',
+        textShadow: '0 1px 4px rgba(0,0,0,0.2)',
       }}>
-        <div style={{
-          fontSize: '14px',
-          fontWeight: 600,
-          color: '#FF3B30',
-          marginBottom: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-        }}>
-          <span style={{ fontSize: '16px' }}>📰</span>
-          Top Stories
-        </div>
-        <div style={{ fontSize: '13px', color: 'rgba(0,0,0,0.35)', textAlign: 'center', padding: '12px 0' }}>
-          Loading news...
-        </div>
+        Loading news...
       </div>
     );
   }
@@ -400,23 +463,17 @@ function NewsWidget({ news }: { news: NewsItem[] }) {
   };
 
   return (
-    <div style={{
-      background: 'rgba(255,255,255,0.75)',
-      borderRadius: '16px',
-      padding: '16px 0',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-    }}>
+    <div style={{ padding: '0' }}>
       <div style={{
-        fontSize: '14px',
+        fontSize: '11px',
         fontWeight: 600,
-        color: '#FF3B30',
-        marginBottom: '10px',
-        padding: '0 18px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
+        color: 'rgba(255,255,255,0.5)',
+        letterSpacing: '0.06em',
+        textTransform: 'uppercase',
+        marginBottom: '8px',
+        padding: '0 4px',
+        textShadow: '0 1px 4px rgba(0,0,0,0.2)',
       }}>
-        <span style={{ fontSize: '16px' }}>📰</span>
         Top Stories
       </div>
 
@@ -428,382 +485,43 @@ function NewsWidget({ news }: { news: NewsItem[] }) {
           rel="noopener noreferrer"
           style={{
             display: 'block',
-            padding: '8px 18px',
+            padding: '7px 4px',
             textDecoration: 'none',
             color: 'inherit',
-            borderTop: i > 0 ? '0.5px solid rgba(0,0,0,0.06)' : 'none',
-            transition: 'background 0.1s',
+            borderTop: i > 0 ? '0.5px solid rgba(255,255,255,0.08)' : 'none',
+            borderRadius: '6px',
+            transition: 'background 0.15s',
           }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.03)'}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
           <div style={{
-            fontSize: '11px',
-            color: 'rgba(0,0,0,0.35)',
+            fontSize: '10px',
+            color: 'rgba(255,255,255,0.4)',
             fontWeight: 500,
-            marginBottom: '3px',
+            marginBottom: '2px',
             display: 'flex',
             justifyContent: 'space-between',
+            textShadow: '0 1px 3px rgba(0,0,0,0.2)',
           }}>
             <span>{item.source}</span>
             <span>{timeAgo(item.pubDate)}</span>
           </div>
           <div style={{
-            fontSize: '13px',
+            fontSize: '12.5px',
             fontWeight: 500,
-            color: 'rgba(0,0,0,0.8)',
+            color: 'rgba(255,255,255,0.85)',
             lineHeight: 1.35,
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
+            textShadow: '0 1px 4px rgba(0,0,0,0.25)',
           }}>
             {item.title}
           </div>
         </a>
       ))}
-    </div>
-  );
-}
-
-/* ══════════════════════════════════════════════════════
-   FLAPPY BIRD — Apple Edition
-   ══════════════════════════════════════════════════════ */
-
-function FlappyBirdWidget() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const gameRef = useRef<{
-    bird: { y: number; vy: number; rotation: number };
-    pipes: { x: number; gapY: number }[];
-    score: number;
-    bestScore: number;
-    state: 'idle' | 'playing' | 'dead';
-    frame: number;
-    animId: number;
-  }>({
-    bird: { y: 120, vy: 0, rotation: 0 },
-    pipes: [],
-    score: 0,
-    bestScore: 0,
-    state: 'idle',
-    frame: 0,
-    animId: 0,
-  });
-  const [score, setScore] = useState(0);
-  const [bestScore, setBestScore] = useState(0);
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'dead'>('idle');
-
-  const W = 328;
-  const H = 200;
-  const BIRD_SIZE = 16;
-  const GRAVITY = 0.35;
-  const FLAP = -5.2;
-  const PIPE_W = 38;
-  const GAP = 62;
-  const PIPE_SPEED = 1.8;
-
-  const resetGame = useCallback(() => {
-    const g = gameRef.current;
-    g.bird = { y: H / 2 - 10, vy: 0, rotation: 0 };
-    g.pipes = [];
-    g.score = 0;
-    g.frame = 0;
-    g.state = 'playing';
-    setScore(0);
-    setGameState('playing');
-  }, []);
-
-  const flap = useCallback(() => {
-    const g = gameRef.current;
-    if (g.state === 'idle') {
-      resetGame();
-      g.bird.vy = FLAP;
-      return;
-    }
-    if (g.state === 'dead') {
-      resetGame();
-      return;
-    }
-    if (g.state === 'playing') {
-      g.bird.vy = FLAP;
-    }
-  }, [resetGame]);
-
-  // Game loop
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
-    ctx.scale(dpr, dpr);
-
-    const drawFrame = () => {
-      const g = gameRef.current;
-      ctx.clearRect(0, 0, W, H);
-
-      // Background — soft gradient like Apple's style
-      const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
-      bgGrad.addColorStop(0, '#E8F4FD');
-      bgGrad.addColorStop(0.6, '#D4ECFA');
-      bgGrad.addColorStop(1, '#C5E1A5');
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, W, H);
-
-      // Ground
-      ctx.fillStyle = '#8BC34A';
-      ctx.fillRect(0, H - 16, W, 16);
-      ctx.fillStyle = '#7CB342';
-      ctx.fillRect(0, H - 16, W, 3);
-
-      if (g.state === 'playing') {
-        g.frame++;
-
-        // Bird physics
-        g.bird.vy += GRAVITY;
-        g.bird.y += g.bird.vy;
-        g.bird.rotation = Math.min(Math.max(g.bird.vy * 3, -25), 70);
-
-        // Spawn pipes
-        if (g.frame % 90 === 0) {
-          const gapY = 40 + Math.random() * (H - GAP - 56);
-          g.pipes.push({ x: W + 10, gapY });
-        }
-
-        // Move pipes
-        for (const p of g.pipes) {
-          p.x -= PIPE_SPEED;
-        }
-
-        // Score
-        for (const p of g.pipes) {
-          if (Math.abs(p.x + PIPE_W / 2 - 50) < PIPE_SPEED) {
-            g.score++;
-            setScore(g.score);
-          }
-        }
-
-        // Remove off-screen pipes
-        g.pipes = g.pipes.filter(p => p.x > -PIPE_W - 10);
-
-        // Collision
-        const bx = 50;
-        const by = g.bird.y;
-        const br = BIRD_SIZE / 2 - 2;
-
-        if (by - br < 0 || by + br > H - 16) {
-          g.state = 'dead';
-          if (g.score > g.bestScore) {
-            g.bestScore = g.score;
-            setBestScore(g.score);
-          }
-          setGameState('dead');
-        }
-
-        for (const p of g.pipes) {
-          if (bx + br > p.x && bx - br < p.x + PIPE_W) {
-            if (by - br < p.gapY || by + br > p.gapY + GAP) {
-              g.state = 'dead';
-              if (g.score > g.bestScore) {
-                g.bestScore = g.score;
-                setBestScore(g.score);
-              }
-              setGameState('dead');
-            }
-          }
-        }
-      }
-
-      // Draw pipes — Apple-style frosted rounded
-      for (const p of g.pipes) {
-        // Top pipe
-        const topH = p.gapY;
-        const pipeGrad = ctx.createLinearGradient(p.x, 0, p.x + PIPE_W, 0);
-        pipeGrad.addColorStop(0, '#7C8B9A');
-        pipeGrad.addColorStop(0.3, '#96A5B4');
-        pipeGrad.addColorStop(0.7, '#96A5B4');
-        pipeGrad.addColorStop(1, '#7C8B9A');
-
-        // Top pipe body
-        ctx.beginPath();
-        ctx.roundRect(p.x, -4, PIPE_W, topH + 4, [0, 0, 6, 6]);
-        ctx.fillStyle = pipeGrad;
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Top pipe cap
-        ctx.beginPath();
-        ctx.roundRect(p.x - 3, topH - 10, PIPE_W + 6, 10, [3, 3, 3, 3]);
-        ctx.fillStyle = '#8A99A8';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-        ctx.stroke();
-
-        // Bottom pipe body
-        const bottomY = p.gapY + GAP;
-        ctx.beginPath();
-        ctx.roundRect(p.x, bottomY, PIPE_W, H - bottomY + 4, [6, 6, 0, 0]);
-        ctx.fillStyle = pipeGrad;
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-        ctx.stroke();
-
-        // Bottom pipe cap
-        ctx.beginPath();
-        ctx.roundRect(p.x - 3, bottomY, PIPE_W + 6, 10, [3, 3, 3, 3]);
-        ctx.fillStyle = '#8A99A8';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-        ctx.stroke();
-      }
-
-      // Draw bird — Apple logo-inspired rounded shape
-      const bx = 50;
-      const by = g.state === 'idle'
-        ? H / 2 - 10 + Math.sin(Date.now() / 300) * 6
-        : gameRef.current.bird.y;
-
-      ctx.save();
-      ctx.translate(bx, by);
-      const rot = g.state === 'playing' || g.state === 'dead' ? g.bird.rotation : 0;
-      ctx.rotate((rot * Math.PI) / 180);
-
-      // Body — SF-inspired rounded rectangle bird
-      ctx.beginPath();
-      ctx.roundRect(-BIRD_SIZE / 2, -BIRD_SIZE / 2 + 1, BIRD_SIZE, BIRD_SIZE - 2, [BIRD_SIZE / 3]);
-      const birdGrad = ctx.createLinearGradient(0, -BIRD_SIZE / 2, 0, BIRD_SIZE / 2);
-      birdGrad.addColorStop(0, '#FF9500');
-      birdGrad.addColorStop(1, '#FF6B00');
-      ctx.fillStyle = birdGrad;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.12)';
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
-
-      // Eye
-      ctx.beginPath();
-      ctx.arc(3, -2, 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#fff';
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(3.5, -2, 1.2, 0, Math.PI * 2);
-      ctx.fillStyle = '#1d1d1f';
-      ctx.fill();
-
-      // Beak
-      ctx.beginPath();
-      ctx.moveTo(BIRD_SIZE / 2, -1);
-      ctx.lineTo(BIRD_SIZE / 2 + 5, 1.5);
-      ctx.lineTo(BIRD_SIZE / 2, 4);
-      ctx.closePath();
-      ctx.fillStyle = '#FFCC02';
-      ctx.fill();
-
-      // Wing
-      ctx.beginPath();
-      const wingY = g.state === 'playing' ? (g.bird.vy < 0 ? -4 : 2) : Math.sin(Date.now() / 150) * 2;
-      ctx.ellipse(-2, wingY, 5, 3.5, -0.3, 0, Math.PI * 2);
-      ctx.fillStyle = '#E8850A';
-      ctx.fill();
-
-      ctx.restore();
-
-      // Score display during play
-      if (g.state === 'playing') {
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        ctx.font = "bold 28px 'SF Pro Display', -apple-system, sans-serif";
-        ctx.textAlign = 'center';
-        ctx.shadowColor = 'rgba(0,0,0,0.15)';
-        ctx.shadowBlur = 6;
-        ctx.fillText(String(g.score), W / 2, 36);
-        ctx.shadowBlur = 0;
-      }
-
-      // Idle overlay
-      if (g.state === 'idle') {
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.font = "600 15px 'SF Pro Text', -apple-system, sans-serif";
-        ctx.textAlign = 'center';
-        ctx.fillText('Tap to Play', W / 2, H / 2 + 36);
-        ctx.font = "400 11px 'SF Pro Text', -apple-system, sans-serif";
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.fillText('Flappy Bird · Apple Edition', W / 2, H / 2 + 52);
-      }
-
-      // Death overlay
-      if (g.state === 'dead') {
-        ctx.fillStyle = 'rgba(255,255,255,0.6)';
-        ctx.fillRect(0, 0, W, H);
-
-        ctx.fillStyle = 'rgba(0,0,0,0.75)';
-        ctx.font = "700 22px 'SF Pro Display', -apple-system, sans-serif";
-        ctx.textAlign = 'center';
-        ctx.fillText('Game Over', W / 2, H / 2 - 18);
-
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.font = "500 14px 'SF Pro Text', -apple-system, sans-serif";
-        ctx.fillText(`Score: ${g.score}`, W / 2, H / 2 + 6);
-
-        ctx.fillStyle = 'rgba(0,0,0,0.35)';
-        ctx.font = "400 12px 'SF Pro Text', -apple-system, sans-serif";
-        ctx.fillText(`Best: ${g.bestScore}`, W / 2, H / 2 + 24);
-
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.font = "400 11px 'SF Pro Text', -apple-system, sans-serif";
-        ctx.fillText('Tap to retry', W / 2, H / 2 + 46);
-      }
-
-      g.animId = requestAnimationFrame(drawFrame);
-    };
-
-    const id = requestAnimationFrame(drawFrame);
-    return () => cancelAnimationFrame(gameRef.current.animId || id);
-  }, []);
-
-  return (
-    <div style={{
-      background: 'rgba(255,255,255,0.75)',
-      borderRadius: '16px',
-      overflow: 'hidden',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-    }}>
-      <div style={{
-        padding: '10px 16px 8px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
-        <div style={{
-          fontSize: '13px',
-          fontWeight: 600,
-          color: 'rgba(0,0,0,0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-        }}>
-          <span style={{ fontSize: '14px' }}>🐦</span>
-          Flappy Bird
-        </div>
-        <div style={{ fontSize: '11px', color: 'rgba(0,0,0,0.35)' }}>
-          Best: {bestScore}
-        </div>
-      </div>
-      <canvas
-        ref={canvasRef}
-        onClick={flap}
-        style={{
-          width: `${W}px`,
-          height: `${H}px`,
-          display: 'block',
-          cursor: 'pointer',
-          borderRadius: '0 0 16px 16px',
-        }}
-      />
     </div>
   );
 }
