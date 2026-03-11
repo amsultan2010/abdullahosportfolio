@@ -217,10 +217,10 @@ const barItem: React.CSSProperties = {
 
 const panelStyle: React.CSSProperties = {
   position: 'absolute', top: '28px', minWidth: '220px', padding: '4px 0',
-  background: 'rgba(246, 246, 246, 0.92)',
-  backdropFilter: 'saturate(180%) blur(40px)', WebkitBackdropFilter: 'saturate(180%) blur(40px)',
-  borderRadius: '6px', border: '0.5px solid rgba(0,0,0,0.15)',
-  boxShadow: '0 10px 40px rgba(0,0,0,0.18), 0 0 1px rgba(0,0,0,0.12)',
+  background: 'rgba(244, 244, 244, 0.72)',
+  backdropFilter: 'saturate(200%) blur(50px)', WebkitBackdropFilter: 'saturate(200%) blur(50px)',
+  borderRadius: '10px', border: '0.5px solid rgba(0,0,0,0.12)',
+  boxShadow: '0 12px 48px rgba(0,0,0,0.2), 0 0 0 0.5px rgba(0,0,0,0.06), inset 0 0.5px 0 rgba(255,255,255,0.6)',
   zIndex: 10000,
   color: 'rgba(0,0,0,0.85)',
 };
@@ -313,7 +313,7 @@ function WifiPanel({ location }: { location: LocationData | null }) {
     <div style={{ padding: '4px 0', minWidth: '280px' }}>
       {/* Wi-Fi header with blue toggle */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 14px 10px' }}>
-        <span style={{ fontWeight: 600, fontSize: '14px', color: 'rgba(0,0,0,0.85)' }}>Wi-Fi</span>
+        <span style={{ fontWeight: 700, fontSize: '13px', color: 'rgba(0,0,0,0.85)' }}>Wi-Fi</span>
         <div style={{ width: '38px', height: '22px', borderRadius: '11px', background: '#007aff', position: 'relative', cursor: 'default' }}>
           <div style={{
             width: '18px', height: '18px', borderRadius: '50%', background: 'white',
@@ -325,9 +325,30 @@ function WifiPanel({ location }: { location: LocationData | null }) {
 
       <DropDivider />
 
+      {/* Personal Hotspot */}
+      <div style={{ padding: '8px 14px 4px' }}>
+        <span style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(0,0,0,0.4)', letterSpacing: '0.02em' }}>Personal Hotspot</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '4px 14px 8px' }}>
+        <div style={{
+          width: '28px', height: '28px', borderRadius: '50%', background: '#34c759',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="17" r="2" fill="white" />
+            <path d="M8 14a5.5 5.5 0 018 0" stroke="white" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+            <path d="M5 11a9.5 9.5 0 0114 0" stroke="white" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+          </svg>
+        </div>
+        <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(0,0,0,0.85)', flex: 1 }}>Ronniel's iPhone</span>
+        <span style={{ fontSize: '11px', color: 'rgba(0,0,0,0.35)' }}>5G</span>
+      </div>
+
+      <DropDivider />
+
       {/* Known Network - Connected */}
       <div style={{ padding: '8px 14px 4px' }}>
-        <span style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(0,0,0,0.35)', letterSpacing: '0.02em' }}>Known Network</span>
+        <span style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(0,0,0,0.4)', letterSpacing: '0.02em' }}>Known Network</span>
       </div>
 
       <div style={{ padding: '4px 14px 4px' }}>
@@ -364,7 +385,7 @@ function WifiPanel({ location }: { location: LocationData | null }) {
 
       {/* Known Networks - Places visited */}
       <div style={{ padding: '8px 14px 4px' }}>
-        <span style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(0,0,0,0.35)', letterSpacing: '0.02em' }}>Known Networks</span>
+        <span style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(0,0,0,0.4)', letterSpacing: '0.02em' }}>Known Networks</span>
       </div>
 
       {[

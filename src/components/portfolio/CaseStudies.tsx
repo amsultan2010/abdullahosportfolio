@@ -305,7 +305,13 @@ function ScrollModeFallback({ sectionRef, titleAnimated, cardAnimated, onContent
   onContentClick?: (content: ContentViewData) => void;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const hasInteracted = useRef(false);
   const paper = researchPapers[activeIndex];
+
+  const switchPaper = (indexOrUpdater: number | ((prev: number) => number)) => {
+    hasInteracted.current = true;
+    setActiveIndex(indexOrUpdater);
+  };
 
   const handleCardClick = () => {
     const data = contentMap[paper.slug];
@@ -337,7 +343,7 @@ function ScrollModeFallback({ sectionRef, titleAnimated, cardAnimated, onContent
           className={`cs-carousel glass-cs-carousel ${cardAnimated ? 'animated' : ''}`}
         >
           <div onClick={handleCardClick} style={{ cursor: 'pointer', padding: '2rem 3rem' }} className="cs-carousel-inner">
-            <div key={paper.slug} style={{ animation: 'csFadeSlide 0.4s ease-out forwards' }}>
+            <div key={paper.slug} style={hasInteracted.current ? { animation: 'csFadeSlide 0.4s ease-out forwards' } : undefined}>
               <div style={{ marginBottom: '1rem', height: '28px', display: 'flex', alignItems: 'center' }}>
                 {paper.company === 'IKIGAI'
                   ? <img src="/ikigai.png" alt="Ikigai" style={{ height: 40, width: 'auto', opacity: 0.85, marginLeft: '-2px' }} />
@@ -374,7 +380,7 @@ function ScrollModeFallback({ sectionRef, titleAnimated, cardAnimated, onContent
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', paddingBottom: '1rem' }}>
             {researchPapers.map((_, i) => (
-              <button key={i} onClick={(e) => { e.stopPropagation(); setActiveIndex(i); }} style={{
+              <button key={i} onClick={(e) => { e.stopPropagation(); switchPaper(i); }} style={{
                 width: activeIndex === i ? '20px' : '6px', height: '6px', borderRadius: '3px',
                 background: activeIndex === i ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.15)',
                 border: 'none', padding: 0, cursor: 'pointer', transition: 'all 0.3s ease',
@@ -383,13 +389,13 @@ function ScrollModeFallback({ sectionRef, titleAnimated, cardAnimated, onContent
           </div>
         </div>
 
-        <button onClick={(e) => { e.stopPropagation(); setActiveIndex(p => p === 0 ? researchPapers.length - 1 : p - 1); }}
+        <button onClick={(e) => { e.stopPropagation(); switchPaper(p => p === 0 ? researchPapers.length - 1 : p - 1); }}
           className="cs-nav-btn cs-nav-prev" aria-label="Previous paper">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <button onClick={(e) => { e.stopPropagation(); setActiveIndex(p => p === researchPapers.length - 1 ? 0 : p + 1); }}
+        <button onClick={(e) => { e.stopPropagation(); switchPaper(p => p === researchPapers.length - 1 ? 0 : p + 1); }}
           className="cs-nav-btn cs-nav-next" aria-label="Next paper">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 6 15 12 9 18" />

@@ -609,7 +609,7 @@ export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
         }
         @keyframes courseSubTextLightUp {
           0% { color: rgba(255, 255, 255, 0.1); }
-          100% { color: rgba(255, 255, 255, 0.65); }
+          100% { color: rgba(255, 255, 255, 0.88); }
         }
         @keyframes sectionFadeIn {
           0% { opacity: 0.1; transform: translateY(8px); }
@@ -630,7 +630,7 @@ export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
             {detail.institution}
           </h2>
           {detail.gpa && (
-            <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', margin: '0.25rem 0 0', fontSize: '0.95rem' }}>
+            <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.88)', margin: '0.25rem 0 0', fontSize: '0.95rem' }}>
               GPA: {detail.gpa}
             </p>
           )}
@@ -734,7 +734,7 @@ export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
           {detail.reflection.split('\n\n').map((para, i) => (
             <p key={i} style={{
               fontFamily: 'NeueMontreal-Light, sans-serif',
-              color: 'rgba(255,255,255,0.75)',
+              color: 'rgba(255,255,255,0.92)',
               fontSize: '0.9rem',
               lineHeight: '1.7',
               margin: i === 0 ? 0 : '1rem 0 0',
@@ -803,14 +803,14 @@ const MultiRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =>
         <div style={{ marginBottom: '2rem', transition: 'opacity 0.5s ease', opacity: allUnlocked ? 1 : 0.7 }}>
           <h3 style={{
             ...sectionTitleStyle,
-            color: allUnlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
+            color: allUnlocked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)',
             transition: 'color 0.5s ease'
           }}>Reflection</h3>
           {allReflections.flatMap((r, ri) =>
             r.split('\n\n').map((para, pi) => (
               <p key={`${ri}-${pi}`} style={{
                 fontFamily: 'NeueMontreal-Light, sans-serif',
-                color: allUnlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)',
+                color: allUnlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.6)',
                 fontSize: '0.9rem',
                 lineHeight: '1.7',
                 margin: (ri === 0 && pi === 0) ? 0 : '1rem 0 0',
@@ -828,7 +828,7 @@ const MultiRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =>
         <div style={{ marginBottom: '1.5rem', transition: 'opacity 0.5s ease', opacity: allUnlocked ? 1 : 0.7 }}>
           <h3 style={{
             ...sectionTitleStyle,
-            color: allUnlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
+            color: allUnlocked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)',
             transition: 'color 0.5s ease'
           }}>Skills Learned</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -857,7 +857,7 @@ const MultiRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =>
         <div style={{ transition: 'opacity 0.5s ease', opacity: allUnlocked ? 1 : 0.7 }}>
           <h3 style={{
             ...sectionTitleStyle,
-            color: allUnlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
+            color: allUnlocked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)',
             transition: 'color 0.5s ease'
           }}>Tech Stack</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -1170,13 +1170,13 @@ const SingleRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =
         <div style={{ marginBottom: '2rem', transition: 'opacity 0.5s ease', opacity: unlocked ? 1 : 0.7 }}>
           <h3 style={{
             ...sectionTitleStyle,
-            color: unlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
+            color: unlocked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)',
             transition: 'color 0.5s ease'
           }}>Reflection</h3>
           {detail.reflection.split('\n\n').map((para, i) => (
             <p key={i} style={{
               fontFamily: 'NeueMontreal-Light, sans-serif',
-              color: unlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)',
+              color: unlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.6)',
               fontSize: '0.9rem',
               lineHeight: '1.7',
               margin: i === 0 ? 0 : '1rem 0 0',
@@ -1466,7 +1466,7 @@ const ProjectContent = ({ detail }: { detail: ProjectDetail }) => {
 const sectionTitleStyle: React.CSSProperties = {
   fontFamily: 'NeueMontreal-Medium, sans-serif',
   fontSize: '1rem',
-  color: 'rgba(255, 255, 255, 0.5)',
+  color: 'rgba(255, 255, 255, 0.85)',
   textTransform: 'uppercase',
   letterSpacing: '0.08em',
   margin: '0 0 1rem',
@@ -1495,7 +1495,7 @@ const tagStyle: React.CSSProperties = {
 
 const listStyle: React.CSSProperties = {
   fontFamily: 'NeueMontreal-Light, sans-serif',
-  color: 'rgba(255, 255, 255, 0.6)',
+  color: 'rgba(255, 255, 255, 0.9)',
   fontSize: '0.9rem',
   lineHeight: '1.7',
   margin: 0,

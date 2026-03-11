@@ -434,9 +434,8 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
                         // README opens the rich project view tab
                         openFile(idx, file);
                       } else {
-                        // All other files open on GitHub directly
-                        const slug = repoSlug(proj.repoUrl);
-                        window.open(`https://github.com/${slug}/blob/main/${file}`, '_blank');
+                        // All other files open the GitHub repo directly
+                        window.open(proj.repoUrl, '_blank');
                       }
                     };
 

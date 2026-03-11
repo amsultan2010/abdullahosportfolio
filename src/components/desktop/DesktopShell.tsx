@@ -1112,7 +1112,7 @@ function Desktop() {
     }
   }, [dispatch]);
 
-  // Terminal slide-over: when Education or Experience opens, slide terminal left (keep same size)
+  // Terminal slide-over: when Education or Experience opens, shrink 20% and slide to middle-left
   useEffect(() => {
     const terminal = state.windows['terminal'];
     if (!terminal || terminal.isMinimized || !terminal.isOpen || terminal.isFullscreen) return;
@@ -1128,23 +1128,27 @@ function Desktop() {
     const menuBarH = 28;
     const dockH = 72;
     const gap = 10;
+    const usableH = screenH - menuBarH - dockH;
 
     if (openSideWindow) {
       const sideWin = state.windows[openSideWindow]!;
 
-      // Terminal keeps its normal size — just slides to the left edge
+      // Terminal shrinks 20% and goes to middle-left
+      const termW = Math.round(800 * 0.8);   // 640
+      const termH = Math.round(500 * 0.8);   // 400
       const termX = gap;
-      const termY = menuBarH + gap;
+      const termY = menuBarH + Math.round((usableH - termH) / 2); // vertically centered
 
-      // Only move if not already positioned there
-      if (Math.abs(terminal.position.x - termX) > 10) {
+      // Only move/resize if not already positioned there
+      if (Math.abs(terminal.position.x - termX) > 10 || Math.abs(terminal.size.width - termW) > 10) {
+        dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: { width: termW, height: termH } });
         dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: termX, y: termY } });
       }
 
       // Side window goes to the right of the terminal
-      const sideW = Math.min(sideWin.size.width, screenW - terminal.size.width - gap * 3);
-      const sideH = screenH - menuBarH - dockH - gap * 2;
-      const sideX = terminal.size.width + gap * 2;
+      const sideW = Math.min(sideWin.size.width, screenW - termW - gap * 3);
+      const sideH = usableH - gap * 2;
+      const sideX = termW + gap * 2;
       const sideY = menuBarH + gap;
 
       if (Math.abs(sideWin.position.x - sideX) > 10 || Math.abs(sideWin.size.height - sideH) > 20) {
@@ -1152,12 +1156,16 @@ function Desktop() {
         dispatch({ type: 'MOVE_WINDOW', id: openSideWindow, position: { x: sideX, y: sideY } });
       }
     } else {
-      // Restore terminal to center if no side windows are open
+      // Restore terminal to original size and center if no side windows are open
       const defaults = { width: 800, height: 500 };
       const centerX = Math.max(0, Math.round((screenW - defaults.width) / 2));
       const centerY = Math.max(28, Math.round((screenH - defaults.height) / 2));
 
-      if (terminal.position.x < 30 && Math.abs(terminal.position.x - centerX) > 30) {
+      const needsRestore = terminal.position.x < 30 && Math.abs(terminal.position.x - centerX) > 30;
+      const needsResize = terminal.size.width < defaults.width - 10;
+
+      if (needsRestore || needsResize) {
+        dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: defaults });
         dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: centerX, y: centerY } });
       }
     }

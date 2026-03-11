@@ -240,7 +240,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
                   </p>
                   <p style={{
                     fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)',
-                    color: darkMode ? 'rgba(255, 255, 255, 0.45)' : '#86868b',
+                    color: darkMode ? 'rgba(255, 255, 255, 0.7)' : '#86868b',
                     fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
                     margin: '0.1rem 0 0',
                     fontWeight: '400',
@@ -252,7 +252,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
                   {r.description && (
                     <p style={{
                       fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
-                      color: darkMode ? 'rgba(255, 255, 255, 0.6)' : '#424245',
+                      color: darkMode ? 'rgba(255, 255, 255, 0.85)' : '#424245',
                       fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
                       margin: '0.4rem 0 0',
                       fontWeight: '400',
@@ -272,7 +272,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
           <>
             <p style={{
               fontSize: 'clamp(0.95rem, 2.3vw, 1.15rem)',
-              color: darkMode ? 'rgba(255, 255, 255, 0.8)' : '#424245',
+              color: darkMode ? 'rgba(255, 255, 255, 0.92)' : '#424245',
               fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
               margin: 0,
               fontWeight: '500',
@@ -289,7 +289,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
             {experience.date && (
               <p style={{
                 fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
-                color: darkMode ? 'rgba(255, 255, 255, 0.45)' : '#86868b',
+                color: darkMode ? 'rgba(255, 255, 255, 0.7)' : '#86868b',
                 fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
                 margin: '0.15rem 0 0',
                 fontWeight: '400',
@@ -303,7 +303,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
             {/* Location */}
             <p style={{
               fontSize: 'clamp(0.9rem, 2.2vw, 1rem)',
-              color: darkMode ? 'rgba(255, 255, 255, 0.45)' : '#86868b',
+              color: darkMode ? 'rgba(255, 255, 255, 0.7)' : '#86868b',
               fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
               margin: 0,
               fontWeight: '400',
@@ -319,7 +319,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
             {/* Description */}
             <p style={{
               fontSize: 'clamp(0.95rem, 2.3vw, 1.1rem)',
-              color: darkMode ? 'rgba(255, 255, 255, 0.6)' : '#424245',
+              color: darkMode ? 'rgba(255, 255, 255, 0.88)' : '#424245',
               fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
               lineHeight: '1.6',
               margin: 0,
