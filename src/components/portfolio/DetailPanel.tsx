@@ -154,22 +154,34 @@ const DetailPanel = ({ detail, onClose, windowMode }: DetailPanelProps) => {
     return (
       <div
         ref={panelRef}
-        style={{ overflowY: 'auto', height: '100%', padding: '1.5rem 2rem' }}
+        style={{ overflowY: 'auto', height: '100%' }}
+        className="detail-panel-window"
       >
-        {detail.type === 'project' && hasVideo && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <video
-              autoPlay loop muted playsInline
-              style={{ width: '100%', borderRadius: '12px', objectFit: 'contain', border: '0.5px solid rgba(255,255,255,0.1)' }}
-            >
-              <source src={(detail as ProjectDetail).demoVideo} type="video/quicktime" />
-              <source src={(detail as ProjectDetail).demoVideo} type="video/mp4" />
-            </video>
+        <div style={{ padding: '1rem', maxWidth: '100ch', margin: '0 auto' }}>
+          <div style={{
+            background: 'rgba(20, 20, 20, 0.5)',
+            border: '0.5px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '8px',
+            overflow: 'hidden',
+          }}>
+            <div style={{ padding: 'clamp(1.5rem, 3vw, 2.5rem)' }}>
+              {detail.type === 'project' && hasVideo && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <video
+                    autoPlay loop muted playsInline
+                    style={{ width: '100%', borderRadius: '12px', objectFit: 'contain', border: '0.5px solid rgba(255,255,255,0.1)' }}
+                  >
+                    <source src={(detail as ProjectDetail).demoVideo} type="video/quicktime" />
+                    <source src={(detail as ProjectDetail).demoVideo} type="video/mp4" />
+                  </video>
+                </div>
+              )}
+              {detail.type === 'education' && <EducationContent detail={detail} />}
+              {detail.type === 'experience' && <ExperienceContent detail={detail} />}
+              {detail.type === 'project' && <ProjectContent detail={detail} />}
+            </div>
           </div>
-        )}
-        {detail.type === 'education' && <EducationContent detail={detail} />}
-        {detail.type === 'experience' && <ExperienceContent detail={detail} />}
-        {detail.type === 'project' && <ProjectContent detail={detail} />}
+        </div>
         <style>{`
           @keyframes sectionFadeIn {
             from { opacity: 0.1; transform: translateY(6px); }

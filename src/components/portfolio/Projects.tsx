@@ -167,8 +167,6 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
     if (!openTabs.includes(idx)) {
       setOpenTabs(prev => [...prev, idx]);
     }
-    // Auto-expand folder
-    setExpandedFolders(prev => ({ ...prev, [idx]: true }));
   };
 
   const closeTab = (idx: number, e: React.MouseEvent) => {
@@ -289,7 +287,16 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
                 <div key={proj.id}>
                   {/* Folder row */}
                   <div
-                    onClick={() => { toggleFolder(idx); selectProject(idx); }}
+                    onClick={() => {
+                      if (selectedProject === idx && expandedFolders[idx]) {
+                        // Already selected + expanded: just collapse
+                        setExpandedFolders(prev => ({ ...prev, [idx]: false }));
+                      } else {
+                        // Select + expand
+                        setExpandedFolders(prev => ({ ...prev, [idx]: true }));
+                        selectProject(idx);
+                      }
+                    }}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -460,8 +467,28 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
           >
             {/* Render README content */}
             <div className="vsc-readme">
-              {/* Cover image */}
-              {detail.coverImage && (
+              {/* Demo video */}
+              {detail.demoVideo && (
+                <div style={{
+                  width: '100%',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  marginBottom: '24px',
+                  background: '#000',
+                  border: '1px solid #333',
+                }}>
+                  <video
+                    autoPlay loop muted playsInline
+                    style={{ width: '100%', display: 'block', borderRadius: '8px' }}
+                  >
+                    <source src={detail.demoVideo} type="video/mp4" />
+                    <source src={detail.demoVideo} type="video/quicktime" />
+                  </video>
+                </div>
+              )}
+
+              {/* Cover image (show only when no video) */}
+              {!detail.demoVideo && detail.coverImage && (
                 <div style={{
                   width: '100%',
                   height: '180px',

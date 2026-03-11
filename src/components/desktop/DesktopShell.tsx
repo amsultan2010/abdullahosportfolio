@@ -272,7 +272,7 @@ function TerminalContent() {
         height: '100%',
         overflowY: 'auto',
         cursor: 'text',
-        background: 'rgba(30, 30, 30, 0.88)',
+        background: 'rgba(15, 15, 20, 0.72)',
         borderRadius: '0 0 12px 12px',
       }}
     >
@@ -508,73 +508,335 @@ function Desktop() {
 }
 
 function MobileLayout() {
+  const [history, setHistory] = useState<TerminalLine[]>([]);
+  const [input, setInput] = useState('');
+  const [cmdHistory, setCmdHistory] = useState<string[]>([]);
+  const [historyIdx, setHistoryIdx] = useState(-1);
+  const [introDone, setIntroDone] = useState(false);
+  const [introText, setIntroText] = useState('');
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  const mobileCommands: Record<string, { desc: string; href?: string; action?: string }> = {
+    'github':    { desc: 'View my GitHub profile', href: 'https://github.com/ronnielgandhe' },
+    'email':     { desc: 'Send me an email', href: 'mailto:ronnielgandhe@gmail.com' },
+    'calendar':  { desc: 'Book a meeting with me', href: 'https://calendly.com/ronnielgandhe' },
+    'spotify':   { desc: 'Listen to my dev playlist', href: 'https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8' },
+    'linkedin':  { desc: 'Connect on LinkedIn', href: 'https://linkedin.com/in/ronnielgandhe' },
+  };
+
+  useEffect(() => {
+    const lines = [
+      'Ronniel Gandhe — Software Engineer',
+      '',
+      'Location: Waterloo, ON',
+      'Email: ronnielgandhe@gmail.com',
+      'GitHub: github.com/ronnielgandhe',
+      '',
+      '"I build systems that think, design that feels,',
+      ' and code that connects ideas to impact."',
+      '',
+      '—————————————————————————————————————',
+      '',
+      'Available commands:',
+      '',
+      '  github       View my GitHub profile',
+      '  email        Send me an email',
+      '  calendar     Book a meeting with me',
+      '  spotify      Listen to my dev playlist',
+      '',
+      '  help         Show this list again',
+      '  clear        Clear terminal',
+      '',
+      'Type a command and press Enter to explore.',
+      '—————————————————————————————————————',
+    ];
+    const full = lines.join('\n');
+    let i = 0;
+    const speed = 6;
+    const interval = setInterval(() => {
+      if (i < full.length) {
+        setIntroText(full.slice(0, i + 1));
+        i++;
+      } else {
+        clearInterval(interval);
+        setIntroDone(true);
+      }
+    }, speed);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (introDone) inputRef.current?.focus();
+  }, [introDone]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight);
+  }, [history, introText]);
+
+  const prompt = 'ronniel ~ % ';
+
+  const runCommand = (raw: string) => {
+    const cmd = raw.trim().toLowerCase();
+    const newLines: TerminalLine[] = [
+      { type: 'prompt', text: prompt + raw, command: raw },
+    ];
+
+    if (!cmd) {
+      // empty
+    } else if (cmd === 'help') {
+      newLines.push({ type: 'system', text: '\nAvailable commands:\n' });
+      Object.entries(mobileCommands).forEach(([name, { desc }]) => {
+        newLines.push({ type: 'output', text: `  \x1b[cmd]${name}\x1b[/cmd]${' '.repeat(Math.max(1, 13 - name.length))}${desc}` });
+      });
+      newLines.push({ type: 'output', text: '' });
+      newLines.push({ type: 'output', text: '  \x1b[cmd]help\x1b[/cmd]         Show this list again' });
+      newLines.push({ type: 'output', text: '  \x1b[cmd]clear\x1b[/cmd]        Clear terminal' });
+    } else if (cmd === 'clear') {
+      setHistory([]);
+      setInput('');
+      return;
+    } else if (mobileCommands[cmd]) {
+      const { desc, href } = mobileCommands[cmd];
+      newLines.push({ type: 'system', text: `Opening ${desc.toLowerCase()}...` });
+      if (href) {
+        setTimeout(() => {
+          if (href.startsWith('mailto:')) {
+            window.location.href = href;
+          } else {
+            window.open(href, '_blank');
+          }
+        }, 300);
+      }
+    } else if (cmd === 'whoami') {
+      newLines.push({ type: 'output', text: 'ronniel' });
+    } else if (cmd === 'pwd') {
+      newLines.push({ type: 'output', text: '/Users/ronniel/portfolio' });
+    } else if (cmd === 'ls') {
+      Object.keys(mobileCommands).forEach(name => {
+        newLines.push({ type: 'output', text: `  📁 ${name}/` });
+      });
+    } else if (cmd.startsWith('echo ')) {
+      newLines.push({ type: 'output', text: raw.replace(/^echo\s+/i, '').replace(/^["']|["']$/g, '') });
+    } else {
+      newLines.push({ type: 'error', text: `zsh: command not found: ${cmd.split(' ')[0]}` });
+      newLines.push({ type: 'output', text: 'Type "help" to see available commands.' });
+    }
+
+    setHistory(prev => [...prev, ...newLines]);
+    setCmdHistory(prev => [raw, ...prev]);
+    setHistoryIdx(-1);
+    setInput('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      runCommand(input);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (cmdHistory.length > 0) {
+        const newIdx = Math.min(historyIdx + 1, cmdHistory.length - 1);
+        setHistoryIdx(newIdx);
+        setInput(cmdHistory[newIdx]);
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (historyIdx > 0) {
+        const newIdx = historyIdx - 1;
+        setHistoryIdx(newIdx);
+        setInput(cmdHistory[newIdx]);
+      } else {
+        setHistoryIdx(-1);
+        setInput('');
+      }
+    }
+  };
+
+  const renderColoredLine = (text: string) => {
+    const parts = text.split(/\x1b\[cmd\]|\x1b\[\/cmd\]/);
+    return parts.map((part, idx) => (
+      idx % 2 === 1
+        ? <span key={idx} style={{ color: '#60a5fa', fontWeight: 700 }}>{part}</span>
+        : <span key={idx} style={{ color: 'rgba(255,255,255,0.55)' }}>{part}</span>
+    ));
+  };
+
+  const getLineColor = (line: TerminalLine) => {
+    switch (line.type) {
+      case 'prompt': return '#4ade80';
+      case 'error': return '#f87171';
+      case 'system': return '#22d3ee';
+      default: return 'rgba(255,255,255,0.75)';
+    }
+  };
+
   return (
     <div style={{
       position: 'absolute',
       inset: 0,
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px 24px',
-      fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif",
       animation: 'mobileFadeIn 0.8s ease-out',
     }}>
-      {/* Glass card */}
+      {/* Mobile menu bar */}
       <div style={{
-        background: 'rgba(255, 255, 255, 0.2)',
-        backdropFilter: 'saturate(180%) blur(24px)',
-        WebkitBackdropFilter: 'saturate(180%) blur(24px)',
-        borderRadius: '20px',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        padding: '32px 24px',
-        width: '100%',
-        maxWidth: '360px',
-        textAlign: 'center',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+        height: '44px',
+        minHeight: '44px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(0, 0, 0, 0.3)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '0.5px solid rgba(255,255,255,0.1)',
+        fontFamily: "'SF Pro Text', -apple-system, sans-serif",
       }}>
-        <div style={{
-          fontSize: '48px',
-          fontWeight: 200,
-          color: 'white',
-          fontFamily: "'SF Pro Display', -apple-system, sans-serif",
-          letterSpacing: '-1px',
-          marginBottom: '4px',
-        }}>
-          RG
-        </div>
-        <div style={{
-          fontSize: '20px',
-          fontWeight: 600,
-          color: 'white',
-          marginBottom: '4px',
-        }}>
-          Ronniel Gandhe
-        </div>
-        <div style={{
+        <span style={{
+          color: 'rgba(255,255,255,0.95)',
           fontSize: '14px',
-          color: 'rgba(255,255,255,0.6)',
-          marginBottom: '24px',
+          fontWeight: 600,
+          letterSpacing: '0.02em',
         }}>
-          Software Engineer
-        </div>
+          Terminal — ronniel
+        </span>
+      </div>
 
-        <div style={{
-          fontSize: '13px',
-          color: 'rgba(255,255,255,0.5)',
-          lineHeight: 1.6,
-          marginBottom: '28px',
+      {/* Terminal body */}
+      <div
+        ref={scrollRef}
+        onClick={() => inputRef.current?.focus()}
+        style={{
+          flex: 1,
+          padding: '16px 16px',
+          fontFamily: "'SF Mono', 'Menlo', monospace",
+          fontSize: '12px',
+          color: '#e0e0e0',
+          lineHeight: 1.65,
+          overflowY: 'auto',
+          cursor: 'text',
+          background: 'rgba(15, 15, 20, 0.72)',
+        }}
+      >
+        {/* Intro text */}
+        <pre style={{
+          margin: 0,
+          fontFamily: 'inherit',
+          fontSize: 'inherit',
+          lineHeight: 'inherit',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          color: 'rgba(255,255,255,0.7)',
         }}>
-          This portfolio is built as an interactive macOS desktop experience. Please visit on a laptop or desktop for the full experience.
-        </div>
+          {introText.split('\n').map((line, i) => {
+            if (i === 0) return <div key={i} style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>{line}</div>;
+            if (line.startsWith('Location:')) return <div key={i}><span style={{ color: '#ff6b9d', fontWeight: 600 }}>Location: </span><span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{line.replace('Location: ', '')}</span></div>;
+            if (line.startsWith('Email:')) return <div key={i}><span style={{ color: '#fbbf24', fontWeight: 600 }}>Email: </span><span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{line.replace('Email: ', '')}</span></div>;
+            if (line.startsWith('GitHub:')) return <div key={i}><span style={{ color: '#22d3ee', fontWeight: 600 }}>GitHub: </span><span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{line.replace('GitHub: ', '')}</span></div>;
+            if (line.startsWith('"')) return <div key={i} style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.45)' }}>{line}</div>;
+            if (line.startsWith('Available commands:')) return <div key={i} style={{ color: '#4ade80', fontWeight: 700 }}>{line}</div>;
+            if (line.startsWith('Type a command')) return <div key={i} style={{ color: 'rgba(255,255,255,0.5)' }}>{line}</div>;
+            if (line.match(/^\s{2}\w/)) {
+              const parts = line.match(/^(\s{2})(\S+)(\s+)(.+)$/);
+              if (parts) {
+                return <div key={i}>{parts[1]}<span style={{ color: '#60a5fa', fontWeight: 700 }}>{parts[2]}</span>{parts[3]}<span style={{ color: 'rgba(255,255,255,0.55)' }}>{parts[4]}</span></div>;
+              }
+            }
+            if (line.startsWith('——')) return <div key={i} style={{ color: 'rgba(255,255,255,0.15)' }}>{line}</div>;
+            return <div key={i}>{line}</div>;
+          })}
+        </pre>
 
-        {/* Quick links */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <MobileLink href="https://github.com/ronnielgandhe" label="GitHub" />
-          <MobileLink href="mailto:ronnielgandhe@gmail.com" label="Email Me" />
-          <MobileLink href="https://calendly.com/ronnielgandhe" label="Book a Meeting" />
-          <MobileLink href="https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8" label="Dev Playlist" />
-        </div>
+        {/* Command history */}
+        {history.map((line, i) => (
+          <div key={i} style={{ color: getLineColor(line), whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            {line.type === 'prompt' ? (
+              <>
+                <span style={{ color: '#4ade80', fontWeight: 700 }}>{prompt}</span>
+                <span style={{ color: '#fff', fontWeight: 500 }}>{line.command}</span>
+              </>
+            ) : line.text.includes('\x1b[cmd]') ? (
+              renderColoredLine(line.text)
+            ) : (
+              line.text
+            )}
+          </div>
+        ))}
+
+        {/* Active prompt */}
+        {introDone && (
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span style={{ color: '#4ade80', fontWeight: 700, whiteSpace: 'pre' }}>{prompt}</span>
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              spellCheck={false}
+              autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                font: 'inherit',
+                color: '#fff',
+                padding: 0,
+                margin: 0,
+                caretColor: '#4ade80',
+                fontSize: '12px',
+              }}
+            />
+          </div>
+        )}
+
+        {/* Blinking cursor during intro */}
+        {!introDone && (
+          <span style={{
+            display: 'inline-block',
+            width: '8px',
+            height: '14px',
+            background: '#4ade80',
+            verticalAlign: 'text-bottom',
+            animation: 'blink 1s step-end infinite',
+          }} />
+        )}
+      </div>
+
+      {/* Quick action bar at bottom */}
+      <div style={{
+        display: 'flex',
+        gap: '6px',
+        padding: '8px 12px',
+        background: 'rgba(0, 0, 0, 0.4)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderTop: '0.5px solid rgba(255,255,255,0.1)',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
+      }}>
+        {Object.entries(mobileCommands).map(([cmd]) => (
+          <button
+            key={cmd}
+            onClick={() => runCommand(cmd)}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '8px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '0.5px solid rgba(255,255,255,0.15)',
+              color: '#60a5fa',
+              fontSize: '11px',
+              fontWeight: 600,
+              fontFamily: "'SF Mono', monospace",
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            {cmd}
+          </button>
+        ))}
       </div>
 
       <style>{`
@@ -582,32 +844,12 @@ function MobileLayout() {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
       `}</style>
     </div>
-  );
-}
-
-function MobileLink({ href, label }: { href: string; label: string }) {
-  return (
-    <a
-      href={href}
-      target={href.startsWith('mailto:') ? undefined : '_blank'}
-      rel="noopener noreferrer"
-      style={{
-        display: 'block',
-        padding: '12px 16px',
-        borderRadius: '12px',
-        background: 'rgba(255, 255, 255, 0.12)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        color: 'white',
-        textDecoration: 'none',
-        fontSize: '14px',
-        fontWeight: 500,
-        transition: 'background 0.15s',
-      }}
-    >
-      {label}
-    </a>
   );
 }
 
