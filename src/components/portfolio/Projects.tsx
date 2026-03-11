@@ -1,9 +1,22 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { ProjectDetail, DetailContent } from './DetailPanel';
 
 interface ProjectsProps {
   onCardClick?: (detail: DetailContent) => void;
   windowMode?: boolean;
+}
+
+interface FileTab {
+  projectIdx: number;
+  fileName: string;  // "README.md", "requirements.txt", etc.
+  content: string | null;
+  loading: boolean;
+}
+
+// Extract repo slug from GitHub URL
+function repoSlug(url: string): string {
+  // "https://github.com/ronnielgandhe/quantzoo" → "ronnielgandhe/quantzoo"
+  return url.replace('https://github.com/', '');
 }
 
 const projects = [
@@ -155,41 +168,122 @@ function getLangColor(lang: string): string {
 const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
   const [selectedProject, setSelectedProject] = useState(0);
   const [expandedFolders, setExpandedFolders] = useState<Record<number, boolean>>({ 0: true });
-  const [activeTab, setActiveTab] = useState(0);
-  const [openTabs, setOpenTabs] = useState<number[]>([0]);
+  const [fileTabs, setFileTabs] = useState<FileTab[]>([{ projectIdx: 0, fileName: 'README.md', content: null, loading: false }]);
+  const [activeTabIdx, setActiveTabIdx] = useState(0);
   const [terminalOpen, setTerminalOpen] = useState(true);
   const [sidebarWidth] = useState(220);
+  const [fileCache, setFileCache] = useState<Record<string, string>>({});
   const editorRef = useRef<HTMLDivElement>(null);
 
+  const activeTab = fileTabs[activeTabIdx] || fileTabs[0];
+
+  // Fetch file content from GitHub
+  const fetchFileContent = useCallback(async (projIdx: number, fileName: string) => {
+    const cacheKey = `${projIdx}:${fileName}`;
+    if (fileCache[cacheKey]) return fileCache[cacheKey];
+
+    const repo = repoSlug(projects[projIdx].repoUrl);
+    try {
+      const res = await fetch(`/api/github?repo=${encodeURIComponent(repo)}&file=${encodeURIComponent(fileName)}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data.content) {
+        setFileCache(prev => ({ ...prev, [cacheKey]: data.content }));
+        return data.content as string;
+      }
+    } catch {}
+    return null;
+  }, [fileCache]);
+
+  // Open a file tab
+  const openFile = useCallback((projIdx: number, fileName: string) => {
+    // Check if tab already exists
+    const existingIdx = fileTabs.findIndex(t => t.projectIdx === projIdx && t.fileName === fileName);
+    if (existingIdx >= 0) {
+      setActiveTabIdx(existingIdx);
+      setSelectedProject(projIdx);
+      return;
+    }
+
+    // Create new tab
+    const newTab: FileTab = { projectIdx: projIdx, fileName, content: null, loading: true };
+    const newTabs = [...fileTabs, newTab];
+    const newIdx = newTabs.length - 1;
+    setFileTabs(newTabs);
+    setActiveTabIdx(newIdx);
+    setSelectedProject(projIdx);
+
+    // Fetch content
+    const cacheKey = `${projIdx}:${fileName}`;
+    if (fileCache[cacheKey]) {
+      setFileTabs(prev => prev.map((t, i) => i === newIdx ? { ...t, content: fileCache[cacheKey], loading: false } : t));
+    } else {
+      fetchFileContent(projIdx, fileName).then(content => {
+        setFileTabs(prev => prev.map((t, i) => i === newIdx ? { ...t, content: content || '# File not found\n\nCould not load this file from GitHub.', loading: false } : t));
+      });
+    }
+  }, [fileTabs, fileCache, fetchFileContent]);
+
+  // Select project (opens README tab)
   const selectProject = (idx: number) => {
     setSelectedProject(idx);
-    setActiveTab(idx);
-    if (!openTabs.includes(idx)) {
-      setOpenTabs(prev => [...prev, idx]);
+    // Check if a README tab for this project exists
+    const readmeIdx = fileTabs.findIndex(t => t.projectIdx === idx && t.fileName === 'README.md');
+    if (readmeIdx >= 0) {
+      setActiveTabIdx(readmeIdx);
+    } else {
+      openFile(idx, 'README.md');
     }
   };
 
-  const closeTab = (idx: number, e: React.MouseEvent) => {
+  const closeTab = (tabIdx: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    const newTabs = openTabs.filter(t => t !== idx);
-    setOpenTabs(newTabs);
-    if (activeTab === idx) {
-      setActiveTab(newTabs.length > 0 ? newTabs[newTabs.length - 1] : -1);
-      setSelectedProject(newTabs.length > 0 ? newTabs[newTabs.length - 1] : 0);
+    const newTabs = fileTabs.filter((_, i) => i !== tabIdx);
+    setFileTabs(newTabs);
+    if (activeTabIdx === tabIdx) {
+      const newActive = Math.min(tabIdx, newTabs.length - 1);
+      setActiveTabIdx(Math.max(0, newActive));
+      if (newTabs[newActive]) setSelectedProject(newTabs[newActive].projectIdx);
+    } else if (activeTabIdx > tabIdx) {
+      setActiveTabIdx(activeTabIdx - 1);
     }
-  };
-
-  const toggleFolder = (idx: number) => {
-    setExpandedFolders(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
   const project = projects[selectedProject];
   const detail = project.detail;
 
-  // Scroll editor to top when switching projects
+  // Auto-fetch content for the active tab if it hasn't been loaded yet
+  useEffect(() => {
+    const tab = fileTabs[activeTabIdx];
+    if (!tab || tab.content !== null || tab.loading) return;
+
+    // Mark as loading
+    setFileTabs(prev => prev.map((t, i) => i === activeTabIdx ? { ...t, loading: true } : t));
+
+    const repo = repoSlug(projects[tab.projectIdx].repoUrl);
+    const cacheKey = `${tab.projectIdx}:${tab.fileName}`;
+
+    if (fileCache[cacheKey]) {
+      setFileTabs(prev => prev.map((t, i) => i === activeTabIdx ? { ...t, content: fileCache[cacheKey], loading: false } : t));
+      return;
+    }
+
+    fetch(`/api/github?repo=${encodeURIComponent(repo)}&file=${encodeURIComponent(tab.fileName)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        const content = data?.content || null;
+        if (content) setFileCache(prev => ({ ...prev, [cacheKey]: content }));
+        setFileTabs(prev => prev.map((t, i) => i === activeTabIdx ? { ...t, content: content || `# Could not load ${tab.fileName}`, loading: false } : t));
+      })
+      .catch(() => {
+        setFileTabs(prev => prev.map((t, i) => i === activeTabIdx ? { ...t, content: `# Could not load ${tab.fileName}`, loading: false } : t));
+      });
+  }, [activeTabIdx, fileTabs.length]);
+
+  // Scroll editor to top when switching tabs
   useEffect(() => {
     editorRef.current?.scrollTo(0, 0);
-  }, [selectedProject]);
+  }, [activeTabIdx]);
 
   return (
     <div className="vsc-root" style={{
@@ -331,10 +425,11 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
                   {isExpanded && proj.files.map((file, fi) => {
                     const { icon, color } = getFileIcon(file);
                     const isDir = file.endsWith('/');
+                    const isActiveFile = activeTab?.projectIdx === idx && activeTab?.fileName === file;
                     return (
                       <div
                         key={fi}
-                        onClick={() => { if (!isDir) selectProject(idx); }}
+                        onClick={() => { if (!isDir) openFile(idx, file); }}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -344,6 +439,7 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
                           color: isDir ? '#888' : '#cccccc',
                           fontSize: '13px',
                           userSelect: 'none',
+                          background: isActiveFile ? 'rgba(255,255,255,0.08)' : 'transparent',
                         }}
                         className="vsc-tree-item"
                       >
@@ -380,13 +476,14 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
             borderBottom: '1px solid #1e1e1e',
             overflow: 'hidden',
           }}>
-            {openTabs.map(idx => {
-              const p = projects[idx];
-              const isActive = idx === activeTab;
+            {fileTabs.map((tab, tabIdx) => {
+              const p = projects[tab.projectIdx];
+              const isActive = tabIdx === activeTabIdx;
+              const { icon, color } = getFileIcon(tab.fileName);
               return (
                 <div
-                  key={idx}
-                  onClick={() => { setActiveTab(idx); setSelectedProject(idx); }}
+                  key={`${tab.projectIdx}-${tab.fileName}`}
+                  onClick={() => { setActiveTabIdx(tabIdx); setSelectedProject(tab.projectIdx); }}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -402,11 +499,11 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
                   }}
                   className={`vsc-tab ${isActive ? 'vsc-tab-active' : 'vsc-tab-inactive'}`}
                 >
-                  <span style={{ fontSize: '9px', fontWeight: 700, color: '#519aba' }}>M</span>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>README.md</span>
+                  <span style={{ fontSize: '9px', fontWeight: 700, color }}>{icon}</span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{tab.fileName}</span>
                   <span style={{ fontSize: '10px', color: '#666', marginLeft: '2px' }}>— {p.title}</span>
                   <span
-                    onClick={(e) => closeTab(idx, e)}
+                    onClick={(e) => closeTab(tabIdx, e)}
                     style={{
                       marginLeft: '6px',
                       fontSize: '14px',
@@ -449,7 +546,7 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
           }}>
             <span>{project.title.toUpperCase().replace(/\s+/g, '-')}</span>
             <span style={{ color: '#555' }}>/</span>
-            <span style={{ color: '#cccccc' }}>README.md</span>
+            <span style={{ color: '#cccccc' }}>{activeTab?.fileName || 'README.md'}</span>
           </div>
 
           {/* Editor content */}
@@ -464,201 +561,132 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
               minHeight: 0,
             }}
           >
-            {/* Render README content */}
-            <div className="vsc-readme">
-              {/* Demo video */}
-              {detail.demoVideo && (
-                <div key={detail.demoVideo} style={{
-                  width: '100%',
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                  marginBottom: '24px',
-                  background: '#000',
-                  border: '1px solid #333',
-                }}>
-                  <video
-                    autoPlay loop muted playsInline
-                    style={{ width: '100%', display: 'block', borderRadius: '8px' }}
-                  >
-                    <source src={detail.demoVideo} type="video/mp4" />
-                    <source src={detail.demoVideo} type="video/quicktime" />
-                  </video>
-                </div>
-              )}
-
-              {/* Cover image (show only when no video) */}
-              {!detail.demoVideo && detail.coverImage && (
-                <div style={{
-                  width: '100%',
-                  height: '180px',
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                  marginBottom: '24px',
-                  background: detail.gradient,
-                }}>
-                  <img
-                    src={detail.coverImage}
-                    alt={detail.title}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
-                  />
-                </div>
-              )}
-
-              {/* Title */}
-              <h1 style={{
-                fontSize: '26px',
-                fontWeight: 600,
-                color: '#e6e6e6',
-                margin: '0 0 8px',
-                fontFamily: "'SF Pro Display', -apple-system, sans-serif",
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-              }}>
-                {detail.title}
-                {detail.repoUrl && (
-                  <a
-                    href={detail.repoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                      fontSize: '13px',
-                      fontWeight: 400,
-                      color: '#4daafc',
-                      textDecoration: 'none',
-                      fontFamily: "'SF Mono', monospace",
-                    }}
-                  >
-                    ↗ GitHub
-                  </a>
+            {/* README.md — show the rich project view */}
+            {activeTab?.fileName === 'README.md' ? (
+              <div className="vsc-readme">
+                {/* Show fetched GitHub README if available */}
+                {activeTab.content ? (
+                  <MarkdownRenderer content={activeTab.content} />
+                ) : activeTab.loading ? (
+                  <div style={{ color: '#666', fontSize: '13px', padding: '20px 0' }}>Loading README from GitHub...</div>
+                ) : (
+                  <>
+                    {/* Fallback: Show rich project content */}
+                    {detail.demoVideo && (
+                      <div key={detail.demoVideo} style={{
+                        width: '100%', borderRadius: '8px', overflow: 'hidden',
+                        marginBottom: '24px', background: '#000', border: '1px solid #333',
+                      }}>
+                        <video autoPlay loop muted playsInline style={{ width: '100%', display: 'block', borderRadius: '8px' }}>
+                          <source src={detail.demoVideo} type="video/mp4" />
+                          <source src={detail.demoVideo} type="video/quicktime" />
+                        </video>
+                      </div>
+                    )}
+                    {!detail.demoVideo && detail.coverImage && (
+                      <div style={{
+                        width: '100%', height: '180px', borderRadius: '8px', overflow: 'hidden',
+                        marginBottom: '24px', background: detail.gradient,
+                      }}>
+                        <img src={detail.coverImage} alt={detail.title}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+                      </div>
+                    )}
+                    <h1 style={{
+                      fontSize: '26px', fontWeight: 600, color: '#e6e6e6', margin: '0 0 8px',
+                      fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                    }}>
+                      {detail.title}
+                      {detail.repoUrl && (
+                        <a href={detail.repoUrl} target="_blank" rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ fontSize: '13px', fontWeight: 400, color: '#4daafc', textDecoration: 'none', fontFamily: "'SF Mono', monospace" }}>
+                          ↗ GitHub
+                        </a>
+                      )}
+                    </h1>
+                    <p style={{ color: '#b0b0b0', fontSize: '14px', lineHeight: 1.7, margin: '0 0 20px', fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif" }}>
+                      {project.description}
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '24px' }}>
+                      {detail.techStack.map((tech, i) => (
+                        <span key={i} style={{
+                          padding: '3px 10px', fontSize: '11px', fontWeight: 500, borderRadius: '4px',
+                          background: 'rgba(77, 170, 252, 0.12)', color: '#4daafc',
+                          border: '1px solid rgba(77, 170, 252, 0.2)', fontFamily: "'SF Mono', monospace",
+                        }}>{tech}</span>
+                      ))}
+                    </div>
+                    {detail.architecture && (
+                      <>
+                        <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#e6e6e6', margin: '0 0 8px', fontFamily: "-apple-system, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ color: '#4daafc' }}>#</span> Architecture
+                        </h2>
+                        <p style={{ color: '#a0a0a0', fontSize: '13px', lineHeight: 1.8, margin: '0 0 20px', fontFamily: "-apple-system, sans-serif" }}>
+                          {detail.architecture}
+                        </p>
+                      </>
+                    )}
+                    {detail.technicalChallenges?.length > 0 && (
+                      <>
+                        <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#e6e6e6', margin: '0 0 8px', fontFamily: "-apple-system, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ color: '#f1b73a' }}>#</span> Technical Challenges
+                        </h2>
+                        <ul style={{ color: '#a0a0a0', fontSize: '13px', lineHeight: 1.8, margin: '0 0 20px', paddingLeft: '20px', fontFamily: "-apple-system, sans-serif" }}>
+                          {detail.technicalChallenges.map((c, i) => <li key={i} style={{ marginBottom: '4px' }}>{c}</li>)}
+                        </ul>
+                      </>
+                    )}
+                    {detail.lessonsLearned?.length > 0 && (
+                      <>
+                        <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#e6e6e6', margin: '0 0 8px', fontFamily: "-apple-system, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ color: '#4ec9b0' }}>#</span> Lessons Learned
+                        </h2>
+                        <ul style={{ color: '#a0a0a0', fontSize: '13px', lineHeight: 1.8, margin: '0 0 20px', paddingLeft: '20px', fontFamily: "-apple-system, sans-serif" }}>
+                          {detail.lessonsLearned.map((l, i) => <li key={i} style={{ marginBottom: '4px' }}>{l}</li>)}
+                        </ul>
+                      </>
+                    )}
+                  </>
                 )}
-              </h1>
-
-              {/* Description */}
-              <p style={{
-                color: '#b0b0b0',
-                fontSize: '14px',
-                lineHeight: 1.7,
-                margin: '0 0 20px',
-                fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
-              }}>
-                {project.description}
-              </p>
-
-              {/* Tech stack badges */}
-              <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '6px',
-                marginBottom: '24px',
-              }}>
-                {detail.techStack.map((tech, i) => (
-                  <span key={i} style={{
-                    padding: '3px 10px',
-                    fontSize: '11px',
-                    fontWeight: 500,
-                    borderRadius: '4px',
-                    background: 'rgba(77, 170, 252, 0.12)',
-                    color: '#4daafc',
-                    border: '1px solid rgba(77, 170, 252, 0.2)',
-                    fontFamily: "'SF Mono', monospace",
-                  }}>
-                    {tech}
-                  </span>
-                ))}
               </div>
-
-              {/* Architecture */}
-              {detail.architecture && (
-                <>
-                  <h2 style={{
-                    fontSize: '18px',
-                    fontWeight: 600,
-                    color: '#e6e6e6',
-                    margin: '0 0 8px',
-                    fontFamily: "-apple-system, sans-serif",
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}>
-                    <span style={{ color: '#4daafc' }}>#</span>
-                    Architecture
-                  </h2>
-                  <p style={{
-                    color: '#a0a0a0',
+            ) : (
+              /* Non-README file: show as code/text */
+              <div>
+                {activeTab?.loading ? (
+                  <div style={{ color: '#666', fontSize: '13px', padding: '20px 0' }}>
+                    Loading {activeTab.fileName}...
+                  </div>
+                ) : (
+                  <pre style={{
+                    color: '#d4d4d4',
                     fontSize: '13px',
-                    lineHeight: 1.8,
-                    margin: '0 0 20px',
-                    fontFamily: "-apple-system, sans-serif",
+                    lineHeight: 1.65,
+                    fontFamily: "'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Menlo', monospace",
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    margin: 0,
+                    padding: 0,
                   }}>
-                    {detail.architecture}
-                  </p>
-                </>
-              )}
-
-              {/* Technical Challenges */}
-              {detail.technicalChallenges && detail.technicalChallenges.length > 0 && (
-                <>
-                  <h2 style={{
-                    fontSize: '18px',
-                    fontWeight: 600,
-                    color: '#e6e6e6',
-                    margin: '0 0 8px',
-                    fontFamily: "-apple-system, sans-serif",
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}>
-                    <span style={{ color: '#f1b73a' }}>#</span>
-                    Technical Challenges
-                  </h2>
-                  <ul style={{
-                    color: '#a0a0a0',
-                    fontSize: '13px',
-                    lineHeight: 1.8,
-                    margin: '0 0 20px',
-                    paddingLeft: '20px',
-                    fontFamily: "-apple-system, sans-serif",
-                  }}>
-                    {detail.technicalChallenges.map((c, i) => (
-                      <li key={i} style={{ marginBottom: '4px' }}>{c}</li>
+                    {activeTab?.content?.split('\n').map((line, i) => (
+                      <div key={i} style={{ display: 'flex', minHeight: '20px' }}>
+                        <span style={{
+                          width: '48px',
+                          minWidth: '48px',
+                          textAlign: 'right',
+                          paddingRight: '16px',
+                          color: '#545454',
+                          userSelect: 'none',
+                          fontSize: '12px',
+                        }}>{i + 1}</span>
+                        <span style={{ flex: 1 }}>{colorizeCode(line, activeTab?.fileName || '')}</span>
+                      </div>
                     ))}
-                  </ul>
-                </>
-              )}
-
-              {/* Lessons Learned */}
-              {detail.lessonsLearned && detail.lessonsLearned.length > 0 && (
-                <>
-                  <h2 style={{
-                    fontSize: '18px',
-                    fontWeight: 600,
-                    color: '#e6e6e6',
-                    margin: '0 0 8px',
-                    fontFamily: "-apple-system, sans-serif",
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}>
-                    <span style={{ color: '#4ec9b0' }}>#</span>
-                    Lessons Learned
-                  </h2>
-                  <ul style={{
-                    color: '#a0a0a0',
-                    fontSize: '13px',
-                    lineHeight: 1.8,
-                    margin: '0 0 20px',
-                    paddingLeft: '20px',
-                    fontFamily: "-apple-system, sans-serif",
-                  }}>
-                    {detail.lessonsLearned.map((l, i) => (
-                      <li key={i} style={{ marginBottom: '4px' }}>{l}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </div>
+                  </pre>
+                )}
+              </div>
+            )}
           </div>
 
           {/* ── Terminal Panel ── */}
@@ -811,6 +839,115 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
     </div>
   );
 };
+
+// ── Simple Markdown Renderer for README files ──
+
+function MarkdownRenderer({ content }: { content: string }) {
+  const lines = content.split('\n');
+  const elements: React.ReactNode[] = [];
+  let inCodeBlock = false;
+  let codeLines: string[] = [];
+  let codeLang = '';
+
+  const renderInline = (text: string): React.ReactNode => {
+    // Bold
+    const parts: React.ReactNode[] = [];
+    const regex = /\*\*(.*?)\*\*|`(.*?)`|\[(.*?)\]\((.*?)\)/g;
+    let lastIdx = 0;
+    let match;
+    let key = 0;
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > lastIdx) parts.push(text.slice(lastIdx, match.index));
+      if (match[1]) parts.push(<strong key={key++} style={{ color: '#e6e6e6', fontWeight: 600 }}>{match[1]}</strong>);
+      if (match[2]) parts.push(<code key={key++} style={{ background: 'rgba(255,255,255,0.06)', padding: '1px 5px', borderRadius: '3px', fontSize: '12px', color: '#ce9178' }}>{match[2]}</code>);
+      if (match[3] && match[4]) parts.push(<a key={key++} href={match[4]} target="_blank" rel="noopener noreferrer" style={{ color: '#4daafc', textDecoration: 'none' }}>{match[3]}</a>);
+      lastIdx = match.index + match[0].length;
+    }
+    if (lastIdx < text.length) parts.push(text.slice(lastIdx));
+    return parts.length > 0 ? parts : text;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.startsWith('```')) {
+      if (inCodeBlock) {
+        elements.push(
+          <pre key={i} style={{
+            background: '#0d1117',
+            border: '1px solid #333',
+            borderRadius: '6px',
+            padding: '12px 16px',
+            margin: '8px 0 16px',
+            fontSize: '12px',
+            lineHeight: 1.6,
+            overflowX: 'auto',
+            color: '#d4d4d4',
+          }}>
+            {codeLines.join('\n')}
+          </pre>
+        );
+        codeLines = [];
+        inCodeBlock = false;
+      } else {
+        inCodeBlock = true;
+        codeLang = line.slice(3).trim();
+        codeLines = [];
+      }
+      continue;
+    }
+
+    if (inCodeBlock) {
+      codeLines.push(line);
+      continue;
+    }
+
+    // Headings
+    if (line.startsWith('# ')) {
+      elements.push(<h1 key={i} style={{ fontSize: '24px', fontWeight: 600, color: '#e6e6e6', margin: '24px 0 8px', fontFamily: "-apple-system, sans-serif", borderBottom: '1px solid #333', paddingBottom: '8px' }}>{renderInline(line.slice(2))}</h1>);
+    } else if (line.startsWith('## ')) {
+      elements.push(<h2 key={i} style={{ fontSize: '20px', fontWeight: 600, color: '#e6e6e6', margin: '20px 0 8px', fontFamily: "-apple-system, sans-serif", borderBottom: '1px solid #333', paddingBottom: '6px' }}>{renderInline(line.slice(3))}</h2>);
+    } else if (line.startsWith('### ')) {
+      elements.push(<h3 key={i} style={{ fontSize: '16px', fontWeight: 600, color: '#e6e6e6', margin: '16px 0 6px', fontFamily: "-apple-system, sans-serif" }}>{renderInline(line.slice(4))}</h3>);
+    } else if (line.startsWith('- ') || line.startsWith('* ')) {
+      elements.push(<div key={i} style={{ color: '#a0a0a0', fontSize: '13px', lineHeight: 1.7, paddingLeft: '20px', margin: '2px 0', fontFamily: "-apple-system, sans-serif" }}>• {renderInline(line.slice(2))}</div>);
+    } else if (/^\d+\.\s/.test(line)) {
+      const num = line.match(/^(\d+)\.\s/)?.[1];
+      elements.push(<div key={i} style={{ color: '#a0a0a0', fontSize: '13px', lineHeight: 1.7, paddingLeft: '20px', margin: '2px 0', fontFamily: "-apple-system, sans-serif" }}>{num}. {renderInline(line.replace(/^\d+\.\s/, ''))}</div>);
+    } else if (line.trim() === '') {
+      elements.push(<div key={i} style={{ height: '8px' }} />);
+    } else if (line.startsWith('> ')) {
+      elements.push(<blockquote key={i} style={{ borderLeft: '3px solid #4daafc', paddingLeft: '12px', margin: '8px 0', color: '#a0a0a0', fontStyle: 'italic', fontSize: '13px' }}>{renderInline(line.slice(2))}</blockquote>);
+    } else if (line.startsWith('![')) {
+      // Image — skip rendering but show placeholder
+      const alt = line.match(/!\[(.*?)\]/)?.[1] || 'image';
+      elements.push(<div key={i} style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', border: '1px solid #333', margin: '8px 0', color: '#666', fontSize: '12px', textAlign: 'center' }}>📷 {alt}</div>);
+    } else {
+      elements.push(<p key={i} style={{ color: '#a0a0a0', fontSize: '13px', lineHeight: 1.7, margin: '4px 0', fontFamily: "-apple-system, sans-serif" }}>{renderInline(line)}</p>);
+    }
+  }
+
+  return <div className="vsc-readme">{elements}</div>;
+}
+
+// ── Simple syntax coloring for code files ──
+
+function colorizeCode(line: string, fileName: string): React.ReactNode {
+  // Python files
+  if (fileName.endsWith('.py') || fileName.endsWith('.txt')) {
+    return line
+      .replace(/^(import |from |class |def |return |if |else|elif |for |while |try|except|with |as |in |not |and |or |raise |yield |async |await )/g, '___KW___$1')
+      .split('___KW___')
+      .map((part, i) => {
+        if (/^(import |from |class |def |return |if |else|elif |for |while |try|except|with |as |in |not |and |or |raise |yield |async |await )/.test(part)) {
+          return <span key={i} style={{ color: '#c586c0' }}>{part}</span>;
+        }
+        return part;
+      });
+  }
+  // For other files just return plain text
+  return line;
+}
 
 // ── Activity Bar Icon ──
 

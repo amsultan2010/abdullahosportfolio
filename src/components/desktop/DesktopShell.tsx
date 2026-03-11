@@ -1112,6 +1112,59 @@ function Desktop() {
     }
   }, [dispatch]);
 
+  // Terminal slide-over: when Education or Experience opens, slide terminal left
+  useEffect(() => {
+    const terminal = state.windows['terminal'];
+    if (!terminal || terminal.isMinimized || !terminal.isOpen || terminal.isFullscreen) return;
+
+    const sideWindows = ['education', 'experience'] as const;
+    const openSideWindow = sideWindows.find(id => {
+      const w = state.windows[id];
+      return w && w.isOpen && !w.isMinimized;
+    });
+
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
+
+    if (openSideWindow) {
+      const sideWin = state.windows[openSideWindow]!;
+      // Terminal shrinks and slides to left
+      const termW = Math.min(460, screenW * 0.35);
+      const termH = Math.min(screenH - 100, 560);
+      const termX = 20;
+      const termY = Math.max(28, Math.round((screenH - termH) / 2));
+
+      // Only move if not already positioned there
+      if (Math.abs(terminal.position.x - termX) > 10 || Math.abs(terminal.size.width - termW) > 10) {
+        dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: { width: termW, height: termH } });
+        dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: termX, y: termY } });
+      }
+
+      // Side window goes to the right
+      const sideW = Math.min(sideWin.size.width, screenW - termW - 50);
+      const sideX = termW + 40;
+      const sideY = Math.max(28, Math.round((screenH - sideWin.size.height) / 2));
+
+      if (Math.abs(sideWin.position.x - sideX) > 10) {
+        dispatch({ type: 'MOVE_WINDOW', id: openSideWindow, position: { x: sideX, y: sideY } });
+      }
+    } else {
+      // Restore terminal to center if no side windows are open
+      const defaults = { width: 800, height: 500 };
+      const centerX = Math.max(0, Math.round((screenW - defaults.width) / 2));
+      const centerY = Math.max(28, Math.round((screenH - defaults.height) / 2));
+
+      if (terminal.size.width < 500 && Math.abs(terminal.position.x - 20) < 30) {
+        // Only restore if it was slid over (small width, near left edge)
+        dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: defaults });
+        dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: centerX, y: centerY } });
+      }
+    }
+  }, [
+    // Only react to open/close changes, not every position tweak
+    Object.keys(state.windows).filter(id => ['education', 'experience'].includes(id) && state.windows[id]?.isOpen && !state.windows[id]?.isMinimized).join(','),
+  ]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
