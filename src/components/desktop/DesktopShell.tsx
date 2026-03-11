@@ -103,6 +103,7 @@ function TerminalContent() {
       '  projects       Side projects & builds',
       '  mythoughts     Blog posts & notes',
       '  deepresearch   Case studies & deep dives',
+      '  calendar       Book a meeting with me',
       '',
       '  help           Show this list again',
       '  clear          Clear terminal',
@@ -302,7 +303,18 @@ function TerminalContent() {
           if (line.match(/^\s{2}\w/)) {
             const parts = line.match(/^(\s{2})(\S+)(\s+)(.+)$/);
             if (parts) {
-              return <div key={i}>{parts[1]}<span style={{ color: '#60a5fa', fontWeight: 700 }}>{parts[2]}</span>{parts[3]}<span style={{ color: 'rgba(255,255,255,0.55)' }}>{parts[4]}</span></div>;
+              const cmdColors: Record<string, string> = {
+                education: '#60a5fa',    // blue
+                experience: '#c084fc',   // purple
+                projects: '#4ade80',     // green
+                mythoughts: '#fbbf24',   // amber
+                deepresearch: '#f472b6', // pink
+                calendar: '#22d3ee',     // cyan
+                help: '#94a3b8',         // slate
+                clear: '#94a3b8',        // slate
+              };
+              const cmdColor = cmdColors[parts[2]] || '#60a5fa';
+              return <div key={i}>{parts[1]}<span style={{ color: cmdColor, fontWeight: 700 }}>{parts[2]}</span>{parts[3]}<span style={{ color: 'rgba(255,255,255,0.55)' }}>{parts[4]}</span></div>;
             }
           }
           if (line.startsWith('——')) return <div key={i} style={{ color: 'rgba(255,255,255,0.15)' }}>{line}</div>;
@@ -451,7 +463,7 @@ function Desktop() {
 
           {/* Windows */}
           {openWindows.map(win => {
-            const darkWindows: string[] = ['education', 'experience', 'detail', 'terminal', 'email', 'photos', 'deep-research', 'content', 'projects'];
+            const darkWindows: string[] = ['education', 'experience', 'detail', 'terminal', 'email', 'photos', 'content', 'projects'];
             const isDark = darkWindows.includes(win.id);
             if (win.id === 'detail' && state.activeDetail) {
               return (

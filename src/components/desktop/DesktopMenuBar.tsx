@@ -546,31 +546,31 @@ function WifiIconDark() {
 
 function BatteryIcon() {
   return (
-    <svg width="22" height="12" viewBox="0 0 22 12" fill="none" style={{ opacity: 0.75 }}>
-      <rect x="0.5" y="1" width="18" height="10" rx="2" stroke="rgba(255,255,255,0.8)" strokeWidth="1" fill="none" />
-      <rect x="19" y="3.5" width="2" height="5" rx="0.75" fill="rgba(255,255,255,0.5)" />
-      <rect x="2" y="2.5" width="14" height="7" rx="1" fill="rgba(255,255,255,0.65)" />
+    <svg width="22" height="12" viewBox="0 0 22 12" fill="none">
+      <rect x="0.5" y="1" width="18" height="10" rx="2" stroke="rgba(255,255,255,0.95)" strokeWidth="1" fill="none" />
+      <rect x="19" y="3.5" width="2" height="5" rx="0.75" fill="rgba(255,255,255,0.6)" />
+      <rect x="2" y="2.5" width="14" height="7" rx="1" fill="rgba(255,255,255,0.9)" />
     </svg>
   );
 }
 
 function WifiIcon() {
   return (
-    <svg width="16" height="14" viewBox="0 0 16 14" fill="none" style={{ opacity: 0.75 }}>
-      <path d="M8 12.5a1 1 0 100-2 1 1 0 000 2z" fill="rgba(255,255,255,0.85)" />
-      <path d="M5.17 9.17a4 4 0 015.66 0" stroke="rgba(255,255,255,0.8)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-      <path d="M2.93 6.93a7 7 0 0110.14 0" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-      <path d="M0.69 4.69a10 10 0 0114.62 0" stroke="rgba(255,255,255,0.5)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+    <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
+      <path d="M8 12.5a1 1 0 100-2 1 1 0 000 2z" fill="rgba(255,255,255,1)" />
+      <path d="M5.17 9.17a4 4 0 015.66 0" stroke="rgba(255,255,255,0.95)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+      <path d="M2.93 6.93a7 7 0 0110.14 0" stroke="rgba(255,255,255,0.9)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+      <path d="M0.69 4.69a10 10 0 0114.62 0" stroke="rgba(255,255,255,0.75)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
     </svg>
   );
 }
 
 function SpeakerIcon() {
   return (
-    <svg width="16" height="14" viewBox="0 0 16 14" fill="none" style={{ opacity: 0.75 }}>
-      <path d="M2 5h2l4-3v10l-4-3H2a1 1 0 01-1-1V6a1 1 0 011-1z" fill="rgba(255,255,255,0.75)" />
-      <path d="M11 4.5a3.5 3.5 0 010 5" stroke="rgba(255,255,255,0.6)" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-      <path d="M13 2.5a6.5 6.5 0 010 9" stroke="rgba(255,255,255,0.4)" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+    <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
+      <path d="M2 5h2l4-3v10l-4-3H2a1 1 0 01-1-1V6a1 1 0 011-1z" fill="rgba(255,255,255,0.95)" />
+      <path d="M11 4.5a3.5 3.5 0 010 5" stroke="rgba(255,255,255,0.8)" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+      <path d="M13 2.5a6.5 6.5 0 010 9" stroke="rgba(255,255,255,0.6)" strokeWidth="1.1" strokeLinecap="round" fill="none" />
     </svg>
   );
 }

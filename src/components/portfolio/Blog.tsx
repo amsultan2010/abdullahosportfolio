@@ -131,112 +131,138 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
       color: 'rgba(0,0,0,0.85)',
       fontSize: '13px',
     }}>
-      {/* ── Notes Toolbar (full-width, Apple-style) ── */}
+      {/* ── Notes Toolbar — exact Apple Notes match ── */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '4px',
-        padding: '6px 12px',
-        borderBottom: '0.5px solid rgba(0,0,0,0.1)',
-        background: 'rgba(0,0,0,0.015)',
-        minHeight: '32px',
+        padding: '4px 10px',
+        borderBottom: '0.5px solid rgba(0,0,0,0.12)',
+        background: '#ececec',
+        minHeight: '34px',
+        gap: '0px',
       }}>
-        {/* Sidebar toggle */}
-        <NotesToolbarBtn>
-          <svg width="15" height="14" viewBox="0 0 18 16" fill="none">
-            <rect x="1" y="1" width="16" height="14" rx="2" stroke="currentColor" strokeWidth="1.2" />
-            <line x1="6" y1="1" x2="6" y2="15" stroke="currentColor" strokeWidth="1.2" />
+        {/* ── Section 1: Sidebar toggle ── */}
+        <NTBtn>
+          <svg width="16" height="15" viewBox="0 0 18 16" fill="none">
+            <rect x="1" y="1" width="16" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.3" />
+            <line x1="6.5" y1="1" x2="6.5" y2="15" stroke="currentColor" strokeWidth="1.3" />
           </svg>
-        </NotesToolbarBtn>
+        </NTBtn>
 
-        <div style={{ width: '1px', height: '16px', background: 'rgba(0,0,0,0.08)', margin: '0 4px' }} />
+        <ToolbarDivider />
 
-        {/* List / Grid view */}
-        <NotesToolbarBtn active>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-            <rect x="1" y="2" width="14" height="2" rx="0.5" fill="currentColor" />
-            <rect x="1" y="7" width="14" height="2" rx="0.5" fill="currentColor" />
-            <rect x="1" y="12" width="14" height="2" rx="0.5" fill="currentColor" />
+        {/* ── Section 2: List / Grid view ── */}
+        <NTBtn active>
+          <svg width="15" height="14" viewBox="0 0 16 14" fill="none">
+            <line x1="1" y1="2" x2="15" y2="2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            <line x1="1" y1="7" x2="15" y2="7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            <line x1="1" y1="12" x2="15" y2="12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
-        </NotesToolbarBtn>
-        <NotesToolbarBtn>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-            <rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" />
-            <rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" />
-            <rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" />
-            <rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" />
+        </NTBtn>
+        <NTBtn>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="1" width="6" height="6" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
+            <rect x="9" y="1" width="6" height="6" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
+            <rect x="1" y="9" width="6" height="6" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
+            <rect x="9" y="9" width="6" height="6" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
           </svg>
-        </NotesToolbarBtn>
+        </NTBtn>
 
-        <div style={{ width: '1px', height: '16px', background: 'rgba(0,0,0,0.08)', margin: '0 4px' }} />
+        <ToolbarDivider />
 
-        {/* Delete */}
-        <NotesToolbarBtn>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-            <polyline points="3,4 4,14 12,14 13,4" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" fill="none" />
-            <line x1="2" y1="4" x2="14" y2="4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            <path d="M6 4V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5V4" stroke="currentColor" strokeWidth="1.2" />
+        {/* ── Section 3: Trash ── */}
+        <NTBtn>
+          <svg width="14" height="15" viewBox="0 0 14 16" fill="none">
+            <path d="M2 4h10l-.8 10a1 1 0 01-1 .9H3.8a1 1 0 01-1-.9L2 4z" stroke="currentColor" strokeWidth="1.2" fill="none" />
+            <line x1="1" y1="4" x2="13" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            <path d="M5 4V2.5a1 1 0 011-1h2a1 1 0 011 1V4" stroke="currentColor" strokeWidth="1.2" />
           </svg>
-        </NotesToolbarBtn>
+        </NTBtn>
 
-        {/* Compose */}
-        <NotesToolbarBtn>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <ToolbarDivider />
+
+        {/* ── Section 4: Compose ── */}
+        <NTBtn>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
             <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.2" />
-            <line x1="5" y1="8" x2="11" y2="8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            <line x1="5" y1="5.5" x2="11" y2="5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            <line x1="5" y1="10.5" x2="8" y2="10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <path d="M9.5 2L14 6.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="5" y1="8" x2="9" y2="8" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+            <line x1="5" y1="5.5" x2="8" y2="5.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+            <line x1="5" y1="10.5" x2="7" y2="10.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
           </svg>
-        </NotesToolbarBtn>
+        </NTBtn>
 
-        <div style={{ width: '1px', height: '16px', background: 'rgba(0,0,0,0.08)', margin: '0 4px' }} />
+        <ToolbarDivider />
 
-        {/* Aa formatting */}
-        <NotesToolbarBtn>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: 'currentColor', lineHeight: 1 }}>Aa</span>
-        </NotesToolbarBtn>
-
-        {/* Adjustments */}
-        <NotesToolbarBtn>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-            <line x1="2" y1="4" x2="14" y2="4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            <line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            <line x1="2" y1="12" x2="14" y2="12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            <circle cx="5" cy="4" r="1.5" fill="rgba(0,0,0,0.04)" stroke="currentColor" strokeWidth="1" />
-            <circle cx="10" cy="8" r="1.5" fill="rgba(0,0,0,0.04)" stroke="currentColor" strokeWidth="1" />
-            <circle cx="7" cy="12" r="1.5" fill="rgba(0,0,0,0.04)" stroke="currentColor" strokeWidth="1" />
+        {/* ── Section 5: Aa, Adjustments, Table, Bar chart ── */}
+        <NTBtn>
+          <span style={{ fontSize: '14px', fontWeight: 700, color: 'currentColor', lineHeight: 1, letterSpacing: '-0.5px' }}>Aa</span>
+        </NTBtn>
+        <NTBtn>
+          <svg width="15" height="14" viewBox="0 0 16 14" fill="none">
+            <circle cx="4" cy="3" r="2" stroke="currentColor" strokeWidth="1.1" />
+            <line x1="4" y1="5" x2="4" y2="13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <circle cx="12" cy="9" r="2" stroke="currentColor" strokeWidth="1.1" />
+            <line x1="12" y1="1" x2="12" y2="7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
           </svg>
-        </NotesToolbarBtn>
-
-        {/* Table */}
-        <NotesToolbarBtn>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        </NTBtn>
+        <NTBtn>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
             <rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.2" />
-            <line x1="1" y1="5.5" x2="15" y2="5.5" stroke="currentColor" strokeWidth="1" />
-            <line x1="1" y1="10.5" x2="15" y2="10.5" stroke="currentColor" strokeWidth="1" />
-            <line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" strokeWidth="1" />
-            <line x1="10.5" y1="1" x2="10.5" y2="15" stroke="currentColor" strokeWidth="1" />
+            <line x1="1" y1="5.5" x2="15" y2="5.5" stroke="currentColor" strokeWidth="0.8" />
+            <line x1="1" y1="10.5" x2="15" y2="10.5" stroke="currentColor" strokeWidth="0.8" />
+            <line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" strokeWidth="0.8" />
+            <line x1="10.5" y1="1" x2="10.5" y2="15" stroke="currentColor" strokeWidth="0.8" />
           </svg>
-        </NotesToolbarBtn>
-
-        <div style={{ flex: 1 }} />
-
-        {/* Share */}
-        <NotesToolbarBtn>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-            <path d="M4 9v4a1 1 0 001 1h6a1 1 0 001-1V9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            <polyline points="5,5 8,2 11,5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            <line x1="8" y1="2" x2="8" y2="10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        </NTBtn>
+        <NTBtn>
+          <svg width="15" height="14" viewBox="0 0 16 14" fill="none">
+            <rect x="1" y="6" width="3" height="7" rx="0.5" fill="currentColor" opacity="0.8" />
+            <rect x="5.5" y="3" width="3" height="10" rx="0.5" fill="currentColor" opacity="0.8" />
+            <rect x="10" y="1" width="3" height="12" rx="0.5" fill="currentColor" opacity="0.8" />
           </svg>
-        </NotesToolbarBtn>
+        </NTBtn>
 
-        {/* Search */}
-        <NotesToolbarBtn>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-            <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.2" />
-            <line x1="10" y1="10" x2="14" y2="14" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        <ToolbarDivider />
+
+        {/* ── Section 6: Image▾, Link, Lock▾ ── */}
+        <NTBtn hasDropdown>
+          <svg width="15" height="13" viewBox="0 0 16 14" fill="none">
+            <rect x="1" y="1" width="14" height="11" rx="2" stroke="currentColor" strokeWidth="1.2" />
+            <circle cx="5" cy="4.5" r="1.5" fill="currentColor" opacity="0.5" />
+            <path d="M1 9l4-3 3 2 3-2 4 3" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" fill="none" />
           </svg>
-        </NotesToolbarBtn>
+        </NTBtn>
+        <NTBtn>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <path d="M6.5 9.5l-1 1a2 2 0 102.83 2.83l1-1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <path d="M9.5 6.5l1-1a2 2 0 112.83 2.83l-1 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="6" y1="10" x2="10" y2="6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+        </NTBtn>
+        <NTBtn hasDropdown>
+          <svg width="12" height="15" viewBox="0 0 12 16" fill="none">
+            <rect x="1" y="7" width="10" height="8" rx="2" stroke="currentColor" strokeWidth="1.2" />
+            <path d="M3 7V5a3 3 0 016 0v2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+          </svg>
+        </NTBtn>
+
+        <ToolbarDivider />
+
+        {/* ── Section 7: Share, Search ── */}
+        <NTBtn>
+          <svg width="14" height="15" viewBox="0 0 14 16" fill="none">
+            <path d="M3 9v4.5a1 1 0 001 1h6a1 1 0 001-1V9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <polyline points="4,5 7,1.5 10,5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <line x1="7" y1="1.5" x2="7" y2="10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+        </NTBtn>
+        <NTBtn>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.3" />
+            <line x1="10.2" y1="10.2" x2="14.5" y2="14.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          </svg>
+        </NTBtn>
       </div>
 
       {/* ── Three-panel layout below toolbar ── */}
@@ -247,7 +273,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
         width: '180px',
         minWidth: '180px',
         borderRight: '0.5px solid rgba(0,0,0,0.1)',
-        background: 'rgba(255,255,255,0.3)',
+        background: '#f0f0f0',
         padding: '12px 0',
         overflowY: 'auto',
         display: 'flex',
@@ -331,7 +357,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
         minWidth: '240px',
         borderRight: '0.5px solid rgba(0,0,0,0.1)',
         overflowY: 'auto',
-        background: 'rgba(255,255,255,0.4)',
+        background: '#ffffff',
       }}>
         {/* Notes grouped by date */}
         {grouped.map(group => (
@@ -409,7 +435,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
         flex: 1,
         overflowY: 'auto',
         padding: '24px 32px',
-        background: 'rgba(255,255,255,0.4)',
+        background: '#ffffff',
       }}>
         {selectedPost && selectedContent ? (
           <>
@@ -539,21 +565,32 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
   );
 };
 
-function NotesToolbarBtn({ children, active }: { children: React.ReactNode; active?: boolean }) {
+function NTBtn({ children, active, hasDropdown }: { children: React.ReactNode; active?: boolean; hasDropdown?: boolean }) {
   return (
     <div style={{
-      width: '24px',
-      height: '24px',
+      width: '28px',
+      height: '26px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: '4px',
       cursor: 'default',
-      color: active ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.35)',
+      color: active ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.45)',
+      position: 'relative',
+      flexShrink: 0,
     }}>
       {children}
+      {hasDropdown && (
+        <svg width="6" height="4" viewBox="0 0 6 4" fill="none" style={{ position: 'absolute', bottom: '2px', right: '1px' }}>
+          <path d="M0.5 0.5L3 3L5.5 0.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
     </div>
   );
+}
+
+function ToolbarDivider() {
+  return <div style={{ width: '1px', height: '18px', background: 'rgba(0,0,0,0.1)', margin: '0 6px', flexShrink: 0 }} />;
 }
 
 export default Blog;
