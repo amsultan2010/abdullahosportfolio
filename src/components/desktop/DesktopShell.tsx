@@ -500,21 +500,10 @@ function CyclingStock() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-        <div style={{ fontFamily: "'SF Mono', monospace", minHeight: '18px' }}>
-          <span style={{ color: '#fff', fontWeight: 700, fontSize: '13px' }}>
-            {scrambledText}
-          </span>
-        </div>
-        <div style={{ display: 'flex', gap: '3px' }}>
-          {stocks.map((_, i) => (
-            <div key={i} style={{
-              width: '3px', height: '3px', borderRadius: '50%',
-              background: i === activeIdx ? '#fff' : 'rgba(255,255,255,0.12)',
-              transition: 'background 0.3s',
-            }} />
-          ))}
-        </div>
+      <div style={{ fontFamily: "'SF Mono', monospace", minHeight: '18px', marginBottom: '2px' }}>
+        <span style={{ color: '#fff', fontWeight: 700, fontSize: '13px' }}>
+          {scrambledText}
+        </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
         <span style={{ fontSize: '22px', fontWeight: 600, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontVariantNumeric: 'tabular-nums' }}>
@@ -841,21 +830,20 @@ function TerminalContent() {
         <div style={{ gridRow: '1', padding: '24px 24px 16px', overflowY: 'auto' }}>
           <div style={{ fontWeight: 700, fontSize: '22px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.2 }}>Ronniel Gandhe</div>
           <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', marginBottom: '14px' }}>Software Engineer</div>
-          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.5, marginBottom: '16px' }}>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.5 }}>
             Using <RotatingWords /> to create<br />elegant and scalable solutions<br />to real world problems.
-          </div>
-          <div style={{ display: 'flex', gap: '16px', fontSize: '11.5px', flexWrap: 'wrap' }}>
-            <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
-            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
-            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
           </div>
         </div>
 
-        {/* Right column — clock + stocks stacked */}
+        {/* Right column — clock + contact info */}
         <div style={{ gridRow: '1 / 3', borderLeft: '1px solid rgba(255,255,255,0.04)', padding: '20px 16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <WorldClock />
           <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)' }} />
-          <StockTickers />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11.5px' }}>
+            <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
+            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ ronnielgandhe@gmail.com</a>
+            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 github.com/ronnielgandhe</a>
+          </div>
         </div>
 
         {/* Command tiles — middle left */}
@@ -997,7 +985,7 @@ function TerminalContent() {
         padding: '24px 24px 8px 28px', borderRight: '1px solid rgba(255,255,255,0.04)',
         minWidth: 0,
       }}>
-        {/* Static hero text — only RotatingWords animates */}
+        {/* Static hero text — name & title only */}
         <div style={{ fontFamily: "'SF Mono', 'JetBrains Mono', monospace", fontSize: '13px', lineHeight: 1.6, color: '#e0e0e0' }}>
           <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '30px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '2px' }}>
             Ronniel Gandhe
@@ -1005,23 +993,19 @@ function TerminalContent() {
           <div style={{ fontSize: '13px', color: '#fff', fontWeight: 400, marginBottom: '14px' }}>
             Software Engineer
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '16px', lineHeight: 1.6, whiteSpace: 'nowrap', overflow: 'hidden' }}>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.6 }}>
             Using {showRotating && <RotatingWords />}
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '16px', lineHeight: 1.6 }}>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.6 }}>
             to create elegant and scalable
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '16px', lineHeight: 1.6 }}>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.6 }}>
             solutions to real world problems.
           </div>
         </div>
 
-        {/* Quick links — stagger in */}
-        <div style={{
-          display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '18px',
-          opacity: showLinks ? 1 : 0, transform: showLinks ? 'translateY(0)' : 'translateY(8px)',
-          transition: 'all 0.5s ease-out', fontFamily: "'SF Mono', monospace", fontSize: '13px',
-        }}>
+        {/* Contact — pushed to bottom of left panel */}
+        <div style={{ marginTop: 'auto', fontFamily: "'SF Mono', monospace", display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11.5px' }}>
           <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
           <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
             ✉️ ronnielgandhe@gmail.com
@@ -1030,53 +1014,50 @@ function TerminalContent() {
             🐙 github.com/ronnielgandhe
           </a>
         </div>
-
-        {/* Clock — pushed to bottom of left panel */}
-        <div style={{ marginTop: 'auto' }}>
-          <WorldClock />
-        </div>
       </div>
 
       {/* Right — widgets stacked */}
       <div ref={scrollRef} onClick={() => inputRef.current?.focus()} style={{
         flex: 1, display: 'flex', flexDirection: 'column', cursor: 'text',
-        fontFamily: "'SF Mono', monospace", overflowX: 'hidden', overflowY: 'hidden',
+        fontFamily: "'SF Mono', monospace", overflow: 'hidden',
       }}>
-        {/* Date — top right corner */}
-        <div style={{ padding: '8px 14px 0', textAlign: 'right', color: '#fff', fontSize: '11px', fontWeight: 400, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-        </div>
-        {/* Stock ticker with chart */}
-        <div style={{ padding: '8px 14px 8px' }}>
-          <CyclingStock />
-        </div>
-        <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)', margin: '0 14px' }} />
+        {/* Scrollable top content (shrinks when window is small) */}
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
+          {/* Date — top right corner */}
+          <div style={{ padding: '8px 14px 0', textAlign: 'right', color: '#fff', fontSize: '11px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+          </div>
+          {/* Stock ticker with chart */}
+          <div style={{ padding: '8px 14px 8px' }}>
+            <CyclingStock />
+          </div>
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)', margin: '0 14px' }} />
 
-        {/* Smart commands */}
-        <div style={{ padding: '8px 14px' }}>
-          <div style={{ color: '#fff', fontSize: '10px', fontWeight: 600, letterSpacing: '0.1em', marginBottom: '4px' }}>EXPLORE</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            {smartCommandLinks.map(item => (
-              <div
-                key={item.cmd}
-                onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
-                style={{
-                  padding: '3px 6px', borderRadius: '4px', cursor: 'pointer',
-                  fontSize: '11.5px', transition: 'all 0.15s',
-                  color: item.color, opacity: 0.5,
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.opacity = '1'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.opacity = '0.5'; }}
-              >
-                <span style={{ color: '#4ade80', marginRight: '4px' }}>$</span>{item.cmd}
-              </div>
-            ))}
+          {/* Smart commands */}
+          <div style={{ padding: '8px 14px' }}>
+            <div style={{ color: '#fff', fontSize: '10px', fontWeight: 600, letterSpacing: '0.1em', marginBottom: '4px' }}>EXPLORE</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              {smartCommandLinks.map(item => (
+                <div
+                  key={item.cmd}
+                  onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
+                  style={{
+                    padding: '3px 6px', borderRadius: '4px', cursor: 'pointer',
+                    fontSize: '11.5px', transition: 'all 0.15s',
+                    color: item.color, opacity: 0.5,
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.opacity = '1'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.opacity = '0.5'; }}
+                >
+                  <span style={{ color: '#4ade80', marginRight: '4px' }}>$</span>{item.cmd}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)', margin: '0 14px' }} />
 
-        {/* Terminal prompt */}
-        <div style={{ padding: '6px 14px', flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+        {/* Terminal prompt — always visible at bottom */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)', padding: '6px 14px', minHeight: '36px', maxHeight: '140px', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           {renderTerminal(true)}
         </div>
       </div>
@@ -1231,6 +1212,7 @@ function Desktop() {
               projects: '#252526',
               blog: '#f0f0f0',
               'deep-research': 'rgba(255,255,255,0.44)',
+              calendar: '#ffffff',
             };
             const titleBarBg = titleBarBgMap[win.id];
             if (win.id === 'detail' && state.activeDetail) {

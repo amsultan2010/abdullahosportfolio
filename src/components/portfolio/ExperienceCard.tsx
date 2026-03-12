@@ -408,18 +408,21 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
         /* Dark mode card variant */
         .dark-experience-card {
           position: relative;
-          background: rgba(255, 255, 255, 0.04);
+          background: rgba(255, 255, 255, 0.07);
           border-radius: 12px;
-          border: none;
+          border: 1px solid rgba(255, 255, 255, 0.08);
           padding: 1.5rem;
           overflow: hidden;
           transition: all 0.3s ease;
           cursor: pointer;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
         .dark-experience-card:hover {
-          background: rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.11);
+          border-color: rgba(255, 255, 255, 0.14);
           transform: translateY(-1px);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
         .dark-experience-card:hover h3 {

@@ -1,14 +1,74 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { photos } from '../../data/photos';
 
 interface PhotosProps {
   windowMode?: boolean;
 }
 
+/* Lazy-loaded thumbnail that only renders the <img> when visible */
+function LazyThumb({ thumb, alt, onClick }: { thumb: string; alt: string; onClick: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { rootMargin: '200px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      onClick={onClick}
+      style={{
+        aspectRatio: '1',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        borderRadius: '2px',
+        position: 'relative',
+        background: '#1a1a1f',
+        containIntrinsicSize: '140px 140px',
+        contentVisibility: 'auto',
+      } as React.CSSProperties}
+      className="photos-grid-item"
+    >
+      {visible && (
+        <img
+          src={thumb}
+          alt={alt}
+          decoding="async"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 const Photos = ({ windowMode }: PhotosProps) => {
   const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
 
   const selected = selectedPhoto !== null ? photos[selectedPhoto] : null;
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (selectedPhoto === null) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' && selectedPhoto < photos.length - 1) setSelectedPhoto(selectedPhoto + 1);
+      if (e.key === 'ArrowLeft' && selectedPhoto > 0) setSelectedPhoto(selectedPhoto - 1);
+      if (e.key === 'Escape') setSelectedPhoto(null);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [selectedPhoto]);
 
   return (
     <div style={{
@@ -86,7 +146,7 @@ const Photos = ({ windowMode }: PhotosProps) => {
 
       {/* Content */}
       {selectedPhoto !== null && selected ? (
-        /* Expanded single photo view */
+        /* Expanded single photo view — loads full-size original */
         <div style={{
           flex: 1,
           display: 'flex',
@@ -196,7 +256,7 @@ const Photos = ({ windowMode }: PhotosProps) => {
           </div>
         </div>
       ) : (
-        /* Grid view */
+        /* Grid view — uses compressed thumbnails */
         <div style={{
           flex: 1,
           overflowY: 'auto',
@@ -208,49 +268,30 @@ const Photos = ({ windowMode }: PhotosProps) => {
             gap: '4px',
           }}>
             {photos.map((photo, i) => (
-              <div
+              <LazyThumb
                 key={i}
+                thumb={photo.thumb}
+                alt={photo.alt}
                 onClick={() => setSelectedPhoto(i)}
-                style={{
-                  aspectRatio: '1',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  borderRadius: '2px',
-                  position: 'relative',
-                }}
-                className="photos-grid-item"
-              >
-                <img
-                  src={photo.src}
-                  alt={photo.alt}
-                  loading="lazy"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    transition: 'transform 0.3s ease, filter 0.3s ease',
-                  }}
-                />
-              </div>
+              />
             ))}
           </div>
         </div>
       )}
 
       <style>{`
+        .photos-grid-item {
+          transition: transform 0.2s ease;
+        }
+        .photos-grid-item:hover {
+          transform: scale(1.03);
+          z-index: 1;
+        }
+        .photos-grid-item img {
+          transition: filter 0.2s ease;
+        }
         .photos-grid-item:hover img {
-          transform: scale(1.05);
           filter: brightness(1.1);
-        }
-        .photos-grid-item::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: rgba(0, 0, 0, 0);
-          transition: background 0.2s;
-        }
-        .photos-grid-item:hover::after {
-          background: rgba(255, 255, 255, 0.05);
         }
       `}</style>
     </div>

@@ -19,6 +19,70 @@ function repoSlug(url: string): string {
   return url.replace('https://github.com/', '');
 }
 
+// Vibrant tech tag color palette for VS Code style
+const techColors: Record<string, { bg: string; text: string; border: string }> = {
+  'Python':      { bg: 'rgba(78, 154, 66, 0.15)',  text: '#6ab04c', border: 'rgba(78, 154, 66, 0.3)' },
+  'PyTorch':     { bg: 'rgba(238, 76, 44, 0.14)',  text: '#ee4c2c', border: 'rgba(238, 76, 44, 0.28)' },
+  'Hugging Face': { bg: 'rgba(255, 213, 79, 0.14)', text: '#ffd54f', border: 'rgba(255, 213, 79, 0.28)' },
+  'FastAPI':     { bg: 'rgba(0, 150, 136, 0.14)',   text: '#009688', border: 'rgba(0, 150, 136, 0.28)' },
+  'TypeScript':  { bg: 'rgba(49, 120, 198, 0.15)',  text: '#4daafc', border: 'rgba(49, 120, 198, 0.3)' },
+  'JavaScript':  { bg: 'rgba(247, 223, 30, 0.14)',  text: '#f0db4f', border: 'rgba(247, 223, 30, 0.28)' },
+  'React':       { bg: 'rgba(97, 218, 251, 0.12)',  text: '#61dafb', border: 'rgba(97, 218, 251, 0.25)' },
+  'Next.js':     { bg: 'rgba(255, 255, 255, 0.08)', text: '#e0e0e0', border: 'rgba(255, 255, 255, 0.18)' },
+  'Node.js':     { bg: 'rgba(104, 159, 56, 0.14)',  text: '#8bc34a', border: 'rgba(104, 159, 56, 0.28)' },
+  'AWS':         { bg: 'rgba(255, 153, 0, 0.14)',   text: '#ff9900', border: 'rgba(255, 153, 0, 0.28)' },
+  'Docker':      { bg: 'rgba(36, 150, 237, 0.14)',  text: '#2496ed', border: 'rgba(36, 150, 237, 0.28)' },
+  'PostgreSQL':  { bg: 'rgba(51, 103, 145, 0.15)',  text: '#6296b4', border: 'rgba(51, 103, 145, 0.3)' },
+  'Redis':       { bg: 'rgba(220, 50, 47, 0.14)',   text: '#dc382f', border: 'rgba(220, 50, 47, 0.28)' },
+  'GraphQL':     { bg: 'rgba(229, 53, 171, 0.14)',  text: '#e535ab', border: 'rgba(229, 53, 171, 0.28)' },
+  'Terraform':   { bg: 'rgba(98, 75, 210, 0.14)',   text: '#7b61ff', border: 'rgba(98, 75, 210, 0.28)' },
+  'Go':          { bg: 'rgba(0, 173, 216, 0.14)',   text: '#00add8', border: 'rgba(0, 173, 216, 0.28)' },
+  'Rust':        { bg: 'rgba(222, 165, 132, 0.14)', text: '#dea584', border: 'rgba(222, 165, 132, 0.28)' },
+  'SQL':         { bg: 'rgba(0, 114, 198, 0.14)',   text: '#4daafc', border: 'rgba(0, 114, 198, 0.28)' },
+  'MongoDB':     { bg: 'rgba(77, 179, 61, 0.14)',   text: '#4db33d', border: 'rgba(77, 179, 61, 0.28)' },
+  'Tailwind CSS': { bg: 'rgba(56, 189, 248, 0.12)', text: '#38bdf8', border: 'rgba(56, 189, 248, 0.25)' },
+  'Swift':       { bg: 'rgba(240, 81, 56, 0.14)',   text: '#f05138', border: 'rgba(240, 81, 56, 0.28)' },
+  'Kotlin':      { bg: 'rgba(127, 82, 255, 0.14)',  text: '#7f52ff', border: 'rgba(127, 82, 255, 0.28)' },
+  'C++':         { bg: 'rgba(0, 89, 156, 0.15)',    text: '#659ad2', border: 'rgba(0, 89, 156, 0.3)' },
+  'Figma':       { bg: 'rgba(162, 89, 255, 0.14)',  text: '#a259ff', border: 'rgba(162, 89, 255, 0.28)' },
+  'Stripe':      { bg: 'rgba(99, 91, 255, 0.14)',   text: '#635bff', border: 'rgba(99, 91, 255, 0.28)' },
+  'OpenAI':      { bg: 'rgba(116, 170, 156, 0.14)', text: '#74aa9c', border: 'rgba(116, 170, 156, 0.28)' },
+  'Astro':       { bg: 'rgba(255, 93, 1, 0.14)',    text: '#ff5d01', border: 'rgba(255, 93, 1, 0.28)' },
+  'Vercel':      { bg: 'rgba(255, 255, 255, 0.08)', text: '#e0e0e0', border: 'rgba(255, 255, 255, 0.18)' },
+  'GitHub Actions': { bg: 'rgba(36, 150, 237, 0.14)', text: '#2496ed', border: 'rgba(36, 150, 237, 0.28)' },
+  'Grafana':     { bg: 'rgba(240, 134, 31, 0.14)',  text: '#f0861f', border: 'rgba(240, 134, 31, 0.28)' },
+  'Datadog':     { bg: 'rgba(99, 44, 166, 0.14)',   text: '#b17fd6', border: 'rgba(99, 44, 166, 0.28)' },
+  'LaunchDarkly': { bg: 'rgba(60, 60, 60, 0.2)',    text: '#a0a0a0', border: 'rgba(160, 160, 160, 0.2)' },
+  'Supabase':    { bg: 'rgba(62, 207, 142, 0.14)',  text: '#3ecf8e', border: 'rgba(62, 207, 142, 0.28)' },
+  'Firebase':    { bg: 'rgba(255, 196, 0, 0.14)',   text: '#ffc400', border: 'rgba(255, 196, 0, 0.28)' },
+  'Selenium':    { bg: 'rgba(67, 176, 42, 0.14)',   text: '#43b02a', border: 'rgba(67, 176, 42, 0.28)' },
+  'NumPy':       { bg: 'rgba(77, 119, 207, 0.14)',  text: '#4d77cf', border: 'rgba(77, 119, 207, 0.28)' },
+  'Pandas':      { bg: 'rgba(21, 2, 101, 0.2)',     text: '#a0a0e0', border: 'rgba(160, 160, 224, 0.25)' },
+  'scikit-learn': { bg: 'rgba(249, 130, 57, 0.14)', text: '#f98239', border: 'rgba(249, 130, 57, 0.28)' },
+};
+
+// Rotating bright fallback palette for unknown techs
+const fallbackColors = [
+  { bg: 'rgba(255, 107, 107, 0.14)', text: '#ff6b6b', border: 'rgba(255, 107, 107, 0.28)' },
+  { bg: 'rgba(78, 205, 196, 0.14)',  text: '#4ecdc4', border: 'rgba(78, 205, 196, 0.28)' },
+  { bg: 'rgba(255, 230, 109, 0.14)', text: '#ffe66d', border: 'rgba(255, 230, 109, 0.28)' },
+  { bg: 'rgba(168, 130, 255, 0.14)', text: '#a882ff', border: 'rgba(168, 130, 255, 0.28)' },
+  { bg: 'rgba(255, 159, 67, 0.14)',  text: '#ff9f43', border: 'rgba(255, 159, 67, 0.28)' },
+  { bg: 'rgba(0, 210, 211, 0.14)',   text: '#00d2d3', border: 'rgba(0, 210, 211, 0.28)' },
+];
+
+function getTechColor(tech: string): { bg: string; text: string; border: string } {
+  // Direct match
+  if (techColors[tech]) return techColors[tech];
+  // Partial match (e.g. "AWS (S3, DynamoDB, Lambda, CloudWatch)" → "AWS")
+  const key = Object.keys(techColors).find(k => tech.toLowerCase().includes(k.toLowerCase()));
+  if (key) return techColors[key];
+  // Fallback: deterministic color based on string hash
+  let hash = 0;
+  for (let i = 0; i < tech.length; i++) hash = ((hash << 5) - hash + tech.charCodeAt(i)) | 0;
+  return fallbackColors[Math.abs(hash) % fallbackColors.length];
+}
+
 const projects = [
   {
     id: 1,
@@ -615,24 +679,27 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
                         </a>
                       )}
                     </h1>
-                    <p style={{ color: '#b0b0b0', fontSize: '14px', lineHeight: 1.7, margin: '0 0 20px', fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif" }}>
+                    <p style={{ color: '#c8c8c8', fontSize: '14px', lineHeight: 1.7, margin: '0 0 20px', fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif" }}>
                       {project.description}
                     </p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '24px' }}>
-                      {detail.techStack.map((tech, i) => (
-                        <span key={i} style={{
-                          padding: '3px 10px', fontSize: '11px', fontWeight: 500, borderRadius: '4px',
-                          background: 'rgba(77, 170, 252, 0.12)', color: '#4daafc',
-                          border: '1px solid rgba(77, 170, 252, 0.2)', fontFamily: "'SF Mono', monospace",
-                        }}>{tech}</span>
-                      ))}
+                      {detail.techStack.map((tech, i) => {
+                        const tc = getTechColor(tech);
+                        return (
+                          <span key={i} style={{
+                            padding: '3px 10px', fontSize: '11px', fontWeight: 500, borderRadius: '4px',
+                            background: tc.bg, color: tc.text,
+                            border: `1px solid ${tc.border}`, fontFamily: "'SF Mono', monospace",
+                          }}>{tech}</span>
+                        );
+                      })}
                     </div>
                     {detail.architecture && (
                       <>
                         <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#e6e6e6', margin: '0 0 8px', fontFamily: "-apple-system, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ color: '#4daafc' }}>#</span> Architecture
                         </h2>
-                        <p style={{ color: '#a0a0a0', fontSize: '13px', lineHeight: 1.8, margin: '0 0 20px', fontFamily: "-apple-system, sans-serif" }}>
+                        <p style={{ color: '#b8b8b8', fontSize: '13px', lineHeight: 1.8, margin: '0 0 20px', fontFamily: "-apple-system, sans-serif" }}>
                           {detail.architecture}
                         </p>
                       </>
@@ -642,7 +709,7 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
                         <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#e6e6e6', margin: '0 0 8px', fontFamily: "-apple-system, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ color: '#f1b73a' }}>#</span> Technical Challenges
                         </h2>
-                        <ul style={{ color: '#a0a0a0', fontSize: '13px', lineHeight: 1.8, margin: '0 0 20px', paddingLeft: '20px', fontFamily: "-apple-system, sans-serif" }}>
+                        <ul style={{ color: '#b8b8b8', fontSize: '13px', lineHeight: 1.8, margin: '0 0 20px', paddingLeft: '20px', fontFamily: "-apple-system, sans-serif" }}>
                           {detail.technicalChallenges.map((c, i) => <li key={i} style={{ marginBottom: '4px' }}>{c}</li>)}
                         </ul>
                       </>
@@ -652,7 +719,7 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
                         <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#e6e6e6', margin: '0 0 8px', fontFamily: "-apple-system, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ color: '#4ec9b0' }}>#</span> Lessons Learned
                         </h2>
-                        <ul style={{ color: '#a0a0a0', fontSize: '13px', lineHeight: 1.8, margin: '0 0 20px', paddingLeft: '20px', fontFamily: "-apple-system, sans-serif" }}>
+                        <ul style={{ color: '#b8b8b8', fontSize: '13px', lineHeight: 1.8, margin: '0 0 20px', paddingLeft: '20px', fontFamily: "-apple-system, sans-serif" }}>
                           {detail.lessonsLearned.map((l, i) => <li key={i} style={{ marginBottom: '4px' }}>{l}</li>)}
                         </ul>
                       </>

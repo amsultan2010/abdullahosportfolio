@@ -105,13 +105,13 @@ const Calendar = ({ windowMode }: CalendarProps) => {
   return (
     <div style={{
       width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
-      background: '#fff', fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif",
+      background: 'transparent', fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif",
       userSelect: 'none',
     }}>
-      {/* Toolbar — matches Apple Calendar chrome */}
+      {/* Toolbar — solid white to match calendar content */}
       <div style={{
         height: '38px', minHeight: '38px', display: 'flex', alignItems: 'center',
-        padding: '0 14px', borderBottom: '1px solid #d6d6d6', background: '#ececec', gap: '8px',
+        padding: '0 14px', borderBottom: '1px solid #e5e5e5', background: '#fff', gap: '8px',
       }}>
         {/* Left: toolbar icons */}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -146,8 +146,8 @@ const Calendar = ({ windowMode }: CalendarProps) => {
         {/* Center: view mode segmented control */}
         <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
           <div style={{
-            display: 'inline-flex', background: '#e9e9e9', borderRadius: '7px',
-            padding: '2px', border: '0.5px solid #d0d0d0',
+            display: 'inline-flex', background: 'rgba(0, 0, 0, 0.06)', borderRadius: '7px',
+            padding: '2px', border: '0.5px solid rgba(0, 0, 0, 0.1)',
           }}>
             {(['Day', 'Week', 'Month', 'Year'] as ViewMode[]).map((mode) => (
               <button
@@ -158,8 +158,8 @@ const Calendar = ({ windowMode }: CalendarProps) => {
                   fontWeight: mode === viewMode ? 500 : 400,
                   fontFamily: "'SF Pro Text', -apple-system, sans-serif",
                   cursor: 'pointer',
-                  background: mode === viewMode ? '#fff' : 'transparent',
-                  color: mode === viewMode ? '#1a1a1a' : '#555',
+                  background: mode === viewMode ? 'rgba(255, 255, 255, 0.85)' : 'transparent',
+                  color: mode === viewMode ? '#1a1a1a' : 'rgba(0, 0, 0, 0.5)',
                   boxShadow: mode === viewMode ? '0 0.5px 2px rgba(0,0,0,0.15), 0 0.5px 0.5px rgba(0,0,0,0.1)' : 'none',
                   transition: 'all 0.15s ease',
                 }}
@@ -173,7 +173,7 @@ const Calendar = ({ windowMode }: CalendarProps) => {
         {/* Right: search */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px',
-          borderRadius: '7px', background: '#fff', border: '0.5px solid #d0d0d0',
+          borderRadius: '7px', background: 'rgba(255, 255, 255, 0.5)', border: '0.5px solid rgba(0, 0, 0, 0.1)',
         }}>
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
             <circle cx="7" cy="7" r="5" stroke="#999" strokeWidth="1.5" />
@@ -182,6 +182,9 @@ const Calendar = ({ windowMode }: CalendarProps) => {
           <span style={{ fontSize: '12.5px', color: '#aaa', fontWeight: 300 }}>Search</span>
         </div>
       </div>
+
+      {/* White content area below translucent toolbar */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fff', overflow: 'hidden' }}>
 
       {/* Header + navigation */}
       <div style={{
@@ -238,6 +241,7 @@ const Calendar = ({ windowMode }: CalendarProps) => {
           Book a Meeting
         </button>
       </div>
+      </div>{/* close white content area */}
     </div>
   );
 };

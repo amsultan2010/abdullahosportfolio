@@ -20,6 +20,8 @@ interface LocationData {
   city: string;
   region: string;
   country: string;
+  lat?: number;
+  lon?: number;
 }
 
 /* ── Main Component ────────────────────────────────── */
@@ -53,8 +55,8 @@ export default function DesktopMenuBar() {
   useEffect(() => {
     fetch('https://ipapi.co/json/')
       .then(r => r.json())
-      .then(d => setLocation({ city: d.city, region: d.region_code || d.region, country: d.country_name }))
-      .catch(() => setLocation({ city: 'Toronto', region: 'ON', country: 'Canada' }));
+      .then(d => setLocation({ city: d.city, region: d.region_code || d.region, country: d.country_name, lat: d.latitude, lon: d.longitude }))
+      .catch(() => setLocation({ city: 'Toronto', region: 'ON', country: 'Canada', lat: 43.65, lon: -79.38 }));
   }, []);
 
   // Spotify polling

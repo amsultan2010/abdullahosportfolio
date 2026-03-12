@@ -23,7 +23,7 @@ interface NewsItem {
 interface NotificationCenterProps {
   open: boolean;
   onClose: () => void;
-  location: { city: string; region: string; country: string } | null;
+  location: { city: string; region: string; country: string; lat?: number; lon?: number } | null;
 }
 
 /* ── Main — Floating Widgets (no panel, no background) ── */
@@ -33,14 +33,17 @@ export default function NotificationCenter({ open, onClose, location }: Notifica
   const [news, setNews] = useState<NewsItem[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch weather
+  // Fetch weather with real geolocation
   useEffect(() => {
     if (!open) return;
-    fetch('/api/weather')
+    const params = location?.lat && location?.lon
+      ? `?lat=${location.lat}&lon=${location.lon}`
+      : '';
+    fetch(`/api/weather${params}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d && !d.error) setWeather(d); })
       .catch(() => {});
-  }, [open]);
+  }, [open, location?.lat, location?.lon]);
 
   // Fetch news
   useEffect(() => {
@@ -68,22 +71,21 @@ export default function NotificationCenter({ open, onClose, location }: Notifica
       ref={containerRef}
       style={{
         position: 'fixed',
-        top: '36px',
+        top: '50%',
         right: '16px',
         width: '320px',
-        maxHeight: 'calc(100vh - 52px)',
+        maxHeight: 'calc(100vh - 80px)',
         zIndex: 9998,
         display: 'flex',
         flexDirection: 'column',
         gap: '16px',
         pointerEvents: open ? 'auto' : 'none',
         opacity: open ? 1 : 0,
-        transform: open ? 'translateY(0)' : 'translateY(-8px)',
+        transform: open ? 'translateY(-50%)' : 'translateY(calc(-50% - 8px))',
         transition: 'opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         overflowY: 'auto',
         overflowX: 'hidden',
         fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif",
-        /* scrollbar hide */
         scrollbarWidth: 'none',
       }}
     >
@@ -130,7 +132,7 @@ function AnalogClock() {
 
     ctx.clearRect(0, 0, size, size);
 
-    // Clock face — white circle with subtle shadow
+    // Clock face
     ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
@@ -248,7 +250,7 @@ function AnalogClock() {
       </div>
       <div style={{
         fontSize: '13px',
-        color: 'rgba(255,255,255,0.7)',
+        color: 'rgba(255,255,255,0.85)',
         marginTop: '2px',
         textShadow: '0 1px 4px rgba(0,0,0,0.25)',
       }}>
@@ -266,7 +268,6 @@ function WeatherIcon({ description }: { description: string }) {
   const d = description.toLowerCase();
   const s: React.CSSProperties = { filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.2))' };
 
-  // Sun
   if (d.includes('clear')) return (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style={s}>
       <circle cx="14" cy="14" r="5.5" stroke="#FFD60A" strokeWidth="1.8" fill="none" />
@@ -281,7 +282,6 @@ function WeatherIcon({ description }: { description: string }) {
     </svg>
   );
 
-  // Partly cloudy / mainly clear
   if (d.includes('partly') || d.includes('mainly')) return (
     <svg width="32" height="26" viewBox="0 0 32 26" fill="none" style={s}>
       <circle cx="22" cy="8" r="4.5" stroke="#FFD60A" strokeWidth="1.5" fill="none" />
@@ -293,14 +293,12 @@ function WeatherIcon({ description }: { description: string }) {
     </svg>
   );
 
-  // Overcast / cloudy
   if (d.includes('overcast') || d.includes('cloud')) return (
     <svg width="30" height="22" viewBox="0 0 30 22" fill="none" style={s}>
       <path d="M7 19c-3.3 0-6-2.2-6-5s2.7-5 6-5c.4-3.3 3.4-6 7-6 3.9 0 7 2.9 7 6.5 0 .2 0 .3 0 .5 2.3.5 4 2.4 4 4.5 0 2.5-2.2 4.5-5 4.5H7z" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5" fill="none" />
     </svg>
   );
 
-  // Rain / showers / drizzle
   if (d.includes('rain') || d.includes('shower') || d.includes('drizzle')) return (
     <svg width="30" height="28" viewBox="0 0 30 28" fill="none" style={s}>
       <path d="M7 16c-3.3 0-6-2.2-6-5s2.7-5 6-5c.4-3.3 3.4-6 7-6 3.9 0 7 2.9 7 6.5 0 .2 0 .3 0 .5 2.3.5 4 2.4 4 4.5 0 2.5-2.2 4.5-5 4.5H7z" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5" fill="none" />
@@ -310,7 +308,6 @@ function WeatherIcon({ description }: { description: string }) {
     </svg>
   );
 
-  // Snow
   if (d.includes('snow') || d.includes('ice') || d.includes('freezing')) return (
     <svg width="30" height="28" viewBox="0 0 30 28" fill="none" style={s}>
       <path d="M7 16c-3.3 0-6-2.2-6-5s2.7-5 6-5c.4-3.3 3.4-6 7-6 3.9 0 7 2.9 7 6.5 0 .2 0 .3 0 .5 2.3.5 4 2.4 4 4.5 0 2.5-2.2 4.5-5 4.5H7z" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5" fill="none" />
@@ -320,7 +317,6 @@ function WeatherIcon({ description }: { description: string }) {
     </svg>
   );
 
-  // Thunderstorm
   if (d.includes('thunder')) return (
     <svg width="30" height="28" viewBox="0 0 30 28" fill="none" style={s}>
       <path d="M7 16c-3.3 0-6-2.2-6-5s2.7-5 6-5c.4-3.3 3.4-6 7-6 3.9 0 7 2.9 7 6.5 0 .2 0 .3 0 .5 2.3.5 4 2.4 4 4.5 0 2.5-2.2 4.5-5 4.5H7z" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5" fill="none" />
@@ -328,7 +324,6 @@ function WeatherIcon({ description }: { description: string }) {
     </svg>
   );
 
-  // Fog
   if (d.includes('fog')) return (
     <svg width="30" height="20" viewBox="0 0 30 20" fill="none" style={s}>
       <line x1="3" y1="5" x2="27" y2="5" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" />
@@ -337,7 +332,6 @@ function WeatherIcon({ description }: { description: string }) {
     </svg>
   );
 
-  // Fallback — generic cloud
   return (
     <svg width="30" height="22" viewBox="0 0 30 22" fill="none" style={s}>
       <path d="M7 19c-3.3 0-6-2.2-6-5s2.7-5 6-5c.4-3.3 3.4-6 7-6 3.9 0 7 2.9 7 6.5 0 .2 0 .3 0 .5 2.3.5 4 2.4 4 4.5 0 2.5-2.2 4.5-5 4.5H7z" stroke="rgba(255,255,255,0.65)" strokeWidth="1.5" fill="none" />
@@ -355,7 +349,7 @@ function WeatherText({ weather, city }: { weather: WeatherData | null; city: str
       <div style={{
         textAlign: 'center',
         fontSize: '12px',
-        color: 'rgba(255,255,255,0.45)',
+        color: 'rgba(255,255,255,0.6)',
         padding: '4px 0',
         textShadow: '0 1px 4px rgba(0,0,0,0.2)',
       }}>
@@ -371,19 +365,17 @@ function WeatherText({ weather, city }: { weather: WeatherData | null; city: str
       alignItems: 'center',
       padding: '0 0 4px',
     }}>
-      {/* Location */}
       <div style={{
-        fontSize: '13px',
-        fontWeight: 400,
-        color: 'rgba(255,255,255,0.65)',
-        textShadow: '0 1px 4px rgba(0,0,0,0.2)',
+        fontSize: '14px',
+        fontWeight: 500,
+        color: 'rgba(255,255,255,0.9)',
+        textShadow: '0 1px 6px rgba(0,0,0,0.3)',
         marginBottom: '4px',
         fontFamily: "'SF Pro Text', -apple-system, sans-serif",
       }}>
         {city}
       </div>
 
-      {/* Icon + Temperature row */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -391,42 +383,40 @@ function WeatherText({ weather, city }: { weather: WeatherData | null; city: str
       }}>
         <WeatherIcon description={weather.description} />
         <span style={{
-          fontSize: '48px',
+          fontSize: '52px',
           fontWeight: 200,
           color: '#fff',
           lineHeight: 1,
           letterSpacing: '-0.04em',
           fontFamily: "'SF Pro Display', -apple-system, sans-serif",
-          textShadow: '0 2px 12px rgba(0,0,0,0.2)',
+          textShadow: '0 2px 16px rgba(0,0,0,0.3)',
         }}>
           {weather.temp}°
         </span>
       </div>
 
-      {/* Condition */}
       <div style={{
-        fontSize: '14px',
-        fontWeight: 400,
-        color: 'rgba(255,255,255,0.75)',
+        fontSize: '15px',
+        fontWeight: 500,
+        color: 'rgba(255,255,255,0.9)',
         marginTop: '6px',
-        textShadow: '0 1px 4px rgba(0,0,0,0.2)',
+        textShadow: '0 1px 6px rgba(0,0,0,0.3)',
         fontFamily: "'SF Pro Text', -apple-system, sans-serif",
       }}>
         {weather.description}
       </div>
 
-      {/* High / Low */}
       <div style={{
         display: 'flex',
         gap: '6px',
         marginTop: '3px',
         fontSize: '13px',
-        color: 'rgba(255,255,255,0.5)',
-        textShadow: '0 1px 4px rgba(0,0,0,0.15)',
+        color: 'rgba(255,255,255,0.7)',
+        textShadow: '0 1px 4px rgba(0,0,0,0.2)',
         fontFamily: "'SF Pro Text', -apple-system, sans-serif",
       }}>
         <span>H:{weather.high}°</span>
-        <span style={{ color: 'rgba(255,255,255,0.25)' }}>|</span>
+        <span style={{ color: 'rgba(255,255,255,0.35)' }}>|</span>
         <span>L:{weather.low}°</span>
       </div>
     </div>
@@ -443,7 +433,7 @@ function NewsList({ news }: { news: NewsItem[] }) {
       <div style={{
         textAlign: 'center',
         fontSize: '12px',
-        color: 'rgba(255,255,255,0.4)',
+        color: 'rgba(255,255,255,0.6)',
         padding: '8px 0',
         textShadow: '0 1px 4px rgba(0,0,0,0.2)',
       }}>
@@ -462,17 +452,42 @@ function NewsList({ news }: { news: NewsItem[] }) {
     } catch { return ''; }
   };
 
+  const sourceColorMap: Record<string, string> = {
+    'CBC': '#e03131',
+    'CBC News': '#e03131',
+    'BBC': '#da77f2',
+    'BBC News': '#da77f2',
+    'CTV': '#51cf66',
+    'CTV News': '#51cf66',
+    'CP24': '#ff922b',
+    'Global News': '#4dabf7',
+    'Reuters': '#ff922b',
+    'investingLive': '#51cf66',
+    'The Globe and Mail': '#ffd43b',
+    'Toronto Star': '#4dabf7',
+    'National Post': '#4dabf7',
+  };
+
+  const getSourceColor = (source: string) => {
+    if (sourceColorMap[source]) return sourceColorMap[source];
+    const lower = source.toLowerCase();
+    for (const [key, color] of Object.entries(sourceColorMap)) {
+      if (lower.includes(key.toLowerCase())) return color;
+    }
+    return '#74c0fc';
+  };
+
   return (
     <div style={{ padding: '0' }}>
       <div style={{
         fontSize: '11px',
         fontWeight: 600,
-        color: 'rgba(255,255,255,0.5)',
+        color: 'rgba(255,255,255,0.85)',
         letterSpacing: '0.06em',
         textTransform: 'uppercase',
         marginBottom: '8px',
         padding: '0 4px',
-        textShadow: '0 1px 4px rgba(0,0,0,0.2)',
+        textShadow: '0 1px 4px rgba(0,0,0,0.3)',
       }}>
         Top Stories
       </div>
@@ -485,38 +500,38 @@ function NewsList({ news }: { news: NewsItem[] }) {
           rel="noopener noreferrer"
           style={{
             display: 'block',
-            padding: '7px 4px',
+            padding: '8px 6px',
             textDecoration: 'none',
             color: 'inherit',
-            borderTop: i > 0 ? '0.5px solid rgba(255,255,255,0.08)' : 'none',
+            borderTop: i > 0 ? '0.5px solid rgba(255,255,255,0.1)' : 'none',
             borderRadius: '6px',
             transition: 'background 0.15s',
           }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
           <div style={{
-            fontSize: '10px',
-            color: 'rgba(255,255,255,0.4)',
-            fontWeight: 500,
-            marginBottom: '2px',
+            fontSize: '10.5px',
+            fontWeight: 600,
+            marginBottom: '3px',
             display: 'flex',
             justifyContent: 'space-between',
-            textShadow: '0 1px 3px rgba(0,0,0,0.2)',
+            alignItems: 'center',
+            textShadow: '0 1px 3px rgba(0,0,0,0.3)',
           }}>
-            <span>{item.source}</span>
-            <span>{timeAgo(item.pubDate)}</span>
+            <span style={{ color: getSourceColor(item.source) }}>{item.source}</span>
+            <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 400 }}>{timeAgo(item.pubDate)}</span>
           </div>
           <div style={{
-            fontSize: '12.5px',
+            fontSize: '13px',
             fontWeight: 500,
-            color: 'rgba(255,255,255,0.85)',
-            lineHeight: 1.35,
+            color: 'rgba(255,255,255,0.92)',
+            lineHeight: 1.4,
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
-            textShadow: '0 1px 4px rgba(0,0,0,0.25)',
+            textShadow: '0 1px 4px rgba(0,0,0,0.3)',
           }}>
             {item.title}
           </div>
