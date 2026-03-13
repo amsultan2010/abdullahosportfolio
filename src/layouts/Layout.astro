@@ -1,5 +1,6 @@
 ---
 import BaseHead from '../components/global/BaseHead.astro';
+import Analytics from '@vercel/analytics/astro';
 ---
 
 <html
@@ -17,5 +18,6 @@ import BaseHead from '../components/global/BaseHead.astro';
 
   <body class='overflow-x-hidden bg-gray-900'>
     <slot />
+    <Analytics />
   </body>
 </html>

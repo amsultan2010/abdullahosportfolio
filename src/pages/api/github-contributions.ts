@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 
 export const GET: APIRoute = async () => {
-  const token = import.meta.env.GITHUB_TOKEN;
+  const token = import.meta.env.GITHUB_TOKEN || process.env.GITHUB_TOKEN;
   if (!token) {
     return new Response(JSON.stringify({ error: 'No GITHUB_TOKEN configured' }), {
       status: 500,

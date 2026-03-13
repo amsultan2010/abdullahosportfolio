@@ -38,5 +38,3 @@ export default function Desktop({ initialBg, backgroundMap, recentPosts }: AppLa
     </div>
   );
 }
-npm run build
-npm run preview

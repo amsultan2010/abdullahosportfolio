@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro';
 
-const CLIENT_ID = import.meta.env.SPOTIFY_CLIENT_ID;
-const CLIENT_SECRET = import.meta.env.SPOTIFY_CLIENT_SECRET;
-const REFRESH_TOKEN = import.meta.env.SPOTIFY_REFRESH_TOKEN;
+const CLIENT_ID = import.meta.env.SPOTIFY_CLIENT_ID || process.env.SPOTIFY_CLIENT_ID;
+const CLIENT_SECRET = import.meta.env.SPOTIFY_CLIENT_SECRET || process.env.SPOTIFY_CLIENT_SECRET;
+const REFRESH_TOKEN = import.meta.env.SPOTIFY_REFRESH_TOKEN || process.env.SPOTIFY_REFRESH_TOKEN;
 
 const TOKEN_URL = 'https://accounts.spotify.com/api/token';
 const NOW_PLAYING_URL = 'https://api.spotify.com/v1/me/player/currently-playing';

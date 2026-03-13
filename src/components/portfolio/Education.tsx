@@ -12,6 +12,7 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
   const [hasAnimated, setHasAnimated] = useState(windowMode ?? false);
   const [selectedDetail, setSelectedDetail] = useState<EducationDetail | null>(null);
   const [viewState, setViewState] = useState<'list' | 'fading-out' | 'detail' | 'fading-back'>('list');
+  const [selectedCert, setSelectedCert] = useState<{ title: string; issuer: string; date: string; pdfUrl: string; logo: string; reflection: string } | null>(null);
   const educationRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -230,10 +231,90 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
                 />
               ))}
             </div>
+
+            {/* ── Certifications ── */}
+            <h3 style={{
+              fontSize: '1.1rem',
+              color: 'rgba(255, 255, 255, 0.7)',
+              fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-MediumItalic, sans-serif',
+              fontStyle: 'italic',
+              margin: '2rem 0 1rem 0',
+              fontWeight: '500',
+            }}>
+              Certifications
+            </h3>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {[
+                {
+                  title: 'Machine Learning for Trading Specialization',
+                  issuer: 'Google Cloud Skills Boost',
+                  date: 'Dec 2024',
+                  credentialId: 'ERAU8H0QLX7N',
+                  pdfUrl: '/google trading cloud .pdf',
+                  logo: '/google_cloud_logo_icon_171058-1.png',
+                  reflection: 'This specialization deepened my understanding of applying ML models to financial markets — from time series forecasting to reinforcement learning for portfolio optimization. It bridged the gap between my CS fundamentals and my interest in quantitative finance.',
+                },
+                {
+                  title: 'Finance & Quantitative Modeling for Analysts',
+                  issuer: 'Wharton Online',
+                  date: 'Dec 2024',
+                  credentialId: 'S2XHA24WPFWY',
+                  pdfUrl: '/wharton certicate.pdf',
+                  logo: '/wharton-shield.png',
+                  reflection: 'Wharton\'s quantitative modeling program gave me a rigorous foundation in financial analysis — from valuation frameworks to risk modeling. It reinforced how to think about markets systematically, which directly informs how I build data-driven tools.',
+                },
+              ].map((cert) => (
+                <div
+                  key={cert.credentialId}
+                  onClick={() => {
+                    setSelectedCert(cert);
+                    setSelectedDetail(null);
+                    setViewState('fading-out');
+                    setTimeout(() => {
+                      setViewState('detail');
+                      scrollRef.current?.scrollTo({ top: 0 });
+                    }, 300);
+                  }}
+                  style={{
+                    flex: 1,
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '0.5px solid rgba(255,255,255,0.1)',
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s, border-color 0.2s',
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)';
+                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.2)';
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
+                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)';
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <img
+                      src={cert.logo}
+                      alt={cert.issuer}
+                      style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 6, flexShrink: 0 }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', fontFamily: "'SF Pro Text', -apple-system, sans-serif", lineHeight: 1.3 }}>
+                        {cert.title}
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Pro Text', -apple-system, sans-serif", marginTop: '3px' }}>
+                        {cert.issuer} · {cert.date}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* ── DETAIL VIEW ── */}
-          {selectedDetail && (viewState === 'detail' || viewState === 'fading-back') && (
+          {(selectedDetail || selectedCert) && (viewState === 'detail' || viewState === 'fading-back') && (
             <div style={{
               padding: 'clamp(0.75rem, 1.5vw, 1rem) clamp(1.5rem, 3vw, 2.5rem) clamp(1.5rem, 3vw, 2.5rem)',
               opacity: viewState === 'detail' ? 1 : 0,
@@ -246,6 +327,7 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
                   setViewState('fading-back');
                   setTimeout(() => {
                     setSelectedDetail(null);
+                    setSelectedCert(null);
                     setViewState('list');
                   }, 300);
                 }}
@@ -266,7 +348,60 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
                 Education
               </button>
 
-              <EducationContent detail={selectedDetail} />
+              {selectedDetail ? (
+                <EducationContent detail={selectedDetail} />
+              ) : selectedCert ? (
+                <div>
+                  {/* Cert header */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '1.25rem' }}>
+                    <img
+                      src={selectedCert.logo}
+                      alt={selectedCert.issuer}
+                      style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 8 }}
+                    />
+                    <div>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", lineHeight: 1.3 }}>
+                        {selectedCert.title}
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Pro Text', -apple-system, sans-serif", marginTop: '3px' }}>
+                        {selectedCert.issuer} · {selectedCert.date}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Reflection */}
+                  <div style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '0.5px solid rgba(255,255,255,0.1)',
+                    borderRadius: '10px',
+                    padding: '16px 18px',
+                    marginBottom: '1.25rem',
+                  }}>
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Pro Text', -apple-system, sans-serif", marginBottom: '8px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                      Reflection
+                    </div>
+                    <div style={{
+                      fontSize: '13px', color: 'rgba(255,255,255,0.7)', fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+                      lineHeight: 1.65, fontStyle: 'italic',
+                    }}>
+                      {selectedCert.reflection}
+                    </div>
+                  </div>
+
+                  {/* Embedded PDF */}
+                  <div style={{
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                    border: '0.5px solid rgba(255,255,255,0.1)',
+                  }}>
+                    <iframe
+                      src={selectedCert.pdfUrl}
+                      style={{ width: '100%', height: '600px', border: 'none', background: '#fff' }}
+                      title={selectedCert.title}
+                    />
+                  </div>
+                </div>
+              ) : null}
             </div>
           )}
         </div>

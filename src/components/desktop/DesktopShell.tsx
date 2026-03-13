@@ -467,6 +467,17 @@ interface StockData {
   symbol: string; name: string; price: number; change: number; pct: number; history: number[];
 }
 
+// Shared sector definitions — used across heatmap, sparklines, and detail views
+const SECTORS: { name: string; symbols: string[]; color?: string }[] = [
+  { name: 'Tech', symbols: ['AAPL', 'MSFT', 'GOOG', 'META', 'NVDA', 'AMD', 'AVGO', 'CRM', 'ORCL', 'ADBE', 'INTC'] },
+  { name: 'Consumer', symbols: ['AMZN', 'TSLA', 'NFLX', 'DIS', 'NKE', 'SBUX', 'MCD', 'UBER', 'SHOP'] },
+  { name: 'Finance', symbols: ['JPM', 'V', 'MA', 'GS'] },
+  { name: 'Health', symbols: ['JNJ', 'PFE', 'LLY', 'UNH'] },
+  { name: 'Crypto', symbols: ['BTC', 'ETH', 'COIN', 'MSTR'] },
+  { name: 'Cloud', symbols: ['SNOW', 'NET', 'CRWD', 'DDOG', 'PLTR'] },
+  { name: 'Energy', symbols: ['XOM', 'BA', 'CAT'] },
+];
+
 // Shared stock data fetcher — avoids multiple API calls
 function useStockData() {
   const [stocks, setStocks] = useState<StockData[]>([]);
@@ -519,8 +530,8 @@ function useStockData() {
   return stocks;
 }
 
-function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false, instanceId = 0 }: {
-  stocks?: StockData[]; startOffset?: number; compact?: boolean; instanceId?: number;
+function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false, instanceId = 0, onCurrentStock }: {
+  stocks?: StockData[]; startOffset?: number; compact?: boolean; instanceId?: number; onCurrentStock?: (stock: StockData) => void;
 } = {}) {
   const ownStocks = useStockData();
   const stocks = externalStocks && externalStocks.length > 0 ? externalStocks : ownStocks;
@@ -616,6 +627,11 @@ function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false
     return () => cancelAnimationFrame(raf);
   }, [stocks]);
 
+  // Notify parent of current stock when it changes
+  useEffect(() => {
+    if (onCurrentStock && stocks[displayIdx]) onCurrentStock(stocks[displayIdx]);
+  }, [displayIdx, stocks]);
+
   const stock = stocks[displayIdx] || null;
   const tickerFull = stock ? `${stock.symbol} ${stock.name}` : '';
   const isUp = stock ? stock.change >= 0 : true;
@@ -697,17 +713,35 @@ function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false
 }
 
 // 2x2 Stock Grid for fullscreen Bloomberg view
-function StockGrid() {
+function StockGrid({ onStockClick }: { onStockClick?: (symbol: string, name: string) => void } = {}) {
   const stocks = useStockData();
+  const currentStocks = useRef<(StockData | null)[]>([null, null, null, null]);
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  const handleCurrentStock = (cellIdx: number, stock: StockData) => {
+    currentStocks.current[cellIdx] = stock;
+  };
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
       {[0, 1, 2, 3].map(i => (
-        <div key={i} style={{
-          padding: '8px 10px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
-        }}>
-          <CyclingStock stocks={stocks} startOffset={i} compact instanceId={i} />
+        <div key={i}
+          onClick={(e) => {
+            e.stopPropagation();
+            const s = currentStocks.current[i];
+            if (s && onStockClick) onStockClick(s.symbol, s.name);
+          }}
+          onMouseEnter={() => setHovered(i)}
+          onMouseLeave={() => setHovered(null)}
+          style={{
+            padding: '8px 10px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+            cursor: onStockClick ? 'pointer' : 'default',
+            background: hovered === i ? 'rgba(255,255,255,0.04)' : 'transparent',
+            transition: 'background 0.15s',
+          }}>
+          <CyclingStock stocks={stocks} startOffset={i} compact instanceId={i} onCurrentStock={(s) => handleCurrentStock(i, s)} />
         </div>
       ))}
     </div>
@@ -810,21 +844,21 @@ function GitHubHeatmap() {
   };
 
   if (!weeks.length) return null;
-  const cellSize = 7;
-  const gap = 2;
+  const cellSize = 5;
+  const gap = 1.5;
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-        <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
-          GITHUB CONTRIBUTIONS
+        <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace" }}>
+          GITHUB
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
-          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
-          LIVE · {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
+          LIVE
         </div>
       </div>
-      <div style={{ overflowX: 'auto', overflowY: 'hidden' }}>
+      <div style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1, display: 'flex', alignItems: 'center' }}>
         <svg width={weeks.length * (cellSize + gap)} height={7 * (cellSize + gap)} style={{ display: 'block' }}>
           {weeks.map((week, wi) =>
             week.map((count, di) => (
@@ -834,22 +868,15 @@ function GitHubHeatmap() {
                 y={di * (cellSize + gap)}
                 width={cellSize}
                 height={cellSize}
-                rx={1.5}
+                rx={1}
                 fill={getColor(count)}
               />
             ))
           )}
         </svg>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
-        <span>{total} contributions in the last year</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-          <span>Less</span>
-          {[0, 1, 3, 5, 7].map(v => (
-            <div key={v} style={{ width: 7, height: 7, borderRadius: 1.5, background: getColor(v) }} />
-          ))}
-          <span>More</span>
-        </div>
+      <div style={{ marginTop: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Mono', monospace" }}>
+        {total} contributions
       </div>
     </div>
   );
@@ -923,19 +950,9 @@ function SpotifyWidget() {
 // ── Widget 3: Market Sector Heatmap ──
 function SectorHeatmap() {
   const stocks = useStockData();
-  const sectors: { name: string; symbols: string[]; color?: string }[] = [
-    { name: 'Tech', symbols: ['AAPL', 'MSFT', 'GOOG', 'META', 'NVDA', 'AMD', 'AVGO', 'CRM', 'ORCL', 'ADBE', 'INTC'] },
-    { name: 'Consumer', symbols: ['AMZN', 'TSLA', 'NFLX', 'DIS', 'NKE', 'SBUX', 'MCD', 'UBER', 'SHOP'] },
-    { name: 'Finance', symbols: ['JPM', 'V', 'MA', 'GS'] },
-    { name: 'Health', symbols: ['JNJ', 'PFE', 'LLY', 'UNH'] },
-    { name: 'Crypto', symbols: ['BTC', 'ETH', 'COIN', 'MSTR'] },
-    { name: 'Cloud', symbols: ['SNOW', 'NET', 'CRWD', 'DDOG', 'PLTR'] },
-    { name: 'Energy', symbols: ['XOM', 'BA', 'CAT'] },
-  ];
-
   if (!stocks.length) return null;
 
-  const sectorData = sectors.map(sec => {
+  const sectorData = SECTORS.map(sec => {
     const matched = stocks.filter(s => sec.symbols.includes(s.symbol));
     const avgPct = matched.length > 0 ? matched.reduce((a, s) => a + s.pct, 0) / matched.length : 0;
     return { ...sec, pct: avgPct, count: matched.length };
@@ -1025,22 +1042,22 @@ function NowPlaying() {
   const pct = track.durationMs > 0 ? (progress / track.durationMs) * 100 : 0;
 
   return (
-    <div style={{ marginTop: '16px' }}>
-      <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Mono', monospace" }}>
         {track.isPlaying ? '♫ NOW PLAYING' : '♫ RECENTLY PLAYED'}
       </div>
-      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: 1 }}>
         {track.albumArt && (
-          <img src={track.albumArt} alt="" style={{ width: 40, height: 40, borderRadius: 4, flexShrink: 0 }} />
+          <img src={track.albumArt} alt="" style={{ width: 48, height: 48, borderRadius: 6, flexShrink: 0 }} />
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
             {track.title}
           </div>
-          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Mono', monospace" }}>
             {track.artist}
           </div>
-          <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{ flex: 1, height: 2, background: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden' }}>
               <div style={{ width: `${pct}%`, height: '100%', background: '#1DB954', borderRadius: 1, transition: 'width 1s linear' }} />
             </div>
@@ -1059,18 +1076,8 @@ function SectorTreemap() {
   const stocks = useStockData();
   if (!stocks.length) return null;
 
-  const sectors = [
-    { name: 'Tech', symbols: ['AAPL', 'MSFT', 'GOOG', 'META', 'NVDA', 'AMD', 'AVGO', 'CRM', 'ORCL', 'ADBE', 'INTC'] },
-    { name: 'Consumer', symbols: ['AMZN', 'TSLA', 'NFLX', 'DIS', 'NKE', 'SBUX', 'MCD', 'UBER', 'SHOP'] },
-    { name: 'Finance', symbols: ['JPM', 'V', 'MA', 'GS'] },
-    { name: 'Health', symbols: ['JNJ', 'PFE', 'LLY', 'UNH'] },
-    { name: 'Crypto', symbols: ['BTC', 'ETH', 'COIN', 'MSTR'] },
-    { name: 'Cloud', symbols: ['SNOW', 'NET', 'CRWD', 'DDOG', 'PLTR'] },
-    { name: 'Energy', symbols: ['XOM', 'BA', 'CAT'] },
-  ];
-
   // Build flat list of individual stocks with sector info
-  const items = sectors.flatMap(sec =>
+  const items = SECTORS.flatMap(sec =>
     sec.symbols.map(sym => {
       const stock = stocks.find(s => s.symbol === sym);
       return stock ? { symbol: stock.symbol, name: stock.name, pct: stock.pct, sector: sec.name, weight: Math.max(Math.abs(stock.pct), 0.3) } : null;
@@ -1156,17 +1163,7 @@ function SectorBubbles() {
   const stocks = useStockData();
   if (!stocks.length) return null;
 
-  const sectors = [
-    { name: 'Tech', symbols: ['AAPL', 'MSFT', 'GOOG', 'META', 'NVDA', 'AMD', 'AVGO', 'CRM', 'ORCL', 'ADBE', 'INTC'] },
-    { name: 'Consumer', symbols: ['AMZN', 'TSLA', 'NFLX', 'DIS', 'NKE', 'SBUX', 'MCD', 'UBER', 'SHOP'] },
-    { name: 'Finance', symbols: ['JPM', 'V', 'MA', 'GS'] },
-    { name: 'Health', symbols: ['JNJ', 'PFE', 'LLY', 'UNH'] },
-    { name: 'Crypto', symbols: ['BTC', 'ETH', 'COIN', 'MSTR'] },
-    { name: 'Cloud', symbols: ['SNOW', 'NET', 'CRWD', 'DDOG', 'PLTR'] },
-    { name: 'Energy', symbols: ['XOM', 'BA', 'CAT'] },
-  ];
-
-  const sectorData = sectors.map(sec => {
+  const sectorData = SECTORS.map(sec => {
     const matched = stocks.filter(s => sec.symbols.includes(s.symbol));
     const avgPct = matched.length > 0 ? matched.reduce((a, s) => a + s.pct, 0) / matched.length : 0;
     return { name: sec.name, pct: avgPct, count: matched.length };
@@ -1222,8 +1219,92 @@ function SectorBubbles() {
   );
 }
 
+// ── Market Clock (fills empty grid slot next to Energy) ──
+function MarketClock() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // NYSE hours: 9:30 AM - 4:00 PM ET, Mon-Fri
+  const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const day = et.getDay(); // 0=Sun, 6=Sat
+  const hrs = et.getHours();
+  const mins = et.getMinutes();
+  const secs = et.getSeconds();
+  const totalMins = hrs * 60 + mins;
+  const openMin = 9 * 60 + 30; // 9:30 AM
+  const closeMin = 16 * 60;     // 4:00 PM
+  const isWeekday = day >= 1 && day <= 5;
+  const isOpen = isWeekday && totalMins >= openMin && totalMins < closeMin;
+
+  // Calculate countdown
+  let targetLabel = '';
+  let countdown = '';
+  if (isOpen) {
+    // Market is open — count down to close
+    targetLabel = 'MARKET CLOSES IN';
+    const remaining = (closeMin - totalMins) * 60 - secs;
+    const h = Math.floor(remaining / 3600);
+    const m = Math.floor((remaining % 3600) / 60);
+    const s = remaining % 60;
+    countdown = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  } else {
+    // Market is closed — count down to next open
+    targetLabel = 'MARKET OPENS IN';
+    let nextOpen = new Date(et);
+    if (isWeekday && totalMins < openMin) {
+      // Today before open
+      nextOpen.setHours(9, 30, 0, 0);
+    } else {
+      // After close or weekend — find next weekday
+      nextOpen.setDate(nextOpen.getDate() + 1);
+      while (nextOpen.getDay() === 0 || nextOpen.getDay() === 6) {
+        nextOpen.setDate(nextOpen.getDate() + 1);
+      }
+      nextOpen.setHours(9, 30, 0, 0);
+    }
+    const diff = Math.max(0, Math.floor((nextOpen.getTime() - et.getTime()) / 1000));
+    const dh = Math.floor(diff / 3600);
+    const dm = Math.floor((diff % 3600) / 60);
+    const ds = diff % 60;
+    if (dh >= 24) {
+      const dd = Math.floor(dh / 24);
+      const rh = dh % 24;
+      countdown = `${dd}d ${rh}h ${dm.toString().padStart(2, '0')}m`;
+    } else {
+      countdown = `${dh}:${dm.toString().padStart(2, '0')}:${ds.toString().padStart(2, '0')}`;
+    }
+  }
+
+  return (
+    <div style={{
+      padding: '6px 8px',
+      background: 'rgba(255,255,255,0.04)', borderRadius: 5, border: '0.5px solid rgba(255,255,255,0.06)',
+      display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
+        <span style={{ width: 5, height: 5, borderRadius: '50%', background: isOpen ? '#4ade80' : '#f87171', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
+        <span style={{ fontSize: '9px', fontWeight: 700, color: isOpen ? '#4ade80' : '#f87171', fontFamily: "'SF Mono', monospace", letterSpacing: '0.05em' }}>
+          {isOpen ? 'MARKET OPEN' : 'MARKET CLOSED'}
+        </span>
+      </div>
+      <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace", marginBottom: '4px' }}>
+        {targetLabel}
+      </div>
+      <div style={{ fontSize: '16px', fontWeight: 700, color: '#fff', fontFamily: "'SF Mono', monospace", fontVariantNumeric: 'tabular-nums', letterSpacing: '0.5px' }}>
+        {countdown}
+      </div>
+      <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Mono', monospace", marginTop: '4px' }}>
+        NYSE · {et.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET
+      </div>
+    </div>
+  );
+}
+
 // ── Sector Sparklines ──
-function SectorSparklines() {
+function SectorSparklines({ onSectorClick }: { onSectorClick?: (name: string) => void } = {}) {
   const stocks = useStockData();
   const [animReady, setAnimReady] = useState(false);
 
@@ -1236,24 +1317,18 @@ function SectorSparklines() {
 
   if (!stocks.length) return null;
 
-  const sectors = [
-    { name: 'Tech', symbols: ['AAPL', 'MSFT', 'GOOG', 'META', 'NVDA', 'AMD', 'AVGO', 'CRM', 'ORCL', 'ADBE', 'INTC'] },
-    { name: 'Consumer', symbols: ['AMZN', 'TSLA', 'NFLX', 'DIS', 'NKE', 'SBUX', 'MCD', 'UBER', 'SHOP'] },
-    { name: 'Finance', symbols: ['JPM', 'V', 'MA', 'GS'] },
-    { name: 'Health', symbols: ['JNJ', 'PFE', 'LLY', 'UNH'] },
-    { name: 'Crypto', symbols: ['BTC', 'ETH', 'COIN', 'MSTR'] },
-    { name: 'Cloud', symbols: ['SNOW', 'NET', 'CRWD', 'DDOG', 'PLTR'] },
-    { name: 'Energy', symbols: ['XOM', 'BA', 'CAT'] },
-  ];
-
-  const sectorData = sectors.map(sec => {
+  const sectorData = SECTORS.map(sec => {
     const matched = stocks.filter(s => sec.symbols.includes(s.symbol));
     const avgPct = matched.length > 0 ? matched.reduce((a, s) => a + s.pct, 0) / matched.length : 0;
     const maxLen = Math.max(...matched.map(s => s.history.length), 0);
     const avgHistory: number[] = [];
     for (let i = 0; i < maxLen; i++) {
-      const vals = matched.map(s => s.history[i]).filter((v): v is number => v != null);
-      avgHistory.push(vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0);
+      // Normalize each stock to % change from its start price so BTC doesn't dominate
+      const pctChanges = matched.map(s => {
+        if (s.history[i] == null || !s.history[0]) return null;
+        return ((s.history[i] - s.history[0]) / s.history[0]) * 100;
+      }).filter((v): v is number => v != null);
+      avgHistory.push(pctChanges.length > 0 ? pctChanges.reduce((a, b) => a + b, 0) / pctChanges.length : 0);
     }
     return { name: sec.name, pct: avgPct, history: avgHistory, count: matched.length };
   });
@@ -1277,7 +1352,7 @@ function SectorSparklines() {
         }
       `}</style>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+        <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace" }}>
           SECTOR PERFORMANCE
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
@@ -1295,11 +1370,18 @@ function SectorSparklines() {
           const color = sec.pct >= 0 ? '#4ade80' : '#f87171';
           const delay = idx * 0.12;
           return (
-            <div key={sec.name} style={{
+            <div key={sec.name}
+              onClick={(e) => { e.stopPropagation(); onSectorClick?.(sec.name); }}
+              style={{
               padding: '6px 8px',
               background: 'rgba(255,255,255,0.04)', borderRadius: 5, border: '0.5px solid rgba(255,255,255,0.06)',
               opacity: animReady ? 1 : 0, animation: animReady ? `sparkFadeIn 0.4s ${delay}s ease-out both` : 'none',
-            }}>
+              cursor: onSectorClick ? 'pointer' : 'default',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => { if (onSectorClick) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}
+            onMouseLeave={e => { if (onSectorClick) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+            >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                 <span style={{ fontSize: '9px', fontWeight: 700, color: '#fff', fontFamily: "'SF Mono', monospace" }}>{sec.name}</span>
                 <span style={{ fontSize: '10px', fontWeight: 700, color, fontFamily: "'SF Mono', monospace" }}>
@@ -1333,6 +1415,716 @@ function SectorSparklines() {
                   </circle>
                 )}
               </svg>
+            </div>
+          );
+        })}
+        {/* Market Clock — fills the empty 8th grid slot */}
+        <MarketClock />
+      </div>
+    </div>
+  );
+}
+
+// ── Drill-Down Components ──
+
+function BloombergBackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer',
+        fontSize: '10px', fontWeight: 700, fontFamily: "'SF Mono', monospace",
+        letterSpacing: '0.05em', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '4px',
+      }}
+      onMouseEnter={e => (e.currentTarget.style.color = '#60a5fa')}
+      onMouseLeave={e => (e.currentTarget.style.color = '#3b82f6')}
+    >
+      ← BACK TO DASHBOARD
+    </button>
+  );
+}
+
+function StockDetailView({ symbol, name, onBack, onSectorClick }: { symbol: string; name: string; onBack: () => void; onSectorClick: (name: string) => void }) {
+  const [detail, setDetail] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const stocks = useStockData();
+  const currentStock = stocks.find(s => s.symbol === symbol);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/stock-detail?symbol=${symbol}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { setDetail(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [symbol]);
+
+  // Find which sector this stock belongs to
+  const sector = SECTORS.find(s => s.symbols.includes(symbol));
+  const sectorStocks = sector ? stocks.filter(s => sector.symbols.includes(s.symbol)) : [];
+
+  const price = currentStock?.price ?? 0;
+  const pct = currentStock?.pct ?? 0;
+  const change = currentStock?.change ?? 0;
+  const isUp = change >= 0;
+  const color = isUp ? '#4ade80' : '#f87171';
+
+  // Build chart from detail API (5-day) or fallback to 1-day history
+  const chartData = detail?.chart?.closes?.length > 0 ? detail.chart.closes : (currentStock?.history || []);
+  const chartH = 160, chartW = 500;
+  const mn = Math.min(...chartData), mx = Math.max(...chartData), rng = mx - mn || 1;
+  const pts = chartData.map((v: number, i: number) => `${(i / (chartData.length - 1)) * chartW},${chartH - ((v - mn) / rng) * (chartH - 8) - 4}`).join(' ');
+  const fillPts = pts + ` ${chartW},${chartH} 0,${chartH}`;
+
+  const statItems = detail ? [
+    { label: 'Open', value: detail.open },
+    { label: 'Prev Close', value: detail.prevClose },
+    { label: 'Day High', value: detail.dayHigh },
+    { label: 'Day Low', value: detail.dayLow },
+    { label: '52W High', value: detail.fiftyTwoWeekHigh },
+    { label: '52W Low', value: detail.fiftyTwoWeekLow },
+    { label: 'Market Cap', value: detail.marketCap },
+    { label: 'Volume', value: detail.volume },
+    { label: '5D High', value: detail.fiveDayHigh },
+    { label: '5D Low', value: detail.fiveDayLow },
+    { label: 'P/E', value: detail.pe },
+    { label: 'Exchange', value: detail.exchange },
+  ].filter(s => s.value && s.value !== '—') : [];
+
+  return (
+    <div style={{ padding: '10px 12px' }}>
+      <BloombergBackButton onClick={onBack} />
+
+      {/* Header: Symbol + Price */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '8px', marginBottom: '12px' }}>
+        <div>
+          <div style={{ fontSize: '16px', fontWeight: 800, color: '#fff', fontFamily: "'SF Mono', monospace" }}>
+            {symbol} <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{detail?.name || name}</span>
+          </div>
+          {detail?.exchange && (
+            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', fontFamily: "'SF Mono', monospace", marginTop: '2px' }}>
+              {detail.exchange} · {detail.currency}
+            </div>
+          )}
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '20px', fontWeight: 800, color: '#fff', fontFamily: "'SF Mono', monospace" }}>
+            {symbol === 'BTC' ? price.toLocaleString('en-US', { maximumFractionDigits: 0 }) : price.toFixed(2)}
+          </div>
+          <div style={{ fontSize: '12px', fontWeight: 700, color, fontFamily: "'SF Mono', monospace" }}>
+            {isUp ? '▲' : '▼'} {Math.abs(change).toFixed(2)} ({isUp ? '+' : ''}{pct.toFixed(2)}%)
+          </div>
+        </div>
+      </div>
+
+      {/* Chart */}
+      {chartData.length > 1 && (
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px', marginBottom: '12px', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+          <svg width="100%" height={chartH} viewBox={`0 0 ${chartW} ${chartH}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
+            <defs>
+              <linearGradient id="detail-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+                <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+              </linearGradient>
+            </defs>
+            <polygon points={fillPts} fill="url(#detail-fill)" />
+            <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+            <circle cx={chartW} cy={chartH - ((chartData[chartData.length - 1] - mn) / rng) * (chartH - 8) - 4} r="3" fill={color}>
+              <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite" />
+            </circle>
+          </svg>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Mono', monospace", marginTop: '4px' }}>
+            <span>{detail?.chart?.closes?.length > 0 ? '5D' : '1D'}</span>
+            <span>LIVE</span>
+          </div>
+        </div>
+      )}
+
+      {/* Stats Grid */}
+      {loading ? (
+        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontFamily: "'SF Mono', monospace", textAlign: 'center', padding: '20px' }}>
+          Loading fundamentals...
+        </div>
+      ) : statItems.length > 0 ? (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: 'rgba(255,255,255,0.04)', borderRadius: 6, overflow: 'hidden', marginBottom: '12px', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+          {statItems.map(s => (
+            <div key={s.label} style={{ padding: '5px 8px', background: 'rgba(10,12,18,0.9)' }}>
+              <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace", fontWeight: 600 }}>{s.label}</div>
+              <div style={{ fontSize: '11px', color: '#fff', fontFamily: "'SF Mono', monospace", fontWeight: 600 }}>{s.value}</div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Sector Context */}
+      {sector && (
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px 10px', marginBottom: '12px', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <span style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Mono', monospace", letterSpacing: '0.05em' }}>
+              SECTOR: {sector.name.toUpperCase()}
+            </span>
+            <button onClick={() => onSectorClick(sector.name)} style={{
+              background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer',
+              fontSize: '9px', fontWeight: 700, fontFamily: "'SF Mono', monospace",
+            }}>
+              VIEW ALL →
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+            {sectorStocks.map(s => (
+              <span key={s.symbol} style={{
+                fontSize: '9px', fontFamily: "'SF Mono', monospace", fontWeight: 600,
+                padding: '2px 6px', borderRadius: 3,
+                background: s.symbol === symbol ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)',
+                color: s.symbol === symbol ? '#3b82f6' : (s.pct >= 0 ? '#4ade80' : '#f87171'),
+                border: s.symbol === symbol ? '1px solid rgba(59,130,246,0.3)' : '1px solid rgba(255,255,255,0.06)',
+              }}>
+                {s.symbol} {s.pct >= 0 ? '+' : ''}{s.pct.toFixed(1)}%
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Related News */}
+      {detail?.news?.length > 0 && (
+        <div style={{ marginTop: '4px' }}>
+          <div style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Mono', monospace", letterSpacing: '0.05em', marginBottom: '6px' }}>
+            RELATED NEWS
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'rgba(255,255,255,0.04)', borderRadius: 6, overflow: 'hidden', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+            {detail.news.map((n: any, i: number) => (
+              <a key={i} href={n.url} target="_blank" rel="noopener noreferrer"
+                style={{
+                  display: 'block', padding: '6px 8px', background: 'rgba(10,12,18,0.9)',
+                  textDecoration: 'none', transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(10,12,18,0.9)')}
+                onClick={e => e.stopPropagation()}
+              >
+                <div style={{ fontSize: '10px', color: '#fff', fontFamily: "'SF Mono', monospace", fontWeight: 500, lineHeight: 1.3 }}>
+                  {n.title}
+                </div>
+                <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.35)', fontFamily: "'SF Mono', monospace", marginTop: '2px' }}>
+                  {n.source} · {n.pubDate ? new Date(n.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SectorDetailView({ sectorName, onBack, onStockClick }: { sectorName: string; onBack: () => void; onStockClick: (symbol: string, name: string) => void }) {
+  const stocks = useStockData();
+  const sector = SECTORS.find(s => s.name === sectorName);
+  const [news, setNews] = useState<{ title: string; source: string; url: string; pubDate: string }[]>([]);
+  const [newsLoading, setNewsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!sectorName) return;
+    setNewsLoading(true);
+    fetch(`/api/sector-news?sector=${encodeURIComponent(sectorName)}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(d => { if (Array.isArray(d)) setNews(d); })
+      .catch(() => {})
+      .finally(() => setNewsLoading(false));
+  }, [sectorName]);
+
+  if (!sector) return null;
+
+  const matched = stocks.filter(s => sector.symbols.includes(s.symbol));
+  const sorted = [...matched].sort((a, b) => b.pct - a.pct);
+  const avgPct = matched.length > 0 ? matched.reduce((a, s) => a + s.pct, 0) / matched.length : 0;
+  const winners = matched.filter(s => s.pct > 0).length;
+  const losers = matched.filter(s => s.pct < 0).length;
+  const flat = matched.filter(s => s.pct === 0).length;
+  const best = sorted[0];
+  const worst = sorted[sorted.length - 1];
+  const isUp = avgPct >= 0;
+  const color = isUp ? '#4ade80' : '#f87171';
+
+  // Spread & volatility
+  const allPcts = matched.map(s => s.pct);
+  const spread = allPcts.length > 1 ? Math.max(...allPcts) - Math.min(...allPcts) : 0;
+  const variance = allPcts.length > 1 ? allPcts.reduce((a, p) => a + (p - avgPct) ** 2, 0) / allPcts.length : 0;
+  const volatility = Math.sqrt(variance);
+
+  // Build sector average sparkline
+  const maxLen = Math.max(...matched.map(s => s.history.length), 0);
+  const avgHistory: number[] = [];
+  for (let i = 0; i < maxLen; i++) {
+    const pctChanges = matched.map(s => {
+      if (s.history[i] == null || !s.history[0]) return null;
+      return ((s.history[i] - s.history[0]) / s.history[0]) * 100;
+    }).filter((v): v is number => v != null);
+    avgHistory.push(pctChanges.length > 0 ? pctChanges.reduce((a, b) => a + b, 0) / pctChanges.length : 0);
+  }
+
+  const sparkH = 120, sparkW = 500;
+  const mn = Math.min(...avgHistory), mx = Math.max(...avgHistory), rng = mx - mn || 1;
+  const pts = avgHistory.map((v, i) => `${(i / (avgHistory.length - 1)) * sparkW},${sparkH - ((v - mn) / rng) * (sparkH - 8) - 4}`).join(' ');
+  const fillPts = pts + ` ${sparkW},${sparkH} 0,${sparkH}`;
+
+  // Mini sparkline builder for individual stocks
+  const miniSparkline = (history: number[], w: number, h: number, c: string) => {
+    if (history.length < 2) return null;
+    const mnH = Math.min(...history), mxH = Math.max(...history), rngH = mxH - mnH || 1;
+    const p = history.map((v, i) => `${(i / (history.length - 1)) * w},${h - ((v - mnH) / rngH) * (h - 2) - 1}`).join(' ');
+    return (
+      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
+        <polyline points={p} fill="none" stroke={c} strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" />
+      </svg>
+    );
+  };
+
+  // Performance bar distribution
+  const maxAbsPct = Math.max(...allPcts.map(Math.abs), 0.01);
+
+  // Source colors for news
+  const sourceColors: Record<string, string> = {
+    'Reuters': '#ff922b', 'CNBC': '#2563eb', 'Bloomberg': '#ff6b35',
+    'WSJ': '#c4a000', 'BBC': '#da77f2', 'AP': '#f87171',
+    'CNN': '#cc0000', 'The Guardian': '#1a73e8', 'Yahoo': '#7c3aed',
+    'MarketWatch': '#22c55e', 'Barron': '#60a5fa', 'Forbes': '#e11d48',
+  };
+  const getNewsColor = (s: string) => {
+    for (const [k, c] of Object.entries(sourceColors)) { if (s.toLowerCase().includes(k.toLowerCase())) return c; }
+    return '#74c0fc';
+  };
+
+  return (
+    <div style={{ padding: '10px 12px' }}>
+      <BloombergBackButton onClick={onBack} />
+
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '8px', marginBottom: '12px' }}>
+        <div>
+          <div style={{ fontSize: '16px', fontWeight: 800, color: '#fff', fontFamily: "'SF Mono', monospace" }}>
+            {sectorName} Sector
+          </div>
+          <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace", marginTop: '2px' }}>
+            {matched.length} stocks tracked · {winners} up · {losers} down{flat > 0 ? ` · ${flat} flat` : ''}
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '18px', fontWeight: 800, color, fontFamily: "'SF Mono', monospace" }}>
+            {isUp ? '+' : ''}{avgPct.toFixed(2)}%
+          </div>
+          <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace" }}>
+            sector avg
+          </div>
+        </div>
+      </div>
+
+      {/* Sector Avg Chart — larger */}
+      {avgHistory.length > 1 && (
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px', marginBottom: '10px', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <span style={{ fontSize: '8px', fontWeight: 700, color: 'rgba(255,255,255,0.35)', fontFamily: "'SF Mono', monospace", letterSpacing: '0.05em' }}>SECTOR AVG PERFORMANCE</span>
+            <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Mono', monospace" }}>intraday</span>
+          </div>
+          <svg width="100%" height={sparkH} viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
+            <defs>
+              <linearGradient id={`sector-fill-${sectorName}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+                <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+              </linearGradient>
+            </defs>
+            <polygon points={fillPts} fill={`url(#sector-fill-${sectorName})`} />
+            <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+            {mn < 0 && mx > 0 && (
+              <line x1="0" y1={sparkH - ((0 - mn) / rng) * (sparkH - 8) - 4} x2={sparkW} y2={sparkH - ((0 - mn) / rng) * (sparkH - 8) - 4} stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" strokeDasharray="4 2" />
+            )}
+          </svg>
+        </div>
+      )}
+
+      {/* Stats Grid — 2 rows */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '4px', marginBottom: '10px' }}>
+        {[
+          { label: 'Winners', value: String(winners), color: '#4ade80' },
+          { label: 'Losers', value: String(losers), color: '#f87171' },
+          { label: 'Best', value: best ? `${best.symbol} ${best.pct >= 0 ? '+' : ''}${best.pct.toFixed(1)}%` : '—', color: '#4ade80' },
+          { label: 'Worst', value: worst ? `${worst.symbol} ${worst.pct.toFixed(1)}%` : '—', color: '#f87171' },
+          { label: 'Spread', value: spread.toFixed(2) + '%', color: '#60a5fa' },
+          { label: 'Volatility', value: volatility.toFixed(2) + '%', color: '#c084fc' },
+          { label: 'Sector Avg', value: `${isUp ? '+' : ''}${avgPct.toFixed(2)}%`, color },
+          { label: 'Breadth', value: matched.length > 0 ? `${((winners / matched.length) * 100).toFixed(0)}% up` : '—', color: winners >= losers ? '#4ade80' : '#f87171' },
+        ].map(s => (
+          <div key={s.label} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 5, padding: '5px 6px', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: '7px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace", fontWeight: 600, letterSpacing: '0.03em' }}>{s.label.toUpperCase()}</div>
+            <div style={{ fontSize: '9px', color: s.color, fontFamily: "'SF Mono', monospace", fontWeight: 700, marginTop: '1px' }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Performance Distribution Bar */}
+      <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px', marginBottom: '10px', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ fontSize: '8px', fontWeight: 700, color: 'rgba(255,255,255,0.35)', fontFamily: "'SF Mono', monospace", letterSpacing: '0.05em', marginBottom: '6px' }}>PERFORMANCE DISTRIBUTION</div>
+        {sorted.map(s => {
+          const sUp = s.pct >= 0;
+          const sColor = sUp ? '#4ade80' : '#f87171';
+          const barWidth = Math.abs(s.pct) / maxAbsPct * 50;
+          return (
+            <div key={s.symbol} style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '3px', cursor: 'pointer', padding: '1px 2px', borderRadius: 3, transition: 'background 0.15s' }}
+              onClick={() => onStockClick(s.symbol, s.name)}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              <span style={{ fontSize: '8px', fontWeight: 700, color: '#fff', fontFamily: "'SF Mono', monospace", width: '38px', flexShrink: 0 }}>{s.symbol}</span>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', height: '12px', position: 'relative' }}>
+                <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: '0.5px', background: 'rgba(255,255,255,0.1)' }} />
+                {sUp ? (
+                  <div style={{ marginLeft: '50%', width: `${barWidth}%`, height: '8px', background: sColor, borderRadius: '0 2px 2px 0', opacity: 0.7, transition: 'width 0.3s' }} />
+                ) : (
+                  <div style={{ marginLeft: `${50 - barWidth}%`, width: `${barWidth}%`, height: '8px', background: sColor, borderRadius: '2px 0 0 2px', opacity: 0.7, transition: 'width 0.3s' }} />
+                )}
+              </div>
+              <span style={{ fontSize: '8px', color: sColor, fontFamily: "'SF Mono', monospace", fontWeight: 700, width: '48px', textAlign: 'right', flexShrink: 0 }}>
+                {sUp ? '+' : ''}{s.pct.toFixed(2)}%
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Stock Table with Mini Charts */}
+      <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, overflow: 'hidden', border: '0.5px solid rgba(255,255,255,0.06)', marginBottom: '10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '50px 1fr 70px 60px 58px', padding: '5px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)' }}>
+          <span style={{ fontSize: '7px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace" }}>SYMBOL</span>
+          <span style={{ fontSize: '7px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace" }}>CHART</span>
+          <span style={{ fontSize: '7px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace", textAlign: 'right' }}>PRICE</span>
+          <span style={{ fontSize: '7px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace", textAlign: 'right' }}>CHG%</span>
+          <span style={{ fontSize: '7px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace", textAlign: 'right' }}>RANGE</span>
+        </div>
+        {sorted.map(s => {
+          const sUp = s.pct >= 0;
+          const sColor = sUp ? '#4ade80' : '#f87171';
+          const hi = s.history.length ? Math.max(...s.history) : s.price;
+          const lo = s.history.length ? Math.min(...s.history) : s.price;
+          const rangeStr = s.symbol === 'BTC'
+            ? `${(lo/1000).toFixed(0)}k-${(hi/1000).toFixed(0)}k`
+            : `${lo.toFixed(0)}-${hi.toFixed(0)}`;
+          return (
+            <div key={s.symbol}
+              onClick={() => onStockClick(s.symbol, s.name)}
+              style={{
+                display: 'grid', gridTemplateColumns: '50px 1fr 70px 60px 58px', padding: '4px 8px',
+                borderBottom: '0.5px solid rgba(255,255,255,0.04)', cursor: 'pointer',
+                transition: 'background 0.15s', alignItems: 'center',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              <div>
+                <span style={{ fontSize: '9px', fontWeight: 700, color: '#fff', fontFamily: "'SF Mono', monospace" }}>{s.symbol}</span>
+                <div style={{ fontSize: '7px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Mono', monospace", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '48px' }}>{s.name.split(' ')[0]}</div>
+              </div>
+              <div style={{ padding: '2px 4px' }}>
+                {miniSparkline(s.history, 80, 20, sColor)}
+              </div>
+              <span style={{ fontSize: '9px', color: '#fff', fontFamily: "'SF Mono', monospace", textAlign: 'right', fontWeight: 600 }}>
+                {s.symbol === 'BTC' ? s.price.toLocaleString('en-US', { maximumFractionDigits: 0 }) : s.price.toFixed(2)}
+              </span>
+              <span style={{ fontSize: '9px', color: sColor, fontFamily: "'SF Mono', monospace", textAlign: 'right', fontWeight: 700 }}>
+                {sUp ? '+' : ''}{s.pct.toFixed(2)}%
+              </span>
+              <span style={{ fontSize: '7px', color: 'rgba(255,255,255,0.35)', fontFamily: "'SF Mono', monospace", textAlign: 'right' }}>
+                {rangeStr}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Sector News */}
+      <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ fontSize: '8px', fontWeight: 700, color: '#ff6b35', fontFamily: "'SF Mono', monospace", letterSpacing: '0.08em', marginBottom: '6px' }}>
+          {sectorName.toUpperCase()} SECTOR NEWS
+        </div>
+        {newsLoading ? (
+          <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Mono', monospace", padding: '8px 0' }}>Loading news…</div>
+        ) : news.length === 0 ? (
+          <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Mono', monospace", padding: '8px 0' }}>No recent news available</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+            {news.map((n, i) => (
+              <a
+                key={i}
+                href={n.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'block', textDecoration: 'none', padding: '5px 6px', borderRadius: 4,
+                  transition: 'background 0.15s', background: 'rgba(10,12,18,0.9)',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(10,12,18,0.9)')}
+                onClick={e => e.stopPropagation()}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                  <span style={{ fontSize: '8px', fontWeight: 700, color: getNewsColor(n.source), fontFamily: "'SF Mono', monospace", flexShrink: 0, marginTop: '1px', minWidth: '50px' }}>
+                    {n.source.toUpperCase().slice(0, 10)}
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '9px', color: '#fff', fontFamily: "'SF Mono', monospace", fontWeight: 500, lineHeight: 1.3 }}>
+                      {n.title}
+                    </div>
+                    <div style={{ fontSize: '7px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Mono', monospace", marginTop: '1px' }}>
+                      {n.pubDate ? new Date(n.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
+                    </div>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Bloomberg Option 1: Scrolling News Tape ──
+function ScrollingNewsTape() {
+  const [news, setNews] = useState<{ title: string; source: string }[]>([]);
+  useEffect(() => {
+    fetch('/api/market-news')
+      .then(r => r.ok ? r.json() : [])
+      .then(d => { if (Array.isArray(d)) setNews(d); })
+      .catch(() => {});
+  }, []);
+
+  if (!news.length) return null;
+
+  const sourceColors: Record<string, string> = {
+    'Reuters': '#ff922b', 'CNBC': '#2563eb', 'Bloomberg': '#ff6b35',
+    'WSJ': '#c4a000', 'BBC': '#da77f2', 'CBC': '#e03131',
+    'AP': '#f87171', 'CNN': '#cc0000', 'The Guardian': '#1a73e8',
+  };
+  const getColor = (s: string) => {
+    for (const [k, c] of Object.entries(sourceColors)) { if (s.toLowerCase().includes(k.toLowerCase())) return c; }
+    return '#74c0fc';
+  };
+
+  const tape = [...news, ...news]; // duplicate for seamless loop
+  const tapeContent = tape.map((item, i) => (
+    <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', paddingRight: '32px' }}>
+      <span style={{ color: getColor(item.source), fontSize: '10px', fontWeight: 700, fontFamily: "'SF Mono', monospace" }}>
+        {item.source.toUpperCase()}
+      </span>
+      <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: "'SF Mono', monospace" }}>
+        {item.title}
+      </span>
+      <span style={{ color: 'rgba(255,255,255,0.2)' }}>│</span>
+    </span>
+  ));
+
+  return (
+    <div style={{ padding: '6px 0', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden', position: 'relative' }}>
+      <style>{`
+        @keyframes tickerScroll {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+      `}</style>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '9px', fontWeight: 700, color: '#ff6b35', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace", padding: '0 10px', flexShrink: 0 }}>
+          NEWS
+        </span>
+        <div style={{ flex: 1, overflow: 'hidden' }}>
+          <div style={{ display: 'inline-flex', animation: 'tickerScroll 80s linear infinite', willChange: 'transform' }}>
+            {tapeContent}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Bloomberg Option 2: Live News Feed ──
+function LiveNewsFeed() {
+  const [news, setNews] = useState<{ title: string; source: string; url: string; pubDate: string }[]>([]);
+  useEffect(() => {
+    fetch('/api/news')
+      .then(r => r.ok ? r.json() : [])
+      .then(d => { if (Array.isArray(d)) setNews(d); })
+      .catch(() => {});
+  }, []);
+
+  const timeAgo = (dateStr: string) => {
+    try {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'Now';
+      if (mins < 60) return `${mins}m`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h`;
+      return `${Math.floor(hrs / 24)}d`;
+    } catch { return ''; }
+  };
+
+  const sourceColors: Record<string, string> = {
+    'Reuters': '#ff922b', 'CNBC': '#2563eb', 'Bloomberg': '#ff6b35',
+    'WSJ': '#c4a000', 'BBC': '#da77f2', 'CBC': '#e03131',
+    'AP': '#f87171', 'CNN': '#cc0000',
+  };
+  const getColor = (s: string) => {
+    for (const [k, c] of Object.entries(sourceColors)) { if (s.toLowerCase().includes(k.toLowerCase())) return c; }
+    return '#74c0fc';
+  };
+
+  if (!news.length) return (
+    <div style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontFamily: "'SF Mono', monospace" }}>
+      Loading feed...
+    </div>
+  );
+
+  return (
+    <div style={{ padding: '8px 12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace" }}>
+          MARKET NEWS
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#ff6b35', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
+          LIVE
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        {news.slice(0, 5).map((item, i) => (
+          <a key={i} href={item.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{
+            display: 'block', padding: '5px 6px', textDecoration: 'none', color: 'inherit',
+            borderRadius: 4, transition: 'background 0.15s', borderLeft: `2px solid ${getColor(item.source)}22`,
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderLeftColor = getColor(item.source); }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderLeftColor = `${getColor(item.source)}22`; }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+              <span style={{ color: getColor(item.source), fontSize: '9px', fontWeight: 700, fontFamily: "'SF Mono', monospace", letterSpacing: '0.05em' }}>
+                {item.source.toUpperCase()}
+              </span>
+              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>
+                {timeAgo(item.pubDate)}
+              </span>
+            </div>
+            <div style={{
+              fontSize: '11px', fontWeight: 500, color: 'rgba(255,255,255,0.75)', lineHeight: 1.35,
+              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+              fontFamily: "'SF Mono', monospace",
+            }}>
+              {item.title}
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Bloomberg Option 3: Market Stats Bar ──
+function MarketStatsBar() {
+  const stocks = useStockData();
+  const [indicators, setIndicators] = useState<{ label: string; value: string; change: number }[]>([]);
+
+  useEffect(() => {
+    // Generate realistic market indicators
+    const gen = (label: string, base: number, vol: number, decimals: number, suffix = '') => {
+      const change = (Math.random() - 0.48) * vol;
+      return { label, value: (base + change).toFixed(decimals) + suffix, change: (change / base) * 100 };
+    };
+    setIndicators([
+      gen('VIX', 18.5, 3, 1),
+      gen('10Y', 4.32, 0.15, 2, '%'),
+      gen('DXY', 104.2, 1.5, 1),
+      gen('GOLD', 2340, 40, 0),
+      gen('OIL', 78.5, 3, 1),
+    ]);
+  }, []);
+
+  if (!indicators.length) return null;
+
+  return (
+    <div style={{ padding: '6px 12px', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {indicators.map(ind => {
+          const isUp = ind.change >= 0;
+          const color = ind.label === 'VIX' ? (isUp ? '#f87171' : '#4ade80') : (isUp ? '#4ade80' : '#f87171');
+          return (
+            <div key={ind.label} style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.08em', fontFamily: "'SF Mono', monospace", marginBottom: '2px' }}>
+                {ind.label}
+              </div>
+              <div style={{ fontSize: '11px', color: '#fff', fontWeight: 600, fontFamily: "'SF Mono', monospace", fontVariantNumeric: 'tabular-nums' }}>
+                {ind.value}
+              </div>
+              <div style={{ fontSize: '8px', color, fontWeight: 600, fontFamily: "'SF Mono', monospace" }}>
+                {isUp ? '▲' : '▼'} {Math.abs(ind.change).toFixed(2)}%
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Bloomberg Option 4: Economic Calendar ──
+function EconomicCalendar() {
+  const events = [
+    { type: 'fed', label: 'FOMC Rate Decision', date: '2026-03-19', icon: '🏛️', importance: 'high' },
+    { type: 'earnings', label: 'NVDA Earnings', date: '2026-03-26', icon: '📊', importance: 'high' },
+    { type: 'earnings', label: 'AAPL Earnings', date: '2026-04-01', icon: '📊', importance: 'high' },
+    { type: 'data', label: 'Non-Farm Payrolls', date: '2026-04-04', icon: '📈', importance: 'medium' },
+    { type: 'data', label: 'CPI Release', date: '2026-04-10', icon: '📉', importance: 'medium' },
+  ];
+
+  const importanceColor: Record<string, string> = { high: '#f87171', medium: '#fbbf24', low: '#4ade80' };
+
+  const getCountdown = (dateStr: string) => {
+    const diff = new Date(dateStr).getTime() - Date.now();
+    if (diff < 0) return 'Passed';
+    const days = Math.floor(diff / 86400000);
+    if (days === 0) return 'Today';
+    if (days === 1) return 'Tomorrow';
+    return `in ${days}d`;
+  };
+
+  return (
+    <div style={{ padding: '8px 12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace" }}>
+          UPCOMING
+        </div>
+        <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Mono', monospace" }}>
+          {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+        {events.map((evt, i) => {
+          const countdown = getCountdown(evt.date);
+          return (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '4px 6px', borderRadius: 4,
+              background: 'rgba(255,255,255,0.02)', border: '0.5px solid rgba(255,255,255,0.04)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
+                <span style={{ width: 4, height: 4, borderRadius: '50%', background: importanceColor[evt.importance], flexShrink: 0 }} />
+                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.8)', fontFamily: "'SF Mono', monospace", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {evt.label}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace" }}>
+                  {new Date(evt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+                <span style={{ fontSize: '9px', fontWeight: 600, color: countdown === 'Today' ? '#f87171' : countdown === 'Tomorrow' ? '#fbbf24' : 'rgba(255,255,255,0.6)', fontFamily: "'SF Mono', monospace", minWidth: '40px', textAlign: 'right' }}>
+                  {countdown}
+                </span>
+              </div>
             </div>
           );
         })}
@@ -1533,6 +2325,18 @@ function TerminalContent() {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
+  // Drill-down state for Bloomberg terminal
+  const [drillDown, setDrillDown] = useState<{ type: 'stock'; symbol: string; name: string } | { type: 'sector'; name: string } | null>(null);
+
+  // Escape key clears drill-down
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && drillDown) { setDrillDown(null); e.preventDefault(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [drillDown]);
+
   // Stagger-in elements (text is static, only rotating words animate)
   useEffect(() => {
     setShowRotating(true);
@@ -1553,6 +2357,16 @@ function TerminalContent() {
   }, [history]);
 
   const prompt = 'ronniel@MacBookPro ~ % ';
+
+  // Exit fullscreen before opening a window so the terminal shrinks back first
+  const openWindow = (id: string) => {
+    if (isFullscreen) {
+      dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' });
+      setTimeout(() => dispatch({ type: 'OPEN_WINDOW', id: id as any }), 150);
+    } else {
+      dispatch({ type: 'OPEN_WINDOW', id: id as any });
+    }
+  };
 
   const runCommand = (raw: string) => {
     const cmd = raw.trim().toLowerCase();
@@ -1579,17 +2393,17 @@ function TerminalContent() {
       // Check smart commands FIRST (before cd/open handlers that would partially match)
       const { window: win, output } = SMART_COMMANDS[cmd];
       newLines.push({ type: 'system', text: output });
-      dispatch({ type: 'OPEN_WINDOW', id: win });
+      openWindow(win);
     } else if (COMMANDS[cmd]) {
       const { window, desc } = COMMANDS[cmd];
       newLines.push({ type: 'system', text: `Opening ${desc.toLowerCase()}...` });
-      dispatch({ type: 'OPEN_WINDOW', id: window });
+      openWindow(window);
     } else if (cmd.startsWith('cd ')) {
       const target = cmd.replace('cd ', '').replace(/[\/~]/g, '').trim();
       if (COMMANDS[target]) {
         const { window, desc } = COMMANDS[target];
         newLines.push({ type: 'system', text: `Opening ${desc.toLowerCase()}...` });
-        dispatch({ type: 'OPEN_WINDOW', id: window });
+        openWindow(window);
       } else {
         newLines.push({ type: 'error', text: `cd: no such directory: ${target}` });
         newLines.push({ type: 'output', text: 'Type "help" to see available commands.' });
@@ -1599,7 +2413,7 @@ function TerminalContent() {
       if (COMMANDS[target]) {
         const { window, desc } = COMMANDS[target];
         newLines.push({ type: 'system', text: `Opening ${desc.toLowerCase()}...` });
-        dispatch({ type: 'OPEN_WINDOW', id: window });
+        openWindow(window);
       } else {
         newLines.push({ type: 'error', text: `open: "${target}" not found` });
         newLines.push({ type: 'output', text: 'Type "help" to see available commands.' });
@@ -1916,11 +2730,13 @@ function TerminalContent() {
   // ═══════════════ SPLIT PANELS (default) ═══════════════
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
-      {/* Left — hero + links */}
+      {/* Left — hero + portfolio (main focus) */}
       <div style={{
-        flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+        width: isFullscreen ? '600px' : undefined,
+        flex: isFullscreen ? 'none' : 1,
+        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
         padding: '28px 20px 14px 28px', borderRight: '1px solid rgba(255,255,255,0.04)',
-        minWidth: 0,
+        minWidth: 0, flexShrink: 0,
       }}>
         {/* Hero text */}
         <div>
@@ -1932,8 +2748,13 @@ function TerminalContent() {
               Software Engineer
             </div>
             {isFullscreen ? (
-              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.7 }}>
-                Using {showRotating && <RotatingWords />} to create elegant and scalable solutions to real world problems.
+              <div style={{ marginTop: '4px' }}>
+                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '10px', fontFamily: "'SF Mono', monospace" }}>
+                  ABOUT
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', lineHeight: 1.7, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 }}>
+                  Software engineer studying Computer Science at Wilfrid Laurier University, previously in the Waterloo CS &amp; Laurier BBA double degree program. Currently building growth systems at Augmentor Labs in New York. I like working across the stack — from low-level systems and infrastructure to product-facing features and data pipelines. Outside of work, I spend time on quantitative projects, reading, and exploring new tools.
+                </div>
               </div>
             ) : (
               <>
@@ -1952,74 +2773,102 @@ function TerminalContent() {
 
           {/* Quick Start — grouped with hero when not fullscreen */}
           {!isFullscreen && <QuickStartTiles runCommand={runCommand} />}
-
-          {/* About Me — fullscreen only */}
-          {isFullscreen && (
-            <div style={{ marginTop: '24px' }}>
-              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '10px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
-                ABOUT
-              </div>
-              <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', lineHeight: 1.7, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 }}>
-                Software engineer studying Computer Science at Wilfrid Laurier University, previously in the Waterloo CS &amp; Laurier BBA double degree program. Currently building growth systems at Augmentor Labs in New York. I like working across the stack — from low-level systems and infrastructure to product-facing features and data pipelines. Outside of work, I spend time on quantitative projects, reading, and exploring new tools.
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* Now Playing — shown in non-fullscreen to fill space */}
+        {!isFullscreen && (
+          <div style={{ marginTop: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+            <NowPlaying />
+          </div>
+        )}
 
         {/* Spacer to push bottom down */}
         {isFullscreen && <div style={{ flex: 1 }} />}
 
-        {/* Bottom section: Now Playing + Quick Start (fullscreen only) + Contact */}
+        {/* Bottom section: Quick Start, Contact + GitHub */}
         <div>
-          {isFullscreen && <NowPlaying />}
           {isFullscreen && <QuickStartTiles runCommand={runCommand} />}
-          <div style={{ fontFamily: "'SF Mono', monospace", display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', marginTop: '16px' }}>
-            <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
-            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
-              ✉️ ronnielgandhe@gmail.com
-            </a>
-            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
-              🐙 github.com/ronnielgandhe
-            </a>
-            <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
-              💼 linkedin.com/in/ronniel-gandhe
-            </a>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', marginTop: '16px' }}>
+            <div style={{ fontFamily: "'SF Mono', monospace", display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px' }}>
+              <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
+              <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                ✉️ ronnielgandhe@gmail.com
+              </a>
+              <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                🐙 github.com/ronnielgandhe
+              </a>
+              <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                💼 linkedin.com/in/ronniel-gandhe
+              </a>
+            </div>
+            {isFullscreen && (
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <GitHubHeatmap />
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Right — widgets stacked */}
+      {/* Middle — open space in fullscreen */}
+      {isFullscreen && <div style={{ flex: 1, minWidth: 0 }} />}
+
+      {/* Right — Bloomberg dashboard (secondary) */}
       <div ref={scrollRef} onClick={() => inputRef.current?.focus()} style={{
-        flex: 1, display: 'flex', flexDirection: 'column',
+        width: isFullscreen ? '535px' : undefined,
+        flex: isFullscreen ? 'none' : 1,
+        flexShrink: 0,
+        display: 'flex', flexDirection: 'column',
         justifyContent: isFullscreen ? 'space-between' : undefined,
         cursor: 'text', fontFamily: "'SF Mono', monospace", overflow: 'hidden',
+        borderLeft: isFullscreen ? '1px solid rgba(255,255,255,0.04)' : undefined,
       }}>
         {isFullscreen ? (
-          /* ═══ FULLSCREEN: Bloomberg terminal layout ═══ */
-          <>
-            {/* Scrollable market data area */}
-            <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
-              {/* Date */}
-              <div style={{ padding: '8px 10px 4px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: 600, fontFamily: "'SF Mono', monospace", letterSpacing: '0.05em' }}>
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-              </div>
-              {/* 2x2 Stock Grid */}
-              <StockGrid />
-              {/* Divider */}
-              <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 10px' }} />
-              {/* Sector Sparklines */}
-              <SectorSparklines />
-              <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 10px' }} />
-              {/* GitHub Contributions */}
-              <div style={{ padding: '8px 10px' }}>
-                <GitHubHeatmap />
-              </div>
-            </div>
-            {/* Terminal prompt */}
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '6px 14px 20px', minHeight: '48px', maxHeight: '100px', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-              {renderTerminal(true)}
-            </div>
-          </>
+          /* ═══ FULLSCREEN: Bloomberg terminal on the right ═══ */
+          <div className="bloomberg-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
+            {drillDown ? (
+              /* ── Drill-down view ── */
+              drillDown.type === 'stock' ? (
+                <StockDetailView
+                  symbol={drillDown.symbol}
+                  name={drillDown.name}
+                  onBack={() => setDrillDown(null)}
+                  onSectorClick={(name) => setDrillDown({ type: 'sector', name })}
+                />
+              ) : (
+                <SectorDetailView
+                  sectorName={drillDown.name}
+                  onBack={() => setDrillDown(null)}
+                  onStockClick={(symbol, name) => setDrillDown({ type: 'stock', symbol, name })}
+                />
+              )
+            ) : (
+              /* ── Dashboard view ── */
+              <>
+                {/* LIVE + Date + Time header */}
+                <div style={{ padding: '8px 10px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80', animation: 'livePulse 2s ease-in-out infinite' }} />
+                    <span style={{ color: '#fff', fontSize: '11px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '0.02em' }}>LIVE</span>
+                  </div>
+                  <div style={{ color: '#fff', fontSize: '11px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                    {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                  </div>
+                </div>
+                {/* 2x2 Stock Grid */}
+                <StockGrid onStockClick={(symbol, name) => setDrillDown({ type: 'stock', symbol, name })} />
+                {/* Divider */}
+                <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 10px' }} />
+                {/* Sector Sparklines */}
+                <SectorSparklines onSectorClick={(name) => setDrillDown({ type: 'sector', name })} />
+                {/* Scrolling News Tape */}
+                <ScrollingNewsTape />
+                <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 10px' }} />
+                {/* Economic Calendar */}
+                <EconomicCalendar />
+              </>
+            )}
+          </div>
         ) : (
           /* ═══ NORMAL: original layout ═══ */
           <>
@@ -2044,7 +2893,9 @@ function TerminalContent() {
       </div>
 
       <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-@keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }`}</style>
+@keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.bloomberg-scroll::-webkit-scrollbar { display: none; }
+.bloomberg-scroll { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
     </div>
   );
 }

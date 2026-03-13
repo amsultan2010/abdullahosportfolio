@@ -1,6 +1,6 @@
 import { useDesktop } from './DesktopContext';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import NotificationCenter from './NotificationCenter';
+import { useState, useEffect, useRef } from 'react';
+
 
 /* ── Types ─────────────────────────────────────────── */
 
@@ -33,11 +33,7 @@ export default function DesktopMenuBar() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [spotify, setSpotify] = useState<SpotifyData | null>(null);
   const [location, setLocation] = useState<LocationData | null>(null);
-  const [ncOpen, setNcOpen] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
-
-  const toggleNC = useCallback(() => { setNcOpen(p => !p); setActiveMenu(null); }, []);
-  const closeNC = useCallback(() => setNcOpen(false), []);
 
   // Clock
   useEffect(() => {
@@ -87,7 +83,7 @@ export default function DesktopMenuBar() {
     return () => document.removeEventListener('mousedown', h);
   }, []);
 
-  const toggle = (id: string) => { setActiveMenu(p => p === id ? null : id); setNcOpen(false); };
+  const toggle = (id: string) => { setActiveMenu(p => p === id ? null : id); };
   const hover = (id: string) => { if (activeMenu !== null) setActiveMenu(id); };
   const close = () => setActiveMenu(null);
 
@@ -144,13 +140,31 @@ export default function DesktopMenuBar() {
         <div style={{ ...barItem, fontWeight: 600, padding: '0 14px 0 0' }}>Ronniel Gandhe</div>
 
         <div
-          onMouseDown={() => { dispatch({ type: 'OPEN_WINDOW', id: 'education' }); close(); }}
+          onMouseDown={() => {
+            const termWin = state.windows.terminal;
+            if (termWin?.isFullscreen) {
+              dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' });
+              setTimeout(() => dispatch({ type: 'OPEN_WINDOW', id: 'education' }), 150);
+            } else {
+              dispatch({ type: 'OPEN_WINDOW', id: 'education' });
+            }
+            close();
+          }}
           onMouseEnter={() => hover('_edu')}
           style={{ ...barItem, padding: '0 10px' }}
         >Education</div>
 
         <div
-          onMouseDown={() => { dispatch({ type: 'OPEN_WINDOW', id: 'experience' }); close(); }}
+          onMouseDown={() => {
+            const termWin = state.windows.terminal;
+            if (termWin?.isFullscreen) {
+              dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' });
+              setTimeout(() => dispatch({ type: 'OPEN_WINDOW', id: 'experience' }), 150);
+            } else {
+              dispatch({ type: 'OPEN_WINDOW', id: 'experience' });
+            }
+            close();
+          }}
           onMouseEnter={() => hover('_exp')}
           style={{ ...barItem, padding: '0 10px' }}
         >Experience</div>
@@ -187,7 +201,6 @@ export default function DesktopMenuBar() {
         </TrayDropdown>
 
         <span
-          onClick={toggleNC}
           style={{
             fontSize: '12.5px',
             color: '#fff',
@@ -196,16 +209,11 @@ export default function DesktopMenuBar() {
             padding: '2px 8px',
             borderRadius: '4px',
             cursor: 'default',
-            background: ncOpen ? 'rgba(255,255,255,0.15)' : 'transparent',
-            transition: 'background 0.15s',
           }}
         >
           {date}&ensp;{time}
         </span>
       </div>
-
-      {/* Notification Center */}
-      <NotificationCenter open={ncOpen} onClose={closeNC} location={location} />
     </div>
   );
 }
