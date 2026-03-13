@@ -758,7 +758,7 @@ function BloombergNewsFeed() {
       <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
         TOP STORIES
       </div>
-      {news.slice(0, 6).map((item, i) => (
+      {news.slice(0, 3).map((item, i) => (
         <a key={i} href={item.url} target="_blank" rel="noopener noreferrer" style={{
           display: 'block', padding: '5px 4px', textDecoration: 'none', color: 'inherit',
           borderTop: i > 0 ? '0.5px solid rgba(255,255,255,0.06)' : 'none',
@@ -781,6 +781,349 @@ function BloombergNewsFeed() {
           </div>
         </a>
       ))}
+    </div>
+  );
+}
+
+// ── Widget 1: GitHub Contribution Heatmap ──
+function GitHubHeatmap() {
+  const [weeks, setWeeks] = useState<number[][]>([]);
+  const [total, setTotal] = useState(0);
+  useEffect(() => {
+    fetch('/api/github-contributions')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.weeks) {
+          setWeeks(d.weeks);
+          setTotal(d.totalContributions);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const getColor = (count: number) => {
+    if (count === 0) return 'rgba(255,255,255,0.04)';
+    if (count <= 1) return '#0e4429';
+    if (count <= 3) return '#006d32';
+    if (count <= 5) return '#26a641';
+    return '#39d353';
+  };
+
+  if (!weeks.length) return null;
+  const cellSize = 7;
+  const gap = 2;
+
+  return (
+    <div style={{ padding: '8px 10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+        <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+          GITHUB CONTRIBUTIONS
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace" }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
+          LIVE · {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+        </div>
+      </div>
+      <div style={{ overflowX: 'auto', overflowY: 'hidden' }}>
+        <svg width={weeks.length * (cellSize + gap)} height={7 * (cellSize + gap)} style={{ display: 'block' }}>
+          {weeks.map((week, wi) =>
+            week.map((count, di) => (
+              <rect
+                key={`${wi}-${di}`}
+                x={wi * (cellSize + gap)}
+                y={di * (cellSize + gap)}
+                width={cellSize}
+                height={cellSize}
+                rx={1.5}
+                fill={getColor(count)}
+              />
+            ))
+          )}
+        </svg>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Mono', monospace" }}>
+        <span>{total} contributions in the last year</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+          <span>Less</span>
+          {[0, 1, 3, 5, 7].map(v => (
+            <div key={v} style={{ width: 7, height: 7, borderRadius: 1.5, background: getColor(v) }} />
+          ))}
+          <span>More</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Widget 2: Spotify Now Playing ──
+function SpotifyWidget() {
+  const [track, setTrack] = useState<{ isPlaying: boolean; title: string; artist: string; album: string; albumArt: string; progressMs: number; durationMs: number } | null>(null);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/spotify')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) { setTrack(d); setProgress(d.progressMs || 0); } })
+      .catch(() => {});
+  }, []);
+
+  // Animate progress bar
+  useEffect(() => {
+    if (!track?.isPlaying) return;
+    const id = setInterval(() => setProgress(p => Math.min(p + 1000, track.durationMs)), 1000);
+    return () => clearInterval(id);
+  }, [track]);
+
+  const fmtTime = (ms: number) => {
+    const s = Math.floor(ms / 1000);
+    return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+  };
+
+  if (!track) return (
+    <div style={{ padding: '8px 10px' }}>
+      <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+        NOW PLAYING
+      </div>
+      <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '11px', fontFamily: "'SF Mono', monospace" }}>Not connected</div>
+    </div>
+  );
+
+  const pct = track.durationMs > 0 ? (progress / track.durationMs) * 100 : 0;
+
+  return (
+    <div style={{ padding: '8px 10px' }}>
+      <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+        {track.isPlaying ? 'NOW PLAYING' : 'RECENTLY PLAYED'}
+      </div>
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        {track.albumArt && (
+          <img src={track.albumArt} alt="" style={{ width: 40, height: 40, borderRadius: 4, flexShrink: 0 }} />
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+            {track.title}
+          </div>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {track.artist}
+          </div>
+          <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
+              <div style={{ width: `${pct}%`, height: '100%', background: '#1db954', borderRadius: 2, transition: 'width 1s linear' }} />
+            </div>
+            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Mono', monospace", flexShrink: 0 }}>
+              {fmtTime(progress)}/{fmtTime(track.durationMs)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Widget 3: Market Sector Heatmap ──
+function SectorHeatmap() {
+  const stocks = useStockData();
+  const sectors: { name: string; symbols: string[]; color?: string }[] = [
+    { name: 'Tech', symbols: ['AAPL', 'MSFT', 'GOOG', 'META', 'NVDA', 'AMD', 'AVGO', 'CRM', 'ORCL', 'ADBE', 'INTC'] },
+    { name: 'Consumer', symbols: ['AMZN', 'TSLA', 'NFLX', 'DIS', 'NKE', 'SBUX', 'MCD', 'UBER', 'SHOP'] },
+    { name: 'Finance', symbols: ['JPM', 'V', 'MA', 'GS'] },
+    { name: 'Health', symbols: ['JNJ', 'PFE', 'LLY', 'UNH'] },
+    { name: 'Crypto', symbols: ['BTC', 'ETH', 'COIN', 'MSTR'] },
+    { name: 'Cloud', symbols: ['SNOW', 'NET', 'CRWD', 'DDOG', 'PLTR'] },
+    { name: 'Energy', symbols: ['XOM', 'BA', 'CAT'] },
+  ];
+
+  if (!stocks.length) return null;
+
+  const sectorData = sectors.map(sec => {
+    const matched = stocks.filter(s => sec.symbols.includes(s.symbol));
+    const avgPct = matched.length > 0 ? matched.reduce((a, s) => a + s.pct, 0) / matched.length : 0;
+    return { ...sec, pct: avgPct, count: matched.length };
+  });
+
+  const maxAbs = Math.max(...sectorData.map(s => Math.abs(s.pct)), 1);
+
+  const getHeatColor = (pct: number) => {
+    const intensity = Math.min(Math.abs(pct) / maxAbs, 1);
+    if (pct >= 0) {
+      const r = Math.round(20 - intensity * 10);
+      const g = Math.round(60 + intensity * 140);
+      const b = Math.round(30 + intensity * 20);
+      return `rgb(${r},${g},${b})`;
+    } else {
+      const r = Math.round(60 + intensity * 180);
+      const g = Math.round(30 - intensity * 15);
+      const b = Math.round(30 - intensity * 10);
+      return `rgb(${r},${g},${b})`;
+    }
+  };
+
+  return (
+    <div style={{ padding: '8px 10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+        <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+          SECTOR PERFORMANCE
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace" }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
+          LIVE · {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px' }}>
+        {sectorData.map(sec => (
+          <div key={sec.name} style={{
+            flex: `${sec.count} 0 0`,
+            minWidth: '48px',
+            background: getHeatColor(sec.pct),
+            borderRadius: 4,
+            padding: '6px 6px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.5)', fontFamily: "'SF Mono', monospace" }}>
+              {sec.name}
+            </div>
+            <div style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(255,255,255,0.9)', fontFamily: "'SF Mono', monospace" }}>
+              {sec.pct >= 0 ? '+' : ''}{sec.pct.toFixed(1)}%
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Widget 4: System Vitals Sparklines ──
+function SystemVitals() {
+  const [data, setData] = useState<{ cpu: number[]; mem: number[]; net: number[] }>({ cpu: [], mem: [], net: [] });
+  const maxPoints = 40;
+
+  useEffect(() => {
+    // Seed with initial data
+    const seed = (base: number, variance: number) =>
+      Array.from({ length: maxPoints }, () => base + (Math.random() - 0.5) * variance);
+    setData({ cpu: seed(35, 30), mem: seed(62, 10), net: seed(45, 40) });
+
+    const id = setInterval(() => {
+      setData(prev => ({
+        cpu: [...prev.cpu.slice(1), Math.max(5, Math.min(95, prev.cpu[prev.cpu.length - 1] + (Math.random() - 0.48) * 15))],
+        mem: [...prev.mem.slice(1), Math.max(40, Math.min(85, prev.mem[prev.mem.length - 1] + (Math.random() - 0.5) * 3))],
+        net: [...prev.net.slice(1), Math.max(0, Math.min(100, prev.net[prev.net.length - 1] + (Math.random() - 0.5) * 25))],
+      }));
+    }, 800);
+    return () => clearInterval(id);
+  }, []);
+
+  const Sparkline = ({ values, color, label, suffix }: { values: number[]; color: string; label: string; suffix: string }) => {
+    if (!values.length) return null;
+    const w = 130, h = 22;
+    const max = Math.max(...values, 1);
+    const pts = values.map((v, i) => `${(i / (maxPoints - 1)) * w},${h - (v / max) * h}`);
+    const path = `M${pts.join(' L')}`;
+    const current = values[values.length - 1];
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace", width: 24, flexShrink: 0 }}>{label}</span>
+        <svg width={w} height={h} style={{ flexShrink: 0 }}>
+          <path d={path} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx={w} cy={h - (current / max) * h} r="2" fill={color} />
+        </svg>
+        <span style={{ fontSize: '10px', color, fontWeight: 600, fontFamily: "'SF Mono', monospace", width: 36, textAlign: 'right', flexShrink: 0 }}>
+          {current.toFixed(0)}{suffix}
+        </span>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ padding: '8px 10px' }}>
+      <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+        SYSTEM
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <Sparkline values={data.cpu} color="#4ade80" label="CPU" suffix="%" />
+        <Sparkline values={data.mem} color="#60a5fa" label="MEM" suffix="%" />
+        <Sparkline values={data.net} color="#c084fc" label="NET" suffix="k" />
+      </div>
+    </div>
+  );
+}
+
+// ── Widget 5: Crypto Orderbook Depth Chart ──
+function OrderbookDepth() {
+  const [bids, setBids] = useState<number[]>([]);
+  const [asks, setAsks] = useState<number[]>([]);
+  const levels = 20;
+
+  useEffect(() => {
+    const genSide = (base: number, mult: number) =>
+      Array.from({ length: levels }, (_, i) => base * Math.pow(mult, i) + Math.random() * base * 0.3);
+
+    setBids(genSide(2.5, 1.08));
+    setAsks(genSide(2.2, 1.06));
+
+    const id = setInterval(() => {
+      setBids(prev => prev.map(v => Math.max(0.5, v + (Math.random() - 0.5) * v * 0.15)));
+      setAsks(prev => prev.map(v => Math.max(0.5, v + (Math.random() - 0.5) * v * 0.15)));
+    }, 600);
+    return () => clearInterval(id);
+  }, []);
+
+  if (!bids.length) return null;
+
+  const w = 220, h = 50;
+  const maxVol = Math.max(...bids, ...asks, 1);
+
+  // Cumulative volumes
+  const bidCum: number[] = [];
+  bids.forEach((v, i) => bidCum.push((bidCum[i - 1] || 0) + v));
+  const askCum: number[] = [];
+  asks.forEach((v, i) => askCum.push((askCum[i - 1] || 0) + v));
+
+  const maxCum = Math.max(bidCum[bidCum.length - 1], askCum[askCum.length - 1], 1);
+  const midX = w / 2;
+
+  // Bid path (left side, going outward)
+  const bidPts = bidCum.map((c, i) => ({
+    x: midX - (i / (levels - 1)) * midX,
+    y: h - (c / maxCum) * (h - 4),
+  }));
+  const bidPath = `M${midX},${h} ` + bidPts.map(p => `L${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ` L${bidPts[bidPts.length - 1]?.x.toFixed(1) || 0},${h} Z`;
+  const bidLine = bidPts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+  // Ask path (right side, going outward)
+  const askPts = askCum.map((c, i) => ({
+    x: midX + (i / (levels - 1)) * midX,
+    y: h - (c / maxCum) * (h - 4),
+  }));
+  const askPath = `M${midX},${h} ` + askPts.map(p => `L${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ` L${askPts[askPts.length - 1]?.x.toFixed(1) || w},${h} Z`;
+  const askLine = askPts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+  return (
+    <div style={{ padding: '8px 10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+        <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>BTC ORDERBOOK</span>
+        <div style={{ display: 'flex', gap: '8px', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>
+          <span style={{ color: '#4ade80' }}>BID {bidCum[bidCum.length - 1]?.toFixed(1)}</span>
+          <span style={{ color: '#f87171' }}>ASK {askCum[askCum.length - 1]?.toFixed(1)}</span>
+        </div>
+      </div>
+      <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: 'block' }}>
+        <defs>
+          <linearGradient id="bid-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#4ade80" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#4ade80" stopOpacity="0.05" />
+          </linearGradient>
+          <linearGradient id="ask-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#f87171" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#f87171" stopOpacity="0.05" />
+          </linearGradient>
+        </defs>
+        <path d={bidPath} fill="url(#bid-fill)" />
+        <path d={bidLine} fill="none" stroke="#4ade80" strokeWidth="1.5" />
+        <path d={askPath} fill="url(#ask-fill)" />
+        <path d={askLine} fill="none" stroke="#f87171" strokeWidth="1.5" />
+        <line x1={midX} y1="0" x2={midX} y2={h} stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" strokeDasharray="2,2" />
+      </svg>
     </div>
   );
 }
@@ -1264,10 +1607,10 @@ function TerminalContent() {
           {/* About Me — fullscreen only */}
           {isFullscreen && (
             <div style={{ marginTop: '24px' }}>
-              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '10px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '10px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
                 ABOUT
               </div>
-              <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: '13px', lineHeight: 1.7, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 }}>
+              <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', lineHeight: 1.7, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 }}>
                 Software engineer studying Computer Science at Wilfrid Laurier University, previously in the Waterloo CS &amp; Laurier BBA double degree program. Currently building growth systems at Augmentor Labs in New York. I like working across the stack — from low-level systems and infrastructure to product-facing features and data pipelines. Outside of work, I spend time on quantitative projects, reading, and exploring new tools.
               </div>
             </div>
@@ -1306,17 +1649,18 @@ function TerminalContent() {
               </div>
               {/* 2x2 Stock Grid */}
               <StockGrid />
-              {/* News Feed */}
-              <div style={{ marginTop: '4px' }}>
-                <BloombergNewsFeed />
-              </div>
+              {/* Divider */}
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 10px' }} />
+              {/* Sector Heatmap */}
+              <SectorHeatmap />
+              {/* Divider */}
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 10px' }} />
+              {/* GitHub Heatmap */}
+              <GitHubHeatmap />
             </div>
-            {/* Explore commands + Terminal prompt */}
-            <div>
-              <ExploreCommands smartCommandLinks={smartCommandLinks} runCommand={runCommand} />
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '6px 14px 20px', minHeight: '82px', maxHeight: '140px', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                {renderTerminal(true)}
-              </div>
+            {/* Terminal prompt */}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '6px 14px 20px', minHeight: '48px', maxHeight: '100px', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+              {renderTerminal(true)}
             </div>
           </>
         ) : (
@@ -1342,7 +1686,8 @@ function TerminalContent() {
         )}
       </div>
 
-      <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
+      <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }`}</style>
     </div>
   );
 }
