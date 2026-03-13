@@ -51,9 +51,15 @@ export const GET: APIRoute = async () => {
       w.contributionDays.map((d: any) => d.contributionCount)
     );
 
+    // Find most recent contribution date
+    const allDays = calendar.weeks.flatMap((w: any) => w.contributionDays);
+    const lastContribDay = [...allDays].reverse().find((d: any) => d.contributionCount > 0);
+    const lastUpdated = lastContribDay?.date || null;
+
     return new Response(JSON.stringify({
       totalContributions: calendar.totalContributions,
       weeks,
+      lastUpdated,
     }), {
       headers: {
         'Content-Type': 'application/json',

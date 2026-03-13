@@ -243,7 +243,7 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
             }}>
               Certifications
             </h3>
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
               {[
                 {
                   title: 'Machine Learning for Trading Specialization',
@@ -276,11 +276,11 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
                     }, 300);
                   }}
                   style={{
-                    flex: 1,
+                    width: '100%',
                     background: 'rgba(255,255,255,0.04)',
                     border: '0.5px solid rgba(255,255,255,0.1)',
                     borderRadius: '10px',
-                    padding: '14px 16px',
+                    padding: '20px 24px',
                     cursor: 'pointer',
                     transition: 'background 0.2s, border-color 0.2s',
                   }}
@@ -293,17 +293,17 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
                     (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)';
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <img
                       src={cert.logo}
                       alt={cert.issuer}
-                      style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 6, flexShrink: 0 }}
+                      style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 8, flexShrink: 0 }}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', fontFamily: "'SF Pro Text', -apple-system, sans-serif", lineHeight: 1.3 }}>
+                      <div style={{ fontSize: '15px', fontWeight: 600, color: '#fff', fontFamily: "'SF Pro Text', -apple-system, sans-serif", lineHeight: 1.3 }}>
                         {cert.title}
                       </div>
-                      <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Pro Text', -apple-system, sans-serif", marginTop: '3px' }}>
+                      <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Pro Text', -apple-system, sans-serif", marginTop: '4px' }}>
                         {cert.issuer} · {cert.date}
                       </div>
                     </div>

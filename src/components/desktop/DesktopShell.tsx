@@ -823,6 +823,7 @@ function BloombergNewsFeed() {
 function GitHubHeatmap() {
   const [weeks, setWeeks] = useState<number[][]>([]);
   const [total, setTotal] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   useEffect(() => {
     fetch('/api/github-contributions')
       .then(r => r.ok ? r.json() : null)
@@ -830,6 +831,7 @@ function GitHubHeatmap() {
         if (d?.weeks) {
           setWeeks(d.weeks);
           setTotal(d.totalContributions);
+          if (d.lastUpdated) setLastUpdated(d.lastUpdated);
         }
       })
       .catch(() => {});
@@ -848,9 +850,9 @@ function GitHubHeatmap() {
   const gap = 1.5;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-        <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace" }}>
+        <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace" }}>
           GITHUB
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
@@ -875,8 +877,13 @@ function GitHubHeatmap() {
           )}
         </svg>
       </div>
-      <div style={{ marginTop: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Mono', monospace" }}>
-        {total} contributions
+      <div style={{ marginTop: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>
+        <span style={{ color: '#fff' }}>{total} contributions</span>
+        {lastUpdated && (
+          <span style={{ color: 'rgba(255,255,255,0.5)' }}>
+            Last updated {new Date(lastUpdated + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -1303,7 +1310,463 @@ function MarketClock() {
   );
 }
 
+// ── Mountain Climber Interactive ──
+// Side-view mountain in the triangular whitespace of the left panel.
+// Fixed 200x300 viewBox so proportions stay consistent regardless of container size.
+const CLIMB_START = 0.08; // man starts near the bottom of the mountain, around email level
+function MountainClimber() {
+  const [progress, setProgress] = useState(CLIMB_START);
+  const [celebrating, setCelebrating] = useState(false);
+  const [showMessage, setShowMessage] = useState(false);
+  const [hintVisible, setHintVisible] = useState(true);
+  const [typedChars, setTypedChars] = useState(0);
+  const keysDown = useRef<Set<string>>(new Set());
+  const rafRef = useRef<number>();
+  const fullMessage = 'YOU\nJUST\nNEED TO\nKEEP ON\nPUSHING';
+
+  // Fixed coordinate system — 240x400 ensures consistent proportions
+  const W = 240;
+  const H = 400;
+
+  // Ridge points — gentle rolling hill with subtle S-curves
+  const ridgePts: [number, number][] = [
+    [8, H],        // flush with bottom edge
+    [18, 378],
+    [30, 358],
+    [42, 342],     // gentle start
+    [54, 330],
+    [66, 320],
+    [76, 314],     // slight plateau
+    [86, 310],
+    [96, 304],
+    [106, 294],    // picks up again
+    [116, 280],
+    [126, 264],
+    [134, 250],    // mid-slope
+    [142, 238],
+    [150, 224],
+    [158, 208],
+    [166, 190],    // steeper push
+    [174, 170],
+    [182, 148],
+    [188, 130],    // approaching summit
+    [194, 114],
+    [200, 100],
+    [206, 88],
+    [212, 78],     // summit
+  ];
+
+  // Smooth ridge path with quadratic bezier curves
+  const ridgePath = (() => {
+    const pts = ridgePts;
+    let d = `M ${pts[0][0]},${pts[0][1]}`;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const midX = (pts[i][0] + pts[i + 1][0]) / 2;
+      const midY = (pts[i][1] + pts[i + 1][1]) / 2;
+      d += ` Q ${pts[i][0]},${pts[i][1]} ${midX},${midY}`;
+    }
+    const last = pts[pts.length - 1];
+    d += ` L ${last[0]},${last[1]}`;
+    return d;
+  })();
+
+  // Terrain fill: ridge → right edge → bottom → close
+  const terrainPath = `${ridgePath} L ${W},${ridgePts[ridgePts.length - 1][1]} L ${W},${H} L ${ridgePts[0][0]},${H} Z`;
+
+  // Get position along the climb path
+  const getPositionOnRidge = useCallback((t: number) => {
+    const pts = ridgePts;
+    let totalLen = 0;
+    for (let i = 1; i < pts.length; i++) {
+      const dx = pts[i][0] - pts[i-1][0]; const dy = pts[i][1] - pts[i-1][1];
+      totalLen += Math.sqrt(dx*dx + dy*dy);
+    }
+    const targetLen = t * totalLen;
+    let traveled = 0;
+    for (let i = 1; i < pts.length; i++) {
+      const dx = pts[i][0] - pts[i-1][0]; const dy = pts[i][1] - pts[i-1][1];
+      const segLen = Math.sqrt(dx*dx + dy*dy);
+      if (traveled + segLen >= targetLen) {
+        const frac = segLen > 0 ? (targetLen - traveled) / segLen : 0;
+        return {
+          x: pts[i-1][0] + dx * frac,
+          y: pts[i-1][1] + dy * frac,
+          // Slope angle for tilting figure
+          angle: Math.atan2(-dy, dx),
+        };
+      }
+      traveled += segLen;
+    }
+    const last = pts[pts.length - 1];
+    return { x: last[0], y: last[1], angle: -Math.PI / 4 };
+  }, []);
+
+  // Keyboard
+  useEffect(() => {
+    if (celebrating) return;
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { keysDown.current.add(e.key); setHintVisible(false); }
+    };
+    const up = (e: KeyboardEvent) => { keysDown.current.delete(e.key); };
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
+    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); };
+  }, [celebrating]);
+
+  // Animation loop
+  useEffect(() => {
+    if (celebrating) return;
+    let lastTime = 0;
+    const speed = 0.1;
+    const tick = (time: number) => {
+      if (lastTime) {
+        const dt = (time - lastTime) / 1000;
+        if (keysDown.current.size > 0) {
+          setProgress(prev => {
+            const next = Math.min(prev + speed * dt, 1);
+            if (next >= 1) { setCelebrating(true); setTimeout(() => setShowMessage(true), 800); }
+            return next;
+          });
+        } else {
+          setProgress(prev => Math.max(prev - speed * 0.08 * dt, CLIMB_START));
+        }
+      }
+      lastTime = time;
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [celebrating]);
+
+  // Typewriter effect for "JUST KEEP PUSHING"
+  useEffect(() => {
+    if (!showMessage) return;
+    setTypedChars(0);
+    let i = 0;
+    const timer = setInterval(() => {
+      i++;
+      setTypedChars(i);
+      if (i >= fullMessage.length) clearInterval(timer);
+    }, 80);
+    return () => clearInterval(timer);
+  }, [showMessage]);
+
+  const pos = getPositionOnRidge(progress);
+  const sphereR = 6;
+  const summit = ridgePts[ridgePts.length - 1];
+
+  const particles = celebrating ? Array.from({ length: 12 }, (_, i) => {
+    const a = (i / 12) * Math.PI * 2;
+    const r = 20 + Math.random() * 15;
+    return { x: pos.x + Math.cos(a) * r, y: pos.y + Math.sin(a) * r, delay: i * 0.05, color: ['#fbbf24', '#fff', '#4ade80', '#f472b6'][i % 4] };
+  }) : [];
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        right: 0,
+        bottom: 0,
+        width: '65%',
+        height: '75%',
+        pointerEvents: 'none',
+        zIndex: 1,
+      }}
+    >
+      <svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMaxYMax meet">
+        <defs>
+          <radialGradient id="sphereGlow">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.9)" />
+            <stop offset="50%" stopColor="rgba(255,255,255,0.2)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </radialGradient>
+          <linearGradient id="mtnFill" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.06)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0.015)" />
+          </linearGradient>
+          <filter id="sphereBlur"><feGaussianBlur stdDeviation="4" /></filter>
+          <filter id="celebGlow"><feGaussianBlur stdDeviation="3" /></filter>
+          <clipPath id="mtnClip">
+            <path d={terrainPath} />
+          </clipPath>
+        </defs>
+
+        {/* Mountain body fill */}
+        <path d={terrainPath} fill="url(#mtnFill)" />
+
+        {/* Subtle terrain texture lines */}
+        <line x1="60" y1="340" x2="160" y2="340" stroke="rgba(255,255,255,0.025)" strokeWidth="0.5" />
+        <line x1="80" y1="290" x2="180" y2="290" stroke="rgba(255,255,255,0.025)" strokeWidth="0.5" />
+        <line x1="110" y1="230" x2="200" y2="230" stroke="rgba(255,255,255,0.02)" strokeWidth="0.5" />
+        <line x1="140" y1="170" x2="220" y2="170" stroke="rgba(255,255,255,0.02)" strokeWidth="0.5" />
+        <line x1="170" y1="110" x2="230" y2="110" stroke="rgba(255,255,255,0.015)" strokeWidth="0.5" />
+
+        {/* Mountain ridge line */}
+        <path d={ridgePath} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* Flag at summit — red until reached, then green */}
+        <g transform={`translate(${summit[0]}, ${summit[1]})`}>
+          <line x1="0" y1="0" x2="0" y2="-16" stroke="rgba(255,255,255,0.5)" strokeWidth="1" />
+          <polygon points="0,-16 10,-12.5 0,-9" fill={celebrating ? '#4ade80' : '#ef4444'} stroke={celebrating ? '#22c55e' : '#dc2626'} strokeWidth="0.5" opacity={0.85} />
+        </g>
+
+        {/* Glowing sphere — ON TOP of the ridge */}
+        {!celebrating && (
+          <>
+            <circle cx={pos.x + 6} cy={pos.y - sphereR - 6} r={sphereR + 8} fill="url(#sphereGlow)" filter="url(#sphereBlur)" opacity={0.6} />
+            <circle cx={pos.x + 6} cy={pos.y - sphereR - 6} r={sphereR} fill="rgba(255,255,255,0.95)" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8">
+              <animate attributeName="r" values={`${sphereR};${sphereR + 1};${sphereR}`} dur="2s" repeatCount="indefinite" />
+            </circle>
+          </>
+        )}
+
+        {/* Stick figure */}
+        {(() => {
+          const step = Math.sin(progress * Math.PI * 20);
+          const isMoving = keysDown.current.size > 0;
+          const legSpread = isMoving ? step * 4 : 0;
+          // Position figure ON the ridge (feet on the surface)
+          const fx = pos.x;
+          const fy = pos.y;
+
+          if (celebrating) {
+            // Standing upright to the RIGHT of the flag — feet ON the ridge
+            const sx = summit[0] + 14;
+            const sy = summit[1] - 10; // offset up so feet (at +10) land on ridge
+            return (
+              <g transform={`translate(${sx}, ${sy})`} opacity="0.9">
+                {/* Legs — standing */}
+                <line x1="-2" y1="0" x2="-3" y2="10" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" />
+                <line x1="2" y1="0" x2="3" y2="10" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" />
+                {/* Body — upright */}
+                <line x1="0" y1="0" x2="0" y2="-12" stroke="#fff" strokeWidth="1.3" strokeLinecap="round" />
+                {/* Head */}
+                <circle cx="0" cy="-15" r="2.5" fill="none" stroke="#fff" strokeWidth="1" />
+                {/* Arms — raised in victory */}
+                <line x1="0" y1="-9" x2="-7" y2="-16" stroke="#fff" strokeWidth="1" strokeLinecap="round" />
+                <line x1="0" y1="-9" x2="7" y2="-16" stroke="#fff" strokeWidth="1" strokeLinecap="round" />
+              </g>
+            );
+          }
+
+          return (
+            <g transform={`translate(${fx - 14}, ${fy - 8})`} opacity="0.8">
+              {/* Legs — stepping animation, feet touch the ridge surface */}
+              <line x1="0" y1="0" x2={3 + legSpread} y2="8" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" />
+              <line x1="0" y1="0" x2={3 - legSpread} y2="8" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" />
+              {/* Body — leaning forward to push */}
+              <line x1="0" y1="0" x2="8" y2="-10" stroke="#fff" strokeWidth="1.3" strokeLinecap="round" />
+              {/* Head */}
+              <circle cx="9.5" cy="-12.5" r="2.5" fill="none" stroke="#fff" strokeWidth="1" />
+              {/* Arms — reaching forward to push the ball */}
+              <line x1="5" y1="-6" x2="13" y2="-7" stroke="#fff" strokeWidth="1" strokeLinecap="round" />
+              <line x1="5" y1="-7" x2="13" y2="-5" stroke="#fff" strokeWidth="1" strokeLinecap="round" />
+            </g>
+          );
+        })()}
+
+        {/* Celebration particles */}
+        {particles.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r="3" fill={p.color} opacity={showMessage ? 0 : 1} filter="url(#celebGlow)">
+            <animate attributeName="r" from="0" to="4" dur="0.6s" begin={`${p.delay}s`} fill="freeze" />
+            <animate attributeName="opacity" from="1" to="0" dur="1.2s" begin={`${p.delay + 0.3}s`} fill="freeze" />
+          </circle>
+        ))}
+
+        {/* "YOU JUST NEED TO KEEP ON PUSHING" — text fills mountain shape, clipped to terrain */}
+        {showMessage && (() => {
+          // Text fills the mountain shape — each word sized to fit its horizontal band
+          const words = ['YOU', 'JUST', 'NEED TO', 'KEEP ON', 'PUSHING'];
+          const bandCount = words.length;
+          const topY = 78;   // summit Y
+          const botY = H;    // base Y
+          const bandH = (botY - topY) / bandCount;
+
+          // Helper: find the ridge X at a given Y (left edge of mountain at that height)
+          const getRidgeXAtY = (y: number) => {
+            for (let i = 1; i < ridgePts.length; i++) {
+              const [x0, y0] = ridgePts[i - 1];
+              const [x1, y1] = ridgePts[i];
+              if ((y0 <= y && y <= y1) || (y1 <= y && y <= y0)) {
+                const t = y0 === y1 ? 0 : (y - y0) / (y1 - y0);
+                return x0 + t * (x1 - x0);
+              }
+            }
+            return ridgePts[0][0];
+          };
+
+          return (
+            <g clipPath="url(#mtnClip)">
+              {words.map((word, wi) => {
+                const charsBeforeThisWord = words.slice(0, wi).reduce((s, w) => s + w.length + 1, 0);
+                const charsAvailable = Math.max(0, typedChars - charsBeforeThisWord);
+                const visiblePart = word.slice(0, charsAvailable);
+                if (charsAvailable <= 0) return null;
+                const bandMidY = topY + (wi + 0.55) * bandH;
+                const fontSize = bandH * 0.78;
+                // Left edge of mountain at this Y
+                const leftX = getRidgeXAtY(bandMidY) + 4;
+                const rightX = W - 2;
+                const availWidth = rightX - leftX;
+                return (
+                  <text
+                    key={wi}
+                    x={leftX}
+                    y={bandMidY + fontSize * 0.32}
+                    textAnchor="start"
+                    textLength={availWidth}
+                    lengthAdjust="spacingAndGlyphs"
+                    style={{
+                      fontSize: `${fontSize}px`,
+                      fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+                      fontWeight: 900,
+                      fontStyle: 'italic',
+                      fill: 'rgba(255,255,255,0.15)',
+                    }}
+                  >
+                    {visiblePart}
+                  </text>
+                );
+              })}
+            </g>
+          );
+        })()}
+      </svg>
+
+      {/* Hint — glowing text in bottom right */}
+      {hintVisible && !celebrating && (
+        <div style={{
+          position: 'absolute', bottom: '8px', right: '8px',
+          fontSize: '10px', fontFamily: "'SF Mono', monospace",
+          color: 'rgba(255,255,255,0.5)',
+          animation: 'cornerPulse 2.5s ease-in-out infinite',
+          pointerEvents: 'none', textAlign: 'right',
+        }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+            hold
+            <span style={{ border: '1px solid rgba(255,255,255,0.4)', borderRadius: 3, padding: '1px 5px', fontSize: '9px', background: 'rgba(255,255,255,0.06)' }}>↑</span>
+            or
+            <span style={{ border: '1px solid rgba(255,255,255,0.4)', borderRadius: 3, padding: '1px 5px', fontSize: '9px', background: 'rgba(255,255,255,0.06)' }}>→</span>
+            to push
+          </span>
+        </div>
+      )}
+
+      {/* Reset button — appears after celebration */}
+      {celebrating && (
+        <div
+          onClick={() => {
+            setCelebrating(false);
+            setShowMessage(false);
+            setTypedChars(0);
+            setProgress(CLIMB_START);
+            setHintVisible(true);
+          }}
+          style={{
+            position: 'absolute', bottom: '8px', right: '8px',
+            cursor: 'pointer', pointerEvents: 'auto',
+            width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)',
+            background: 'rgba(255,255,255,0.05)',
+            color: 'rgba(255,255,255,0.4)', fontSize: '11px',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
+          title="Reset climb"
+        >
+          ↻
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Sector Sparklines ──
+function AnimatedSparkline({ history, color, delay, sparkW, sparkH, animReady, idx }: {
+  history: number[]; color: string; delay: number; sparkW: number; sparkH: number; animReady: boolean; idx: number;
+}) {
+  const [progress, setProgress] = useState(0);
+  const rafRef = useRef<number>();
+
+  const min = Math.min(...history);
+  const max = Math.max(...history);
+  const range = max - min || 1;
+
+  useEffect(() => {
+    if (!animReady || history.length === 0) return;
+
+    const timeout = setTimeout(() => {
+      let frame = 0;
+      const totalPoints = history.length;
+      const framesPerPoint = Math.max(1, Math.round(72 / totalPoints));
+      let subFrame = 0;
+
+      const loop = () => {
+        subFrame++;
+        if (subFrame >= framesPerPoint) {
+          subFrame = 0;
+          frame++;
+          setProgress(frame);
+        }
+        if (frame < totalPoints) {
+          rafRef.current = requestAnimationFrame(loop);
+        }
+      };
+      rafRef.current = requestAnimationFrame(loop);
+    }, delay * 1000);
+
+    return () => {
+      clearTimeout(timeout);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [animReady]);
+
+  const visCount = Math.min(progress, history.length);
+  const pts: { x: number; y: number }[] = [];
+  for (let i = 0; i < visCount; i++) {
+    pts.push({
+      x: (i / (history.length - 1)) * sparkW,
+      y: sparkH - ((history[i] - min) / range) * (sparkH - 4) - 2,
+    });
+  }
+
+  const linePath = pts.length > 1
+    ? pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+    : '';
+  const lastPt = pts[pts.length - 1];
+  const firstPt = pts[0];
+  const gradId = `sector-grad-${idx}`;
+  const glowId = `sector-glow-${idx}`;
+
+  return (
+    <svg width="100%" height={sparkH} viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.12" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+        <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      {linePath && firstPt && lastPt && (
+        <>
+          <path d={linePath + ` L${lastPt.x.toFixed(1)},${sparkH} L${firstPt.x.toFixed(1)},${sparkH} Z`} fill={`url(#${gradId})`} />
+          <path d={linePath} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx={lastPt.x} cy={lastPt.y} r={3} fill={color} filter={`url(#${glowId})`}>
+            <animate attributeName="r" values="2;4;2" dur="1.2s" repeatCount="indefinite" />
+          </circle>
+        </>
+      )}
+    </svg>
+  );
+}
+
 function SectorSparklines({ onSectorClick }: { onSectorClick?: (name: string) => void } = {}) {
   const stocks = useStockData();
   const [animReady, setAnimReady] = useState(false);
@@ -1338,17 +1801,9 @@ function SectorSparklines({ onSectorClick }: { onSectorClick?: (name: string) =>
   return (
     <div style={{ padding: '10px 12px' }}>
       <style>{`
-        @keyframes sparkDraw {
-          from { stroke-dashoffset: 800; }
-          to { stroke-dashoffset: 0; }
-        }
         @keyframes sparkFadeIn {
           from { opacity: 0; transform: translateY(4px); }
           to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes glowFadeIn {
-          from { opacity: 0; }
-          to { opacity: 0.15; }
         }
       `}</style>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -1362,11 +1817,6 @@ function SectorSparklines({ onSectorClick }: { onSectorClick?: (name: string) =>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
         {sectorData.map((sec, idx) => {
-          const min = Math.min(...sec.history);
-          const max = Math.max(...sec.history);
-          const range = max - min || 1;
-          const pts = sec.history.map((v, i) => `${(i / (sec.history.length - 1)) * sparkW},${sparkH - ((v - min) / range) * (sparkH - 4) - 2}`).join(' ');
-          const fillPts = pts + ` ${sparkW},${sparkH} 0,${sparkH}`;
           const color = sec.pct >= 0 ? '#4ade80' : '#f87171';
           const delay = idx * 0.12;
           return (
@@ -1388,33 +1838,15 @@ function SectorSparklines({ onSectorClick }: { onSectorClick?: (name: string) =>
                   {sec.pct >= 0 ? '+' : ''}{sec.pct.toFixed(2)}%
                 </span>
               </div>
-              <svg width="100%" height={sparkH} viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
-                <defs>
-                  <linearGradient id={`spark-fill-${idx}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={color} stopOpacity="0.25" />
-                    <stop offset="100%" stopColor={color} stopOpacity="0.02" />
-                  </linearGradient>
-                </defs>
-                <polygon points={fillPts} fill={`url(#spark-fill-${idx})`} style={{ animation: animReady ? `glowFadeIn 1s ${delay + 0.5}s ease-out both` : 'none', opacity: 0 }} />
-                <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"
-                  style={{
-                    strokeDasharray: 800,
-                    strokeDashoffset: animReady ? undefined : 800,
-                    animation: animReady ? `sparkDraw 1.2s ${delay}s ease-out both` : 'none',
-                  }}
-                />
-                {sec.history.length > 0 && (
-                  <circle
-                    cx={sparkW}
-                    cy={sparkH - ((sec.history[sec.history.length - 1] - min) / range) * (sparkH - 4) - 2}
-                    r="2" fill={color}
-                    style={{ opacity: animReady ? 1 : 0, animation: animReady ? `sparkFadeIn 0.3s ${delay + 1}s ease-out both` : 'none' }}
-                  >
-                    <animate attributeName="r" values="2;3;2" dur="2s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
-                  </circle>
-                )}
-              </svg>
+              <AnimatedSparkline
+                history={sec.history}
+                color={color}
+                delay={delay}
+                sparkW={sparkW}
+                sparkH={sparkH}
+                animReady={animReady}
+                idx={idx}
+              />
             </div>
           );
         })}
@@ -1441,6 +1873,278 @@ function BloombergBackButton({ onClick }: { onClick: () => void }) {
     >
       ← BACK TO DASHBOARD
     </button>
+  );
+}
+
+// ── Middle Panel: Site Guide + Tech Stack + Stats + Certs ──
+
+const SITE_GUIDE = [
+  { label: 'Experience', desc: 'Work history & internships', cmd: 'npm run experience', icon: '💼' },
+  { label: 'Education', desc: 'Academic background & coursework', cmd: 'git log --education', icon: '🎓' },
+  { label: 'Projects', desc: 'Side projects & builds', cmd: 'brew install projects', icon: '🔨' },
+  { label: 'Notes', desc: 'Blog posts & thoughts', cmd: 'cat mythoughts.md', icon: '📝' },
+  { label: 'Research', desc: 'Case studies & deep dives', cmd: 'cd deepresearch', icon: '📚' },
+  { label: 'Calendar', desc: 'Book a meeting with me', cmd: 'open calendar.app', icon: '📅' },
+];
+
+// Category color themes — one gradient color per category
+const CATEGORY_THEME: Record<string, { color: string; rgb: string }> = {
+  Languages:  { color: '#5B9BD5', rgb: '91,155,213' },
+  Frameworks: { color: '#4ECB71', rgb: '78,203,113' },
+  Tools:      { color: '#FF9F43', rgb: '255,159,67' },
+};
+const TECH_STACK = [
+  { category: 'Languages', items: ['TypeScript', 'Python', 'Java', 'C++', 'SQL', 'Go'] },
+  { category: 'Frameworks', items: ['React', 'Next.js', 'Node.js', 'Astro', 'FastAPI', 'Spring'] },
+  { category: 'Tools', items: ['AWS', 'Docker', 'PostgreSQL', 'Redis', 'Git', 'Linux'] },
+];
+
+const GOOGLE_COLORS = ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#4285F4', '#EA4335', '#FBBC04', '#34A853', '#4285F4', '#EA4335', '#FBBC04', '#34A853'];
+// Wharton: "Wharton" in blue, " Online" in white
+const WHARTON_COLORS = ['#4A7EC1','#4A7EC1','#4A7EC1','#4A7EC1','#4A7EC1','#4A7EC1','#4A7EC1','#fff','#fff','#fff','#fff','#fff','#fff','#fff'];
+// Amazon: 3 yellow, 3 white, space white, "Web" all yellow, space white, "Ser" white, "vic" yellow, "es" white
+const AMAZON_COLORS = ['#FF9900','#FF9900','#FF9900','#fff','#fff','#fff','#fff','#FF9900','#FF9900','#FF9900','#fff','#fff','#fff','#fff','#FF9900','#FF9900','#FF9900','#fff','#fff'];
+
+function BrandText({ text, colors }: { text: string; colors: string[] }) {
+  return <>{text.split('').map((ch, i) => <span key={i} style={{ color: colors[i % colors.length] }}>{ch}</span>)}</>;
+}
+
+const CERTIFICATIONS = [
+  { name: 'Machine Learning for Trading Specialization', issuer: 'Google Cloud', status: '', issuerColors: GOOGLE_COLORS },
+  { name: 'Finance & Quantitative Modeling for Analysts', issuer: 'Wharton Online', status: '', issuerColors: WHARTON_COLORS },
+  { name: 'AWS Cloud Practitioner', issuer: 'Amazon Web Services', status: 'In Progress', issuerColors: AMAZON_COLORS },
+];
+
+const sectionLabel: React.CSSProperties = {
+  color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: 700,
+  letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Mono', monospace",
+};
+
+// ── Chronograph Clock ──
+function ChronographClock() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const hours = time.getHours() % 12;
+  const minutes = time.getMinutes();
+  const seconds = time.getSeconds();
+
+  const size = 180;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = 78; // main dial radius
+
+  // Angles (12 o'clock = -90deg)
+  const secAngle = (seconds / 60) * 360 - 90;
+  const minAngle = (minutes / 60) * 360 + (seconds / 60) * 6 - 90;
+  const hrAngle = (hours / 12) * 360 + (minutes / 60) * 30 - 90;
+
+  const hand = (angle: number, len: number, w: number, color: string) => {
+    const rad = (angle * Math.PI) / 180;
+    return (
+      <line
+        x1={cx} y1={cy}
+        x2={cx + Math.cos(rad) * len}
+        y2={cy + Math.sin(rad) * len}
+        stroke={color} strokeWidth={w} strokeLinecap="round"
+      />
+    );
+  };
+
+  // Sub-dial: running seconds (small circle at bottom)
+  const subR = 18;
+  const subCx = cx;
+  const subCy = cy + 32;
+  const subSecAngle = (seconds / 60) * 360 - 90;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {/* Outer ring */}
+        <circle cx={cx} cy={cy} r={r + 4} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5" />
+
+        {/* Hour markers */}
+        {Array.from({ length: 12 }, (_, i) => {
+          const angle = ((i / 12) * 360 - 90) * Math.PI / 180;
+          const isMain = i % 3 === 0;
+          const inner = isMain ? r - 12 : r - 8;
+          const outer = r - 2;
+          return (
+            <line
+              key={i}
+              x1={cx + Math.cos(angle) * inner} y1={cy + Math.sin(angle) * inner}
+              x2={cx + Math.cos(angle) * outer} y2={cy + Math.sin(angle) * outer}
+              stroke={isMain ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)'}
+              strokeWidth={isMain ? 1.5 : 0.8}
+              strokeLinecap="round"
+            />
+          );
+        })}
+
+        {/* Minute tick marks */}
+        {Array.from({ length: 60 }, (_, i) => {
+          if (i % 5 === 0) return null;
+          const angle = ((i / 60) * 360 - 90) * Math.PI / 180;
+          return (
+            <line
+              key={`m${i}`}
+              x1={cx + Math.cos(angle) * (r - 4)} y1={cy + Math.sin(angle) * (r - 4)}
+              x2={cx + Math.cos(angle) * (r - 2)} y2={cy + Math.sin(angle) * (r - 2)}
+              stroke="rgba(255,255,255,0.08)" strokeWidth="0.5"
+            />
+          );
+        })}
+
+        {/* Sub-dial ring (running seconds) */}
+        <circle cx={subCx} cy={subCy} r={subR} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" />
+        {/* Sub-dial ticks */}
+        {Array.from({ length: 12 }, (_, i) => {
+          const angle = ((i / 12) * 360 - 90) * Math.PI / 180;
+          return (
+            <line
+              key={`s${i}`}
+              x1={subCx + Math.cos(angle) * (subR - 3)} y1={subCy + Math.sin(angle) * (subR - 3)}
+              x2={subCx + Math.cos(angle) * (subR - 1)} y2={subCy + Math.sin(angle) * (subR - 1)}
+              stroke="rgba(255,255,255,0.15)" strokeWidth="0.4"
+            />
+          );
+        })}
+        {/* Sub-dial hand */}
+        {(() => {
+          const rad = (subSecAngle * Math.PI) / 180;
+          return (
+            <line
+              x1={subCx} y1={subCy}
+              x2={subCx + Math.cos(rad) * (subR - 4)}
+              y2={subCy + Math.sin(rad) * (subR - 4)}
+              stroke="rgba(255,255,255,0.5)" strokeWidth="0.6" strokeLinecap="round"
+            />
+          );
+        })()}
+
+        {/* Hour hand */}
+        {hand(hrAngle, 40, 2.2, 'rgba(255,255,255,0.75)')}
+        {/* Minute hand */}
+        {hand(minAngle, 58, 1.5, 'rgba(255,255,255,0.6)')}
+        {/* Second hand */}
+        {hand(secAngle, 65, 0.6, 'rgba(255,255,255,0.35)')}
+        {/* Second hand tail */}
+        {(() => {
+          const rad = ((secAngle + 180) * Math.PI) / 180;
+          return (
+            <line
+              x1={cx} y1={cy}
+              x2={cx + Math.cos(rad) * 14}
+              y2={cy + Math.sin(rad) * 14}
+              stroke="rgba(255,255,255,0.35)" strokeWidth="0.6" strokeLinecap="round"
+            />
+          );
+        })()}
+
+        {/* Center dot */}
+        <circle cx={cx} cy={cy} r="2.5" fill="rgba(255,255,255,0.5)" />
+        <circle cx={cx} cy={cy} r="1" fill="#1a1a2e" />
+
+        {/* Brand text */}
+        <text x={cx} y={cy - 20} textAnchor="middle" style={{ fontSize: '6px', fill: 'rgba(255,255,255,0.2)', fontFamily: "'SF Mono', monospace", letterSpacing: '0.15em', fontWeight: 500 }}>
+          GANDHE
+        </text>
+      </svg>
+
+      {/* Digital readout below */}
+      <div style={{
+        fontFamily: "'SF Mono', monospace",
+        fontSize: '11px',
+        color: 'rgba(255,255,255,0.3)',
+        letterSpacing: '0.1em',
+      }}>
+        {String(time.getHours()).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+      </div>
+    </div>
+  );
+}
+
+function MiddlePanel({ runCommand }: { runCommand: (cmd: string) => void }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '28px 20px 14px 20px' }}>
+      {/* Site Guide */}
+      <div>
+        <div style={sectionLabel}>SITE GUIDE</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          {SITE_GUIDE.map(item => (
+            <div
+              key={item.label}
+              onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '5px 8px',
+                borderRadius: 5, cursor: 'pointer', transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              <span style={{ fontSize: '12px', width: '18px', textAlign: 'center' }}>{item.icon}</span>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: '#fff', fontFamily: "'SF Mono', monospace", minWidth: '80px' }}>{item.label}</span>
+              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>{item.desc}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: '8px', padding: '6px 8px', borderRadius: 5, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace", lineHeight: 1.6 }}>
+            <span style={{ color: 'rgba(255,255,255,0.6)' }}>Tip:</span> Click the green button in the top left to return to the home page and explore the site.
+          </div>
+        </div>
+      </div>
+
+      {/* Tech Stack */}
+      <div style={{ marginTop: '16px' }}>
+        <div style={sectionLabel}>TECH STACK</div>
+        {TECH_STACK.map(cat => (
+          <div key={cat.category} style={{ marginBottom: '8px' }}>
+            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', fontFamily: "'SF Mono', monospace", marginBottom: '4px', textTransform: 'uppercase' as const }}>{cat.category}</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+              {cat.items.map((item, i) => {
+                const theme = CATEGORY_THEME[cat.category] || { color: '#fff', rgb: '255,255,255' };
+                const opacity = 0.18 - (i * 0.02);
+                return (
+                  <span key={item} style={{
+                    fontSize: '10px', padding: '2px 8px', borderRadius: 4,
+                    background: `rgba(${theme.rgb},${Math.max(opacity, 0.06)})`,
+                    border: `0.5px solid rgba(${theme.rgb},0.25)`,
+                    color: theme.color, fontFamily: "'SF Mono', monospace",
+                  }}>{item}</span>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Certifications */}
+      <div style={{ marginTop: '16px' }}>
+        <div style={sectionLabel}>CERTIFICATIONS</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {CERTIFICATIONS.map(cert => (
+            <div key={cert.name} style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '11px', color: '#fff', fontFamily: "'SF Mono', monospace", fontWeight: 600 }}>{cert.name}</span>
+              <span style={{ fontSize: '10px', fontFamily: "'SF Mono', monospace", fontWeight: 600 }}>· <BrandText text={cert.issuer} colors={cert.issuerColors} /></span>
+              {cert.status && (
+                <span style={{ fontSize: '9px', color: '#fbbf24', fontFamily: "'SF Mono', monospace", fontWeight: 600, padding: '1px 6px', borderRadius: 3, background: 'rgba(251,191,36,0.1)', border: '0.5px solid rgba(251,191,36,0.2)' }}>{cert.status}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+
+      {/* GitHub Heatmap */}
+      <GitHubHeatmap />
+    </div>
   );
 }
 
@@ -1889,7 +2593,7 @@ function SectorDetailView({ sectorName, onBack, onStockClick }: { sectorName: st
 
 // ── Bloomberg Option 1: Scrolling News Tape ──
 function ScrollingNewsTape() {
-  const [news, setNews] = useState<{ title: string; source: string }[]>([]);
+  const [news, setNews] = useState<{ title: string; source: string; url: string }[]>([]);
   useEffect(() => {
     fetch('/api/market-news')
       .then(r => r.ok ? r.json() : [])
@@ -1911,15 +2615,18 @@ function ScrollingNewsTape() {
 
   const tape = [...news, ...news]; // duplicate for seamless loop
   const tapeContent = tape.map((item, i) => (
-    <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', paddingRight: '32px' }}>
+    <a key={i} href={item.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', paddingRight: '32px', textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}
+      onMouseEnter={e => { (e.currentTarget.querySelector('[data-title]') as HTMLElement).style.textDecoration = 'underline'; }}
+      onMouseLeave={e => { (e.currentTarget.querySelector('[data-title]') as HTMLElement).style.textDecoration = 'none'; }}
+    >
       <span style={{ color: getColor(item.source), fontSize: '10px', fontWeight: 700, fontFamily: "'SF Mono', monospace" }}>
         {item.source.toUpperCase()}
       </span>
-      <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: "'SF Mono', monospace" }}>
+      <span data-title style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: "'SF Mono', monospace" }}>
         {item.title}
       </span>
       <span style={{ color: 'rgba(255,255,255,0.2)' }}>│</span>
-    </span>
+    </a>
   ));
 
   return (
@@ -2729,14 +3436,17 @@ function TerminalContent() {
 
   // ═══════════════ SPLIT PANELS (default) ═══════════════
   return (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100%', overflow: 'hidden', position: 'relative' as const }}>
       {/* Left — hero + portfolio (main focus) */}
       <div style={{
-        width: isFullscreen ? '600px' : undefined,
+        width: isFullscreen ? '38%' : undefined,
         flex: isFullscreen ? 'none' : 1,
         display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        padding: '28px 20px 14px 28px', borderRight: '1px solid rgba(255,255,255,0.04)',
+        padding: isFullscreen ? '20px 20px 8px 28px' : '28px 20px 14px 28px', borderRight: '1px solid rgba(255,255,255,0.04)',
         minWidth: 0, flexShrink: 0,
+        overflowY: isFullscreen ? 'auto' : 'hidden',
+        overflowX: 'hidden',
+        position: 'relative' as const,
       }}>
         {/* Hero text */}
         <div>
@@ -2744,16 +3454,59 @@ function TerminalContent() {
             <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '34px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
               Ronniel Gandhe
             </div>
-            <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', fontWeight: 400, marginBottom: '16px' }}>
+            <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', fontWeight: 400, marginBottom: isFullscreen ? '8px' : '16px' }}>
               Software Engineer
             </div>
             {isFullscreen ? (
-              <div style={{ marginTop: '4px' }}>
+              <div style={{ marginTop: '0px' }}>
                 <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '10px', fontFamily: "'SF Mono', monospace" }}>
                   ABOUT
                 </div>
                 <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', lineHeight: 1.7, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 }}>
                   Software engineer studying Computer Science at Wilfrid Laurier University, previously in the Waterloo CS &amp; Laurier BBA double degree program. Currently building growth systems at Augmentor Labs in New York. I like working across the stack — from low-level systems and infrastructure to product-facing features and data pipelines. Outside of work, I spend time on quantitative projects, reading, and exploring new tools.
+                </div>
+                <div style={{ marginTop: '12px' }}>
+                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Mono', monospace" }}>
+                    INTERESTS
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', lineHeight: 1.7, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div>
+                      <div style={{ color: '#fff', fontWeight: 600, marginBottom: '2px' }}>Building</div>
+                      <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                        <li>Currently building Enttor — looking for cracked engineers.</li>
+                        <li>Reach out at zzhang@enttor.ai if you want to build something meaningful.</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <div style={{ color: '#fff', fontWeight: 600, marginBottom: '2px' }}>Reading</div>
+                      <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                        <li>Zero to One, Laws of Human Nature, Outliers, A Promised Land.</li>
+                        <li>Sam Altman's "What I Wish Someone Had Told Me."</li>
+                        <li>All books are fiction — written by biased humans.</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <div style={{ color: '#fff', fontWeight: 600, marginBottom: '2px' }}>Health</div>
+                      <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                        <li>Dairy-avoidant pescatarian borrowing from Bryan Johnson's playbook.</li>
+                        <li>Soulcycle 3–4x a week, religiously.</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <div style={{ color: '#fff', fontWeight: 600, marginBottom: '2px' }}>Finance</div>
+                      <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                        <li>Fascinated by market microstructure and quantitative strategies.</li>
+                        <li>I build models to understand how markets move.</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <div style={{ color: '#fff', fontWeight: 600, marginBottom: '2px' }}>Philosophy</div>
+                      <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                        <li>Aggressive minimalist. Urgency over complacency.</li>
+                        <li>Dress for the person you want to become.</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -2782,14 +3535,13 @@ function TerminalContent() {
           </div>
         )}
 
-        {/* Spacer to push bottom down */}
-        {isFullscreen && <div style={{ flex: 1 }} />}
+
+        {/* Spacer — only in non-fullscreen; in fullscreen space-between handles it */}
 
         {/* Bottom section: Quick Start, Contact + GitHub */}
         <div>
-          {isFullscreen && <QuickStartTiles runCommand={runCommand} />}
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', marginTop: '16px' }}>
-            <div style={{ fontFamily: "'SF Mono', monospace", display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px' }}>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', marginTop: isFullscreen ? '8px' : '16px' }}>
+            <div style={{ fontFamily: "'SF Mono', monospace", display: 'flex', flexDirection: 'column', gap: isFullscreen ? '2px' : '6px', fontSize: isFullscreen ? '12px' : '13px' }}>
               <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
               <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
                 ✉️ ronnielgandhe@gmail.com
@@ -2801,21 +3553,22 @@ function TerminalContent() {
                 💼 linkedin.com/in/ronniel-gandhe
               </a>
             </div>
-            {isFullscreen && (
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <GitHubHeatmap />
-              </div>
-            )}
           </div>
         </div>
+        {/* Mountain Climber interactive — fills right whitespace */}
+        {isFullscreen && <MountainClimber />}
       </div>
 
-      {/* Middle — open space in fullscreen */}
-      {isFullscreen && <div style={{ flex: 1, minWidth: 0 }} />}
+      {/* Middle — Site Guide, Tech Stack, Stats, Certs, GitHub heatmap */}
+      {isFullscreen && (
+        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+          <MiddlePanel runCommand={runCommand} />
+        </div>
+      )}
 
       {/* Right — Bloomberg dashboard (secondary) */}
       <div ref={scrollRef} onClick={() => inputRef.current?.focus()} style={{
-        width: isFullscreen ? '535px' : undefined,
+        width: isFullscreen ? '34%' : undefined,
         flex: isFullscreen ? 'none' : 1,
         flexShrink: 0,
         display: 'flex', flexDirection: 'column',
@@ -2892,8 +3645,41 @@ function TerminalContent() {
         )}
       </div>
 
+      {/* Subtle glowing corner expand — bottom right, non-fullscreen only */}
+      {!isFullscreen && (
+        <div
+          onClick={() => dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' })}
+          style={{
+            position: 'absolute',
+            bottom: 10,
+            right: 10,
+            cursor: 'pointer',
+            zIndex: 10,
+            animation: 'cornerPulse 2.5s ease-in-out infinite',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.animation = 'none'; }}
+          onMouseLeave={e => { e.currentTarget.style.animation = 'cornerPulse 2.5s ease-in-out infinite'; }}
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M18 1v17H1" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      )}
+
       <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 @keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes cornerGlow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.3)); }
+  50% { filter: drop-shadow(0 0 6px rgba(255,255,255,0.7)); }
+}
+@keyframes cornerPulse {
+  0%, 100% { opacity: 0.25; filter: drop-shadow(0 0 1px rgba(255,255,255,0.2)); }
+  50% { opacity: 0.85; filter: drop-shadow(0 0 8px rgba(255,255,255,0.6)); }
+}
+@keyframes expandGlow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(97,218,251,0.4)); }
+  50% { filter: drop-shadow(0 0 6px rgba(97,218,251,0.8)); }
+}
 .bloomberg-scroll::-webkit-scrollbar { display: none; }
 .bloomberg-scroll { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
     </div>
