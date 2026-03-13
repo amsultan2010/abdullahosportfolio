@@ -814,7 +814,7 @@ function GitHubHeatmap() {
   const gap = 2;
 
   return (
-    <div style={{ padding: '8px 10px' }}>
+    <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
         <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
           GITHUB CONTRIBUTIONS
@@ -987,6 +987,355 @@ function SectorHeatmap() {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Now Playing (Spotify) ──
+function NowPlaying() {
+  const [track, setTrack] = useState<{ isPlaying: boolean; title: string; artist: string; album: string; albumArt: string; progressMs: number; durationMs: number } | null>(null);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const fetchTrack = () => {
+      fetch('/api/spotify')
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d) { setTrack(d); setProgress(d.progressMs || 0); } })
+        .catch(() => {});
+    };
+    fetchTrack();
+    const id = setInterval(fetchTrack, 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (!track?.isPlaying) return;
+    const id = setInterval(() => setProgress(p => Math.min(p + 1000, track.durationMs)), 1000);
+    return () => clearInterval(id);
+  }, [track]);
+
+  const fmtTime = (ms: number) => {
+    const s = Math.floor(ms / 1000);
+    return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+  };
+
+  if (!track) return null;
+
+  const pct = track.durationMs > 0 ? (progress / track.durationMs) * 100 : 0;
+
+  return (
+    <div style={{ marginTop: '16px' }}>
+      <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+        {track.isPlaying ? '♫ NOW PLAYING' : '♫ RECENTLY PLAYED'}
+      </div>
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        {track.albumArt && (
+          <img src={track.albumArt} alt="" style={{ width: 40, height: 40, borderRadius: 4, flexShrink: 0 }} />
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+            {track.title}
+          </div>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+            {track.artist}
+          </div>
+          <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ flex: 1, height: 2, background: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden' }}>
+              <div style={{ width: `${pct}%`, height: '100%', background: '#1DB954', borderRadius: 1, transition: 'width 1s linear' }} />
+            </div>
+            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace", flexShrink: 0 }}>
+              {fmtTime(progress)} / {fmtTime(track.durationMs)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Sector Treemap (finviz style) ──
+function SectorTreemap() {
+  const stocks = useStockData();
+  if (!stocks.length) return null;
+
+  const sectors = [
+    { name: 'Tech', symbols: ['AAPL', 'MSFT', 'GOOG', 'META', 'NVDA', 'AMD', 'AVGO', 'CRM', 'ORCL', 'ADBE', 'INTC'] },
+    { name: 'Consumer', symbols: ['AMZN', 'TSLA', 'NFLX', 'DIS', 'NKE', 'SBUX', 'MCD', 'UBER', 'SHOP'] },
+    { name: 'Finance', symbols: ['JPM', 'V', 'MA', 'GS'] },
+    { name: 'Health', symbols: ['JNJ', 'PFE', 'LLY', 'UNH'] },
+    { name: 'Crypto', symbols: ['BTC', 'ETH', 'COIN', 'MSTR'] },
+    { name: 'Cloud', symbols: ['SNOW', 'NET', 'CRWD', 'DDOG', 'PLTR'] },
+    { name: 'Energy', symbols: ['XOM', 'BA', 'CAT'] },
+  ];
+
+  // Build flat list of individual stocks with sector info
+  const items = sectors.flatMap(sec =>
+    sec.symbols.map(sym => {
+      const stock = stocks.find(s => s.symbol === sym);
+      return stock ? { symbol: stock.symbol, name: stock.name, pct: stock.pct, sector: sec.name, weight: Math.max(Math.abs(stock.pct), 0.3) } : null;
+    }).filter(Boolean) as { symbol: string; name: string; pct: number; sector: string; weight: number }[]
+  );
+
+  const totalWeight = items.reduce((a, b) => a + b.weight, 0);
+  const maxAbs = Math.max(...items.map(i => Math.abs(i.pct)), 1);
+
+  const getColor = (pct: number) => {
+    const intensity = Math.min(Math.abs(pct) / maxAbs, 1);
+    if (pct >= 0) return `rgba(34, ${Math.round(120 + intensity * 77)}, ${Math.round(50 + intensity * 30)}, ${0.6 + intensity * 0.4})`;
+    return `rgba(${Math.round(180 + intensity * 68)}, ${Math.round(40 - intensity * 20)}, ${Math.round(40 - intensity * 15)}, ${0.6 + intensity * 0.4})`;
+  };
+
+  // Simple treemap: arrange in rows
+  const W = 100; // percentage width
+  const rows: { items: typeof items; y: number; h: number }[] = [];
+  let remaining = [...items].sort((a, b) => b.weight - a.weight);
+  let yPos = 0;
+
+  while (remaining.length > 0) {
+    const rowItems: typeof items = [];
+    let rowWeight = 0;
+    const targetRowWeight = totalWeight / 4; // ~4 rows
+    while (remaining.length > 0 && (rowWeight < targetRowWeight || rowItems.length === 0)) {
+      rowItems.push(remaining.shift()!);
+      rowWeight += rowItems[rowItems.length - 1].weight;
+    }
+    const rowH = (rowWeight / totalWeight) * 100;
+    rows.push({ items: rowItems, y: yPos, h: rowH });
+    yPos += rowH;
+  }
+
+  return (
+    <div style={{ padding: '8px 10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+        <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+          MARKET TREEMAP
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
+          LIVE
+        </div>
+      </div>
+      <div style={{ position: 'relative', width: '100%', height: '120px', borderRadius: 4, overflow: 'hidden' }}>
+        {rows.map((row, ri) => {
+          const rowWeight = row.items.reduce((a, b) => a + b.weight, 0);
+          let xPos = 0;
+          return row.items.map((item, ii) => {
+            const w = (item.weight / rowWeight) * W;
+            const x = xPos;
+            xPos += w;
+            return (
+              <div key={item.symbol} style={{
+                position: 'absolute',
+                left: `${x}%`, top: `${row.y}%`,
+                width: `${w}%`, height: `${row.h}%`,
+                background: getColor(item.pct),
+                border: '0.5px solid rgba(0,0,0,0.3)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                overflow: 'hidden', cursor: 'default',
+              }}>
+                <div style={{ fontSize: w > 12 ? '8px' : '6px', fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.6)', fontFamily: "'SF Mono', monospace", lineHeight: 1.2 }}>
+                  {item.symbol}
+                </div>
+                {w > 8 && (
+                  <div style={{ fontSize: '7px', fontWeight: 600, color: 'rgba(255,255,255,0.9)', fontFamily: "'SF Mono', monospace" }}>
+                    {item.pct >= 0 ? '+' : ''}{item.pct.toFixed(1)}%
+                  </div>
+                )}
+              </div>
+            );
+          });
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Sector Bubbles ──
+function SectorBubbles() {
+  const stocks = useStockData();
+  if (!stocks.length) return null;
+
+  const sectors = [
+    { name: 'Tech', symbols: ['AAPL', 'MSFT', 'GOOG', 'META', 'NVDA', 'AMD', 'AVGO', 'CRM', 'ORCL', 'ADBE', 'INTC'] },
+    { name: 'Consumer', symbols: ['AMZN', 'TSLA', 'NFLX', 'DIS', 'NKE', 'SBUX', 'MCD', 'UBER', 'SHOP'] },
+    { name: 'Finance', symbols: ['JPM', 'V', 'MA', 'GS'] },
+    { name: 'Health', symbols: ['JNJ', 'PFE', 'LLY', 'UNH'] },
+    { name: 'Crypto', symbols: ['BTC', 'ETH', 'COIN', 'MSTR'] },
+    { name: 'Cloud', symbols: ['SNOW', 'NET', 'CRWD', 'DDOG', 'PLTR'] },
+    { name: 'Energy', symbols: ['XOM', 'BA', 'CAT'] },
+  ];
+
+  const sectorData = sectors.map(sec => {
+    const matched = stocks.filter(s => sec.symbols.includes(s.symbol));
+    const avgPct = matched.length > 0 ? matched.reduce((a, s) => a + s.pct, 0) / matched.length : 0;
+    return { name: sec.name, pct: avgPct, count: matched.length };
+  });
+
+  const maxAbs = Math.max(...sectorData.map(s => Math.abs(s.pct)), 1);
+  const W = 320, H = 90;
+
+  // Position bubbles in a packed layout
+  const bubbles = sectorData.map((sec, i) => {
+    const r = 12 + (sec.count / 11) * 20;
+    const angle = (i / sectorData.length) * Math.PI * 2 - Math.PI / 2;
+    const spread = 0.6;
+    return {
+      ...sec,
+      r,
+      cx: W / 2 + Math.cos(angle) * (W * spread * 0.35),
+      cy: H / 2 + Math.sin(angle) * (H * spread * 0.35),
+    };
+  });
+
+  const getColor = (pct: number) => {
+    const intensity = Math.min(Math.abs(pct) / maxAbs, 1);
+    if (pct >= 0) return `rgba(34, ${Math.round(140 + intensity * 57)}, ${Math.round(60 + intensity * 20)}, ${0.7 + intensity * 0.3})`;
+    return `rgba(${Math.round(200 + intensity * 48)}, ${Math.round(50 - intensity * 25)}, ${Math.round(50 - intensity * 20)}, ${0.7 + intensity * 0.3})`;
+  };
+
+  return (
+    <div style={{ padding: '8px 10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+        <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+          SECTOR BUBBLES
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
+          LIVE
+        </div>
+      </div>
+      <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: 'block' }}>
+        {bubbles.map(b => (
+          <g key={b.name}>
+            <circle cx={b.cx} cy={b.cy} r={b.r} fill={getColor(b.pct)} stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
+            <text x={b.cx} y={b.cy - 3} textAnchor="middle" fill="#fff" fontSize="7" fontWeight="700" fontFamily="'SF Mono', monospace" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+              {b.name}
+            </text>
+            <text x={b.cx} y={b.cy + 7} textAnchor="middle" fill="rgba(255,255,255,0.9)" fontSize="7" fontWeight="600" fontFamily="'SF Mono', monospace">
+              {b.pct >= 0 ? '+' : ''}{b.pct.toFixed(1)}%
+            </text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+// ── Sector Sparklines ──
+function SectorSparklines() {
+  const stocks = useStockData();
+  const [animReady, setAnimReady] = useState(false);
+
+  useEffect(() => {
+    if (stocks.length > 0) {
+      const t = setTimeout(() => setAnimReady(true), 100);
+      return () => clearTimeout(t);
+    }
+  }, [stocks.length]);
+
+  if (!stocks.length) return null;
+
+  const sectors = [
+    { name: 'Tech', symbols: ['AAPL', 'MSFT', 'GOOG', 'META', 'NVDA', 'AMD', 'AVGO', 'CRM', 'ORCL', 'ADBE', 'INTC'] },
+    { name: 'Consumer', symbols: ['AMZN', 'TSLA', 'NFLX', 'DIS', 'NKE', 'SBUX', 'MCD', 'UBER', 'SHOP'] },
+    { name: 'Finance', symbols: ['JPM', 'V', 'MA', 'GS'] },
+    { name: 'Health', symbols: ['JNJ', 'PFE', 'LLY', 'UNH'] },
+    { name: 'Crypto', symbols: ['BTC', 'ETH', 'COIN', 'MSTR'] },
+    { name: 'Cloud', symbols: ['SNOW', 'NET', 'CRWD', 'DDOG', 'PLTR'] },
+    { name: 'Energy', symbols: ['XOM', 'BA', 'CAT'] },
+  ];
+
+  const sectorData = sectors.map(sec => {
+    const matched = stocks.filter(s => sec.symbols.includes(s.symbol));
+    const avgPct = matched.length > 0 ? matched.reduce((a, s) => a + s.pct, 0) / matched.length : 0;
+    const maxLen = Math.max(...matched.map(s => s.history.length), 0);
+    const avgHistory: number[] = [];
+    for (let i = 0; i < maxLen; i++) {
+      const vals = matched.map(s => s.history[i]).filter((v): v is number => v != null);
+      avgHistory.push(vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0);
+    }
+    return { name: sec.name, pct: avgPct, history: avgHistory, count: matched.length };
+  });
+
+  const sparkW = 200, sparkH = 40;
+
+  return (
+    <div style={{ padding: '10px 12px' }}>
+      <style>{`
+        @keyframes sparkDraw {
+          from { stroke-dashoffset: 800; }
+          to { stroke-dashoffset: 0; }
+        }
+        @keyframes sparkFadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes glowFadeIn {
+          from { opacity: 0; }
+          to { opacity: 0.15; }
+        }
+      `}</style>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+          SECTOR PERFORMANCE
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
+          LIVE · {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+        {sectorData.map((sec, idx) => {
+          const min = Math.min(...sec.history);
+          const max = Math.max(...sec.history);
+          const range = max - min || 1;
+          const pts = sec.history.map((v, i) => `${(i / (sec.history.length - 1)) * sparkW},${sparkH - ((v - min) / range) * (sparkH - 4) - 2}`).join(' ');
+          const fillPts = pts + ` ${sparkW},${sparkH} 0,${sparkH}`;
+          const color = sec.pct >= 0 ? '#4ade80' : '#f87171';
+          const delay = idx * 0.12;
+          return (
+            <div key={sec.name} style={{
+              padding: '6px 8px',
+              background: 'rgba(255,255,255,0.04)', borderRadius: 5, border: '0.5px solid rgba(255,255,255,0.06)',
+              opacity: animReady ? 1 : 0, animation: animReady ? `sparkFadeIn 0.4s ${delay}s ease-out both` : 'none',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                <span style={{ fontSize: '9px', fontWeight: 700, color: '#fff', fontFamily: "'SF Mono', monospace" }}>{sec.name}</span>
+                <span style={{ fontSize: '10px', fontWeight: 700, color, fontFamily: "'SF Mono', monospace" }}>
+                  {sec.pct >= 0 ? '+' : ''}{sec.pct.toFixed(2)}%
+                </span>
+              </div>
+              <svg width="100%" height={sparkH} viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
+                <defs>
+                  <linearGradient id={`spark-fill-${idx}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+                    <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+                  </linearGradient>
+                </defs>
+                <polygon points={fillPts} fill={`url(#spark-fill-${idx})`} style={{ animation: animReady ? `glowFadeIn 1s ${delay + 0.5}s ease-out both` : 'none', opacity: 0 }} />
+                <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"
+                  style={{
+                    strokeDasharray: 800,
+                    strokeDashoffset: animReady ? undefined : 800,
+                    animation: animReady ? `sparkDraw 1.2s ${delay}s ease-out both` : 'none',
+                  }}
+                />
+                {sec.history.length > 0 && (
+                  <circle
+                    cx={sparkW}
+                    cy={sparkH - ((sec.history[sec.history.length - 1] - min) / range) * (sparkH - 4) - 2}
+                    r="2" fill={color}
+                    style={{ opacity: animReady ? 1 : 0, animation: animReady ? `sparkFadeIn 0.3s ${delay + 1}s ease-out both` : 'none' }}
+                  >
+                    <animate attributeName="r" values="2;3;2" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                )}
+              </svg>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -1617,8 +1966,12 @@ function TerminalContent() {
           )}
         </div>
 
-        {/* Bottom section: Quick Start (fullscreen only) + Contact */}
+        {/* Spacer to push bottom down */}
+        {isFullscreen && <div style={{ flex: 1 }} />}
+
+        {/* Bottom section: Now Playing + Quick Start (fullscreen only) + Contact */}
         <div>
+          {isFullscreen && <NowPlaying />}
           {isFullscreen && <QuickStartTiles runCommand={runCommand} />}
           <div style={{ fontFamily: "'SF Mono', monospace", display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', marginTop: '16px' }}>
             <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
@@ -1651,12 +2004,13 @@ function TerminalContent() {
               <StockGrid />
               {/* Divider */}
               <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 10px' }} />
-              {/* Sector Heatmap */}
-              <SectorHeatmap />
-              {/* Divider */}
+              {/* Sector Sparklines */}
+              <SectorSparklines />
               <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 10px' }} />
-              {/* GitHub Heatmap */}
-              <GitHubHeatmap />
+              {/* GitHub Contributions */}
+              <div style={{ padding: '8px 10px' }}>
+                <GitHubHeatmap />
+              </div>
             </div>
             {/* Terminal prompt */}
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '6px 14px 20px', minHeight: '48px', maxHeight: '100px', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
