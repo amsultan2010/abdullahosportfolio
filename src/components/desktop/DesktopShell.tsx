@@ -1094,9 +1094,14 @@ function Desktop() {
   }, [dispatch]);
 
   // Terminal slide-over: when Education or Experience opens, shrink 20% and slide to middle-left
+  // Only runs when browser viewport is wide enough (not split-screen / narrow view)
   useEffect(() => {
     const terminal = state.windows['terminal'];
-    if (!terminal || terminal.isMinimized || !terminal.isOpen || terminal.isFullscreen) return;
+    if (!terminal || terminal.isMinimized || !terminal.isOpen) return;
+
+    // Skip slide-over animation when viewport is narrow (e.g. browser in split-screen)
+    const MIN_WIDTH_FOR_SLIDE = 1024;
+    if (window.innerWidth < MIN_WIDTH_FOR_SLIDE) return;
 
     const sideWindows = ['education', 'experience'] as const;
     const openSideWindow = sideWindows.find(id => {
@@ -1137,17 +1142,12 @@ function Desktop() {
         dispatch({ type: 'MOVE_WINDOW', id: openSideWindow, position: { x: sideX, y: sideY } });
       }
     } else {
-      // Restore terminal to original size and center if no side windows are open
-      const defaults = { width: 800, height: 500 };
-      const centerX = Math.max(0, Math.round((screenW - defaults.width) / 2));
-      const centerY = Math.max(28, Math.round((screenH - defaults.height) / 2));
+      // Restore terminal to fullscreen if it was shrunk for the side-by-side layout
+      const needsRestore = terminal.position.x < 30 && terminal.size.width < screenW - 20;
 
-      const needsRestore = terminal.position.x < 30 && Math.abs(terminal.position.x - centerX) > 30;
-      const needsResize = terminal.size.width < defaults.width - 10;
-
-      if (needsRestore || needsResize) {
-        dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: defaults });
-        dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: centerX, y: centerY } });
+      if (needsRestore) {
+        dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: { width: screenW, height: screenH - menuBarH } });
+        dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: 0, y: menuBarH } });
       }
     }
   }, [
