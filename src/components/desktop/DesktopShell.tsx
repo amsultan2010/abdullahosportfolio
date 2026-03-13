@@ -819,7 +819,7 @@ function GitHubHeatmap() {
         <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
           GITHUB CONTRIBUTIONS
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace" }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
           <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
           LIVE · {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
         </div>
@@ -841,7 +841,7 @@ function GitHubHeatmap() {
           )}
         </svg>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Mono', monospace" }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
         <span>{total} contributions in the last year</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
           <span>Less</span>
@@ -964,7 +964,7 @@ function SectorHeatmap() {
         <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
           SECTOR PERFORMANCE
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace" }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
           <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
           LIVE · {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
         </div>
