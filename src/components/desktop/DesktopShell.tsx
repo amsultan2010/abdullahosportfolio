@@ -1981,6 +1981,9 @@ function TerminalContent() {
             <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
               🐙 github.com/ronnielgandhe
             </a>
+            <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+              💼 linkedin.com/in/ronniel-gandhe
+            </a>
           </div>
         </div>
       </div>
@@ -2287,6 +2290,7 @@ function MobileLayout() {
       'Location: Waterloo, ON',
       'Email: ronnielgandhe@gmail.com',
       'GitHub: github.com/ronnielgandhe',
+      'LinkedIn: linkedin.com/in/ronniel-gandhe',
       '',
       '"I build systems that think, design that feels,',
       ' and code that connects ideas to impact."',
