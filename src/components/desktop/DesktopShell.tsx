@@ -16,6 +16,7 @@ import Blog from '../portfolio/Blog';
 import Calendar from '../portfolio/Calendar';
 import EmailCompose from '../portfolio/EmailCompose';
 import Photos from '../portfolio/Photos';
+import WifiSettings from '../portfolio/WifiSettings';
 import DetailPanel from '../portfolio/DetailPanel';
 import ContentViewer from '../portfolio/ContentViewer';
 import type { DetailContent } from '../portfolio/DetailPanel';
@@ -51,6 +52,8 @@ function WindowContent({ id }: { id: WindowId }) {
       return <EmailCompose windowMode />;
     case 'photos':
       return <Photos windowMode />;
+    case 'wifi-settings':
+      return <WifiSettings />;
     default:
       return null;
   }
@@ -349,13 +352,13 @@ function useScrambleText(target: string, trigger: number) {
     }
 
     let step = 0;
-    const totalSteps = len + 8;
+    const totalSteps = len + 12;
     const id = setInterval(() => {
       step++;
       const result: string[] = [];
       for (let i = 0; i < target.length; i++) {
         const resolveAt = resolveOrder.indexOf(i);
-        if (step > resolveAt + 6) {
+        if (step > resolveAt + 8) {
           result.push(target[i]);
         } else if (target[i] === ' ') {
           result.push(' ');
@@ -364,162 +367,313 @@ function useScrambleText(target: string, trigger: number) {
         }
       }
       setDisplay(result.join(''));
-      if (step >= totalSteps + 4) clearInterval(id);
-    }, 35);
+      if (step >= totalSteps + 6) clearInterval(id);
+    }, 50);
     return () => clearInterval(id);
   }, [target, trigger]);
 
   return display || target;
 }
 
-// ── Stock Ticker with Scramble Text + Connected Line ──
+// ── Quick Start Tiles ──
+const QUICK_NAV = [
+  { label: 'experience', cmd: 'npm run experience', color: '#c084fc', icon: '💼' },
+  { label: 'education', cmd: 'git log --education', color: '#60a5fa', icon: '🎓' },
+  { label: 'projects', cmd: 'brew install projects', color: '#4ade80', icon: '🔨' },
+  { label: 'notes', cmd: 'cat mythoughts.md', color: '#fbbf24', icon: '📝' },
+  { label: 'research', cmd: 'cd deepresearch', color: '#f472b6', icon: '📚' },
+  { label: 'calendar', cmd: 'open calendar.app', color: '#22d3ee', icon: '📅' },
+];
+
+function QuickStartTiles({ runCommand }: { runCommand: (cmd: string) => void }) {
+  return (
+    <div style={{ marginTop: '20px', fontFamily: "'SF Mono', monospace" }}>
+      <div style={{ color: '#fff', fontSize: '11px', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '8px' }}>
+        QUICK START
+      </div>
+      <div className="qs-pills" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+        {QUICK_NAV.map(n => (
+          <div
+            key={n.label}
+            className="qs-pill"
+            onClick={(e) => { e.stopPropagation(); runCommand(n.cmd); }}
+            style={{
+              padding: '10px 8px 8px', borderRadius: '10px', cursor: 'pointer', textAlign: 'center',
+              border: `1px solid ${n.color}33`, background: `${n.color}0a`,
+              fontSize: '12px', color: n.color, ['--gc' as any]: n.color,
+            }}
+          >
+            <div style={{ fontSize: '18px', marginBottom: '3px' }}>{n.icon}</div>
+            <div style={{ fontWeight: 500 }}>{n.label}</div>
+          </div>
+        ))}
+      </div>
+      <style>{`
+        .qs-pill { opacity:0.75; transition:opacity .2s,background .2s,border-color .2s,box-shadow .2s; }
+        .qs-pills:hover .qs-pill { opacity:0.3; }
+        .qs-pills:hover .qs-pill:hover { opacity:1; box-shadow:0 0 12px var(--gc,#fff)22; }
+      `}</style>
+    </div>
+  );
+}
+
+// ── Explore Commands (constantly lit, highlight on hover) ──
+function ExploreCommands({ smartCommandLinks, runCommand }: {
+  smartCommandLinks: { cmd: string; color: string }[];
+  runCommand: (cmd: string) => void;
+}) {
+  return (
+    <div style={{ padding: '8px 14px' }}>
+      <div style={{ color: '#fff', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', marginBottom: '4px' }}>EXPLORE</div>
+      <div className="explore-list" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        {smartCommandLinks.map((item) => (
+          <div
+            key={item.cmd}
+            className="explore-cmd"
+            onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
+            style={{
+              padding: '3px 6px', borderRadius: '4px', cursor: 'pointer',
+              fontSize: '12.5px',
+              color: item.color,
+              ['--glow-color' as any]: item.color,
+            }}
+          >
+            <span style={{ color: '#4ade80', marginRight: '4px' }}>$</span>{item.cmd}
+          </div>
+        ))}
+      </div>
+      <style>{`
+        .explore-cmd {
+          opacity: 0.85;
+          text-shadow: 0 0 4px var(--glow-color, #fff);
+          transition: opacity 0.2s, text-shadow 0.2s, background 0.2s;
+        }
+        .explore-list:hover .explore-cmd {
+          opacity: 0.35;
+          text-shadow: none;
+        }
+        .explore-list:hover .explore-cmd:hover {
+          opacity: 1;
+          text-shadow: 0 0 8px var(--glow-color, #fff);
+          background: rgba(255,255,255,0.06);
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ── Stock Ticker Tape with Continuous Line ──
 interface StockData {
   symbol: string; name: string; price: number; change: number; pct: number; history: number[];
 }
 
-function CyclingStock() {
+// Shared stock data fetcher — avoids multiple API calls
+function useStockData() {
   const [stocks, setStocks] = useState<StockData[]>([]);
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [drawProgress, setDrawProgress] = useState(0);
-  const [phase, setPhase] = useState<'draw' | 'hold' | 'transition'>('draw');
-  // Connected line: buffer of all drawn points (normalized 0-1)
-  const [lineBuffer, setLineBuffer] = useState<{ y: number; isUp: boolean }[]>([]);
-  const bufferMax = 100;
-
-  const generateFallback = (): StockData[] => {
-    const bases = [
-      { symbol: 'SPY', name: 'S&P 500', base: 590.32 },
-      { symbol: 'QQQ', name: 'Nasdaq', base: 512.18 },
-      { symbol: 'BTC', name: 'Bitcoin', base: 87245 },
-      { symbol: 'AAPL', name: 'Apple', base: 228.54 },
-      { symbol: 'NVDA', name: 'NVIDIA', base: 118.72 },
-      { symbol: 'TSLA', name: 'Tesla', base: 272.64 },
-    ];
-    return bases.map(b => {
-      const history: number[] = [b.base];
-      for (let i = 1; i < 80; i++) {
-        history.push(history[i - 1] + (Math.random() - 0.48) * b.base * 0.002);
-      }
-      const price = history[history.length - 1];
-      return { symbol: b.symbol, name: b.name, price, change: price - b.base, pct: ((price - b.base) / b.base) * 100, history };
-    });
-  };
-
   useEffect(() => {
+    const generateFallback = (): StockData[] => {
+      const bases = [
+        { symbol: 'NVDA', name: 'NVIDIA', base: 118.72 },
+        { symbol: 'TSLA', name: 'Tesla', base: 272.64 },
+        { symbol: 'PLTR', name: 'Palantir', base: 78.50 },
+        { symbol: 'AMD', name: 'AMD', base: 156.30 },
+        { symbol: 'META', name: 'Meta', base: 585.20 },
+        { symbol: 'COIN', name: 'Coinbase', base: 215.40 },
+        { symbol: 'BTC', name: 'Bitcoin', base: 87245 },
+        { symbol: 'SNAP', name: 'Snap', base: 11.20 },
+        { symbol: 'NFLX', name: 'Netflix', base: 892.50 },
+        { symbol: 'CRWD', name: 'CrowdStrike', base: 342.10 },
+        { symbol: 'AAPL', name: 'Apple', base: 228.54 },
+        { symbol: 'SPY', name: 'S&P 500', base: 590.32 },
+      ];
+      return bases.map((b, idx) => {
+        const drift = (idx % 3 === 0 ? 0.52 : idx % 3 === 1 ? 0.44 : 0.48);
+        const vol = idx < 6 ? 0.005 : 0.002;
+        const history: number[] = [b.base];
+        for (let i = 1; i < 80; i++) {
+          history.push(history[i - 1] + (Math.random() - drift) * b.base * vol);
+        }
+        const price = history[history.length - 1];
+        return { symbol: b.symbol, name: b.name, price, change: price - b.base, pct: ((price - b.base) / b.base) * 100, history };
+      }).sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct));
+    };
+    const interleaveMovers = (data: StockData[]): StockData[] => {
+      const gainers = data.filter(s => s.pct > 0).sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct));
+      const losers = data.filter(s => s.pct <= 0).sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct));
+      const result: StockData[] = [];
+      let gi = 0, li = 0;
+      while (gi < gainers.length || li < losers.length) {
+        if (gi < gainers.length) result.push(gainers[gi++]);
+        if (li < losers.length) result.push(losers[li++]);
+      }
+      return result;
+    };
     fetch('/api/stocks')
       .then(r => r.ok ? r.json() : Promise.reject())
       .then((data: StockData[]) => {
-        if (Array.isArray(data) && data.length > 0) setStocks(data);
-        else setStocks(generateFallback());
+        if (Array.isArray(data) && data.length > 0) setStocks(interleaveMovers(data));
+        else setStocks(interleaveMovers(generateFallback()));
       })
-      .catch(() => setStocks(generateFallback()));
+      .catch(() => setStocks(interleaveMovers(generateFallback())));
   }, []);
+  return stocks;
+}
 
-  const stock = stocks[activeIdx] || null;
+function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false, instanceId = 0 }: {
+  stocks?: StockData[]; startOffset?: number; compact?: boolean; instanceId?: number;
+} = {}) {
+  const ownStocks = useStockData();
+  const stocks = externalStocks && externalStocks.length > 0 ? externalStocks : ownStocks;
+  const [tick, setTick] = useState(0);
+  const [displayIdx, setDisplayIdx] = useState(startOffset);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const h = compact ? 70 : 120;
+  const maxVisible = 140;
+  const framesPerStock = compact ? 150 : 180;
+  const frameSkip = 3;
+  // Each of the 4 grid instances cycles through every 4th stock offset by its position
+  const totalInstances = compact ? 4 : 1;
+
+  const anim = useRef({
+    activeIdx: startOffset,
+    stockFrame: 0,
+    yBuffer: [] as number[],
+    colorBuffer: [] as string[],
+    textChanged: false,
+    frameCount: 0,
+  });
+
+  const normalize = (hist: number[]) => {
+    const mn = Math.min(...hist), mx = Math.max(...hist), r = mx - mn || 1;
+    return hist.map(v => (v - mn) / r);
+  };
+
+  // Get the actual stock index for this instance — skip by totalInstances to avoid overlap
+  const getStockIdx = (cycleIdx: number) => {
+    if (stocks.length === 0) return 0;
+    return (startOffset + cycleIdx * totalInstances) % stocks.length;
+  };
+
+  useEffect(() => {
+    if (!stocks.length) return;
+    let raf: number;
+    const a = anim.current;
+    let cycleCount = 0;
+    a.activeIdx = getStockIdx(cycleCount);
+
+    const loop = () => {
+      a.frameCount++;
+      if (a.frameCount % frameSkip !== 0) {
+        raf = requestAnimationFrame(loop);
+        return;
+      }
+
+      const stock = stocks[a.activeIdx];
+      if (!stock) { raf = requestAnimationFrame(loop); return; }
+      const norm = normalize(stock.history);
+      const isUp = stock.change >= 0;
+      const c = isUp ? '#4ade80' : '#f87171';
+
+      const progress = a.stockFrame / framesPerStock;
+      const histIdx = Math.min(Math.floor(progress * (norm.length - 1)), norm.length - 1);
+      let y = h - 4 - norm[histIdx] * (h - 8);
+
+      if (a.stockFrame < 12 && a.yBuffer.length > 0) {
+        const lastY = a.yBuffer[a.yBuffer.length - 1];
+        const blend = a.stockFrame / 12;
+        y = lastY + (y - lastY) * blend;
+      }
+
+      a.yBuffer.push(y);
+      a.colorBuffer.push(c);
+
+      if (a.yBuffer.length > maxVisible * 2) {
+        a.yBuffer = a.yBuffer.slice(-maxVisible);
+        a.colorBuffer = a.colorBuffer.slice(-maxVisible);
+      }
+
+      a.stockFrame++;
+
+      if (a.stockFrame > framesPerStock - 60 && !a.textChanged) {
+        a.textChanged = true;
+        const nextCycle = cycleCount + 1;
+        setDisplayIdx(getStockIdx(nextCycle));
+      }
+
+      if (a.stockFrame >= framesPerStock) {
+        cycleCount++;
+        a.activeIdx = getStockIdx(cycleCount);
+        a.stockFrame = 0;
+        a.textChanged = false;
+      }
+
+      setTick(t => t + 1);
+      raf = requestAnimationFrame(loop);
+    };
+
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [stocks]);
+
+  const stock = stocks[displayIdx] || null;
   const tickerFull = stock ? `${stock.symbol} ${stock.name}` : '';
   const isUp = stock ? stock.change >= 0 : true;
   const fmtPrice = stock
     ? (stock.symbol === 'BTC' ? stock.price.toLocaleString('en-US', { maximumFractionDigits: 0 }) : stock.price.toFixed(2))
     : '';
   const pctStr = stock ? `${isUp ? '▲' : '▼'} ${Math.abs(stock.pct).toFixed(2)}%` : '';
-  const priceAndPct = `${fmtPrice}  ${pctStr}`;
-
-  const scrambledText = useScrambleText(tickerFull, activeIdx);
-  const scrambledPrice = useScrambleText(fmtPrice, activeIdx);
-  const scrambledPct = useScrambleText(pctStr, activeIdx);
-
-  // Normalize history to 0-1
-  const normalize = (hist: number[]) => {
-    const mn = Math.min(...hist), mx = Math.max(...hist), r = mx - mn || 1;
-    return hist.map(v => (v - mn) / r);
-  };
-
-  // Draw phase — glowing dot traces the line slowly
-  useEffect(() => {
-    if (phase !== 'draw' || !stock) return;
-    if (drawProgress >= 1) {
-      setPhase('hold');
-      return;
-    }
-    const norm = normalize(stock.history);
-    const isUp = stock.change >= 0;
-    const id = requestAnimationFrame(() => {
-      const newProg = Math.min(drawProgress + 0.007, 1);
-      setDrawProgress(newProg);
-      // Add point to connected buffer
-      const ptIdx = Math.floor(newProg * (norm.length - 1));
-      const lastBufferY = lineBuffer.length > 0 ? lineBuffer[lineBuffer.length - 1].y : norm[0];
-      // Smoothly bridge from last buffer point to current stock's normalized value
-      const targetY = norm[ptIdx];
-      const blendedY = lineBuffer.length < 5
-        ? lastBufferY + (targetY - lastBufferY) * (lineBuffer.length / 5) // smooth bridge over first 5 pts
-        : targetY;
-      setLineBuffer(prev => {
-        const next = [...prev, { y: blendedY, isUp }];
-        return next.length > bufferMax ? next.slice(next.length - bufferMax) : next;
-      });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [phase, drawProgress, stock]);
-
-  // Hold phase
-  useEffect(() => {
-    if (phase !== 'hold') return;
-    const id = setTimeout(() => setPhase('transition'), 2000);
-    return () => clearTimeout(id);
-  }, [phase]);
-
-  // Transition phase — scramble text, then advance
-  useEffect(() => {
-    if (phase !== 'transition') return;
-    const id = setTimeout(() => {
-      setActiveIdx(prev => (prev + 1) % (stocks.length || 1));
-      setDrawProgress(0);
-      setPhase('draw');
-    }, 600);
-    return () => clearTimeout(id);
-  }, [phase, stocks.length]);
-
-  if (!stock) return <div style={{ height: '140px' }} />;
+  const scrambledText = useScrambleText(tickerFull, displayIdx);
+  const scrambledPrice = useScrambleText(fmtPrice, displayIdx);
+  const scrambledPct = useScrambleText(pctStr, displayIdx);
   const color = isUp ? '#4ade80' : '#f87171';
 
-  // Render connected sparkline from buffer
-  const w = 220, h = 140;
-  const bufLen = lineBuffer.length;
-  const latestColor = bufLen > 0 && lineBuffer[bufLen - 1].isUp ? '#4ade80' : '#f87171';
+  if (!stock) return <div style={{ height: compact ? '90px' : '140px' }} />;
 
-  const pts = lineBuffer.map((p, i) => ({
-    x: (i / (bufferMax - 1)) * w,
-    y: h - 4 - p.y * (h - 8),
-  }));
+  const a = anim.current;
+  const w = containerRef.current?.clientWidth || 220;
+  const bufLen = a.yBuffer.length;
+  const visCount = Math.min(bufLen, maxVisible);
+  const sidx = bufLen - visCount;
+  const spacing = w / (maxVisible - 1);
+
+  const pts: { x: number; y: number }[] = [];
+  for (let i = 0; i < visCount; i++) {
+    pts.push({ x: i * spacing, y: a.yBuffer[sidx + i] });
+  }
 
   const linePath = pts.length > 1
     ? pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
     : '';
-  const dot = pts.length > 0 ? pts[pts.length - 1] : { x: 0, y: h / 2 };
+  const lastPt = pts[pts.length - 1] || { x: 0, y: h / 2 };
+  const firstPt = pts[0] || { x: 0, y: h / 2 };
+  const latestColor = a.colorBuffer[a.colorBuffer.length - 1] || '#4ade80';
+  const gradId = `spark-grad-${instanceId}`;
+  const glowId = `glow-${instanceId}`;
 
   return (
     <div>
-      <div style={{ fontFamily: "'SF Mono', monospace", minHeight: '18px', marginBottom: '2px' }}>
-        <span style={{ color: '#fff', fontWeight: 700, fontSize: '13px' }}>
+      <div style={{ fontFamily: "'SF Mono', monospace", minHeight: compact ? '14px' : '18px', marginBottom: '2px' }}>
+        <span style={{ color: '#fff', fontWeight: 700, fontSize: compact ? '11px' : '13px' }}>
           {scrambledText}
         </span>
       </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-        <span style={{ fontSize: '22px', fontWeight: 600, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: compact ? '6px' : '8px' }}>
+        <span style={{ fontSize: compact ? '16px' : '22px', fontWeight: 600, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontVariantNumeric: 'tabular-nums' }}>
           {scrambledPrice}
         </span>
-        <span style={{ color, fontSize: '12px', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+        <span style={{ color, fontSize: compact ? '10px' : '12px', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
           {scrambledPct}
         </span>
       </div>
-      <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" overflow="visible" style={{ display: 'block', marginTop: '4px' }}>
+      <div ref={containerRef} style={{ marginTop: compact ? '2px' : '4px', overflow: 'visible' }}>
+      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" overflow="visible" style={{ display: 'block', width: '100%', height: `${h}px` }}>
         <defs>
-          <linearGradient id="spark-grad" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={latestColor} stopOpacity="0.12" />
             <stop offset="100%" stopColor={latestColor} stopOpacity="0" />
           </linearGradient>
-          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
@@ -529,14 +683,104 @@ function CyclingStock() {
         </defs>
         {linePath && (
           <>
-            <path d={linePath + ` L${dot.x.toFixed(1)},${h} L${pts[0].x.toFixed(1)},${h} Z`} fill="url(#spark-grad)" />
+            <path d={linePath + ` L${lastPt.x.toFixed(1)},${h} L${firstPt.x.toFixed(1)},${h} Z`} fill={`url(#${gradId})`} />
             <path d={linePath} fill="none" stroke={latestColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx={dot.x} cy={dot.y} r="5" fill={latestColor} filter="url(#glow)">
-              <animate attributeName="r" values="4;6;4" dur="1.2s" repeatCount="indefinite" />
+            <circle cx={lastPt.x} cy={lastPt.y} r={compact ? 3 : 5} fill={latestColor} filter={`url(#${glowId})`}>
+              <animate attributeName="r" values={compact ? '2;4;2' : '4;6;4'} dur="1.2s" repeatCount="indefinite" />
             </circle>
           </>
         )}
       </svg>
+      </div>
+    </div>
+  );
+}
+
+// 2x2 Stock Grid for fullscreen Bloomberg view
+function StockGrid() {
+  const stocks = useStockData();
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      {[0, 1, 2, 3].map(i => (
+        <div key={i} style={{
+          padding: '8px 10px',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+        }}>
+          <CyclingStock stocks={stocks} startOffset={i} compact instanceId={i} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Inline news feed for fullscreen Bloomberg view
+interface NewsItem { title: string; source: string; url: string; pubDate: string; }
+
+function BloombergNewsFeed() {
+  const [news, setNews] = useState<NewsItem[]>([]);
+  useEffect(() => {
+    fetch('/api/news')
+      .then(r => r.ok ? r.json() : [])
+      .then(d => { if (Array.isArray(d)) setNews(d); })
+      .catch(() => {});
+  }, []);
+
+  const timeAgo = (dateStr: string) => {
+    try {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const hours = Math.floor(diff / 3600000);
+      if (hours < 1) return 'Now';
+      if (hours < 24) return `${hours}h`;
+      return `${Math.floor(hours / 24)}d`;
+    } catch { return ''; }
+  };
+
+  const sourceColors: Record<string, string> = {
+    'CBC': '#e03131', 'CBC News': '#e03131', 'BBC': '#da77f2', 'BBC News': '#da77f2',
+    'CTV': '#51cf66', 'CTV News': '#51cf66', 'CP24': '#ff922b', 'Global News': '#4dabf7',
+    'Reuters': '#ff922b', 'The Globe and Mail': '#ffd43b', 'Toronto Star': '#4dabf7',
+  };
+  const getColor = (s: string) => {
+    if (sourceColors[s]) return sourceColors[s];
+    for (const [k, c] of Object.entries(sourceColors)) { if (s.toLowerCase().includes(k.toLowerCase())) return c; }
+    return '#74c0fc';
+  };
+
+  if (!news.length) return (
+    <div style={{ padding: '8px 10px', color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontFamily: "'SF Mono', monospace" }}>
+      Loading feed...
+    </div>
+  );
+
+  return (
+    <div style={{ padding: '0 10px' }}>
+      <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+        TOP STORIES
+      </div>
+      {news.slice(0, 6).map((item, i) => (
+        <a key={i} href={item.url} target="_blank" rel="noopener noreferrer" style={{
+          display: 'block', padding: '5px 4px', textDecoration: 'none', color: 'inherit',
+          borderTop: i > 0 ? '0.5px solid rgba(255,255,255,0.06)' : 'none',
+          transition: 'background 0.15s',
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          onClick={e => e.stopPropagation()}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+            <span style={{ color: getColor(item.source), fontSize: '10px', fontWeight: 600, fontFamily: "'SF Mono', monospace" }}>{item.source}</span>
+            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', fontFamily: "'SF Mono', monospace" }}>{timeAgo(item.pubDate)}</span>
+          </div>
+          <div style={{
+            fontSize: '12px', fontWeight: 500, color: 'rgba(255,255,255,0.8)', lineHeight: 1.35,
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+            fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+          }}>
+            {item.title}
+          </div>
+        </a>
+      ))}
     </div>
   );
 }
@@ -584,7 +828,8 @@ function CompactTickers() {
 }
 
 function TerminalContent() {
-  const { dispatch } = useDesktop();
+  const { state, dispatch } = useDesktop();
+  const isFullscreen = state.windows.terminal?.isFullscreen ?? false;
   const [history, setHistory] = useState<TerminalLine[]>([]);
   const [input, setInput] = useState('');
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
@@ -773,7 +1018,7 @@ function TerminalContent() {
 
   // Shared terminal prompt + history renderer
   const renderTerminal = (compact?: boolean, mono?: boolean) => (
-    <div style={{ fontFamily: mono !== false ? "'SF Mono', 'JetBrains Mono', 'Menlo', monospace" : 'inherit', fontSize: compact ? '11.5px' : '12.5px', lineHeight: 1.5 }}>
+    <div style={{ fontFamily: mono !== false ? "'SF Mono', 'JetBrains Mono', 'Menlo', monospace" : 'inherit', fontSize: compact ? '12.5px' : '13px', lineHeight: 1.5 }}>
       {history.map((line, i) => (
         <div key={i} style={{ color: getLineColor(line), whiteSpace: 'pre-wrap' }}>
           {line.type === 'prompt' ? (
@@ -783,10 +1028,10 @@ function TerminalContent() {
       ))}
       {introDone && (
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ color: '#4ade80', fontWeight: 700, whiteSpace: 'pre', fontFamily: "'SF Mono', monospace", fontSize: compact ? '11.5px' : '12.5px' }}>{prompt}</span>
+          <span style={{ color: '#4ade80', fontWeight: 700, whiteSpace: 'pre', fontFamily: "'SF Mono', monospace", fontSize: compact ? '12.5px' : '13px' }}>{prompt}</span>
           <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown}
             spellCheck={false} autoComplete="off"
-            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontFamily: "'SF Mono', monospace", fontSize: compact ? '11.5px' : '12.5px', color: '#fff', padding: 0, margin: 0, caretColor: '#4ade80' }} />
+            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontFamily: "'SF Mono', monospace", fontSize: compact ? '12.5px' : '13px', color: '#fff', padding: 0, margin: 0, caretColor: '#4ade80' }} />
         </div>
       )}
       {!introDone && <span style={{ display: 'inline-block', width: '8px', height: '14px', background: '#4ade80', animation: 'blink 1s step-end infinite' }} />}
@@ -981,85 +1226,120 @@ function TerminalContent() {
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
       {/* Left — hero + links */}
       <div style={{
-        flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center',
-        padding: '24px 24px 8px 28px', borderRight: '1px solid rgba(255,255,255,0.04)',
+        flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+        padding: '28px 20px 14px 28px', borderRight: '1px solid rgba(255,255,255,0.04)',
         minWidth: 0,
       }}>
-        {/* Static hero text — name & title only */}
-        <div style={{ fontFamily: "'SF Mono', 'JetBrains Mono', monospace", fontSize: '13px', lineHeight: 1.6, color: '#e0e0e0' }}>
-          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '30px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '2px' }}>
-            Ronniel Gandhe
+        {/* Hero text */}
+        <div>
+          <div style={{ fontFamily: "'SF Mono', 'JetBrains Mono', monospace", fontSize: '14px', lineHeight: 1.6, color: '#e0e0e0' }}>
+            <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '34px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
+              Ronniel Gandhe
+            </div>
+            <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', fontWeight: 400, marginBottom: '16px' }}>
+              Software Engineer
+            </div>
+            {isFullscreen ? (
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.7 }}>
+                Using {showRotating && <RotatingWords />} to create elegant and scalable solutions to real world problems.
+              </div>
+            ) : (
+              <>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.7 }}>
+                  Using {showRotating && <RotatingWords />}
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.7 }}>
+                  to create elegant and scalable
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.7 }}>
+                  solutions to real world problems.
+                </div>
+              </>
+            )}
           </div>
-          <div style={{ fontSize: '13px', color: '#fff', fontWeight: 400, marginBottom: '14px' }}>
-            Software Engineer
-          </div>
-          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.6 }}>
-            Using {showRotating && <RotatingWords />}
-          </div>
-          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.6 }}>
-            to create elegant and scalable
-          </div>
-          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.6 }}>
-            solutions to real world problems.
-          </div>
+
+          {/* Quick Start — grouped with hero when not fullscreen */}
+          {!isFullscreen && <QuickStartTiles runCommand={runCommand} />}
+
+          {/* About Me — fullscreen only */}
+          {isFullscreen && (
+            <div style={{ marginTop: '24px' }}>
+              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '10px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+                ABOUT
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: '13px', lineHeight: 1.7, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 }}>
+                Software engineer studying Computer Science at Wilfrid Laurier University, previously in the Waterloo CS &amp; Laurier BBA double degree program. Currently building growth systems at Augmentor Labs in New York. I like working across the stack — from low-level systems and infrastructure to product-facing features and data pipelines. Outside of work, I spend time on quantitative projects, reading, and exploring new tools.
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Contact — pushed to bottom of left panel */}
-        <div style={{ marginTop: 'auto', fontFamily: "'SF Mono', monospace", display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11.5px' }}>
-          <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
-          <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
-            ✉️ ronnielgandhe@gmail.com
-          </a>
-          <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
-            🐙 github.com/ronnielgandhe
-          </a>
+        {/* Bottom section: Quick Start (fullscreen only) + Contact */}
+        <div>
+          {isFullscreen && <QuickStartTiles runCommand={runCommand} />}
+          <div style={{ fontFamily: "'SF Mono', monospace", display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', marginTop: '16px' }}>
+            <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
+            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+              ✉️ ronnielgandhe@gmail.com
+            </a>
+            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+              🐙 github.com/ronnielgandhe
+            </a>
+          </div>
         </div>
       </div>
 
       {/* Right — widgets stacked */}
       <div ref={scrollRef} onClick={() => inputRef.current?.focus()} style={{
-        flex: 1, display: 'flex', flexDirection: 'column', cursor: 'text',
-        fontFamily: "'SF Mono', monospace", overflow: 'hidden',
+        flex: 1, display: 'flex', flexDirection: 'column',
+        justifyContent: isFullscreen ? 'space-between' : undefined,
+        cursor: 'text', fontFamily: "'SF Mono', monospace", overflow: 'hidden',
       }}>
-        {/* Scrollable top content (shrinks when window is small) */}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
-          {/* Date — top right corner */}
-          <div style={{ padding: '8px 14px 0', textAlign: 'right', color: '#fff', fontSize: '11px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-          </div>
-          {/* Stock ticker with chart */}
-          <div style={{ padding: '8px 14px 8px' }}>
-            <CyclingStock />
-          </div>
-          <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)', margin: '0 14px' }} />
-
-          {/* Smart commands */}
-          <div style={{ padding: '8px 14px' }}>
-            <div style={{ color: '#fff', fontSize: '10px', fontWeight: 600, letterSpacing: '0.1em', marginBottom: '4px' }}>EXPLORE</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {smartCommandLinks.map(item => (
-                <div
-                  key={item.cmd}
-                  onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
-                  style={{
-                    padding: '3px 6px', borderRadius: '4px', cursor: 'pointer',
-                    fontSize: '11.5px', transition: 'all 0.15s',
-                    color: item.color, opacity: 0.5,
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.opacity = '1'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.opacity = '0.5'; }}
-                >
-                  <span style={{ color: '#4ade80', marginRight: '4px' }}>$</span>{item.cmd}
-                </div>
-              ))}
+        {isFullscreen ? (
+          /* ═══ FULLSCREEN: Bloomberg terminal layout ═══ */
+          <>
+            {/* Scrollable market data area */}
+            <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
+              {/* Date */}
+              <div style={{ padding: '8px 10px 4px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: 600, fontFamily: "'SF Mono', monospace", letterSpacing: '0.05em' }}>
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+              </div>
+              {/* 2x2 Stock Grid */}
+              <StockGrid />
+              {/* News Feed */}
+              <div style={{ marginTop: '4px' }}>
+                <BloombergNewsFeed />
+              </div>
             </div>
-          </div>
-        </div>
-
-        {/* Terminal prompt — always visible at bottom */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)', padding: '6px 14px', minHeight: '36px', maxHeight: '140px', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          {renderTerminal(true)}
-        </div>
+            {/* Explore commands + Terminal prompt */}
+            <div>
+              <ExploreCommands smartCommandLinks={smartCommandLinks} runCommand={runCommand} />
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '6px 14px 20px', minHeight: '82px', maxHeight: '140px', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                {renderTerminal(true)}
+              </div>
+            </div>
+          </>
+        ) : (
+          /* ═══ NORMAL: original layout ═══ */
+          <>
+            <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
+              {/* Date — top right corner */}
+              <div style={{ padding: '8px 14px 0', textAlign: 'right', color: '#fff', fontSize: '11px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+              </div>
+              {/* Stock ticker with chart */}
+              <div style={{ padding: '8px 14px 8px' }}>
+                <CyclingStock />
+              </div>
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)', margin: '0 14px' }} />
+              <ExploreCommands smartCommandLinks={smartCommandLinks} runCommand={runCommand} />
+            </div>
+            {/* Terminal prompt */}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)', padding: '6px 14px', minHeight: '36px', maxHeight: '140px', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+              {renderTerminal(true)}
+            </div>
+          </>
+        )}
       </div>
 
       <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
@@ -1119,9 +1399,9 @@ function Desktop() {
     if (openSideWindow) {
       const sideWin = state.windows[openSideWindow]!;
 
-      // Terminal shrinks 20% and goes to middle-left
+      // Terminal shrinks width but keeps enough height for all content
       const termW = Math.round(800 * 0.8);   // 640
-      const termH = Math.round(500 * 0.8);   // 400
+      const termH = Math.min(usableH - gap * 2, 580); // use available height, cap at 580
       const termX = gap;
       const termY = menuBarH + Math.round((usableH - termH) / 2); // vertically centered
 
@@ -1142,12 +1422,15 @@ function Desktop() {
         dispatch({ type: 'MOVE_WINDOW', id: openSideWindow, position: { x: sideX, y: sideY } });
       }
     } else {
-      // Restore terminal to fullscreen if it was shrunk for the side-by-side layout
+      // Restore terminal to its original size if it was shrunk for the side-by-side layout
       const needsRestore = terminal.position.x < 30 && terminal.size.width < screenW - 20;
 
       if (needsRestore) {
-        dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: { width: screenW, height: screenH - menuBarH } });
-        dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: 0, y: menuBarH } });
+        const origW = 840, origH = 620;
+        const origX = Math.round((screenW - origW) / 2);
+        const origY = menuBarH + Math.round((usableH - origH) / 2);
+        dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: { width: origW, height: origH } });
+        dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: origX, y: origY } });
       }
     }
   }, [
@@ -1167,6 +1450,10 @@ function Desktop() {
       if ((e.metaKey || e.ctrlKey) && e.key === 'm' && state.focusedWindowId) {
         e.preventDefault();
         dispatch({ type: 'MINIMIZE_WINDOW', id: state.focusedWindowId });
+      }
+      // Escape to close focused window (skip terminal)
+      if (e.key === 'Escape' && state.focusedWindowId && state.focusedWindowId !== 'terminal') {
+        dispatch({ type: 'CLOSE_WINDOW', id: state.focusedWindowId });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -1206,12 +1493,12 @@ function Desktop() {
 
           {/* Windows */}
           {openWindows.map(win => {
-            const darkWindows: string[] = ['education', 'experience', 'detail', 'terminal', 'email', 'photos', 'content', 'projects'];
+            const darkWindows: string[] = ['education', 'experience', 'detail', 'terminal', 'email', 'photos', 'content', 'projects', 'wifi-settings'];
             const isDark = darkWindows.includes(win.id);
             const titleBarBgMap: Record<string, string> = {
               projects: '#252526',
               blog: '#f0f0f0',
-              'deep-research': 'rgba(255,255,255,0.44)',
+              'deep-research': '#f0f0f0',
               calendar: '#ffffff',
             };
             const titleBarBg = titleBarBgMap[win.id];

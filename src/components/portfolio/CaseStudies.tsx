@@ -83,13 +83,11 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
       fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif",
       background: 'transparent', color: 'rgba(0,0,0,0.85)',
     }}>
-      {/* ── Left Sidebar — light frosted glass ── */}
+      {/* ── Left Sidebar — solid grey like Apple Books ── */}
       <div style={{
         width: '190px', minWidth: '190px',
-        borderRight: '0.5px solid rgba(0,0,0,0.08)',
-        background: 'rgba(255,255,255,0.38)',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
+        borderRight: '0.5px solid rgba(0,0,0,0.1)',
+        background: '#f0f0f0',
         padding: '14px 0', display: 'flex', flexDirection: 'column',
         fontSize: '13px',
       }}>
@@ -123,7 +121,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
       </div>
 
       {/* ── Main Content: Book Grid ── */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px', background: 'rgba(255,255,255,0.25)' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px', background: '#ffffff' }}>
         {/* Section title */}
         <h1 style={{
           fontSize: '28px', fontWeight: 700, color: 'rgba(0,0,0,0.8)', margin: '0 0 28px',

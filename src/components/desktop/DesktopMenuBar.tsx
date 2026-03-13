@@ -179,7 +179,7 @@ export default function DesktopMenuBar() {
         <BatteryIcon />
 
         <TrayDropdown id="wifi" active={activeMenu} toggle={toggle} icon={<WifiIcon />} align="right">
-          <WifiPanel location={location} />
+          <WifiPanel location={location} onOpenSettings={() => { dispatch({ type: 'OPEN_WINDOW', id: 'wifi-settings' }); close(); }} />
         </TrayDropdown>
 
         <TrayDropdown id="sound" active={activeMenu} toggle={toggle} icon={<SpeakerIcon />} align="right">
@@ -310,7 +310,7 @@ function DropDivider() {
 
 /* ── WiFi Panel ────────────────────────────────────── */
 
-function WifiPanel({ location }: { location: LocationData | null }) {
+function WifiPanel({ location, onOpenSettings }: { location: LocationData | null; onOpenSettings: () => void }) {
   return (
     <div style={{ padding: '4px 0', minWidth: '280px' }}>
       {/* Wi-Fi header with blue toggle */}
@@ -323,27 +323,6 @@ function WifiPanel({ location }: { location: LocationData | null }) {
             boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
           }} />
         </div>
-      </div>
-
-      <DropDivider />
-
-      {/* Personal Hotspot */}
-      <div style={{ padding: '8px 14px 4px' }}>
-        <span style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(0,0,0,0.4)', letterSpacing: '0.02em' }}>Personal Hotspot</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '4px 14px 8px' }}>
-        <div style={{
-          width: '28px', height: '28px', borderRadius: '50%', background: '#34c759',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="17" r="2" fill="white" />
-            <path d="M8 14a5.5 5.5 0 018 0" stroke="white" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-            <path d="M5 11a9.5 9.5 0 0114 0" stroke="white" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-          </svg>
-        </div>
-        <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(0,0,0,0.85)', flex: 1 }}>Ronniel's iPhone</span>
-        <span style={{ fontSize: '11px', color: 'rgba(0,0,0,0.35)' }}>5G</span>
       </div>
 
       <DropDivider />
@@ -426,11 +405,7 @@ function WifiPanel({ location }: { location: LocationData | null }) {
       <DropDivider />
 
       {/* Wi-Fi Settings */}
-      <div style={{
-        padding: '6px 14px', cursor: 'default', fontSize: '13px', color: 'rgba(0,0,0,0.85)',
-      }}>
-        Wi-Fi Settings...
-      </div>
+      <DropItem label="Wi-Fi Settings..." onClick={onOpenSettings} />
     </div>
   );
 }

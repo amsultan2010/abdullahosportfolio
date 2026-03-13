@@ -136,7 +136,7 @@ const Experience = ({ onCardClick, windowMode }: ExperienceProps) => {
         }}>
           {/* ── LIST VIEW ── */}
           <div style={{
-            padding: 'clamp(1.5rem, 3vw, 2.5rem)',
+            padding: 'clamp(1rem, 2vw, 1.5rem) clamp(1.5rem, 3vw, 2.5rem) clamp(1.5rem, 3vw, 2.5rem)',
             opacity: viewState === 'list' ? 1 : viewState === 'fading-out' ? 0 : 0,
             transform: viewState === 'list' ? 'scale(1)' : 'scale(0.97)',
             transition: 'opacity 0.3s ease, transform 0.3s ease',
@@ -178,7 +178,7 @@ const Experience = ({ onCardClick, windowMode }: ExperienceProps) => {
           {/* ── DETAIL VIEW ── */}
           {selectedDetail && (viewState === 'detail' || viewState === 'fading-back') && (
             <div style={{
-              padding: 'clamp(1.5rem, 3vw, 2.5rem)',
+              padding: 'clamp(0.75rem, 1.5vw, 1rem) clamp(1.5rem, 3vw, 2.5rem) clamp(1.5rem, 3vw, 2.5rem)',
               opacity: viewState === 'detail' ? 1 : 0,
               transform: viewState === 'detail' ? 'translateY(0)' : 'translateY(12px)',
               transition: 'opacity 0.35s ease, transform 0.35s ease',
