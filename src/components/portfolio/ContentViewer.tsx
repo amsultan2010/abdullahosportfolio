@@ -77,8 +77,11 @@ const CompanyLogo = ({ company }: { company: string }) => {
 const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const markdownRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedRef = useRef(false);
   const brand = content.company ? companyBrands[content.company] : null;
   const isDeepResearch = content.type === 'deep-research';
+  const shouldAnimate = !hasAnimatedRef.current;
+  if (!hasAnimatedRef.current) hasAnimatedRef.current = true;
 
 
   // Escape key + body scroll lock (skip in windowMode — AppWindow handles this)
@@ -167,7 +170,7 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
           overflowY: 'auto',
           height: '100%',
         }}
-        className="content-viewer-panel"
+        className={`content-viewer-panel${shouldAnimate ? ' cv-cascade-animate' : ''}`}
       >
         <div style={{ maxWidth: content.type === 'deep-research' ? '120ch' : '90ch', margin: '0 auto' }}>
             <div className="cv-terminal-content" style={{ padding: 'clamp(1.5rem, 3vw, 2.5rem)' }}>
@@ -219,13 +222,13 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
             0% { opacity: 0.05; transform: translateY(8px); filter: brightness(0.3); }
             100% { opacity: 1; transform: translateY(0); filter: brightness(1); }
           }
-          .cv-cascade-item { opacity: 0.05; filter: brightness(0.3); animation: cvCascadeIn 0.6s ease forwards; }
-          .cv-cascade-0 { animation-delay: 0.15s; }
-          .cv-cascade-1 { animation-delay: 0.3s; }
-          .cv-cascade-2 { animation-delay: 0.45s; }
-          .cv-cascade-3 { animation-delay: 0.55s; }
-          .cv-cascade-4 { animation-delay: 0.65s; }
-          .cv-cascade-5 { animation-delay: 0.8s; }
+          .cv-cascade-animate .cv-cascade-item { opacity: 0.05; filter: brightness(0.3); animation: cvCascadeIn 0.6s ease forwards; }
+          .cv-cascade-animate .cv-cascade-0 { animation-delay: 0.15s; }
+          .cv-cascade-animate .cv-cascade-1 { animation-delay: 0.3s; }
+          .cv-cascade-animate .cv-cascade-2 { animation-delay: 0.45s; }
+          .cv-cascade-animate .cv-cascade-3 { animation-delay: 0.55s; }
+          .cv-cascade-animate .cv-cascade-4 { animation-delay: 0.65s; }
+          .cv-cascade-animate .cv-cascade-5 { animation-delay: 0.8s; }
           .cv-scroll-reveal { opacity: 0.3; filter: brightness(0.5); transform: translateY(4px); transition: opacity 0.6s ease, filter 0.6s ease, transform 0.6s ease; }
           .cv-scroll-revealed { opacity: 1 !important; filter: brightness(1) !important; transform: translateY(0) !important; }
         `}</style>
@@ -257,9 +260,9 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
           top: 0, left: 0, right: 0, bottom: 0,
           overflowY: 'auto',
           zIndex: 301,
-          animation: 'cvSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+          animation: shouldAnimate ? undefined : 'cvSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
         }}
-        className="content-viewer-panel"
+        className={`content-viewer-panel${shouldAnimate ? ' cv-cascade-animate' : ''}`}
       >
         {/* Back button */}
         <div style={{
@@ -432,17 +435,17 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
           0% { opacity: 0.05; transform: translateY(8px); filter: brightness(0.3); }
           100% { opacity: 1; transform: translateY(0); filter: brightness(1); }
         }
-        .cv-cascade-item {
+        .cv-cascade-animate .cv-cascade-item {
           opacity: 0.05;
           filter: brightness(0.3);
           animation: cvCascadeIn 0.6s ease forwards;
         }
-        .cv-cascade-0 { animation-delay: 0.15s; }
-        .cv-cascade-1 { animation-delay: 0.3s; }
-        .cv-cascade-2 { animation-delay: 0.45s; }
-        .cv-cascade-3 { animation-delay: 0.55s; }
-        .cv-cascade-4 { animation-delay: 0.65s; }
-        .cv-cascade-5 { animation-delay: 0.8s; }
+        .cv-cascade-animate .cv-cascade-0 { animation-delay: 0.15s; }
+        .cv-cascade-animate .cv-cascade-1 { animation-delay: 0.3s; }
+        .cv-cascade-animate .cv-cascade-2 { animation-delay: 0.45s; }
+        .cv-cascade-animate .cv-cascade-3 { animation-delay: 0.55s; }
+        .cv-cascade-animate .cv-cascade-4 { animation-delay: 0.65s; }
+        .cv-cascade-animate .cv-cascade-5 { animation-delay: 0.8s; }
         .cv-scroll-reveal {
           opacity: 0.3;
           filter: brightness(0.5);

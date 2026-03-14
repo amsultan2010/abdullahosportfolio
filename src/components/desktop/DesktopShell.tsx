@@ -5680,6 +5680,33 @@ const FLOATING_BOOKS = [
   },
 ];
 
+function ReaderPage({ text }: { text: string }) {
+  if (!text) return <div style={{ flex: 1 }} />;
+  const lines = text.split('\n');
+  return (
+    <div style={{ flex: 1, fontFamily: "'Georgia', 'Times New Roman', serif", fontSize: '14px', lineHeight: 1.7, color: '#2a2218', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+      {lines.map((line, i) => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('### ')) return <h3 key={i} style={{ fontSize: '15px', fontWeight: 700, margin: '14px 0 6px', fontFamily: "'Georgia', serif" }}>{trimmed.slice(4)}</h3>;
+        if (trimmed.startsWith('## ')) return <h2 key={i} style={{ fontSize: '17px', fontWeight: 700, margin: '16px 0 8px', fontFamily: "'Georgia', serif" }}>{trimmed.slice(3)}</h2>;
+        if (trimmed.startsWith('# ')) return <h1 key={i} style={{ fontSize: '19px', fontWeight: 700, margin: '18px 0 10px', fontFamily: "'Georgia', serif" }}>{trimmed.slice(2)}</h1>;
+        if (trimmed === '') return <div key={i} style={{ height: '8px' }} />;
+        // Handle bold (**text**)
+        const parts = trimmed.split(/(\*\*[^*]+\*\*)/g);
+        return (
+          <p key={i} style={{ margin: '0 0 4px', textAlign: 'justify' }}>
+            {parts.map((part, j) =>
+              part.startsWith('**') && part.endsWith('**')
+                ? <strong key={j}>{part.slice(2, -2)}</strong>
+                : part
+            )}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 function FloatingBooks() {
   const { state, dispatch } = useDesktop();
   const [selected, setSelected] = useState<string | null>(null);
@@ -5725,17 +5752,42 @@ function FloatingBooks() {
     }
   }, [selected]);
 
+  // Auto-close books when another window opens
+  const windowCount = Object.keys(state.windows).length;
+  const prevWindowCount = useRef(windowCount);
+  useEffect(() => {
+    if (prevWindowCount.current < windowCount && state.floatingBooksVisible) {
+      // A new window was opened — close books with reverse animation
+      if (selected) {
+        handleClose();
+        setTimeout(() => {
+          setExiting(true);
+          setTimeout(() => {
+            dispatch({ type: 'HIDE_FLOATING_BOOKS' });
+            setExiting(false);
+          }, 300);
+        }, 500);
+      } else {
+        setExiting(true);
+        setTimeout(() => {
+          dispatch({ type: 'HIDE_FLOATING_BOOKS' });
+          setExiting(false);
+        }, 300);
+      }
+    }
+    prevWindowCount.current = windowCount;
+  }, [windowCount]);
+
   // Escape key — instantly dismiss (only when books are visible)
   useEffect(() => {
     if (!state.floatingBooksVisible) return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopImmediatePropagation();
-        if (phase === 'content' || phase === 'expanding' || phase === 'stacking') {
-          setSelected(null);
-          setPhase('idle');
+        if (phase === 'content' || phase === 'expanding' || phase === 'stacking' || phase === 'flipping') {
+          handleClose();
         } else if (phase === 'idle') {
-          dispatch({ type: 'HIDE_FLOATING_BOOKS' });
+          handleDismiss();
         }
       }
     };
@@ -5759,8 +5811,14 @@ function FloatingBooks() {
   };
 
   const handleClose = () => {
-    setSelected(null);
-    setPhase('idle');
+    // Reverse animation: content → closing (shrink) → idle
+    setPhase('closing');
+    setTimeout(() => {
+      setSelected(null);
+      setPhase('idle');
+      setReaderMode(false);
+      setReaderPage(0);
+    }, 500);
   };
 
   const handleDismiss = () => {
@@ -5768,7 +5826,12 @@ function FloatingBooks() {
       handleClose();
       return;
     }
-    dispatch({ type: 'HIDE_FLOATING_BOOKS' });
+    // Fade out all books, then hide
+    setExiting(true);
+    setTimeout(() => {
+      dispatch({ type: 'HIDE_FLOATING_BOOKS' });
+      setExiting(false);
+    }, 300);
   };
 
   const isOpen = phase === 'expanding' || phase === 'flipping' || phase === 'content';
@@ -5886,18 +5949,19 @@ function FloatingBooks() {
               zIndex: 9998,
             };
           } else if (isSelected) {
-            // Selected book: expand
-            const isExpanded = phase === 'expanding' || phase === 'content';
+            // Selected book: expand or close (reverse)
+            const isExpanded = phase === 'expanding' || phase === 'content' || phase === 'flipping';
+            const isClosing = phase === 'closing';
             bookStyle = {
               position: 'fixed',
-              right: isExpanded ? `${expandedRight}px` : idleRight,
-              top: isExpanded ? `${expandedTop}px` : idleTop,
-              width: isExpanded ? `${BIG_W}px` : `${SMALL_W}px`,
-              height: isExpanded ? `${BIG_H}px` : `${SMALL_H}px`,
-              opacity: 1,
-              transform: phase === 'stacking' ? 'scale(1.02)' : (phase === 'closing' ? `scale(0.95)` : 'none'),
+              right: isExpanded && !isClosing ? `${expandedRight}px` : idleRight,
+              top: isExpanded && !isClosing ? `${expandedTop}px` : idleTop,
+              width: isExpanded && !isClosing ? `${BIG_W}px` : `${SMALL_W}px`,
+              height: isExpanded && !isClosing ? `${BIG_H}px` : `${SMALL_H}px`,
+              opacity: isClosing ? 0.8 : 1,
+              transform: phase === 'stacking' ? 'scale(1.02)' : (isClosing ? 'rotateY(-12deg) scale(1)' : 'none'),
               animation: phase === 'flipping' ? 'bookPageFlip 0.7s ease-in-out forwards' : 'none',
-              transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
+              transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
               zIndex: 10001,
             };
           }
@@ -6036,39 +6100,148 @@ function FloatingBooks() {
                   /* Content phase: show the ContentViewer inside the book */
                   <div style={{
                     position: 'absolute', inset: 0,
-                    background: 'rgba(20, 20, 20, 0.85)',
+                    background: readerMode ? '#f5f1ea' : 'rgba(20, 20, 20, 0.85)',
                     overflow: 'hidden',
                     display: 'flex', flexDirection: 'column',
                     borderRadius: '4px 10px 10px 4px',
                     zIndex: 10,
+                    transition: 'background 0.3s ease',
                   }}>
-                    {/* Close button */}
+                    {/* Top bar: reader toggle + close */}
                     <div style={{
-                      display: 'flex', justifyContent: 'flex-end', padding: '10px 14px 0',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '8px 14px 0',
                       zIndex: 11,
                     }}>
                       <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!readerMode && contentData?.markdown) {
+                            // Split markdown into pages (~800 chars each for two-page spread)
+                            const text = contentData.markdown;
+                            const chunks: string[] = [];
+                            const paragraphs = text.split('\n\n');
+                            let current = '';
+                            for (const p of paragraphs) {
+                              if (current.length + p.length > 800 && current.length > 200) {
+                                chunks.push(current.trim());
+                                current = p + '\n\n';
+                              } else {
+                                current += p + '\n\n';
+                              }
+                            }
+                            if (current.trim()) chunks.push(current.trim());
+                            setReaderPages(chunks);
+                            setReaderPage(0);
+                          }
+                          setReaderMode(!readerMode);
+                        }}
+                        style={{
+                          background: readerMode ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)',
+                          border: `1px solid ${readerMode ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'}`,
+                          color: readerMode ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)',
+                          borderRadius: '6px', padding: '4px 10px',
+                          cursor: 'pointer', fontSize: '10px', fontFamily: "'SF Mono', monospace",
+                          transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '4px',
+                        }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                        </svg>
+                        {readerMode ? 'Scroll' : 'Reader'}
+                      </button>
+                      <button
                         onClick={(e) => { e.stopPropagation(); handleClose(); }}
                         style={{
-                          background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)',
-                          color: 'rgba(255,255,255,0.6)', borderRadius: '6px', padding: '4px 12px',
+                          background: readerMode ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)',
+                          border: `1px solid ${readerMode ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'}`,
+                          color: readerMode ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)',
+                          borderRadius: '6px', padding: '4px 12px',
                           cursor: 'pointer', fontSize: '11px', fontFamily: "'SF Mono', monospace",
                           transition: 'all 0.15s',
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'rgba(255,255,255,0.9)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
                       >
                         ESC
                       </button>
                     </div>
                     {contentData ? (
-                      <div style={{ flex: 1, overflow: 'hidden' }}>
-                        <ContentViewer
-                          content={contentData}
-                          onClose={handleClose}
-                          windowMode
-                        />
-                      </div>
+                      readerMode ? (
+                        /* Two-page spread reader */
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                          <div style={{
+                            flex: 1, display: 'flex', gap: '1px',
+                            background: 'rgba(0,0,0,0.08)',
+                            margin: '8px 10px',
+                            borderRadius: '4px',
+                            overflow: 'hidden',
+                          }}>
+                            {/* Left page */}
+                            <div style={{
+                              flex: 1, background: '#f8f5ef', padding: '24px 20px 16px 24px',
+                              overflowY: 'auto', fontSize: '11px', lineHeight: 1.7,
+                              color: '#2a2a2a', fontFamily: "'Georgia', 'Times New Roman', serif",
+                              borderRight: '1px solid rgba(0,0,0,0.06)',
+                            }}>
+                              <ReaderPage text={readerPages[readerPage * 2] || ''} />
+                              <div style={{ position: 'absolute', bottom: '8px', left: '20px', fontSize: '9px', color: 'rgba(0,0,0,0.25)' }}>
+                                {readerPage * 2 + 1}
+                              </div>
+                            </div>
+                            {/* Right page */}
+                            <div style={{
+                              flex: 1, background: '#faf7f2', padding: '24px 24px 16px 20px',
+                              overflowY: 'auto', fontSize: '11px', lineHeight: 1.7,
+                              color: '#2a2a2a', fontFamily: "'Georgia', 'Times New Roman', serif",
+                            }}>
+                              <ReaderPage text={readerPages[readerPage * 2 + 1] || ''} />
+                              <div style={{ position: 'absolute', bottom: '8px', right: '20px', fontSize: '9px', color: 'rgba(0,0,0,0.25)' }}>
+                                {readerPage * 2 + 2}
+                              </div>
+                            </div>
+                          </div>
+                          {/* Page navigation */}
+                          <div style={{
+                            display: 'flex', justifyContent: 'center', alignItems: 'center',
+                            gap: '16px', padding: '4px 0 8px',
+                          }}>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setReaderPage(p => Math.max(0, p - 1)); }}
+                              disabled={readerPage === 0}
+                              style={{
+                                background: 'none', border: 'none', cursor: readerPage === 0 ? 'default' : 'pointer',
+                                color: readerPage === 0 ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.5)',
+                                fontSize: '16px', padding: '2px 8px',
+                              }}
+                            >
+                              ‹
+                            </button>
+                            <span style={{ fontSize: '10px', color: 'rgba(0,0,0,0.4)', fontFamily: "'SF Mono', monospace" }}>
+                              {readerPage * 2 + 1}–{Math.min(readerPage * 2 + 2, readerPages.length)} of {readerPages.length}
+                            </span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setReaderPage(p => Math.min(Math.ceil(readerPages.length / 2) - 1, p + 1)); }}
+                              disabled={readerPage >= Math.ceil(readerPages.length / 2) - 1}
+                              style={{
+                                background: 'none', border: 'none',
+                                cursor: readerPage >= Math.ceil(readerPages.length / 2) - 1 ? 'default' : 'pointer',
+                                color: readerPage >= Math.ceil(readerPages.length / 2) - 1 ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.5)',
+                                fontSize: '16px', padding: '2px 8px',
+                              }}
+                            >
+                              ›
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ flex: 1, overflow: 'hidden' }}>
+                          <ContentViewer
+                            content={contentData}
+                            onClose={handleClose}
+                            windowMode
+                          />
+                        </div>
+                      )
                     ) : (
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>
                         Loading...

@@ -92,7 +92,7 @@ const projects = [
     coverImage: "/trading.png",
     repoUrl: "https://github.com/ronnielgandhe/quantzoo",
     language: "Python",
-    files: ["README.md", "Architecture.md", "Backend.md", "Frontend.md", "Impact.md", "Takeaways.md"],
+    files: ["README.md", "architecture.md", "backend.md", "frontend.md", "impact.md", "takeaways.md"],
     detail: {
       type: 'project' as const,
       id: 1,
@@ -146,7 +146,7 @@ const projects = [
     coverImage: "/cover.png",
     repoUrl: "https://github.com/ronnielgandhe/creatorscope",
     language: "Python",
-    files: ["README.md", "Architecture.md", "Scoring Engine.md", "Discovery Pipeline.md", "Impact.md", "Takeaways.md"],
+    files: ["README.md", "architecture.md", "scoring engine.md", "discovery pipeline.md", "impact.md", "takeaways.md"],
     detail: {
       type: 'project' as const,
       id: 2,
@@ -201,7 +201,7 @@ const projects = [
     coverImage: "/yournews-cover.png",
     repoUrl: "https://github.com/ronnielgandhe/yournews",
     language: "Python",
-    files: ["README.md", "Architecture.md", "Ranking Pipeline.md", "Personalization.md", "Impact.md", "Takeaways.md"],
+    files: ["README.md", "architecture.md", "ranking pipeline.md", "personalization.md", "impact.md", "takeaways.md"],
     detail: {
       type: 'project' as const,
       id: 3,
@@ -256,7 +256,7 @@ const projects = [
     coverImage: "/howmanyclicks-cover.png",
     repoUrl: "https://github.com/ronnielgandhe/how-many-clicks",
     language: "JavaScript",
-    files: ["README.md", "Architecture.md", "Pathfinding.md", "Game Design.md", "Impact.md", "Takeaways.md"],
+    files: ["README.md", "architecture.md", "pathfinding.md", "game design.md", "impact.md", "takeaways.md"],
     detail: {
       type: 'project' as const,
       id: 4,
@@ -322,9 +322,17 @@ function getFileIcon(name: string): { icon: string; color: string } {
 // Check if a file name corresponds to a project section
 function getSectionContent(projDetail: ProjectDetail, fileName: string): string | null {
   if (!projDetail.sections || fileName === 'README.md') return null;
-  const sectionTitle = fileName.replace(/\.md$/, '');
-  const section = projDetail.sections.find(s => s.title === sectionTitle);
+  const sectionTitle = fileName.replace(/\.md$/, '').toLowerCase();
+  const section = projDetail.sections.find(s => s.title.toLowerCase() === sectionTitle);
   return section ? section.content : null;
+}
+
+// Get the section title (original casing) from a file name
+function getSectionTitle(projDetail: ProjectDetail, fileName: string): string | null {
+  if (!projDetail.sections || fileName === 'README.md') return null;
+  const sectionTitle = fileName.replace(/\.md$/, '').toLowerCase();
+  const section = projDetail.sections.find(s => s.title.toLowerCase() === sectionTitle);
+  return section ? section.title : null;
 }
 
 // Render markdown-like content with bold, paragraphs, and lists
@@ -663,8 +671,29 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
 
                     const handleFileClick = () => {
                       if (isDir) return;
-                      if (isReadme || isSectionFile) {
-                        // README and section .md files open as tabs
+                      if (isSectionFile) {
+                        // Section .md files scroll to that section within the README view
+                        // First, make sure the README tab is active for this project
+                        const readmeIdx = fileTabs.findIndex(t => t.projectIdx === idx && t.fileName === 'README.md');
+                        if (readmeIdx >= 0) {
+                          setActiveTabIdx(readmeIdx);
+                          setSelectedProject(idx);
+                        } else {
+                          openFile(idx, 'README.md');
+                        }
+                        // Scroll to the section heading after a short delay to allow tab switch
+                        const sectionTitle = getSectionTitle(proj.detail, file);
+                        if (sectionTitle) {
+                          const sectionId = `section-${sectionTitle.toLowerCase().replace(/\s+/g, '-')}`;
+                          setTimeout(() => {
+                            const el = document.getElementById(sectionId);
+                            if (el) {
+                              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                          }, 50);
+                        }
+                      } else if (isReadme) {
+                        // README opens as a tab
                         openFile(idx, file);
                       } else {
                         // All other files open the GitHub repo directly
