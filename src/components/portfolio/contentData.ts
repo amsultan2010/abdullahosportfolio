@@ -1,6 +1,27 @@
 import type { ContentViewData } from './ContentViewer';
 
 export const contentMap: Record<string, ContentViewData> = {
+  'preface': {
+    type: 'blog',
+    slug: 'preface',
+    title: 'Welcome to My Notes',
+    publishedAt: '2026-03-01',
+    tags: ['Personal'],
+    readingTime: 1,
+    summary: '',
+    markdown: `These are my personal notes and reflections on things I find interesting.
+
+I write about technology, finance, psychology, and career decisions. None of this is meant to be authoritative. These are just my own thoughts and explorations as I try to make sense of the world around me.
+
+Some of these notes are polished essays. Others are rougher ideas I wanted to get down before they disappeared. All of them reflect what I was thinking at the time I wrote them.
+
+## How to navigate
+
+Browse by topic using the folders on the left, or scroll through the list and click anything that catches your eye. There is no particular order you need to read them in.
+
+Thanks for stopping by.`
+  },
+
   'prestige-is-a-strong-drug': {
     type: 'blog',
     slug: 'prestige-is-a-strong-drug',
@@ -23,15 +44,17 @@ At first it feels electric. It feels like you are standing in the center of mome
 
 But after a while I started noticing something uncomfortable. Being inside a prestigious environment can trick you into believing you are moving forward simply because the environment itself looks impressive.
 
-## Prestige creates a form of borrowed momentum.
+## Borrowed Momentum
 
-You begin to confuse the reputation of the institution with your own trajectory. The system is powerful, so you assume your personal progress must be powerful as well.
+Prestige creates a form of borrowed momentum. You begin to confuse the reputation of the institution with your own trajectory. The system is powerful, so you assume your personal progress must be powerful as well.
 
 But prestige does not guarantee that you are actually building anything meaningful. It only guarantees that the outside world thinks you probably are.
 
 Eventually I realized something that most people in those environments quietly suspect but rarely say out loud.
 
-## Prestige can become a place to hide.
+## A Place to Hide
+
+Prestige can become a place to hide.
 
 You can spend years inside impressive institutions while avoiding the uncomfortable work of figuring out what you actually want to build with your life.
 
@@ -74,9 +97,9 @@ There are charts everywhere. Indicators. Strategies. Entire online communities c
 
 You start believing that if you study the charts long enough, if you learn the right strategy, you might unlock the code.
 
-## But if you stay in the rabbit hole long enough, something interesting happens.
+## Seeing How the Game Works
 
-You start seeing how the game actually works.
+But if you stay in the rabbit hole long enough, something interesting happens. You start seeing how the game actually works.
 
 The loudest voices are rarely the most profitable. The traders posting massive returns are often taking massive risks. The strategies that look exciting tend to burn out the fastest.
 
@@ -90,9 +113,9 @@ Speculation asks the question "What might move next?"
 
 Investing asks the question "What will still matter in ten years?"
 
-## The deeper you go into trading culture, the clearer this difference becomes.
+## Speculation vs. Investing
 
-The meme coin trader chasing a 10x return in three days is playing a psychological game. The volatility itself is the product.
+The deeper you go into trading culture, the clearer this difference becomes. The meme coin trader chasing a 10x return in three days is playing a psychological game. The volatility itself is the product.
 
 The investor slowly building a portfolio of durable assets is playing a different game entirely.
 
@@ -204,9 +227,9 @@ That observation leads people to a quick conclusion.
 
 Technically speaking, that criticism is not wrong. Many early AI startups are essentially building workflow tools on top of existing language models.
 
-## But the conclusion that these companies have no value misses something important.
+## Why Wrappers Still Matter
 
-Technology adoption rarely starts with deep infrastructure.
+But the conclusion that these companies have no value misses something important. Technology adoption rarely starts with deep infrastructure.
 
 It usually starts with interface.
 
@@ -494,6 +517,366 @@ The investor who earns the market return is not the one with the best stock pick
 - Bogle, J. (2007). *The Little Book of Common Sense Investing*. John Wiley & Sons.
 - Graham, B. (1949). *The Intelligent Investor*. Harper & Brothers.
 - Fama, E. & French, K. (2010). "Luck versus Skill in the Cross-Section of Mutual Fund Returns." *Journal of Finance*, 65(5), 1915-1947.
+`
+  },
+
+  'enterprise-software-cost': {
+    type: 'deep-research',
+    slug: 'enterprise-software-cost',
+    title: 'Why Enterprise Software Costs Millions',
+    company: 'SAP',
+    publishedAt: '2026-01-15',
+    tags: ['Technology', 'Business', 'Enterprise', 'Research'],
+    readingTime: 12,
+    summary: 'Understanding why companies pay enormous sums for tools that often look like spreadsheets',
+    markdown: `# Why Enterprise Software Costs Millions
+
+*Understanding the Hidden Economics of Business Infrastructure*
+
+---
+
+> "The expensive part of enterprise software is never the software."
+>
+> Michael Cusumano, MIT Sloan School of Management
+
+## 1. Introduction
+
+Enterprise software is one of the most counterintuitive markets in technology. Companies routinely pay **\\$5 million to \\$500 million** for systems that, to an outside observer, appear to do what a spreadsheet could accomplish. SAP, Oracle, Salesforce, and Workday collectively generate over **\\$150 billion** in annual revenue selling software that most employees actively dislike using.
+
+This raises an obvious question: why do intelligent executives, armed with procurement teams and due diligence processes, repeatedly approve enormous checks for software that looks unremarkable?
+
+The answer reveals something important about how large organizations actually function. Enterprise software is not expensive because it does complex things. It is expensive because it does **simple things at enormous scale, with zero tolerance for failure, inside organizations that cannot afford to stop operating while the system is installed**.
+
+This paper examines the four layers of cost that make enterprise software so expensive, and why cheaper alternatives consistently fail to displace incumbents.
+
+{{chart:enterprise-cost-breakdown}}
+
+---
+
+## 2. The Visible Costs: License and Subscription
+
+### 2.1 What You See on the Invoice
+
+The most visible component of enterprise software cost is the license or subscription fee. For a large SAP S/4HANA deployment, this typically ranges from **\\$2 million to \\$50 million** depending on user count and modules.
+
+This is the number that appears in procurement documents and board presentations. It is also, consistently, the **smallest component of total cost**.
+
+| Cost Component | % of Total Cost (Typical) |
+|---|---|
+| License / Subscription | 15 – 25% |
+| Implementation & Consulting | 30 – 40% |
+| Customization & Integration | 15 – 25% |
+| Ongoing Maintenance & Support | 15 – 20% |
+| Training & Change Management | 5 – 10% |
+
+The ratio of implementation cost to license cost in enterprise software is typically **3:1 to 7:1**. For every dollar spent on the software itself, three to seven dollars are spent making it work inside the organization.
+
+### 2.2 Why SaaS Did Not Solve This
+
+The shift to cloud-based SaaS was supposed to reduce enterprise software costs. In practice, it shifted costs from capital expenditure to operating expenditure without reducing the total.
+
+Salesforce, the poster child of cloud enterprise software, generates an average revenue per enterprise customer of approximately **\\$340,000 per year**. For large deployments, annual costs routinely exceed **\\$5 million**. The cloud eliminated hardware costs but not the fundamental complexity that drives implementation, customization, and integration spending.
+
+---
+
+## 3. The Hidden Layer: Implementation Complexity
+
+### 3.1 Why Consulting Firms Exist
+
+The global enterprise software consulting market is worth approximately **\\$250 billion annually**. Accenture, Deloitte, and IBM Consulting each employ hundreds of thousands of consultants whose primary job is to install and configure enterprise software.
+
+This fact alone reveals something important: **if the software were simple to deploy, these firms would not exist at this scale**.
+
+The complexity comes from three sources that are invisible until deployment begins:
+
+**Process Mapping.** Every organization has hundreds of business processes, most of which are undocumented and many of which contradict each other. Before enterprise software can be configured, these processes must be discovered, documented, rationalized, and mapped to the system. This is organizational archaeology, and it is expensive.
+
+**Data Migration.** Existing data is messy, duplicated, inconsistently formatted, and spread across dozens of legacy systems. Migrating this data into a new system while maintaining referential integrity and business continuity is one of the most error-prone activities in technology.
+
+**Integration.** No enterprise system operates in isolation. A typical large company has **200 to 1,000 distinct software systems** that must exchange data. Each integration point is a potential failure mode.
+
+{{chart:process-complexity}}
+
+### 3.2 The Failure Rate
+
+The track record of large enterprise software deployments is sobering:
+
+- **55 to 75%** of ERP implementations exceed their budget (Panorama Consulting, 2024)
+- **60%** exceed their timeline
+- **20 to 30%** are considered outright failures
+- The average ERP implementation takes **17.4 months** (vs. 12 months planned)
+
+These numbers have remained remarkably stable for two decades, despite improvements in methodology, tooling, and cloud infrastructure. The implication is clear: **the difficulty is inherent in the problem, not in the technology**.
+
+---
+
+## 4. Switching Costs: The Real Moat
+
+### 4.1 Why Companies Stay
+
+The most powerful force in enterprise software is not the quality of the product. It is the **cost of leaving**.
+
+Once an enterprise system is deployed, it becomes deeply embedded in organizational processes, data flows, compliance frameworks, and employee workflows. The cost of switching is not just financial; it is operational, political, and psychological.
+
+{{chart:switching-cost}}
+
+Switching costs compound over time. In the first year after deployment, switching would be expensive but feasible. By year five, the system has accumulated custom configurations, integrations, and institutional knowledge that make replacement extraordinarily disruptive. By year ten, the system is effectively permanent.
+
+This is why SAP customers have an average tenure of **25+ years**. It is not loyalty. It is physics.
+
+### 4.2 The Lock-In Mechanisms
+
+Enterprise software vendors have perfected several mechanisms that increase switching costs:
+
+- **Data format lock-in.** Proprietary data schemas that are expensive to map to other systems
+- **Process dependency.** Business processes designed around the software's specific workflow patterns
+- **Certification ecosystems.** Employees who have invested years building vendor-specific expertise
+- **Compliance integration.** Audit trails and regulatory reporting built on the system's architecture
+- **Ecosystem effects.** Third-party tools, partners, and integrations that only work with the incumbent system
+
+Each of these mechanisms individually might not prevent switching. Together, they create a gravitational field that makes the incumbent system the default choice even when superior alternatives exist.
+
+---
+
+## 5. The Market Structure
+
+### 5.1 Why Enterprise Software Is a Natural Oligopoly
+
+The enterprise software market is dominated by a small number of very large players. In ERP alone, SAP and Oracle control approximately **60% of the global market**. In CRM, Salesforce alone holds **23%**.
+
+This concentration is not accidental. Enterprise software markets tend toward oligopoly for structural reasons:
+
+{{chart:enterprise-market-size}}
+
+- **High switching costs** protect incumbents from displacement
+- **Network effects** among consultants, partners, and trained users create ecosystem moats
+- **Regulatory requirements** favor established vendors with proven compliance capabilities
+- **Sales cycle length** (12 to 24 months for large deals) requires enormous sales infrastructure
+- **Reference customer requirements** mean new entrants cannot win large deals without existing large customers
+
+### 5.2 The Startup Graveyard
+
+The history of enterprise software is littered with startups that built demonstrably better products but failed to displace incumbents. The pattern is consistent:
+
+1. A startup builds a modern, elegant solution to a specific enterprise problem
+2. Early adopters (small to mid-market companies) adopt enthusiastically
+3. The startup attempts to move upmarket to large enterprises
+4. Large enterprises evaluate the product but choose the incumbent
+5. The reason: not product quality, but **risk, integration complexity, and switching costs**
+
+The lesson is uncomfortable for product-focused founders: in enterprise software, **the product is often the least important factor in the purchasing decision**.
+
+---
+
+## 6. What This Means
+
+### 6.1 For Buyers
+
+The total cost of enterprise software ownership is typically **3 to 5 times** the amount that appears on the initial purchase order. Organizations that budget only for license fees and basic implementation consistently experience cost overruns and project failures.
+
+The most successful enterprise software deployments share common characteristics:
+
+- Executive sponsorship that persists beyond the initial approval
+- Realistic timelines (18 to 24 months, not 6 to 12)
+- Process simplification before configuration, not after
+- Change management treated as a first-class workstream, not an afterthought
+
+### 6.2 For Builders
+
+The enterprise software market rewards durability over elegance. The products that generate the most revenue are rarely the ones that win design awards. They are the ones that become **infrastructure**, invisible and essential, woven so deeply into organizational fabric that removing them is unthinkable.
+
+This is why enterprise software costs millions. Not because it is worth millions as a product. But because it becomes worth millions as an **embedded dependency** that the organization cannot function without.
+
+---
+
+## References
+
+- Panorama Consulting Group (2024). *ERP Report: Trends and Insights*.
+- Gartner (2024). *Market Share Analysis: Enterprise Application Software, Worldwide, 2023*.
+- Cusumano, M. (2019). *The Business of Software*. Free Press.
+- Davenport, T. (1998). "Putting the Enterprise into the Enterprise System." *Harvard Business Review*, 76(4).
+- IDC (2024). *Worldwide Enterprise Applications Software Market Forecast*.
+- SAP SE (2024). *Annual Report 2023*.
+- Salesforce (2024). *Annual Report, Fiscal Year 2024*.
+`
+  },
+
+  'attention-economy': {
+    type: 'deep-research',
+    slug: 'attention-economy',
+    title: 'The Attention Economy Is Rewiring Human Motivation',
+    company: 'DEEP FOCUS',
+    publishedAt: '2026-02-10',
+    tags: ['Psychology', 'Technology', 'Behavioral Economics', 'Research'],
+    readingTime: 13,
+    summary: 'Why the ability to focus may become the most valuable skill in the modern economy',
+    markdown: `# The Attention Economy Is Rewiring Human Motivation
+
+*Why the Ability to Focus May Become the Most Valuable Skill in the Modern Economy*
+
+---
+
+> "What information consumes is rather obvious: it consumes the attention of its recipients."
+>
+> Herbert Simon, Nobel Laureate in Economics (1971)
+
+## 1. Introduction
+
+The average American now spends **7 hours and 4 minutes** per day looking at screens, according to DataReportal's 2024 global digital report. The average smartphone user touches their phone **2,617 times per day**. The average knowledge worker checks email or messaging every **6 minutes**.
+
+These are not statistics about technology adoption. They are measurements of a fundamental shift in how human attention is allocated, monetized, and depleted. For the first time in history, the majority of waking hours for the average person in developed economies are spent consuming content designed by engineers whose explicit objective is to **maximize time on platform**.
+
+This paper examines how the attention economy is restructuring human motivation, what the cognitive costs of perpetual distraction are, and why the ability to sustain deep focus is becoming an increasingly rare and valuable economic asset.
+
+{{chart:attention-span}}
+
+---
+
+## 2. The Mechanics of Attention Capture
+
+### 2.1 The Dopamine Extraction Machine
+
+Social media platforms, streaming services, and mobile applications are not neutral tools. They are **dopamine extraction machines** engineered to exploit the brain's reward circuitry.
+
+The mechanism is well understood. The brain's reward system evolved to reinforce behaviors associated with survival: finding food, forming social bonds, acquiring status. This system operates primarily through dopamine release in the nucleus accumbens, which generates feelings of anticipation, excitement, and satisfaction.
+
+Modern technology has learned to trigger this system artificially:
+
+- **Variable ratio reinforcement.** Social media feeds deliver rewards (likes, comments, interesting content) on an unpredictable schedule, the same pattern that makes slot machines addictive.
+
+- **Social validation loops.** Every notification that someone liked your photo, responded to your comment, or viewed your story triggers a small dopamine release associated with social acceptance.
+
+- **Infinite scroll.** By removing natural stopping points, infinite scroll eliminates the friction that would normally cause disengagement.
+
+- **Personalization algorithms.** Machine learning systems that analyze billions of behavioral data points to predict exactly which content will capture each individual's attention for the longest duration.
+
+{{chart:dopamine-feedback}}
+
+### 2.2 The Attention Arms Race
+
+The companies competing for attention have grown enormously. The combined market capitalization of the five largest attention-economy companies exceeds **\\$4 trillion**. Their combined R&D spending on engagement optimization exceeds **\\$80 billion annually**.
+
+On the other side of this equation is the individual human brain, running on hardware that has not been updated in approximately 300,000 years.
+
+| Platform | Avg. Daily Time (US Adults) | Primary Dopamine Mechanism |
+|---|---|---|
+| TikTok | 95 minutes | Variable content + infinite scroll |
+| YouTube | 74 minutes | Autoplay + recommendation engine |
+| Facebook/Instagram | 58 minutes | Social validation + notifications |
+| X (Twitter) | 34 minutes | Outrage/novelty cycle |
+| Email/Slack | 120+ minutes | Intermittent obligation signals |
+
+This is not a fair contest. The aggregate engineering talent and capital directed toward capturing human attention is orders of magnitude greater than the resources available to any individual to defend it.
+
+---
+
+## 3. The Cognitive Costs
+
+### 3.1 Attention Residue
+
+Sophie Leroy's research at the University of Washington introduced the concept of **attention residue**: when you switch from Task A to Task B, a portion of your cognitive capacity remains stuck on Task A. You are not fully present for either task.
+
+The implications for modern work are severe. A study by Gloria Mark at UC Irvine found that the average knowledge worker is interrupted or self-interrupts every **3 minutes and 5 seconds**. After each interruption, it takes an average of **23 minutes and 15 seconds** to return to the same level of focus.
+
+The arithmetic is devastating: if you are interrupted 15 times in an 8-hour workday, you spend nearly **6 hours** in a state of partial attention, never achieving the deep focus required for complex problem-solving.
+
+### 3.2 Deep Work vs. Shallow Work
+
+Cal Newport's framework distinguishes between **deep work** (cognitively demanding tasks performed in a state of distraction-free concentration) and **shallow work** (logistical tasks performed while distracted).
+
+The economic implications are significant:
+
+{{chart:deep-vs-shallow}}
+
+Deep work produces the outputs that create economic value: original research, strategic thinking, complex code, creative breakthroughs, and novel problem-solving. Shallow work produces the outputs that *maintain* operations: emails, meetings, status updates, and administrative tasks.
+
+The attention economy systematically shifts time from deep work to shallow work by making distraction frictionless and focus effortful.
+
+### 3.3 The Neuroplasticity Problem
+
+The brain adapts to its environment. Repeated patterns of behavior physically reshape neural pathways through a process called neuroplasticity.
+
+The concern raised by neuroscientists like Adam Gazzaley (UCSF) is that chronic multitasking and frequent task-switching may be **training the brain to be distractible**. If the default mode of operation is rapid switching between stimuli, the neural pathways that support sustained attention may atrophy from disuse.
+
+A 2020 study in *Nature Communications* found that heavy media multitaskers showed **reduced gray matter density** in the anterior cingulate cortex, a brain region critical for sustained attention and cognitive control.
+
+---
+
+## 4. The Economics of Focus
+
+### 4.1 Scarcity Creates Value
+
+In classical economics, the value of a resource increases as it becomes scarcer. If the attention economy is systematically reducing the population's capacity for deep focus, then individuals who retain or develop this capacity hold an increasingly rare and valuable skill.
+
+Cal Newport calls this the **deep work hypothesis**: the ability to perform deep work is becoming increasingly rare at exactly the same time it is becoming increasingly valuable in our economy.
+
+The evidence is suggestive. Studies of high performers across fields consistently identify sustained focus as a distinguishing characteristic:
+
+- Elite software engineers are estimated to be **10 to 100x** more productive than average engineers, a gap largely attributable to uninterrupted focus on complex systems
+- Academic researchers who produce the highest-impact publications report **4 to 6 hours of daily deep work** as the cornerstone of their productivity
+- Professional musicians require approximately **10,000 hours of deliberate practice** to reach elite performance, essentially a measure of cumulative focused attention
+
+{{chart:focus-advantage}}
+
+### 4.2 The Focus Premium
+
+Organizations are beginning to recognize the economic value of attention management:
+
+- Companies like Basecamp and Shopify have implemented **no-meeting days** and communication protocols designed to protect deep work time
+- Deep work and focus time features have been built into Microsoft Teams, Google Calendar, and Slack
+- Executive coaching increasingly emphasizes **attention management** over time management
+- Remote work has been partially adopted to allow employees to control their attention environments
+
+The organizations that learn to protect and cultivate deep focus in their workforce may hold a structural advantage over those that do not.
+
+---
+
+## 5. Defending Attention
+
+### 5.1 Individual Strategies
+
+The research suggests several evidence-based approaches:
+
+- **Time blocking.** Scheduling specific blocks for deep work and defending them as non-negotiable
+- **Environment design.** The mere presence of a smartphone, even turned off, reduces available cognitive capacity (Ward et al., 2017)
+- **Digital fasting.** Periodic intentional disconnection from all digital stimuli
+- **Attention training.** Meditation has been shown to improve sustained attention after as little as four days of training (Zeidan et al., 2010)
+- **Output-based scheduling.** Measuring productivity by depth of output rather than hours of input
+
+### 5.2 The Asymmetry Problem
+
+The fundamental challenge is one of asymmetry. The forces competing for human attention are backed by trillions of dollars of capital, the most sophisticated behavioral engineering ever developed, and algorithms that learn and adapt in real time.
+
+The individual defending their attention has willpower, which depletes; habits, which take months to build; and awareness, which can be overwhelmed.
+
+This asymmetry suggests that **individual strategies alone are insufficient**. Structural interventions may be necessary to preserve the cognitive capacity that deep work requires.
+
+---
+
+## 6. Conclusion
+
+The attention economy is not merely a business model. It is a force that is actively reshaping human cognition, motivation, and economic output. **Sustained focus is under siege, and its scarcity is creating a new form of economic inequality.**
+
+The most important skill of the twenty-first century may not be any specific technical competency. It may be the ability to **pay attention to one thing for a long time**.
+
+> "A wealth of information creates a poverty of attention."
+>
+> Herbert Simon
+
+---
+
+## References
+
+- Newport, C. (2016). *Deep Work: Rules for Focused Success in a Distracted World*. Grand Central.
+- Mark, G. (2023). *Attention Span*. Hanover Square Press.
+- Gazzaley, A. & Rosen, L. (2016). *The Distracted Mind: Ancient Brains in a High-Tech World*. MIT Press.
+- Ward, A.F. et al. (2017). "Brain Drain: The Mere Presence of One's Own Smartphone Reduces Available Cognitive Capacity." *JACR*, 2(2), 140-154.
+- Leroy, S. (2009). "Why Is It So Hard to Do My Work?" *Organizational Behavior and Human Decision Processes*, 109(2), 168-181.
+- Zeidan, F. et al. (2010). "Mindfulness Meditation Improves Cognition." *Consciousness and Cognition*, 19(2), 597-605.
+- Ericsson, K.A. et al. (1993). "The Role of Deliberate Practice." *Psychological Review*, 100(3), 363-406.
+- DataReportal (2024). *Digital 2024: Global Overview Report*.
+- Simon, H. (1971). "Designing Organizations for an Information-Rich World."
+- McConnell, S. (2004). *Code Complete*. Microsoft Press.
 `
   },
 

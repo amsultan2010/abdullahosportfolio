@@ -76,6 +76,7 @@ export interface ProjectDetail {
   lessonsLearned: string[];
   techStack: string[];
   repoUrl?: string;
+  sections?: { title: string; content: string }[];
 }
 
 export type DetailContent = EducationDetail | ExperienceDetail | ProjectDetail;
@@ -657,7 +658,7 @@ export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
                   <span style={{
                     fontFamily: 'NeueMontreal-Medium, sans-serif',
                     color: 'rgba(255,255,255,0.2)',
-                    fontSize: '0.85rem',
+                    fontSize: '0.9rem',
                     animation: `courseTextLightUp 0.5s ease ${delay} forwards`,
                   }}>
                     {c.code}
@@ -665,7 +666,7 @@ export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
                   <span style={{
                     fontFamily: 'NeueMontreal-Medium, sans-serif',
                     color: 'rgba(255,255,255,0.1)',
-                    fontSize: '0.8rem',
+                    fontSize: '0.85rem',
                     animation: `courseSubTextLightUp 0.5s ease ${delay} forwards`,
                   }}>
                     {c.name}
@@ -735,7 +736,7 @@ export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
             <p key={i} style={{
               fontFamily: 'NeueMontreal-Medium, sans-serif',
               color: 'rgba(255,255,255,0.92)',
-              fontSize: '0.9rem',
+              fontSize: '0.95rem',
               lineHeight: '1.7',
               margin: i === 0 ? 0 : '1rem 0 0',
               fontStyle: 'italic',
@@ -811,7 +812,7 @@ const MultiRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =>
               <p key={`${ri}-${pi}`} style={{
                 fontFamily: 'NeueMontreal-Medium, sans-serif',
                 color: allUnlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.75)',
-                fontSize: '0.9rem',
+                fontSize: '0.95rem',
                 lineHeight: '1.7',
                 margin: (ri === 0 && pi === 0) ? 0 : '1rem 0 0',
                 transition: 'color 0.5s ease'
@@ -1003,7 +1004,7 @@ const RoleTimelineSection = ({ role, roleIndex, isLast, onUnlock }: {
                 <p style={{
                   fontFamily: 'NeueMontreal-Medium, sans-serif',
                   color: isDirectHover ? 'rgb(255,255,255)' : (isActive ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.7)'),
-                  fontSize: '0.9rem',
+                  fontSize: '1rem',
                   margin: '0 0 0.25rem',
                   transition: 'color 0.3s ease'
                 }}>
@@ -1012,9 +1013,9 @@ const RoleTimelineSection = ({ role, roleIndex, isLast, onUnlock }: {
                 <p style={{
                   fontFamily: 'NeueMontreal-Medium, sans-serif',
                   color: isDirectHover ? 'rgba(255,255,255,0.95)' : (isActive ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.6)'),
-                  fontSize: '0.85rem',
+                  fontSize: '0.95rem',
                   margin: 0,
-                  lineHeight: '1.5',
+                  lineHeight: '1.6',
                   transition: 'color 0.3s ease'
                 }}>
                   {entry.description}
@@ -1142,7 +1143,7 @@ const SingleRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =
                   <p style={{
                     fontFamily: 'NeueMontreal-Medium, sans-serif',
                     color: isDirectHover ? 'rgb(255,255,255)' : (isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)'),
-                    fontSize: '0.9rem',
+                    fontSize: '1rem',
                     margin: '0 0 0.25rem',
                     transition: 'color 0.3s ease'
                   }}>
@@ -1151,9 +1152,9 @@ const SingleRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =
                   <p style={{
                     fontFamily: 'NeueMontreal-Medium, sans-serif',
                     color: isDirectHover ? 'rgba(255,255,255,0.95)' : (isActive ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.35)'),
-                    fontSize: '0.85rem',
+                    fontSize: '0.95rem',
                     margin: 0,
-                    lineHeight: '1.5',
+                    lineHeight: '1.6',
                     transition: 'color 0.3s ease'
                   }}>
                     {entry.description}
@@ -1177,7 +1178,7 @@ const SingleRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =
             <p key={i} style={{
               fontFamily: 'NeueMontreal-Medium, sans-serif',
               color: unlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.6)',
-              fontSize: '0.9rem',
+              fontSize: '0.95rem',
               lineHeight: '1.7',
               margin: i === 0 ? 0 : '1rem 0 0',
               transition: 'color 0.5s ease'
@@ -1497,7 +1498,7 @@ const tagStyle: React.CSSProperties = {
 const listStyle: React.CSSProperties = {
   fontFamily: 'NeueMontreal-Medium, sans-serif',
   color: 'rgba(255, 255, 255, 0.95)',
-  fontSize: '0.9rem',
+  fontSize: '0.95rem',
   lineHeight: '1.7',
   margin: 0,
   paddingLeft: '1rem',

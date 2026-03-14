@@ -1237,17 +1237,17 @@ function SectorTreemap() {
   }
 
   return (
-    <div style={{ padding: '8px 10px', height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-        <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+    <div style={{ padding: '10px 12px', height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <div style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
           MARKET TREEMAP
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
           <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
           LIVE
         </div>
       </div>
-      <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: '120px', borderRadius: 4, overflow: 'hidden' }}>
+      <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: '160px', borderRadius: 4, overflow: 'hidden' }}>
         {rows.map((row, ri) => {
           const rowWeight = row.items.reduce((a, b) => a + b.weight, 0);
           let xPos = 0;
@@ -1265,11 +1265,11 @@ function SectorTreemap() {
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 overflow: 'hidden', cursor: 'default',
               }}>
-                <div style={{ fontSize: w > 12 ? '8px' : '6px', fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.6)', fontFamily: "'SF Mono', monospace", lineHeight: 1.2 }}>
+                <div style={{ fontSize: w > 12 ? '10px' : '8px', fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.6)', fontFamily: "'SF Mono', monospace", lineHeight: 1.2 }}>
                   {item.symbol}
                 </div>
                 {w > 8 && (
-                  <div style={{ fontSize: '7px', fontWeight: 600, color: 'rgba(255,255,255,0.9)', fontFamily: "'SF Mono', monospace" }}>
+                  <div style={{ fontSize: '9px', fontWeight: 600, color: 'rgba(255,255,255,0.95)', fontFamily: "'SF Mono', monospace" }}>
                     {item.pct >= 0 ? '+' : ''}{item.pct.toFixed(1)}%
                   </div>
                 )}
@@ -1410,17 +1410,17 @@ function MarketClock() {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
         <span style={{ width: 5, height: 5, borderRadius: '50%', background: isOpen ? '#4ade80' : '#f87171', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
-        <span style={{ fontSize: '9px', fontWeight: 700, color: isOpen ? '#4ade80' : '#f87171', fontFamily: "'SF Mono', monospace", letterSpacing: '0.05em' }}>
+        <span style={{ fontSize: '10px', fontWeight: 700, color: isOpen ? '#4ade80' : '#f87171', fontFamily: "'SF Mono', monospace", letterSpacing: '0.05em' }}>
           {isOpen ? 'MARKET OPEN' : 'MARKET CLOSED'}
         </span>
       </div>
-      <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace", marginBottom: '4px' }}>
+      <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.6)', fontWeight: 600, letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace", marginBottom: '4px' }}>
         {targetLabel}
       </div>
-      <div style={{ fontSize: '16px', fontWeight: 700, color: '#fff', fontFamily: "'SF Mono', monospace", fontVariantNumeric: 'tabular-nums', letterSpacing: '0.5px' }}>
+      <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', fontFamily: "'SF Mono', monospace", fontVariantNumeric: 'tabular-nums', letterSpacing: '0.5px' }}>
         {countdown}
       </div>
-      <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Mono', monospace", marginTop: '4px' }}>
+      <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Mono', monospace", marginTop: '4px' }}>
         NYSE · {et.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET
       </div>
     </div>
@@ -2537,13 +2537,13 @@ function BloombergTopBar({ stocks, gameMode, onToggleGame }: { stocks: StockData
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px',
       fontFamily: "'SF Mono', monospace", fontSize: '10px',
     }}>
-      <span style={{ color: '#ff6b35', fontWeight: 700, letterSpacing: '0.15em', fontSize: '10px' }}>BLOOMBERG</span>
+      <span style={{ color: '#ff6b35', fontWeight: 700, letterSpacing: '0.15em', fontSize: '11px' }}>BLOOMBERG</span>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
         {tickerStocks.map((s, i) => (
           <React.Fragment key={s.symbol}>
-            {i > 0 && <span style={{ color: 'rgba(255,255,255,0.15)', margin: '0 8px' }}>{'\u2502'}</span>}
-            <span style={{ color: 'rgba(255,255,255,0.6)' }}>{s.symbol}</span>
-            <span style={{ color: 'rgba(255,255,255,0.8)', margin: '0 4px' }}>{s.price < 1000 ? s.price.toFixed(2) : s.price.toFixed(0)}</span>
+            {i > 0 && <span style={{ color: 'rgba(255,255,255,0.2)', margin: '0 8px' }}>{'\u2502'}</span>}
+            <span style={{ color: 'rgba(255,255,255,0.8)' }}>{s.symbol}</span>
+            <span style={{ color: 'rgba(255,255,255,0.95)', margin: '0 4px' }}>{s.price < 1000 ? s.price.toFixed(2) : s.price.toFixed(0)}</span>
             <span style={{ color: s.pct >= 0 ? '#4ade80' : '#f87171' }}>
               {s.pct >= 0 ? '\u25B2' : '\u25BC'}{Math.abs(s.pct).toFixed(2)}%
             </span>
@@ -2552,7 +2552,7 @@ function BloombergTopBar({ stocks, gameMode, onToggleGame }: { stocks: StockData
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         {/* Game button hidden for now */}
-        <span style={{ color: 'rgba(255,255,255,0.5)' }}>
+        <span style={{ color: 'rgba(255,255,255,0.7)' }}>
           {time.toLocaleTimeString('en-US', { hour12: false })}
         </span>
       </div>
@@ -2604,14 +2604,14 @@ function PerformanceBarChart({ stocks }: { stocks: StockData[] }) {
 
   return (
     <div style={{ padding: '10px 14px' }}>
-      <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Mono', monospace" }}>TOP MOVERS</div>
+      <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.1em', marginBottom: '8px', fontWeight: 700, fontFamily: "'SF Mono', monospace" }}>TOP MOVERS</div>
       {movers.map((s, i) => {
         const isUp = s.pct >= 0;
         const barPct = (Math.abs(s.pct) / maxAbs) * 100;
         return (
-          <div key={s.symbol} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px', opacity: 0, animation: `fadeInLeft 0.3s ease ${i * 0.04}s forwards` }}>
-            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.6)', fontFamily: "'SF Mono', monospace", minWidth: '36px' }}>{s.symbol}</span>
-            <div style={{ flex: 1, height: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '2px', overflow: 'hidden', position: 'relative' }}>
+          <div key={s.symbol} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', opacity: 0, animation: `fadeInLeft 0.3s ease ${i * 0.04}s forwards` }}>
+            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', fontFamily: "'SF Mono', monospace", minWidth: '40px' }}>{s.symbol}</span>
+            <div style={{ flex: 1, height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden', position: 'relative' }}>
               <div style={{
                 position: 'absolute', [isUp ? 'left' : 'right']: '50%', top: 0, height: '100%',
                 width: `${barPct / 2}%`, borderRadius: '2px',
@@ -2620,7 +2620,7 @@ function PerformanceBarChart({ stocks }: { stocks: StockData[] }) {
               }} />
               <div style={{ position: 'absolute', left: '50%', top: 0, width: '1px', height: '100%', background: 'rgba(255,255,255,0.15)' }} />
             </div>
-            <span style={{ fontSize: '9px', fontWeight: 600, fontFamily: "'SF Mono', monospace", minWidth: '48px', textAlign: 'right', color: isUp ? '#4ade80' : '#f87171' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, fontFamily: "'SF Mono', monospace", minWidth: '52px', textAlign: 'right', color: isUp ? '#4ade80' : '#f87171' }}>
               {isUp ? '+' : ''}{s.pct.toFixed(2)}%
             </span>
           </div>
@@ -2671,19 +2671,19 @@ function CorrelationMatrix({ stocks }: { stocks: StockData[] }) {
 
   return (
     <div style={{ padding: '10px 14px' }}>
-      <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: "'SF Mono', monospace" }}>SECTOR CORRELATION</div>
-      <div style={{ display: 'grid', gridTemplateColumns: `28px repeat(${sectorNames.length}, 1fr)`, gap: '1px' }}>
+      <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.1em', marginBottom: '8px', fontWeight: 700, fontFamily: "'SF Mono', monospace" }}>SECTOR CORRELATION</div>
+      <div style={{ display: 'grid', gridTemplateColumns: `32px repeat(${sectorNames.length}, 1fr)`, gap: '2px' }}>
         {/* Header row */}
         <div />
         {sectorNames.map(name => (
-          <div key={name} style={{ fontSize: '7px', color: 'rgba(255,255,255,0.4)', textAlign: 'center', fontFamily: "'SF Mono', monospace", padding: '2px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div key={name} style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)', textAlign: 'center', fontFamily: "'SF Mono', monospace", padding: '2px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {name.slice(0, 4)}
           </div>
         ))}
         {/* Data rows */}
         {sectorNames.map((rowName, ri) => (
           <React.Fragment key={rowName}>
-            <div style={{ fontSize: '7px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace", display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '3px' }}>
+            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)', fontFamily: "'SF Mono', monospace", display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '4px' }}>
               {rowName.slice(0, 4)}
             </div>
             {matrix[ri].map((val, ci) => (
@@ -2691,8 +2691,8 @@ function CorrelationMatrix({ stocks }: { stocks: StockData[] }) {
                 background: getColor(val),
                 borderRadius: '2px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                aspectRatio: '1', minHeight: '16px',
-                fontSize: '7px', color: 'rgba(255,255,255,0.8)', fontFamily: "'SF Mono', monospace", fontWeight: 600,
+                aspectRatio: '1', minHeight: '22px',
+                fontSize: '9px', color: 'rgba(255,255,255,0.95)', fontFamily: "'SF Mono', monospace", fontWeight: 600,
               }}>
                 {val.toFixed(1)}
               </div>
@@ -2717,14 +2717,14 @@ function VolatilityGauge({ stocks }: { stocks: StockData[] }) {
 
   return (
     <div style={{ padding: '10px 14px' }}>
-      <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Mono', monospace" }}>VOLATILITY INDEX</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.1em', marginBottom: '8px', fontWeight: 700, fontFamily: "'SF Mono', monospace" }}>VOLATILITY INDEX</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
         {sectorVols.map((s, i) => {
           const pct = (s.vol / maxVol) * 100;
           return (
-            <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Mono', monospace", minWidth: '48px' }}>{s.name}</span>
-              <div style={{ flex: 1, height: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px', overflow: 'hidden' }}>
+            <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.8)', fontFamily: "'SF Mono', monospace", minWidth: '56px' }}>{s.name}</span>
+              <div style={{ flex: 1, height: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
                 <div style={{
                   width: `${pct}%`, height: '100%', borderRadius: '4px',
                   background: `linear-gradient(90deg, ${s.color}88, ${s.color})`,
@@ -2732,7 +2732,7 @@ function VolatilityGauge({ stocks }: { stocks: StockData[] }) {
                   animation: `volGrow${i} 1.2s ease ${i * 0.08}s both`,
                 }} />
               </div>
-              <span style={{ fontSize: '8px', color: s.color, fontFamily: "'SF Mono', monospace", minWidth: '36px', textAlign: 'right', fontWeight: 600 }}>
+              <span style={{ fontSize: '10px', color: s.color, fontFamily: "'SF Mono', monospace", minWidth: '42px', textAlign: 'right', fontWeight: 600 }}>
                 {s.vol.toFixed(2)}%
               </span>
             </div>
@@ -2762,34 +2762,34 @@ function SectorPieChart({ stocks }: { stocks: StockData[] }) {
   let offset = 0;
 
   return (
-    <div style={{ padding: '10px 14px' }}>
-      <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Mono', monospace" }}>
+    <div style={{ padding: '10px 14px', height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+      <div style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Mono', monospace" }}>
         SECTOR ALLOCATION
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <svg width="160" height="160" viewBox="0 0 160 160">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+        <svg width="180" height="180" viewBox="0 0 160 160" style={{ flexShrink: 0 }}>
           {sectorData.map((d, i) => {
             const pct = d.value / total;
             const dashLen = pct * circumference;
             const currentOffset = offset;
             offset += dashLen;
             return (
-              <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={d.color} strokeWidth="18"
+              <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={d.color} strokeWidth="20"
                 strokeDasharray={`${mounted ? dashLen : 0} ${circumference}`}
                 strokeDashoffset={-currentOffset}
                 style={{ transition: 'stroke-dasharray 0.8s ease-out', transformOrigin: `${cx}px ${cy}px` }}
               />
             );
           })}
-          <text x={cx} y={cy - 4} textAnchor="middle" fill="rgba(255,255,255,0.8)" fontSize="16" fontWeight="700" fontFamily="'SF Mono', monospace">{SECTORS.length}</text>
-          <text x={cx} y={cy + 10} textAnchor="middle" fill="rgba(255,255,255,0.35)" fontSize="8" fontFamily="'SF Mono', monospace">SECTORS</text>
+          <text x={cx} y={cy - 4} textAnchor="middle" fill="rgba(255,255,255,0.9)" fontSize="18" fontWeight="700" fontFamily="'SF Mono', monospace">{SECTORS.length}</text>
+          <text x={cx} y={cy + 12} textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="9" fontFamily="'SF Mono', monospace">SECTORS</text>
         </svg>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {sectorData.map((d, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', fontFamily: "'SF Mono', monospace" }}>
-              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: d.color, flexShrink: 0 }} />
-              <span style={{ color: 'rgba(255,255,255,0.6)', minWidth: '55px' }}>{d.name}</span>
-              <span style={{ color: 'rgba(255,255,255,0.4)' }}>{((d.value / total) * 100).toFixed(1)}%</span>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontFamily: "'SF Mono', monospace" }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: d.color, flexShrink: 0 }} />
+              <span style={{ color: 'rgba(255,255,255,0.85)', minWidth: '55px' }}>{d.name}</span>
+              <span style={{ color: 'rgba(255,255,255,0.7)' }}>{((d.value / total) * 100).toFixed(1)}%</span>
             </div>
           ))}
         </div>
@@ -2836,22 +2836,22 @@ function BloombergBottomBar() {
 
   return (
     <div style={{
-      height: '28px', minHeight: '28px', background: '#0a0c12', borderTop: '1px solid rgba(255,255,255,0.06)',
+      height: '32px', minHeight: '32px', background: '#0a0c12', borderTop: '1px solid rgba(255,255,255,0.08)',
       display: 'flex', alignItems: 'center', padding: '0 12px', gap: '16px',
-      fontFamily: "'SF Mono', monospace", fontSize: '9px',
+      fontFamily: "'SF Mono', monospace", fontSize: '10px',
     }}>
       {items.map((item, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{ color: 'rgba(255,255,255,0.35)' }}>{item.label}</span>
+          <span style={{ color: 'rgba(255,255,255,0.6)' }}>{item.label}</span>
           {item.label === 'A/D' ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ color: 'rgba(255,255,255,0.7)' }}>{item.value}</span>
+              <span style={{ color: 'rgba(255,255,255,0.9)' }}>{item.value}</span>
               <div style={{ width: '40px', height: '4px', background: '#f87171', borderRadius: '2px', overflow: 'hidden' }}>
                 <div style={{ width: `${adPct}%`, height: '100%', background: '#4ade80', borderRadius: '2px', transition: 'width 0.5s' }} />
               </div>
             </div>
           ) : (
-            <span style={{ color: item.color || 'rgba(255,255,255,0.7)' }}>{item.value}</span>
+            <span style={{ color: item.color || 'rgba(255,255,255,0.9)' }}>{item.value}</span>
           )}
         </div>
       ))}
@@ -3947,7 +3947,7 @@ function BloombergTerminalView({ drillDown, setDrillDown }: {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#0a0c12', fontFamily: "'SF Mono', monospace" }}>
       <BloombergTopBar stocks={stocks} gameMode={gameMode} onToggleGame={() => {}} />
-      <div style={{ flex: 1, overflow: 'hidden', display: hasDrillDown ? 'block' : 'grid', gridTemplateColumns: hasDrillDown ? undefined : '58% 42%' }}>
+      <div style={{ flex: 1, overflow: 'hidden', display: hasDrillDown ? 'block' : 'grid', gridTemplateColumns: hasDrillDown ? undefined : '50% 50%' }}>
         {hasDrillDown ? (
           <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', background: '#1c1c1e' }}>
             {drillDown.type === 'stock' ? (
@@ -3972,7 +3972,7 @@ function BloombergTerminalView({ drillDown, setDrillDown }: {
             </div>
             {/* Right column */}
             <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto' }}>
-              <div style={{ display: 'flex', height: '180px' }}>
+              <div style={{ display: 'flex', height: '240px' }}>
                 <div style={{ flex: 1, borderRight: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}><SectorTreemap /></div>
                 <div style={{ flex: 1, overflow: 'hidden' }}><SectorPieChart stocks={stocks} /></div>
               </div>
@@ -4612,7 +4612,7 @@ function ScrollingNewsTape() {
         }
       `}</style>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ fontSize: '9px', fontWeight: 700, color: '#ff6b35', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace", padding: '0 10px', flexShrink: 0 }}>
+        <span style={{ fontSize: '11px', fontWeight: 700, color: '#ff6b35', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace", padding: '0 10px', flexShrink: 0 }}>
           NEWS
         </span>
         <div style={{ flex: 1, overflow: 'hidden' }}>
@@ -4666,10 +4666,10 @@ function LiveNewsFeed() {
   return (
     <div style={{ padding: '8px 12px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace" }}>
+        <div style={{ fontSize: '12px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace" }}>
           MARKET NEWS
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
           <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#ff6b35', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
           LIVE
         </div>
@@ -4684,15 +4684,15 @@ function LiveNewsFeed() {
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderLeftColor = `${getColor(item.source)}22`; }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-              <span style={{ color: getColor(item.source), fontSize: '9px', fontWeight: 700, fontFamily: "'SF Mono', monospace", letterSpacing: '0.05em' }}>
+              <span style={{ color: getColor(item.source), fontSize: '10px', fontWeight: 700, fontFamily: "'SF Mono', monospace", letterSpacing: '0.05em' }}>
                 {item.source.toUpperCase()}
               </span>
-              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>
+              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontFamily: "'SF Mono', monospace" }}>
                 {timeAgo(item.pubDate)}
               </span>
             </div>
             <div style={{
-              fontSize: '11px', fontWeight: 500, color: 'rgba(255,255,255,0.75)', lineHeight: 1.35,
+              fontSize: '11px', fontWeight: 500, color: 'rgba(255,255,255,0.85)', lineHeight: 1.35,
               display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
               fontFamily: "'SF Mono', monospace",
             }}>
@@ -4735,13 +4735,13 @@ function MarketStatsBar() {
           const color = ind.label === 'VIX' ? (isUp ? '#f87171' : '#4ade80') : (isUp ? '#4ade80' : '#f87171');
           return (
             <div key={ind.label} style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.08em', fontFamily: "'SF Mono', monospace", marginBottom: '2px' }}>
+              <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)', fontWeight: 700, letterSpacing: '0.08em', fontFamily: "'SF Mono', monospace", marginBottom: '2px' }}>
                 {ind.label}
               </div>
-              <div style={{ fontSize: '11px', color: '#fff', fontWeight: 600, fontFamily: "'SF Mono', monospace", fontVariantNumeric: 'tabular-nums' }}>
+              <div style={{ fontSize: '13px', color: '#fff', fontWeight: 600, fontFamily: "'SF Mono', monospace", fontVariantNumeric: 'tabular-nums' }}>
                 {ind.value}
               </div>
-              <div style={{ fontSize: '8px', color, fontWeight: 600, fontFamily: "'SF Mono', monospace" }}>
+              <div style={{ fontSize: '10px', color, fontWeight: 600, fontFamily: "'SF Mono', monospace" }}>
                 {isUp ? '▲' : '▼'} {Math.abs(ind.change).toFixed(2)}%
               </div>
             </div>
@@ -4776,10 +4776,10 @@ function EconomicCalendar() {
   return (
     <div style={{ padding: '8px 12px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace" }}>
+        <div style={{ fontSize: '12px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace" }}>
           UPCOMING
         </div>
-        <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Mono', monospace" }}>
+        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)', fontFamily: "'SF Mono', monospace" }}>
           {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
         </div>
       </div>
@@ -4794,15 +4794,15 @@ function EconomicCalendar() {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
                 <span style={{ width: 4, height: 4, borderRadius: '50%', background: importanceColor[evt.importance], flexShrink: 0 }} />
-                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.8)', fontFamily: "'SF Mono', monospace", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)', fontFamily: "'SF Mono', monospace", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {evt.label}
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace" }}>
+                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', fontFamily: "'SF Mono', monospace" }}>
                   {new Date(evt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>
-                <span style={{ fontSize: '9px', fontWeight: 600, color: countdown === 'Today' ? '#f87171' : countdown === 'Tomorrow' ? '#fbbf24' : 'rgba(255,255,255,0.6)', fontFamily: "'SF Mono', monospace", minWidth: '40px', textAlign: 'right' }}>
+                <span style={{ fontSize: '10px', fontWeight: 600, color: countdown === 'Today' ? '#f87171' : countdown === 'Tomorrow' ? '#fbbf24' : 'rgba(255,255,255,0.75)', fontFamily: "'SF Mono', monospace", minWidth: '44px', textAlign: 'right' }}>
                   {countdown}
                 </span>
               </div>
@@ -4923,8 +4923,8 @@ function OrderbookDepth() {
   return (
     <div style={{ padding: '8px 10px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-        <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>BTC ORDERBOOK</span>
-        <div style={{ display: 'flex', gap: '8px', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>
+        <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>BTC ORDERBOOK</span>
+        <div style={{ display: 'flex', gap: '8px', fontSize: '10px', fontFamily: "'SF Mono', monospace" }}>
           <span style={{ color: '#4ade80' }}>BID {bidCum[bidCum.length - 1]?.toFixed(1)}</span>
           <span style={{ color: '#f87171' }}>ASK {askCum[askCum.length - 1]?.toFixed(1)}</span>
         </div>
@@ -5660,24 +5660,49 @@ const FLOATING_BOOKS = [
     coverAccent: '#e8554a',
     company: 'IKIGAI',
   },
+  {
+    slug: 'enterprise-software-cost',
+    title: 'Why Enterprise Software Costs Millions',
+    summary: 'Understanding why companies pay enormous sums for tools that often look like spreadsheets.',
+    readingTime: 12,
+    coverGradient: ['#0a1a0a', '#152e15', '#1e4420'],
+    coverAccent: '#4ade80',
+    company: 'SAP',
+  },
+  {
+    slug: 'attention-economy',
+    title: 'The Attention Economy Is Rewiring Human Motivation',
+    summary: 'Why the ability to focus may become the most valuable skill in the modern economy.',
+    readingTime: 13,
+    coverGradient: ['#1a0a14', '#2e1525', '#44203a'],
+    coverAccent: '#f472b6',
+    company: 'DEEP FOCUS',
+  },
 ];
 
 function FloatingBooks() {
   const { state, dispatch } = useDesktop();
   const [selected, setSelected] = useState<string | null>(null);
-  const [phase, setPhase] = useState<'idle' | 'stacking' | 'expanding' | 'content' | 'closing'>('idle');
+  const [phase, setPhase] = useState<'idle' | 'stacking' | 'expanding' | 'flipping' | 'content' | 'closing'>('idle');
   const [entering, setEntering] = useState(true);
   const [exiting, setExiting] = useState(false);
   const [contentData, setContentData] = useState<ContentViewData | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState<Record<string, { x: number; y: number }>>({});
   const bookRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [readerMode, setReaderMode] = useState(false);
+  const [readerPage, setReaderPage] = useState(0);
+  const [readerPages, setReaderPages] = useState<string[]>([]);
 
-  // Book dimensions
-  const SMALL_W = 270;
-  const SMALL_H = 360;
+  // Book dimensions - smaller for 2x2 grid
+  const SMALL_W = 210;
+  const SMALL_H = 280;
   const BIG_H = 700;
   const BIG_W = Math.round(BIG_H * 3 / 4); // 525px, maintains 3:4
+  const GRID_GAP = 16;
+  // 2x2 grid: total width = 2 * SMALL_W + GAP
+  const GRID_W = 2 * SMALL_W + GRID_GAP;
+  const GRID_H = 2 * SMALL_H + GRID_GAP;
 
   useEffect(() => {
     if (state.floatingBooksVisible) {
@@ -5727,8 +5752,9 @@ function FloatingBooks() {
       setPhase('stacking');
       setTimeout(() => setPhase('expanding'), 400);
     } else if (phase === 'expanding' && selected === slug) {
-      // Second click on enlarged book: page-flip and show content
-      setPhase('content');
+      // Second click on enlarged book: page-flip animation, then show content
+      setPhase('flipping');
+      setTimeout(() => setPhase('content'), 700);
     }
   };
 
@@ -5745,7 +5771,7 @@ function FloatingBooks() {
     dispatch({ type: 'HIDE_FLOATING_BOOKS' });
   };
 
-  const isOpen = phase === 'expanding' || phase === 'content';
+  const isOpen = phase === 'expanding' || phase === 'flipping' || phase === 'content';
   const screenH = typeof window !== 'undefined' ? window.innerHeight : 900;
   // Expanded book position: right side, vertically centered
   const expandedTop = Math.round((screenH - BIG_H) / 2);
@@ -5771,10 +5797,12 @@ function FloatingBooks() {
           to { opacity: 0; transform: translateX(200px) scale(0.3); }
         }
         @keyframes bookPageFlip {
-          0% { transform: perspective(1200px) rotateY(0deg); }
-          30% { transform: perspective(1200px) rotateY(-18deg); }
-          60% { transform: perspective(1200px) rotateY(5deg); }
-          100% { transform: perspective(1200px) rotateY(0deg); }
+          0% { transform: perspective(1200px) rotateY(0deg) scale(1); }
+          15% { transform: perspective(1200px) rotateY(-35deg) scale(1.02); }
+          40% { transform: perspective(1200px) rotateY(-90deg) scale(1.01); }
+          60% { transform: perspective(1200px) rotateY(-130deg) scale(1); }
+          80% { transform: perspective(1200px) rotateY(-165deg) scale(0.99); }
+          100% { transform: perspective(1200px) rotateY(-180deg) scale(1); }
         }
         @keyframes contentFadeIn {
           from { opacity: 0; transform: translateY(20px); }
@@ -5815,9 +5843,13 @@ function FloatingBooks() {
           const rotY = isHovered ? (mp.x - 0.5) * 25 : -12;
           const rotX = isHovered ? -(mp.y - 0.5) * 15 : 4;
 
-          // Position calculations
-          const idleTop = idx === 0 ? '100px' : `${100 + SMALL_H + 30}px`;
-          const idleRight = '250px';
+          // 2x2 grid position calculations
+          const col = idx % 2;       // 0=left, 1=right
+          const row = Math.floor(idx / 2); // 0=top, 1=bottom
+          const gridRight = 120;
+          const gridTop = Math.round((screenH - GRID_H) / 2);
+          const idleRight = `${gridRight + (1 - col) * (SMALL_W + GRID_GAP)}px`;
+          const idleTop = `${gridTop + row * (SMALL_H + GRID_GAP)}px`;
 
           // When stacking: other book slides behind selected
           // When expanding: selected book grows to BIG size
@@ -5840,15 +5872,15 @@ function FloatingBooks() {
               transition: isHovered ? 'transform 0.15s ease-out' : 'transform 0.5s ease-out',
             };
           } else if (isOther) {
-            // Non-selected book: tuck behind selected
+            // Non-selected book: fade and shrink in place
             bookStyle = {
               position: 'fixed',
-              right: `${parseInt(idleRight) + 20}px`,
-              top: selected === FLOATING_BOOKS[0].slug ? '22%' : '48%',
+              right: idleRight,
+              top: idleTop,
               width: `${SMALL_W}px`,
               height: `${SMALL_H}px`,
-              opacity: phase === 'closing' ? 1 : 0.3,
-              transform: `scale(0.85) rotateY(-8deg)`,
+              opacity: phase === 'closing' ? 1 : 0.15,
+              transform: `scale(0.9) rotateY(-8deg)`,
               filter: 'blur(2px)',
               transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
               zIndex: 9998,
@@ -5864,7 +5896,7 @@ function FloatingBooks() {
               height: isExpanded ? `${BIG_H}px` : `${SMALL_H}px`,
               opacity: 1,
               transform: phase === 'stacking' ? 'scale(1.02)' : (phase === 'closing' ? `scale(0.95)` : 'none'),
-              animation: phase === 'content' ? 'bookPageFlip 0.8s ease-out' : 'none',
+              animation: phase === 'flipping' ? 'bookPageFlip 0.7s ease-in-out forwards' : 'none',
               transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
               zIndex: 10001,
             };
@@ -5942,10 +5974,23 @@ function FloatingBooks() {
                         <img src="/NASDAQ_Logo.svg.png" alt="Nasdaq"
                           height={isOpen && isSelected ? 32 : 22}
                           style={{ filter: 'brightness(0) invert(1)', opacity: 0.9, transition: 'height 0.6s ease' }} />
-                      ) : (
+                      ) : book.company === 'IKIGAI' ? (
                         <img src="/ikigai.png" alt="Ikigai"
                           height={isOpen && isSelected ? 50 : 36}
                           style={{ opacity: 0.9, transition: 'height 0.6s ease' }} />
+                      ) : (
+                        <span style={{
+                          fontSize: isOpen && isSelected ? '14px' : '10px',
+                          fontWeight: 700,
+                          letterSpacing: '0.15em',
+                          color: book.coverAccent,
+                          opacity: 0.85,
+                          fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+                          transition: 'font-size 0.6s ease',
+                          textTransform: 'uppercase',
+                        }}>
+                          {book.company}
+                        </span>
                       )}
                     </div>
                     <div>
@@ -6176,8 +6221,8 @@ function Desktop() {
           dispatch({ type: 'MOVE_WINDOW', id: openSideWindow, position: { x: sideX, y: sideY } });
         }
       } else {
-        // Floating books take ~560px on the right (525px book + gaps)
-        sideW = 580;
+        // Floating books 2x2 grid takes ~560px on the right (2*210 + 16 gap + margins)
+        sideW = 2 * 210 + 16 + 120 + 40;  // grid + right margin + buffer
         sideH = 700;
       }
 

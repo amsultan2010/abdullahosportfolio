@@ -184,7 +184,7 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
             inset: 0,
           }}>
             <h2 style={{
-              fontSize: '1.5rem',
+              fontSize: '1.2rem',
               color: 'rgba(255, 255, 255, 0.9)',
               fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-MediumItalic, sans-serif',
               fontStyle: 'italic',
@@ -234,7 +234,7 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
 
             {/* ── Certifications ── */}
             <h3 style={{
-              fontSize: '1.5rem',
+              fontSize: '1.2rem',
               color: 'rgba(255, 255, 255, 0.9)',
               fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-MediumItalic, sans-serif',
               fontStyle: 'italic',
@@ -397,7 +397,7 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
         /* Non-window mode: original light layout */
         <>
           <h2 style={{
-            fontSize: '1.5rem',
+            fontSize: '1.2rem',
             color: '#1d1d1f',
             fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-MediumItalic, sans-serif',
             fontStyle: 'italic',

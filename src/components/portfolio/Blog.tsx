@@ -101,7 +101,7 @@ const fontSizes: Record<FontSize, { body: string; title: string; label: string }
 const fontSizeOrder: FontSize[] = ['small', 'medium', 'large'];
 
 const Blog = ({ onContentClick, windowMode }: BlogProps) => {
-  const [selectedSlug, setSelectedSlug] = useState<string>(blogPosts[0].slug);
+  const [selectedSlug, setSelectedSlug] = useState<string>('preface');
   const [activeFolder, setActiveFolder] = useState('All Notes');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSidebar, setShowSidebar] = useState(true);
@@ -123,6 +123,8 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
   });
 
   const grouped = groupByDate(sortedPosts);
+  const isPreface = selectedSlug === 'preface';
+  const prefaceContent = contentMap['preface'];
   const selectedPost = blogPosts.find(p => p.slug === selectedSlug);
   const selectedContent = selectedPost ? contentMap[selectedPost.slug] : null;
 
@@ -522,10 +524,53 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '24px 32px',
+        padding: '16px 32px',
         background: '#ffffff',
       }}>
-        {selectedPost && selectedContent ? (
+        {isPreface && prefaceContent ? (
+          <>
+            {/* Preface welcome page */}
+            <div style={{
+              maxWidth: '520px',
+              margin: '0 auto',
+            }}>
+              <div style={{
+                fontSize: '32px',
+                marginBottom: '10px',
+              }}>
+                📝
+              </div>
+              <h1 style={{
+                fontSize: '22px',
+                fontWeight: 600,
+                color: 'rgba(0,0,0,0.85)',
+                lineHeight: 1.3,
+                margin: '0 0 20px',
+                fontFamily: 'NeueMontreal-Medium, -apple-system, BlinkMacSystemFont, sans-serif',
+              }}>
+                My Notes
+              </h1>
+              <div className="notes-content" style={{
+                fontSize: fs.body,
+                lineHeight: 1.8,
+                color: 'rgba(0,0,0,0.65)',
+                fontFamily: 'NeueMontreal-Light, -apple-system, BlinkMacSystemFont, sans-serif',
+                transition: 'font-size 0.2s ease',
+              }}>
+                <MarkdownRenderer content={prefaceContent.markdown} />
+              </div>
+              <div style={{
+                marginTop: '32px',
+                paddingTop: '20px',
+                borderTop: '1px solid rgba(0,0,0,0.08)',
+                fontSize: '12px',
+                color: 'rgba(0,0,0,0.3)',
+              }}>
+                {blogPosts.length} notes &middot; Select one from the list to start reading
+              </div>
+            </div>
+          </>
+        ) : selectedPost && selectedContent ? (
           <>
             {/* Date header */}
             <div style={{
@@ -544,7 +589,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
               color: 'rgba(0,0,0,0.9)',
               lineHeight: 1.3,
               margin: '0 0 8px',
-              fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif",
+              fontFamily: 'NeueMontreal-Medium, -apple-system, BlinkMacSystemFont, sans-serif',
               transition: 'font-size 0.2s ease',
             }}>
               {selectedPost.title}
@@ -556,6 +601,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
               color: 'rgba(0,0,0,0.5)',
               lineHeight: 1.5,
               margin: '0 0 24px',
+              fontFamily: 'NeueMontreal-Light, -apple-system, BlinkMacSystemFont, sans-serif',
               transition: 'font-size 0.2s ease',
             }}>
               {selectedPost.summary}
@@ -588,38 +634,57 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
       </div>{/* close three-panel layout */}
 
       <style>{`
-        /* Override MarkdownRenderer dark-theme inline styles */
-        .notes-content h2,
-        .notes-content h3 {
-          font-size: 18px !important;
-          font-weight: 700 !important;
+        /* Override MarkdownRenderer dark-theme inline styles for Notes light theme */
+        .notes-content h2 {
+          font-family: NeueMontreal-Medium, -apple-system, BlinkMacSystemFont, sans-serif !important;
+          font-size: 1.2em !important;
+          font-weight: 500 !important;
           color: rgba(0,0,0,0.85) !important;
+          margin: 1.8em 0 0.6em !important;
+          padding-bottom: 0.35em !important;
+          border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+          line-height: 1.35 !important;
+        }
+        .notes-content h3 {
+          font-family: NeueMontreal-Medium, -apple-system, BlinkMacSystemFont, sans-serif !important;
+          font-size: 1.05em !important;
+          font-weight: 500 !important;
+          color: rgba(0,0,0,0.8) !important;
           margin: 1.5em 0 0.5em !important;
+          line-height: 1.35 !important;
+          border-bottom: none !important;
+          padding-bottom: 0 !important;
         }
         .notes-content p {
+          font-family: NeueMontreal-Light, -apple-system, BlinkMacSystemFont, sans-serif !important;
           margin: 0 0 1em !important;
           color: rgba(0,0,0,0.7) !important;
+          line-height: 1.8 !important;
+          font-weight: normal !important;
         }
         .notes-content strong {
-          font-weight: 600 !important;
+          font-family: NeueMontreal-Medium, -apple-system, BlinkMacSystemFont, sans-serif !important;
+          font-weight: 500 !important;
           color: rgba(0,0,0,0.85) !important;
         }
         .notes-content em {
           color: rgba(0,0,0,0.75) !important;
         }
         .notes-content blockquote {
+          font-family: NeueMontreal-Light, -apple-system, BlinkMacSystemFont, sans-serif !important;
           border-left: 3px solid rgba(0,0,0,0.15) !important;
           padding-left: 16px !important;
-          margin: 1em 0 !important;
+          margin: 1.2em 0 !important;
           color: rgba(0,0,0,0.55) !important;
           font-style: italic;
+          line-height: 1.7 !important;
         }
         .notes-content code {
           background: rgba(0,0,0,0.06) !important;
           color: rgba(0,0,0,0.8) !important;
           padding: 2px 6px !important;
           border-radius: 4px !important;
-          font-size: 13px !important;
+          font-size: 0.88em !important;
         }
         .notes-content pre {
           background: rgba(0,0,0,0.04) !important;
@@ -627,6 +692,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
           border-radius: 8px !important;
           padding: 12px 16px !important;
           overflow-x: auto;
+          margin: 1.2em 0 !important;
         }
         .notes-content pre code {
           background: none !important;
@@ -635,15 +701,28 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
         .notes-content hr {
           border: none !important;
           border-top: 1px solid rgba(0,0,0,0.1) !important;
+          margin: 1.5em 0 !important;
         }
         .notes-content a {
           color: #007AFF !important;
           text-decoration-color: rgba(0,122,255,0.3) !important;
         }
+        .notes-content ul,
+        .notes-content ol {
+          font-family: NeueMontreal-Light, -apple-system, BlinkMacSystemFont, sans-serif !important;
+          color: rgba(0,0,0,0.7) !important;
+          line-height: 1.8 !important;
+          margin: 0.8em 0 !important;
+        }
         .notes-content li {
           color: rgba(0,0,0,0.7) !important;
+          margin-bottom: 0.3em !important;
+        }
+        .notes-content table {
+          font-family: NeueMontreal-Light, -apple-system, BlinkMacSystemFont, sans-serif !important;
         }
         .notes-content table th {
+          font-family: NeueMontreal-Medium, -apple-system, BlinkMacSystemFont, sans-serif !important;
           color: rgba(0,0,0,0.85) !important;
           border-bottom-color: rgba(0,0,0,0.15) !important;
         }

@@ -286,34 +286,16 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
             }}>
               {experience.role}
             </p>
-            {experience.date && (
-              <p style={{
-                fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
-                color: darkMode ? 'rgba(255, 255, 255, 0.7)' : '#86868b',
-                fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
-                margin: '0.15rem 0 0',
-                fontWeight: '400',
-                userSelect: 'none',
-                WebkitUserSelect: 'none'
-              }}>
-                {experience.date}
-              </p>
-            )}
-
-            {/* Location */}
             <p style={{
-              fontSize: 'clamp(0.9rem, 2.2vw, 1rem)',
+              fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)',
               color: darkMode ? 'rgba(255, 255, 255, 0.7)' : '#86868b',
               fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
-              margin: 0,
+              margin: '0.1rem 0 0',
               fontWeight: '400',
-              wordWrap: 'break-word',
-              overflowWrap: 'break-word',
-              wordBreak: 'break-word',
               userSelect: 'none',
               WebkitUserSelect: 'none'
             }}>
-              {experience.location}
+              {[experience.date, experience.location].filter(Boolean).join(' · ')}
             </p>
 
             {/* Description */}
