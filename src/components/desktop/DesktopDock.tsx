@@ -25,6 +25,7 @@ export default function DesktopDock() {
     { id: 'projects', label: 'Projects', icon: <DockImage src="/vscode.png" alt="VS Code" /> },
     { id: 'deep-research', label: 'Deep Research', icon: <DockImage src="/books.png" alt="Books" cropScale={1.18} /> },
     { id: 'blog', label: 'My Thoughts', icon: <DockImage src="/notes.png" alt="Notes" /> },
+    { id: 'stocks', label: 'Stocks', icon: <DockImage src="/stocks.png" alt="Stocks" /> },
     { id: 'photos', label: 'Photos', icon: <DockImage src="/icons/photos.png" alt="Photos" /> },
     { id: 'calendar', label: 'Book a Meeting', icon: <CalendarIcon /> },
   ];

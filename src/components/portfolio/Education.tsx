@@ -234,12 +234,12 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
 
             {/* ── Certifications ── */}
             <h3 style={{
-              fontSize: '1.1rem',
-              color: 'rgba(255, 255, 255, 0.7)',
+              fontSize: '1.5rem',
+              color: 'rgba(255, 255, 255, 0.9)',
               fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-MediumItalic, sans-serif',
               fontStyle: 'italic',
-              margin: '2rem 0 1rem 0',
-              fontWeight: '500',
+              margin: '2rem 0 1.25rem 0',
+              fontWeight: '600',
             }}>
               Certifications
             </h3>
@@ -275,35 +275,23 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
                       scrollRef.current?.scrollTo({ top: 0 });
                     }, 300);
                   }}
+                  className="dark-experience-card"
                   style={{
                     width: '100%',
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '0.5px solid rgba(255,255,255,0.1)',
-                    borderRadius: '10px',
-                    padding: '20px 24px',
                     cursor: 'pointer',
-                    transition: 'background 0.2s, border-color 0.2s',
-                  }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)';
-                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.2)';
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
-                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)';
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
                     <img
                       src={cert.logo}
                       alt={cert.issuer}
-                      style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 8, flexShrink: 0 }}
+                      style={{ width: 55, height: 55, objectFit: 'contain', borderRadius: 8, flexShrink: 0 }}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '15px', fontWeight: 600, color: '#fff', fontFamily: "'SF Pro Text', -apple-system, sans-serif", lineHeight: 1.3 }}>
+                      <div style={{ fontSize: 'clamp(1rem, 2.5vw, 1.3rem)', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Medium, sans-serif', lineHeight: 1.3 }}>
                         {cert.title}
                       </div>
-                      <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontFamily: "'SF Pro Text', -apple-system, sans-serif", marginTop: '4px' }}>
+                      <div style={{ fontSize: 'clamp(0.9rem, 2.2vw, 1rem)', color: 'rgba(255,255,255,0.7)', fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif', marginTop: '4px' }}>
                         {cert.issuer} · {cert.date}
                       </div>
                     </div>

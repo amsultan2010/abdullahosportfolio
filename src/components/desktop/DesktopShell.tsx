@@ -54,6 +54,8 @@ function WindowContent({ id }: { id: WindowId }) {
       return <Photos windowMode />;
     case 'wifi-settings':
       return <WifiSettings />;
+    case 'stocks':
+      return <StocksApp />;
     default:
       return null;
   }
@@ -535,99 +537,90 @@ function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false
 } = {}) {
   const ownStocks = useStockData();
   const stocks = externalStocks && externalStocks.length > 0 ? externalStocks : ownStocks;
-  const [tick, setTick] = useState(0);
-  const [displayIdx, setDisplayIdx] = useState(startOffset);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const h = compact ? 70 : 120;
-  const maxVisible = 140;
-  const framesPerStock = compact ? 150 : 180;
-  const frameSkip = 3;
-  // Each of the 4 grid instances cycles through every 4th stock offset by its position
   const totalInstances = compact ? 4 : 1;
 
-  const anim = useRef({
-    activeIdx: startOffset,
-    stockFrame: 0,
-    yBuffer: [] as number[],
-    colorBuffer: [] as string[],
-    textChanged: false,
-    frameCount: 0,
-  });
+  const h = compact ? 70 : 120;
+  const NUM_POINTS = 100; // number of chart points to draw
+  const DRAW_DURATION = compact ? 3000 : 3500; // ms to draw/erase
+  const HOLD_DURATION = compact ? 20000 : 30000; // ms to hold on screen
 
-  const normalize = (hist: number[]) => {
-    const mn = Math.min(...hist), mx = Math.max(...hist), r = mx - mn || 1;
-    return hist.map(v => (v - mn) / r);
-  };
+  // Phases: 'drawing' → 'holding' → 'erasing' → 'switching' → 'drawing'
+  const [phase, setPhase] = useState<'drawing' | 'holding' | 'erasing' | 'switching'>('drawing');
+  const [drawProgress, setDrawProgress] = useState(0); // 0 to 1
+  const [cycleCount, setCycleCount] = useState(0);
+  const [displayIdx, setDisplayIdx] = useState(startOffset);
+  const rafRef = useRef<number>(0);
+  const SWITCH_PAUSE = 1200; // ms to show new ticker before drawing
 
-  // Get the actual stock index for this instance — skip by totalInstances to avoid overlap
-  const getStockIdx = (cycleIdx: number) => {
+  const getStockIdx = (cycle: number) => {
     if (stocks.length === 0) return 0;
-    return (startOffset + cycleIdx * totalInstances) % stocks.length;
+    return (startOffset + cycle * totalInstances) % stocks.length;
   };
 
+  // Main animation loop
   useEffect(() => {
     if (!stocks.length) return;
-    let raf: number;
-    const a = anim.current;
-    let cycleCount = 0;
-    a.activeIdx = getStockIdx(cycleCount);
+    let startTime = performance.now();
+    let currentPhase: 'drawing' | 'holding' | 'erasing' | 'switching' = 'drawing';
+    let cycle = 0;
 
-    const loop = () => {
-      a.frameCount++;
-      if (a.frameCount % frameSkip !== 0) {
-        raf = requestAnimationFrame(loop);
-        return;
+    // Set initial stock
+    setDisplayIdx(getStockIdx(cycle));
+
+    const loop = (now: number) => {
+      const elapsed = now - startTime;
+
+      if (currentPhase === 'drawing') {
+        const p = Math.min(elapsed / DRAW_DURATION, 1);
+        const eased = 1 - Math.pow(1 - p, 2);
+        setDrawProgress(eased);
+        if (p >= 1) {
+          currentPhase = 'holding';
+          setPhase('holding');
+          startTime = now;
+          setDrawProgress(1);
+        }
+      } else if (currentPhase === 'holding') {
+        if (elapsed >= HOLD_DURATION) {
+          currentPhase = 'erasing';
+          setPhase('erasing');
+          startTime = now;
+        }
+      } else if (currentPhase === 'erasing') {
+        const p = Math.min(elapsed / DRAW_DURATION, 1);
+        const eased = 1 - (1 - Math.pow(p, 2));
+        setDrawProgress(1 - eased);
+        if (p >= 1) {
+          // Erase done — switch ticker text, pause before drawing
+          cycle++;
+          const nextIdx = getStockIdx(cycle);
+          setCycleCount(cycle);
+          setDisplayIdx(nextIdx);
+          setDrawProgress(0);
+          currentPhase = 'switching';
+          setPhase('switching');
+          startTime = now;
+        }
+      } else if (currentPhase === 'switching') {
+        // Pause with new ticker shown, empty chart
+        if (elapsed >= SWITCH_PAUSE) {
+          currentPhase = 'drawing';
+          setPhase('drawing');
+          startTime = now;
+        }
       }
 
-      const stock = stocks[a.activeIdx];
-      if (!stock) { raf = requestAnimationFrame(loop); return; }
-      const norm = normalize(stock.history);
-      const isUp = stock.change >= 0;
-      const c = isUp ? '#4ade80' : '#f87171';
-
-      const progress = a.stockFrame / framesPerStock;
-      const histIdx = Math.min(Math.floor(progress * (norm.length - 1)), norm.length - 1);
-      let y = h - 4 - norm[histIdx] * (h - 8);
-
-      if (a.stockFrame < 12 && a.yBuffer.length > 0) {
-        const lastY = a.yBuffer[a.yBuffer.length - 1];
-        const blend = a.stockFrame / 12;
-        y = lastY + (y - lastY) * blend;
-      }
-
-      a.yBuffer.push(y);
-      a.colorBuffer.push(c);
-
-      if (a.yBuffer.length > maxVisible * 2) {
-        a.yBuffer = a.yBuffer.slice(-maxVisible);
-        a.colorBuffer = a.colorBuffer.slice(-maxVisible);
-      }
-
-      a.stockFrame++;
-
-      if (a.stockFrame > framesPerStock - 60 && !a.textChanged) {
-        a.textChanged = true;
-        const nextCycle = cycleCount + 1;
-        setDisplayIdx(getStockIdx(nextCycle));
-      }
-
-      if (a.stockFrame >= framesPerStock) {
-        cycleCount++;
-        a.activeIdx = getStockIdx(cycleCount);
-        a.stockFrame = 0;
-        a.textChanged = false;
-      }
-
-      setTick(t => t + 1);
-      raf = requestAnimationFrame(loop);
+      rafRef.current = requestAnimationFrame(loop);
     };
 
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    setPhase('drawing');
+    setDrawProgress(0);
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
   }, [stocks]);
 
-  // Notify parent of current stock when it changes
+  // Notify parent of current stock
   useEffect(() => {
     if (onCurrentStock && stocks[displayIdx]) onCurrentStock(stocks[displayIdx]);
   }, [displayIdx, stocks]);
@@ -646,24 +639,33 @@ function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false
 
   if (!stock) return <div style={{ height: compact ? '90px' : '140px' }} />;
 
-  const a = anim.current;
+  // Build full chart points from stock history
   const w = containerRef.current?.clientWidth || 220;
-  const bufLen = a.yBuffer.length;
-  const visCount = Math.min(bufLen, maxVisible);
-  const sidx = bufLen - visCount;
-  const spacing = w / (maxVisible - 1);
+  const hist = stock.history;
+  const mn = Math.min(...hist), mx = Math.max(...hist), rng = mx - mn || 1;
+  const totalPts = Math.min(hist.length, NUM_POINTS);
 
-  const pts: { x: number; y: number }[] = [];
-  for (let i = 0; i < visCount; i++) {
-    pts.push({ x: i * spacing, y: a.yBuffer[sidx + i] });
+  const allPts: { x: number; y: number }[] = [];
+  for (let i = 0; i < totalPts; i++) {
+    const histIdx = Math.floor((i / (totalPts - 1)) * (hist.length - 1));
+    const norm = (hist[histIdx] - mn) / rng;
+    allPts.push({
+      x: (i / (totalPts - 1)) * w,
+      y: h - 4 - norm * (h - 8),
+    });
   }
 
-  const linePath = pts.length > 1
-    ? pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+  // Slice points based on drawProgress (how much of the chart is visible)
+  const visibleCount = Math.max(2, Math.round(drawProgress * totalPts));
+  const visPts = phase === 'erasing'
+    ? allPts.slice(0, visibleCount) // erase from right: shrink visible from end
+    : allPts.slice(0, visibleCount); // draw from left: grow visible from start
+
+  const linePath = visPts.length > 1
+    ? visPts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
     : '';
-  const lastPt = pts[pts.length - 1] || { x: 0, y: h / 2 };
-  const firstPt = pts[0] || { x: 0, y: h / 2 };
-  const latestColor = a.colorBuffer[a.colorBuffer.length - 1] || '#4ade80';
+  const lastPt = visPts[visPts.length - 1] || { x: 0, y: h / 2 };
+  const firstPt = visPts[0] || { x: 0, y: h / 2 };
   const gradId = `spark-grad-${instanceId}`;
   const glowId = `glow-${instanceId}`;
 
@@ -686,8 +688,8 @@ function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false
       <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" overflow="visible" style={{ display: 'block', width: '100%', height: `${h}px` }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={latestColor} stopOpacity="0.12" />
-            <stop offset="100%" stopColor={latestColor} stopOpacity="0" />
+            <stop offset="0%" stopColor={color} stopOpacity="0.12" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
           </linearGradient>
           <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="3" result="blur" />
@@ -700,8 +702,8 @@ function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false
         {linePath && (
           <>
             <path d={linePath + ` L${lastPt.x.toFixed(1)},${h} L${firstPt.x.toFixed(1)},${h} Z`} fill={`url(#${gradId})`} />
-            <path d={linePath} fill="none" stroke={latestColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx={lastPt.x} cy={lastPt.y} r={compact ? 3 : 5} fill={latestColor} filter={`url(#${glowId})`}>
+            <path d={linePath} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx={lastPt.x} cy={lastPt.y} r={compact ? 3 : 5} fill={color} filter={`url(#${glowId})`}>
               <animate attributeName="r" values={compact ? '2;4;2' : '4;6;4'} dur="1.2s" repeatCount="indefinite" />
             </circle>
           </>
@@ -915,7 +917,7 @@ function SpotifyWidget() {
 
   if (!track) return (
     <div style={{ padding: '8px 10px' }}>
-      <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+      <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
         NOW PLAYING
       </div>
       <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '11px', fontFamily: "'SF Mono', monospace" }}>Not connected</div>
@@ -926,7 +928,7 @@ function SpotifyWidget() {
 
   return (
     <div style={{ padding: '8px 10px' }}>
-      <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+      <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
         {track.isPlaying ? 'NOW PLAYING' : 'RECENTLY PLAYED'}
       </div>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -1050,7 +1052,7 @@ function NowPlaying() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Mono', monospace" }}>
+      <div style={{ color: '#fff', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Mono', monospace" }}>
         {track.isPlaying ? '♫ NOW PLAYING' : '♫ RECENTLY PLAYED'}
       </div>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: 1 }}>
@@ -2068,37 +2070,395 @@ function ChronographClock() {
   );
 }
 
-function MiddlePanel({ runCommand }: { runCommand: (cmd: string) => void }) {
+function __removedDinoGame() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const gameRef = useRef<{
+    dino: { y: number; vy: number; jumping: boolean; ducking: boolean; width: number; height: number };
+    obstacles: { x: number; width: number; height: number; type: 'cactus' | 'bird'; y: number }[];
+    score: number;
+    highScore: number;
+    speed: number;
+    frame: number;
+    gameOver: boolean;
+    started: boolean;
+    groundY: number;
+    raf: number;
+  } | null>(null);
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
+  const [started, setStarted] = useState(false);
+
+  const CANVAS_W = 400;
+  const CANVAS_H = 100;
+  const GROUND_Y = 80;
+  const DINO_W = 20;
+  const DINO_H = 22;
+  const GRAVITY = 0.6;
+  const JUMP_FORCE = -10;
+
+  const initGame = () => {
+    const g = {
+      dino: { y: GROUND_Y - DINO_H, vy: 0, jumping: false, ducking: false, width: DINO_W, height: DINO_H },
+      obstacles: [] as any[],
+      score: 0,
+      highScore: gameRef.current?.highScore || 0,
+      speed: 3,
+      frame: 0,
+      gameOver: false,
+      started: true,
+      groundY: GROUND_Y,
+      raf: 0,
+    };
+    gameRef.current = g;
+    setGameOver(false);
+    setStarted(true);
+    setScore(0);
+  };
+
+  const drawDino = (ctx: CanvasRenderingContext2D, g: NonNullable<typeof gameRef.current>) => {
+    const d = g.dino;
+    ctx.fillStyle = '#e0e0e0';
+    // Simple dino shape
+    const legFrame = Math.floor(g.frame / 5) % 2;
+    // Body
+    ctx.fillRect(d.y < GROUND_Y - DINO_H - 2 ? 12 : 10, d.y, d.width, d.ducking ? d.height * 0.6 : d.height);
+    // Head
+    ctx.fillRect(22, d.y - 6, 10, 8);
+    // Eye
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(27, d.y - 4, 3, 3);
+    ctx.fillStyle = '#e0e0e0';
+    // Legs
+    if (!d.jumping) {
+      if (legFrame === 0) {
+        ctx.fillRect(12, d.y + d.height, 4, 5);
+        ctx.fillRect(22, d.y + d.height, 4, 3);
+      } else {
+        ctx.fillRect(12, d.y + d.height, 4, 3);
+        ctx.fillRect(22, d.y + d.height, 4, 5);
+      }
+    } else {
+      ctx.fillRect(12, d.y + d.height, 4, 4);
+      ctx.fillRect(22, d.y + d.height, 4, 4);
+    }
+    // Tail
+    ctx.fillRect(6, d.y + 2, 6, 3);
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Draw initial state
+    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.beginPath();
+    ctx.moveTo(0, GROUND_Y);
+    ctx.lineTo(CANVAS_W, GROUND_Y);
+    ctx.stroke();
+
+    // Static dino
+    ctx.fillStyle = '#e0e0e0';
+    ctx.fillRect(10, GROUND_Y - DINO_H, DINO_W, DINO_H);
+    ctx.fillRect(22, GROUND_Y - DINO_H - 6, 10, 8);
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(27, GROUND_Y - DINO_H - 4, 3, 3);
+    ctx.fillStyle = '#e0e0e0';
+    ctx.fillRect(12, GROUND_Y, 4, 4);
+    ctx.fillRect(22, GROUND_Y, 4, 4);
+    ctx.fillRect(6, GROUND_Y - DINO_H + 2, 6, 3);
+
+    // "Press Space" text
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = "10px 'SF Mono', monospace";
+    ctx.textAlign = 'center';
+    ctx.fillText('Press SPACE to start', CANVAS_W / 2, GROUND_Y + 16);
+  }, []);
+
+  useEffect(() => {
+    if (!started || gameOver) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const g = gameRef.current;
+    if (!g) return;
+
+    let raf: number;
+    const loop = () => {
+      g.frame++;
+      const d = g.dino;
+
+      // Physics
+      if (d.jumping) {
+        d.vy += GRAVITY;
+        d.y += d.vy;
+        if (d.y >= GROUND_Y - d.height) {
+          d.y = GROUND_Y - d.height;
+          d.vy = 0;
+          d.jumping = false;
+        }
+      }
+
+      // Spawn obstacles
+      const lastObs = g.obstacles[g.obstacles.length - 1];
+      const minGap = 120 / g.speed * 3;
+      if (!lastObs || lastObs.x < CANVAS_W - minGap) {
+        if (Math.random() < 0.02) {
+          const isBird = g.score > 5 && Math.random() < 0.25;
+          g.obstacles.push({
+            x: CANVAS_W + 10,
+            width: isBird ? 16 : (8 + Math.random() * 12),
+            height: isBird ? 12 : (15 + Math.random() * 15),
+            type: isBird ? 'bird' : 'cactus',
+            y: isBird ? GROUND_Y - 30 - Math.random() * 15 : GROUND_Y,
+          });
+        }
+      }
+
+      // Move obstacles
+      g.obstacles.forEach(o => { o.x -= g.speed; });
+      g.obstacles = g.obstacles.filter(o => o.x > -30);
+
+      // Score
+      g.score += 0.05;
+      g.speed = 3 + Math.floor(g.score / 10) * 0.5;
+      setScore(Math.floor(g.score));
+
+      // Collision
+      for (const o of g.obstacles) {
+        const ox = o.x;
+        const oy = o.type === 'cactus' ? o.y - o.height : o.y;
+        const ow = o.width;
+        const oh = o.height;
+        const dx = 10, dy = d.y, dw = d.width + 10, dh = d.ducking ? d.height * 0.6 : d.height;
+        if (dx + dw > ox + 2 && dx < ox + ow - 2 && dy + dh > oy + 2 && dy < oy + oh - 2) {
+          g.gameOver = true;
+          if (g.score > g.highScore) {
+            g.highScore = Math.floor(g.score);
+            setHighScore(Math.floor(g.score));
+          }
+          setGameOver(true);
+          return;
+        }
+      }
+
+      // Draw
+      ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+      // Ground
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.beginPath();
+      ctx.moveTo(0, GROUND_Y);
+      ctx.lineTo(CANVAS_W, GROUND_Y);
+      ctx.stroke();
+
+      // Ground texture (small dashes)
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      for (let i = 0; i < 30; i++) {
+        const gx = ((i * 17 + g.frame * g.speed * 0.5) % (CANVAS_W + 20)) - 10;
+        ctx.fillRect(gx, GROUND_Y + 2 + (i % 3), 3 + (i % 2), 1);
+      }
+
+      // Dino
+      drawDino(ctx, g);
+
+      // Obstacles
+      for (const o of g.obstacles) {
+        if (o.type === 'cactus') {
+          ctx.fillStyle = '#4ade80';
+          ctx.fillRect(o.x, o.y - o.height, o.width, o.height);
+          // Cactus arms
+          if (o.width > 12) {
+            ctx.fillRect(o.x - 4, o.y - o.height * 0.6, 5, 3);
+            ctx.fillRect(o.x + o.width - 1, o.y - o.height * 0.4, 5, 3);
+          }
+        } else {
+          // Bird
+          ctx.fillStyle = 'rgba(255,255,255,0.7)';
+          ctx.fillRect(o.x, o.y, o.width, 4);
+          // Wings
+          const wingY = g.frame % 10 < 5 ? -5 : 3;
+          ctx.fillRect(o.x + 4, o.y + wingY, 8, 3);
+        }
+      }
+
+      // Score display
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = "10px 'SF Mono', monospace";
+      ctx.textAlign = 'right';
+      ctx.fillText(String(Math.floor(g.score)).padStart(5, '0'), CANVAS_W - 4, 12);
+      if (g.highScore > 0) {
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.fillText('HI ' + String(g.highScore).padStart(5, '0'), CANVAS_W - 60, 12);
+      }
+
+      raf = requestAnimationFrame(loop);
+    };
+
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [started, gameOver]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.code === 'Space' || e.code === 'ArrowUp') {
+        e.preventDefault();
+        e.stopPropagation();
+        const g = gameRef.current;
+        if (!g || !g.started) {
+          initGame();
+          return;
+        }
+        if (g.gameOver) {
+          initGame();
+          return;
+        }
+        if (!g.dino.jumping) {
+          g.dino.jumping = true;
+          g.dino.vy = JUMP_FORCE;
+        }
+      }
+      if (e.code === 'ArrowDown') {
+        e.preventDefault();
+        const g = gameRef.current;
+        if (g && g.started && !g.gameOver) {
+          g.dino.ducking = true;
+        }
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'ArrowDown') {
+        const g = gameRef.current;
+        if (g) g.dino.ducking = false;
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '28px 20px 14px 20px' }}>
-      {/* Site Guide */}
-      <div>
-        <div style={sectionLabel}>SITE GUIDE</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          {SITE_GUIDE.map(item => (
-            <div
-              key={item.label}
-              onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '8px', padding: '5px 8px',
-                borderRadius: 5, cursor: 'pointer', transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-            >
-              <span style={{ fontSize: '12px', width: '18px', textAlign: 'center' }}>{item.icon}</span>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#fff', fontFamily: "'SF Mono', monospace", minWidth: '80px' }}>{item.label}</span>
-              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>{item.desc}</span>
-            </div>
-          ))}
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+        const g = gameRef.current;
+        if (!g || !g.started) {
+          initGame();
+          return;
+        }
+        if (g.gameOver) {
+          initGame();
+          return;
+        }
+        if (!g.dino.jumping) {
+          g.dino.jumping = true;
+          g.dino.vy = JUMP_FORCE;
+        }
+      }}
+      style={{
+        background: 'rgba(255,255,255,0.03)',
+        borderRadius: 6,
+        padding: '6px',
+        border: '0.5px solid rgba(255,255,255,0.06)',
+        cursor: 'pointer',
+      }}
+    >
+      <canvas
+        ref={canvasRef}
+        width={CANVAS_W}
+        height={CANVAS_H}
+        style={{ display: 'block', width: '100%', height: 'auto', imageRendering: 'pixelated' }}
+      />
+      {gameOver && (
+        <div style={{ textAlign: 'center', marginTop: '4px' }}>
+          <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace" }}>
+            GAME OVER — click or press SPACE to restart
+          </span>
         </div>
-        <div style={{ marginTop: '8px', padding: '6px 8px', borderRadius: 5, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace", lineHeight: 1.6 }}>
-            <span style={{ color: 'rgba(255,255,255,0.6)' }}>Tip:</span> Click the green button in the top left to return to the home page and explore the site.
-          </div>
+      )}
+    </div>
+  );
+}
+
+// ── Standalone Stocks App ──
+function StocksApp() {
+  const [drillDown, setDrillDown] = useState<{ type: 'stock'; symbol: string; name: string } | { type: 'sector'; name: string } | null>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && drillDown) { setDrillDown(null); e.preventDefault(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [drillDown]);
+
+  return (
+    <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', fontFamily: "'SF Mono', monospace", background: '#1c1c1e' }}>
+      {/* My Watchlist title */}
+      <div style={{ padding: '14px 14px 0' }}>
+        <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '-0.01em' }}>
+          My Watchlist
         </div>
       </div>
 
+      <div>
+        {drillDown ? (
+          drillDown.type === 'stock' ? (
+            <StockDetailView
+              symbol={drillDown.symbol}
+              name={drillDown.name}
+              onBack={() => setDrillDown(null)}
+              onSectorClick={(name) => setDrillDown({ type: 'sector', name })}
+            />
+          ) : (
+            <SectorDetailView
+              sectorName={drillDown.name}
+              onBack={() => setDrillDown(null)}
+              onStockClick={(symbol, name) => setDrillDown({ type: 'stock', symbol, name })}
+            />
+          )
+        ) : (
+          <>
+            {/* LIVE + Date header */}
+            <div style={{ padding: '12px 14px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80', animation: 'livePulse 2s ease-in-out infinite' }} />
+                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '0.02em' }}>LIVE</span>
+              </div>
+              <div style={{ color: '#fff', fontSize: '12px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+              </div>
+            </div>
+            {/* 2x2 Stock Grid */}
+            <StockGrid onStockClick={(symbol, name) => setDrillDown({ type: 'stock', symbol, name })} />
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 14px' }} />
+            {/* Sector Sparklines */}
+            <SectorSparklines onSectorClick={(name) => setDrillDown({ type: 'sector', name })} />
+            {/* News Tape */}
+            <ScrollingNewsTape />
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 14px' }} />
+            {/* Economic Calendar */}
+            <EconomicCalendar />
+          </>
+        )}
+      </div>
+      <style>{`@keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.bloomberg-scroll::-webkit-scrollbar { display: none; }
+.bloomberg-scroll { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
+    </div>
+  );
+}
+
+function MiddlePanel({ runCommand }: { runCommand: (cmd: string) => void }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '28px 20px 14px 20px' }}>
       {/* Tech Stack */}
       <div style={{ marginTop: '16px' }}>
         <div style={sectionLabel}>TECH STACK</div>
@@ -2139,11 +2499,10 @@ function MiddlePanel({ runCommand }: { runCommand: (cmd: string) => void }) {
         </div>
       </div>
 
-      {/* Spacer */}
-      <div style={{ flex: 1 }} />
-
       {/* GitHub Heatmap */}
-      <GitHubHeatmap />
+      <div style={{ marginTop: '16px' }}>
+        <GitHubHeatmap />
+      </div>
     </div>
   );
 }
@@ -2172,8 +2531,8 @@ function StockDetailView({ symbol, name, onBack, onSectorClick }: { symbol: stri
   const isUp = change >= 0;
   const color = isUp ? '#4ade80' : '#f87171';
 
-  // Build chart from detail API (5-day) or fallback to 1-day history
-  const chartData = detail?.chart?.closes?.length > 0 ? detail.chart.closes : (currentStock?.history || []);
+  // Build chart from 1-day history (same as main Bloomberg screen) — fallback to detail API if unavailable
+  const chartData = (currentStock?.history?.length ?? 0) > 0 ? currentStock!.history : (detail?.chart?.closes || []);
   const chartH = 160, chartW = 500;
   const mn = Math.min(...chartData), mx = Math.max(...chartData), rng = mx - mn || 1;
   const pts = chartData.map((v: number, i: number) => `${(i / (chartData.length - 1)) * chartW},${chartH - ((v - mn) / rng) * (chartH - 8) - 4}`).join(' ');
@@ -3032,18 +3391,6 @@ function TerminalContent() {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
-  // Drill-down state for Bloomberg terminal
-  const [drillDown, setDrillDown] = useState<{ type: 'stock'; symbol: string; name: string } | { type: 'sector'; name: string } | null>(null);
-
-  // Escape key clears drill-down
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && drillDown) { setDrillDown(null); e.preventDefault(); }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [drillDown]);
-
   // Stagger-in elements (text is static, only rotating words animate)
   useEffect(() => {
     setShowRotating(true);
@@ -3555,8 +3902,7 @@ function TerminalContent() {
             </div>
           </div>
         </div>
-        {/* Mountain Climber interactive — fills right whitespace */}
-        {isFullscreen && <MountainClimber />}
+        {/* Empty space — right whitespace */}
       </div>
 
       {/* Middle — Site Guide, Tech Stack, Stats, Certs, GitHub heatmap */}
@@ -3566,9 +3912,9 @@ function TerminalContent() {
         </div>
       )}
 
-      {/* Right — Bloomberg dashboard (secondary) */}
+      {/* Right panel */}
       <div ref={scrollRef} onClick={() => inputRef.current?.focus()} style={{
-        width: isFullscreen ? '34%' : undefined,
+        width: isFullscreen ? '30%' : undefined,
         flex: isFullscreen ? 'none' : 1,
         flexShrink: 0,
         display: 'flex', flexDirection: 'column',
@@ -3577,50 +3923,12 @@ function TerminalContent() {
         borderLeft: isFullscreen ? '1px solid rgba(255,255,255,0.04)' : undefined,
       }}>
         {isFullscreen ? (
-          /* ═══ FULLSCREEN: Bloomberg terminal on the right ═══ */
-          <div className="bloomberg-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
-            {drillDown ? (
-              /* ── Drill-down view ── */
-              drillDown.type === 'stock' ? (
-                <StockDetailView
-                  symbol={drillDown.symbol}
-                  name={drillDown.name}
-                  onBack={() => setDrillDown(null)}
-                  onSectorClick={(name) => setDrillDown({ type: 'sector', name })}
-                />
-              ) : (
-                <SectorDetailView
-                  sectorName={drillDown.name}
-                  onBack={() => setDrillDown(null)}
-                  onStockClick={(symbol, name) => setDrillDown({ type: 'stock', symbol, name })}
-                />
-              )
-            ) : (
-              /* ── Dashboard view ── */
-              <>
-                {/* LIVE + Date + Time header */}
-                <div style={{ padding: '8px 10px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80', animation: 'livePulse 2s ease-in-out infinite' }} />
-                    <span style={{ color: '#fff', fontSize: '11px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '0.02em' }}>LIVE</span>
-                  </div>
-                  <div style={{ color: '#fff', fontSize: '11px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-                    {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                  </div>
-                </div>
-                {/* 2x2 Stock Grid */}
-                <StockGrid onStockClick={(symbol, name) => setDrillDown({ type: 'stock', symbol, name })} />
-                {/* Divider */}
-                <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 10px' }} />
-                {/* Sector Sparklines */}
-                <SectorSparklines onSectorClick={(name) => setDrillDown({ type: 'sector', name })} />
-                {/* Scrolling News Tape */}
-                <ScrollingNewsTape />
-                <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 10px' }} />
-                {/* Economic Calendar */}
-                <EconomicCalendar />
-              </>
-            )}
+          /* ═══ FULLSCREEN: Date only ═══ */
+          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            {/* Date header */}
+            <div style={{ padding: '12px 14px 0', textAlign: 'right', color: '#fff', fontSize: '11px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+            </div>
           </div>
         ) : (
           /* ═══ NORMAL: original layout ═══ */
@@ -3630,8 +3938,13 @@ function TerminalContent() {
               <div style={{ padding: '8px 14px 0', textAlign: 'right', color: '#fff', fontSize: '11px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
               </div>
-              {/* Stock ticker with chart */}
-              <div style={{ padding: '8px 14px 8px' }}>
+              {/* Stock ticker with chart — click to open Stocks app */}
+              <div
+                style={{ padding: '8px 14px 8px', cursor: 'pointer', borderRadius: 6, transition: 'background 0.15s' }}
+                onClick={(e) => { e.stopPropagation(); openWindow('stocks'); }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
                 <CyclingStock />
               </div>
               <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)', margin: '0 14px' }} />
@@ -3722,7 +4035,7 @@ function Desktop() {
     const MIN_WIDTH_FOR_SLIDE = 1024;
     if (window.innerWidth < MIN_WIDTH_FOR_SLIDE) return;
 
-    const sideWindows = ['education', 'experience'] as const;
+    const sideWindows = ['education', 'experience', 'stocks'] as const;
     const openSideWindow = sideWindows.find(id => {
       const w = state.windows[id];
       return w && w.isOpen && !w.isMinimized;
@@ -3737,24 +4050,27 @@ function Desktop() {
 
     if (openSideWindow) {
       const sideWin = state.windows[openSideWindow]!;
+      const sideDefaultW = sideWin.size.width; // e.g. 480 for stocks
 
-      // Terminal shrinks width but keeps enough height for all content
-      const termW = Math.round(800 * 0.8);   // 640
-      const termH = Math.min(usableH - gap * 2, 580); // use available height, cap at 580
+      // Fit both windows side-by-side: terminal shrinks only as much as needed
+      const totalGaps = gap * 3; // left gap + middle gap + right gap
+      const available = screenW - totalGaps;
+      // Terminal gets remaining space after side window, but no wider than 840
+      const sideW = Math.min(sideDefaultW, Math.round(available * 0.38));
+      const termW = Math.min(840, available - sideW);
+      const termH = Math.min(usableH - gap * 2, 620);
+      const sideH = usableH - gap * 2;
+
       const termX = gap;
-      const termY = menuBarH + Math.round((usableH - termH) / 2); // vertically centered
+      const termY = menuBarH + Math.round((usableH - termH) / 2);
+      const sideX = termX + termW + gap;
+      const sideY = menuBarH + gap;
 
       // Only move/resize if not already positioned there
       if (Math.abs(terminal.position.x - termX) > 10 || Math.abs(terminal.size.width - termW) > 10) {
         dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: { width: termW, height: termH } });
         dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: termX, y: termY } });
       }
-
-      // Side window goes to the right of the terminal
-      const sideW = Math.min(sideWin.size.width, screenW - termW - gap * 3);
-      const sideH = usableH - gap * 2;
-      const sideX = termW + gap * 2;
-      const sideY = menuBarH + gap;
 
       if (Math.abs(sideWin.position.x - sideX) > 10 || Math.abs(sideWin.size.height - sideH) > 20) {
         dispatch({ type: 'RESIZE_WINDOW', id: openSideWindow, size: { width: sideW, height: sideH } });
@@ -3774,7 +4090,7 @@ function Desktop() {
     }
   }, [
     // Only react to open/close changes, not every position tweak
-    Object.keys(state.windows).filter(id => ['education', 'experience'].includes(id) && state.windows[id]?.isOpen && !state.windows[id]?.isMinimized).join(','),
+    Object.keys(state.windows).filter(id => ['education', 'experience', 'stocks'].includes(id) && state.windows[id]?.isOpen && !state.windows[id]?.isMinimized).join(','),
   ]);
 
   // Keyboard shortcuts
@@ -3832,13 +4148,14 @@ function Desktop() {
 
           {/* Windows */}
           {openWindows.map(win => {
-            const darkWindows: string[] = ['education', 'experience', 'detail', 'terminal', 'email', 'photos', 'content', 'projects', 'wifi-settings'];
+            const darkWindows: string[] = ['education', 'experience', 'detail', 'terminal', 'email', 'photos', 'content', 'projects', 'wifi-settings', 'stocks'];
             const isDark = darkWindows.includes(win.id);
             const titleBarBgMap: Record<string, string> = {
               projects: '#252526',
               blog: '#f0f0f0',
               'deep-research': '#f0f0f0',
               calendar: '#ffffff',
+              stocks: '#1c1c1e',
             };
             const titleBarBg = titleBarBgMap[win.id];
             if (win.id === 'detail' && state.activeDetail) {
