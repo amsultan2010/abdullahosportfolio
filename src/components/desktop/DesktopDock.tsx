@@ -38,6 +38,9 @@ export default function DesktopDock() {
 
   const allItems = [...windowItems, { id: 'divider' as any, label: '', icon: null }, ...externalItems];
 
+  // Portfolio windows are mutually exclusive — opening one auto-closes others
+  const PORTFOLIO_WINDOWS: WindowId[] = ['education', 'experience', 'projects', 'blog', 'calendar', 'photos'];
+
   const handleClick = (item: DockItem) => {
     if (item.isExternal && item.href) {
       if (item.href.startsWith('mailto:')) {
@@ -48,12 +51,31 @@ export default function DesktopDock() {
       return;
     }
     const id = item.id as WindowId;
+
+    // Books/Deep Research: use floating cards instead of a window
+    if (id === 'deep-research') {
+      if (state.floatingBooksVisible) {
+        dispatch({ type: 'HIDE_FLOATING_BOOKS' });
+      } else {
+        dispatch({ type: 'SHOW_FLOATING_BOOKS' });
+      }
+      return;
+    }
+
     const win = state.windows[id];
     if (win?.isMinimized) {
       dispatch({ type: 'RESTORE_WINDOW', id });
     } else if (win?.isOpen) {
       dispatch({ type: 'FOCUS_WINDOW', id });
     } else {
+      // Auto-close other portfolio windows when opening a new one
+      if (PORTFOLIO_WINDOWS.includes(id)) {
+        PORTFOLIO_WINDOWS.forEach(pid => {
+          if (pid !== id && state.windows[pid]?.isOpen) {
+            dispatch({ type: 'CLOSE_WINDOW', id: pid });
+          }
+        });
+      }
       dispatch({ type: 'OPEN_WINDOW', id });
     }
   };
@@ -222,6 +244,8 @@ function DockButton({ item, scale, isOpen, onClick }: {
           height: `${size}px`,
           borderRadius: `${12 * scale}px`,
           border: 'none',
+          outline: 'none',
+          WebkitTapHighlightColor: 'transparent',
           background: 'transparent',
           cursor: 'pointer',
           display: 'flex',

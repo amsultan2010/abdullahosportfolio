@@ -65,6 +65,7 @@ interface TerminalLine {
   type: 'prompt' | 'output' | 'error' | 'system';
   text: string;
   command?: string;
+  ts?: number; // timestamp for auto-fade
 }
 
 const COMMANDS: Record<string, { window: WindowId; desc: string }> = {
@@ -379,15 +380,15 @@ function useScrambleText(target: string, trigger: number) {
 
 // ── Quick Start Tiles ──
 const QUICK_NAV = [
-  { label: 'experience', cmd: 'npm run experience', color: '#c084fc', icon: '💼' },
-  { label: 'education', cmd: 'git log --education', color: '#60a5fa', icon: '🎓' },
-  { label: 'projects', cmd: 'brew install projects', color: '#4ade80', icon: '🔨' },
-  { label: 'notes', cmd: 'cat mythoughts.md', color: '#fbbf24', icon: '📝' },
-  { label: 'research', cmd: 'cd deepresearch', color: '#f472b6', icon: '📚' },
-  { label: 'calendar', cmd: 'open calendar.app', color: '#22d3ee', icon: '📅' },
+  { label: 'experience', cmd: 'npm run experience', color: '#c084fc', icon: '/icons/folder.png', emoji: '💼' },
+  { label: 'education', cmd: 'git log --education', color: '#60a5fa', icon: '/icons/folder.png' },
+  { label: 'projects', cmd: 'brew install projects', color: '#4ade80', icon: '/vscode.png' },
+  { label: 'notes', cmd: 'cat mythoughts.md', color: '#fbbf24', icon: '/notes.png' },
+  { label: 'research', cmd: 'cd deepresearch', color: '#f472b6', icon: '/books.png' },
+  { label: 'calendar', cmd: 'open calendar.app', color: '#22d3ee', icon: '/calandar.png' },
 ];
 
-function QuickStartTiles({ runCommand }: { runCommand: (cmd: string) => void }) {
+function QuickStartTiles({ runCommand }: { runCommand: (cmd: string, source?: 'ui' | 'typed') => void }) {
   return (
     <div style={{ marginTop: '20px', fontFamily: "'SF Mono', monospace" }}>
       <div style={{ color: '#fff', fontSize: '11px', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '8px' }}>
@@ -398,20 +399,20 @@ function QuickStartTiles({ runCommand }: { runCommand: (cmd: string) => void }) 
           <div
             key={n.label}
             className="qs-pill"
-            onClick={(e) => { e.stopPropagation(); runCommand(n.cmd); }}
+            onClick={(e) => { e.stopPropagation(); runCommand(n.cmd, 'ui'); }}
             style={{
               padding: '10px 8px 8px', borderRadius: '10px', cursor: 'pointer', textAlign: 'center',
               border: `1px solid ${n.color}33`, background: `${n.color}0a`,
               fontSize: '12px', color: n.color, ['--gc' as any]: n.color,
             }}
           >
-            <div style={{ fontSize: '18px', marginBottom: '3px' }}>{n.icon}</div>
+            <div style={{ marginBottom: '3px', display: 'flex', justifyContent: 'center' }}>{'emoji' in n && n.emoji ? <span style={{ fontSize: '20px', lineHeight: '22px' }}>{n.emoji}</span> : <img src={n.icon} alt={n.label} style={{ width: '22px', height: '22px', objectFit: 'contain' }} />}</div>
             <div style={{ fontWeight: 500 }}>{n.label}</div>
           </div>
         ))}
       </div>
       <style>{`
-        .qs-pill { opacity:0.75; transition:opacity .2s,background .2s,border-color .2s,box-shadow .2s; }
+        .qs-pill { opacity:1; transition:opacity .2s,background .2s,border-color .2s,box-shadow .2s; }
         .qs-pills:hover .qs-pill { opacity:0.3; }
         .qs-pills:hover .qs-pill:hover { opacity:1; box-shadow:0 0 12px var(--gc,#fff)22; }
       `}</style>
@@ -422,7 +423,7 @@ function QuickStartTiles({ runCommand }: { runCommand: (cmd: string) => void }) 
 // ── Explore Commands (constantly lit, highlight on hover) ──
 function ExploreCommands({ smartCommandLinks, runCommand }: {
   smartCommandLinks: { cmd: string; color: string }[];
-  runCommand: (cmd: string) => void;
+  runCommand: (cmd: string, source?: 'ui' | 'typed') => void;
 }) {
   return (
     <div style={{ padding: '8px 14px' }}>
@@ -432,7 +433,7 @@ function ExploreCommands({ smartCommandLinks, runCommand }: {
           <div
             key={item.cmd}
             className="explore-cmd"
-            onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
+            onClick={(e) => { e.stopPropagation(); runCommand(item.cmd, 'ui'); }}
             style={{
               padding: '3px 6px', borderRadius: '4px', cursor: 'pointer',
               fontSize: '12.5px',
@@ -5036,7 +5037,7 @@ function TerminalContent() {
     }
   };
 
-  const runCommand = (raw: string) => {
+  const runCommand = (raw: string, _source: 'ui' | 'typed' = 'typed') => {
     const cmd = raw.trim().toLowerCase();
     const newLines: TerminalLine[] = [
       { type: 'prompt', text: prompt + raw, command: raw },
@@ -5058,20 +5059,22 @@ function TerminalContent() {
       setInput('');
       return;
     } else if (SMART_COMMANDS[cmd]) {
-      // Check smart commands FIRST (before cd/open handlers that would partially match)
       const { window: win, output } = SMART_COMMANDS[cmd];
       newLines.push({ type: 'system', text: output });
-      openWindow(win);
+      if (win === 'deep-research') dispatch({ type: 'SHOW_FLOATING_BOOKS' });
+      else openWindow(win);
     } else if (COMMANDS[cmd]) {
-      const { window, desc } = COMMANDS[cmd];
+      const { window: winId, desc } = COMMANDS[cmd];
       newLines.push({ type: 'system', text: `Opening ${desc.toLowerCase()}...` });
-      openWindow(window);
+      if (winId === 'deep-research') dispatch({ type: 'SHOW_FLOATING_BOOKS' });
+      else openWindow(winId);
     } else if (cmd.startsWith('cd ')) {
       const target = cmd.replace('cd ', '').replace(/[\/~]/g, '').trim();
       if (COMMANDS[target]) {
-        const { window, desc } = COMMANDS[target];
+        const { window: winId2, desc } = COMMANDS[target];
         newLines.push({ type: 'system', text: `Opening ${desc.toLowerCase()}...` });
-        openWindow(window);
+        if (winId2 === 'deep-research') dispatch({ type: 'SHOW_FLOATING_BOOKS' });
+        else openWindow(winId2);
       } else {
         newLines.push({ type: 'error', text: `cd: no such directory: ${target}` });
         newLines.push({ type: 'output', text: 'Type "help" to see available commands.' });
@@ -5079,9 +5082,10 @@ function TerminalContent() {
     } else if (cmd.startsWith('open ')) {
       const target = cmd.replace('open ', '').trim();
       if (COMMANDS[target]) {
-        const { window, desc } = COMMANDS[target];
+        const { window: winId3, desc } = COMMANDS[target];
         newLines.push({ type: 'system', text: `Opening ${desc.toLowerCase()}...` });
-        openWindow(window);
+        if (winId3 === 'deep-research') dispatch({ type: 'SHOW_FLOATING_BOOKS' });
+        else openWindow(winId3);
       } else {
         newLines.push({ type: 'error', text: `open: "${target}" not found` });
         newLines.push({ type: 'output', text: 'Type "help" to see available commands.' });
@@ -5101,7 +5105,9 @@ function TerminalContent() {
       newLines.push({ type: 'output', text: 'Type "help" to see available commands.' });
     }
 
-    setHistory(prev => [...prev, ...newLines]);
+    const now = Date.now();
+    const stamped = newLines.map(l => ({ ...l, ts: now }));
+    setHistory(prev => [...prev, ...stamped]);
     setCmdHistory(prev => [raw, ...prev]);
     setHistoryIdx(-1);
     setInput('');
@@ -5158,6 +5164,7 @@ function TerminalContent() {
       case 'prompt': return '#4ade80';
       case 'error': return '#f87171';
       case 'system': return '#22d3ee';
+      case 'human': return 'rgba(255,255,255,0.55)';
       default: return 'rgba(255,255,255,0.75)';
     }
   };
@@ -5190,16 +5197,36 @@ function TerminalContent() {
   // Change to preview: 'bento' | 'bigtype' | 'dashboard' | 'split'
   const DESIGN_MODE = 'split';
 
+  // Auto-fade old terminal lines after 15s
+  useEffect(() => {
+    if (history.length === 0) return;
+    const timer = setInterval(() => {
+      const now = Date.now();
+      setHistory(prev => prev.filter(line => !line.ts || now - line.ts < 18000));
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [history.length]);
+
   // Shared terminal prompt + history renderer
   const renderTerminal = (compact?: boolean, mono?: boolean) => (
     <div style={{ fontFamily: mono !== false ? "'SF Mono', 'JetBrains Mono', 'Menlo', monospace" : 'inherit', fontSize: compact ? '12.5px' : '13px', lineHeight: 1.5 }}>
-      {history.map((line, i) => (
-        <div key={i} style={{ color: getLineColor(line), whiteSpace: 'pre-wrap' }}>
-          {line.type === 'prompt' ? (
-            <><span style={{ color: '#4ade80', fontWeight: 700 }}>{prompt}</span><span style={{ color: '#fff', fontWeight: 500 }}>{line.command}</span></>
-          ) : line.text.includes('\x1b[cmd]') ? renderColoredLine(line.text) : line.text}
-        </div>
-      ))}
+      {history.map((line, i) => {
+        const age = line.ts ? Date.now() - line.ts : 0;
+        const isFading = line.ts && age > 15000;
+        return (
+          <div key={i} style={{
+            color: getLineColor(line), whiteSpace: 'pre-wrap',
+            opacity: isFading ? 0 : 1,
+            transform: isFading ? 'translateY(-12px) scale(0.97)' : 'translateY(0) scale(1)',
+            filter: isFading ? 'blur(2px)' : 'blur(0px)',
+            transition: 'opacity 3s ease-out, transform 3s ease-out, filter 3s ease-out',
+          }}>
+            {line.type === 'prompt' ? (
+              <><span style={{ color: '#4ade80', fontWeight: 700 }}>{prompt}</span><span style={{ color: '#fff', fontWeight: 500 }}>{line.command}</span></>
+            ) : line.text.includes('\x1b[cmd]') ? renderColoredLine(line.text) : line.text}
+          </div>
+        );
+      })}
       {introDone && (
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <span style={{ color: '#4ade80', fontWeight: 700, whiteSpace: 'pre', fontFamily: "'SF Mono', monospace", fontSize: compact ? '12.5px' : '13px' }}>{prompt}</span>
@@ -5613,6 +5640,468 @@ function TerminalContent() {
   );
 }
 
+// ── Floating Books (3D books with stack + expand + slide-over content) ──
+const FLOATING_BOOKS = [
+  {
+    slug: 'investor-behavior-gap',
+    title: 'Why Investors Underperform the Markets They Invest In',
+    summary: 'Financial markets produce strong long-term returns, yet the average investor consistently earns far less.',
+    readingTime: 14,
+    coverGradient: ['#0a1628', '#1a2744', '#2a3a5c'],
+    coverAccent: '#4a9eff',
+    company: 'NDX',
+  },
+  {
+    slug: 'discipline-paradox',
+    title: 'The Discipline Paradox',
+    summary: 'Why do insanely talented people fail while mediocre disciplined people win?',
+    readingTime: 16,
+    coverGradient: ['#1a0a0a', '#2a1515', '#3d2020'],
+    coverAccent: '#e8554a',
+    company: 'IKIGAI',
+  },
+];
+
+function FloatingBooks() {
+  const { state, dispatch } = useDesktop();
+  const [selected, setSelected] = useState<string | null>(null);
+  const [phase, setPhase] = useState<'idle' | 'stacking' | 'expanding' | 'content' | 'closing'>('idle');
+  const [entering, setEntering] = useState(true);
+  const [exiting, setExiting] = useState(false);
+  const [contentData, setContentData] = useState<ContentViewData | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const [mousePos, setMousePos] = useState<Record<string, { x: number; y: number }>>({});
+  const bookRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Book dimensions
+  const SMALL_W = 270;
+  const SMALL_H = 360;
+  const BIG_H = 700;
+  const BIG_W = Math.round(BIG_H * 3 / 4); // 525px, maintains 3:4
+
+  useEffect(() => {
+    if (state.floatingBooksVisible) {
+      setEntering(false);
+      setExiting(false);
+      setSelected(null);
+      setPhase('idle');
+    }
+  }, [state.floatingBooksVisible]);
+
+  // Load content when selected
+  useEffect(() => {
+    if (selected) {
+      import('../portfolio/contentData').then(mod => {
+        const data = mod.contentMap[selected];
+        if (data) setContentData(data as ContentViewData);
+      });
+    } else {
+      setContentData(null);
+    }
+  }, [selected]);
+
+  // Escape key — instantly dismiss (only when books are visible)
+  useEffect(() => {
+    if (!state.floatingBooksVisible) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopImmediatePropagation();
+        if (phase === 'content' || phase === 'expanding' || phase === 'stacking') {
+          setSelected(null);
+          setPhase('idle');
+        } else if (phase === 'idle') {
+          dispatch({ type: 'HIDE_FLOATING_BOOKS' });
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKey, true);
+    return () => window.removeEventListener('keydown', handleKey, true);
+  }, [phase, dispatch, state.floatingBooksVisible]);
+
+  if (!state.floatingBooksVisible) return null;
+
+  const handleBookClick = (slug: string) => {
+    if (phase === 'idle') {
+      // First click: stack and expand the book
+      setSelected(slug);
+      setPhase('stacking');
+      setTimeout(() => setPhase('expanding'), 400);
+    } else if (phase === 'expanding' && selected === slug) {
+      // Second click on enlarged book: page-flip and show content
+      setPhase('content');
+    }
+  };
+
+  const handleClose = () => {
+    setSelected(null);
+    setPhase('idle');
+  };
+
+  const handleDismiss = () => {
+    if (selected) {
+      handleClose();
+      return;
+    }
+    dispatch({ type: 'HIDE_FLOATING_BOOKS' });
+  };
+
+  const isOpen = phase === 'expanding' || phase === 'content';
+  const screenH = typeof window !== 'undefined' ? window.innerHeight : 900;
+  // Expanded book position: right side, vertically centered
+  const expandedTop = Math.round((screenH - BIG_H) / 2);
+  const expandedRight = 30;
+
+  return (
+    <>
+      <style>{`
+        @keyframes floatBook1 {
+          0%,100% { transform: translateY(0) rotateY(-12deg) rotateX(4deg); }
+          50% { transform: translateY(-12px) rotateY(-8deg) rotateX(2deg); }
+        }
+        @keyframes floatBook2 {
+          0%,100% { transform: translateY(0) rotateY(-12deg) rotateX(4deg); }
+          50% { transform: translateY(-10px) rotateY(-14deg) rotateX(5deg); }
+        }
+        @keyframes bookSlideIn {
+          from { opacity: 0; transform: translateX(120px) rotateY(-25deg) scale(0.8); }
+          to { opacity: 1; transform: translateX(0) rotateY(-12deg) scale(1); }
+        }
+        @keyframes bookSlideOut {
+          from { opacity: 1; transform: scale(1); }
+          to { opacity: 0; transform: translateX(200px) scale(0.3); }
+        }
+        @keyframes bookPageFlip {
+          0% { transform: perspective(1200px) rotateY(0deg); }
+          30% { transform: perspective(1200px) rotateY(-18deg); }
+          60% { transform: perspective(1200px) rotateY(5deg); }
+          100% { transform: perspective(1200px) rotateY(0deg); }
+        }
+        @keyframes contentFadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pagePeelHint {
+          0%,100% { transform: rotate(0deg) scale(1); }
+          50% { transform: rotate(-3deg) scale(1.05); }
+        }
+        @keyframes pagePeelCurl {
+          from { width: 40px; height: 40px; }
+          to { width: 60px; height: 60px; }
+        }
+      `}</style>
+
+      {/* Clickable backdrop to dismiss */}
+      <div
+        onClick={handleDismiss}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 9997,
+          background: isOpen ? 'rgba(0,0,0,0.3)' : 'transparent',
+          pointerEvents: 'auto',
+          opacity: exiting ? 0 : 1,
+          transition: 'background 0.4s ease, opacity 0.3s ease',
+        }}
+      />
+
+      {/* Floating books container */}
+      <div style={{ position: 'fixed', zIndex: 9999, pointerEvents: 'none', inset: 0, perspective: '1200px' }}>
+        {FLOATING_BOOKS.map((book, idx) => {
+          const isSelected = selected === book.slug;
+          const isOther = selected && !isSelected;
+          const isHovered = hovered === book.slug && phase === 'idle';
+          const gradient = `linear-gradient(160deg, ${book.coverGradient[0]}, ${book.coverGradient[1]}, ${book.coverGradient[2]})`;
+
+          // Mouse tracking for 3D rotation
+          const mp = mousePos[book.slug] || { x: 0.5, y: 0.5 };
+          const rotY = isHovered ? (mp.x - 0.5) * 25 : -12;
+          const rotX = isHovered ? -(mp.y - 0.5) * 15 : 4;
+
+          // Position calculations
+          const idleTop = idx === 0 ? '100px' : `${100 + SMALL_H + 30}px`;
+          const idleRight = '250px';
+
+          // When stacking: other book slides behind selected
+          // When expanding: selected book grows to BIG size
+          // When content: selected is big with content visible inside
+          let bookStyle: React.CSSProperties = {};
+
+          if (phase === 'idle' || (!isSelected && !isOther)) {
+            // Normal floating state
+            bookStyle = {
+              position: 'fixed',
+              right: idleRight,
+              top: idleTop,
+              width: `${SMALL_W}px`,
+              height: `${SMALL_H}px`,
+              opacity: exiting ? 0 : 1,
+              transform: isHovered
+                ? `perspective(600px) rotateY(${rotY}deg) rotateX(${rotX}deg) scale(1.05)`
+                : undefined,
+              animation: 'none',
+              transition: isHovered ? 'transform 0.15s ease-out' : 'transform 0.5s ease-out',
+            };
+          } else if (isOther) {
+            // Non-selected book: tuck behind selected
+            bookStyle = {
+              position: 'fixed',
+              right: `${parseInt(idleRight) + 20}px`,
+              top: selected === FLOATING_BOOKS[0].slug ? '22%' : '48%',
+              width: `${SMALL_W}px`,
+              height: `${SMALL_H}px`,
+              opacity: phase === 'closing' ? 1 : 0.3,
+              transform: `scale(0.85) rotateY(-8deg)`,
+              filter: 'blur(2px)',
+              transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
+              zIndex: 9998,
+            };
+          } else if (isSelected) {
+            // Selected book: expand
+            const isExpanded = phase === 'expanding' || phase === 'content';
+            bookStyle = {
+              position: 'fixed',
+              right: isExpanded ? `${expandedRight}px` : idleRight,
+              top: isExpanded ? `${expandedTop}px` : idleTop,
+              width: isExpanded ? `${BIG_W}px` : `${SMALL_W}px`,
+              height: isExpanded ? `${BIG_H}px` : `${SMALL_H}px`,
+              opacity: 1,
+              transform: phase === 'stacking' ? 'scale(1.02)' : (phase === 'closing' ? `scale(0.95)` : 'none'),
+              animation: phase === 'content' ? 'bookPageFlip 0.8s ease-out' : 'none',
+              transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
+              zIndex: 10001,
+            };
+          }
+
+          return (
+            <div
+              key={book.slug}
+              ref={el => { bookRefs.current[book.slug] = el; }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleBookClick(book.slug);
+              }}
+              onMouseEnter={() => phase === 'idle' && setHovered(book.slug)}
+              onMouseLeave={() => { setHovered(null); setMousePos(p => ({ ...p, [book.slug]: { x: 0.5, y: 0.5 } })); }}
+              onMouseMove={(e) => {
+                if (phase !== 'idle') return;
+                const el = bookRefs.current[book.slug];
+                if (!el) return;
+                const rect = el.getBoundingClientRect();
+                setMousePos(p => ({
+                  ...p,
+                  [book.slug]: {
+                    x: (e.clientX - rect.left) / rect.width,
+                    y: (e.clientY - rect.top) / rect.height,
+                  }
+                }));
+              }}
+              style={{
+                ...bookStyle,
+                pointerEvents: exiting ? 'none' : 'auto',
+                cursor: phase === 'idle' ? 'pointer' : 'default',
+                transformStyle: 'preserve-3d',
+                zIndex: bookStyle.zIndex || (isSelected ? 10001 : isHovered ? 10000 : 9999),
+              } as React.CSSProperties}
+            >
+              {/* 3D Book front face */}
+              <div style={{
+                position: 'absolute', inset: 0,
+                borderRadius: '4px 10px 10px 4px',
+                overflow: 'hidden',
+                background: gradient,
+                boxShadow: (isSelected && isOpen)
+                  ? `0 40px 100px rgba(0,0,0,0.7), 0 15px 40px rgba(0,0,0,0.5), -8px 8px 25px rgba(0,0,0,0.3)`
+                  : isHovered
+                    ? `0 30px 80px rgba(0,0,0,0.6), 0 10px 30px rgba(0,0,0,0.4)`
+                    : `0 20px 60px rgba(0,0,0,0.5), 0 6px 20px rgba(0,0,0,0.3)`,
+                transition: 'box-shadow 0.4s ease',
+              }}>
+                {/* Spine edge */}
+                <div style={{
+                  position: 'absolute', left: 0, top: 0, bottom: 0, width: isOpen && isSelected ? '10px' : '8px',
+                  background: `linear-gradient(90deg, ${book.coverGradient[0]}ee, ${book.coverGradient[1]}cc)`,
+                  borderRight: '1px solid rgba(255,255,255,0.06)',
+                  transition: 'width 0.4s ease',
+                  zIndex: 2,
+                }} />
+                {/* Spine highlight */}
+                <div style={{
+                  position: 'absolute', left: '2px', top: '8px', bottom: '8px', width: '1px',
+                  background: 'rgba(255,255,255,0.12)', borderRadius: '1px', zIndex: 3,
+                }} />
+
+                {/* Book cover content — scales with the book */}
+                {!(isSelected && phase === 'content') ? (
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    padding: isOpen && isSelected ? '40px 30px 30px 36px' : '28px 22px 22px 26px',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                    transition: 'padding 0.7s ease',
+                    zIndex: 5,
+                  }}>
+                    <div>
+                      {book.company === 'NDX' ? (
+                        <img src="/NASDAQ_Logo.svg.png" alt="Nasdaq"
+                          height={isOpen && isSelected ? 32 : 22}
+                          style={{ filter: 'brightness(0) invert(1)', opacity: 0.9, transition: 'height 0.6s ease' }} />
+                      ) : (
+                        <img src="/ikigai.png" alt="Ikigai"
+                          height={isOpen && isSelected ? 50 : 36}
+                          style={{ opacity: 0.9, transition: 'height 0.6s ease' }} />
+                      )}
+                    </div>
+                    <div>
+                      <h3 style={{
+                        fontSize: isOpen && isSelected ? '24px' : '17px',
+                        fontWeight: 700, color: '#ffffff',
+                        lineHeight: 1.35, margin: '0 0 10px',
+                        fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+                        transition: 'font-size 0.6s ease',
+                        textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                      }}>
+                        {book.title}
+                      </h3>
+                      <p style={{
+                        fontSize: isOpen && isSelected ? '14px' : '12px',
+                        color: 'rgba(255,255,255,0.7)',
+                        lineHeight: 1.5, margin: 0,
+                        transition: 'font-size 0.6s ease',
+                      }}>
+                        {book.summary}
+                      </p>
+                    </div>
+                    <div>
+                      <div style={{
+                        height: '2px', width: isOpen && isSelected ? '60px' : '40px',
+                        borderRadius: '1px', background: book.coverAccent, opacity: 0.7,
+                        transition: 'width 0.6s ease',
+                        marginBottom: isOpen && isSelected ? '12px' : '0',
+                      }} />
+                      {isOpen && isSelected && phase === 'expanding' && (
+                        <span style={{
+                          fontSize: '13px', color: 'rgba(255,255,255,0.45)',
+                          fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+                          animation: 'contentFadeIn 0.5s ease-out 0.6s both',
+                          letterSpacing: '0.02em',
+                        }}>
+                          Click to read →
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  /* Content phase: show the ContentViewer inside the book */
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'rgba(20, 20, 20, 0.85)',
+                    overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column',
+                    borderRadius: '4px 10px 10px 4px',
+                    zIndex: 10,
+                  }}>
+                    {/* Close button */}
+                    <div style={{
+                      display: 'flex', justifyContent: 'flex-end', padding: '10px 14px 0',
+                      zIndex: 11,
+                    }}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleClose(); }}
+                        style={{
+                          background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)',
+                          color: 'rgba(255,255,255,0.6)', borderRadius: '6px', padding: '4px 12px',
+                          cursor: 'pointer', fontSize: '11px', fontFamily: "'SF Mono', monospace",
+                          transition: 'all 0.15s',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'rgba(255,255,255,0.9)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
+                      >
+                        ESC
+                      </button>
+                    </div>
+                    {contentData ? (
+                      <div style={{ flex: 1, overflow: 'hidden' }}>
+                        <ContentViewer
+                          content={contentData}
+                          onClose={handleClose}
+                          windowMode
+                        />
+                      </div>
+                    ) : (
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>
+                        Loading...
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Grain texture */}
+                <div style={{
+                  position: 'absolute', inset: 0, opacity: 0.04, pointerEvents: 'none',
+                  backgroundImage: 'radial-gradient(rgba(255,255,255,1) 1px, transparent 1px)',
+                  backgroundSize: '3px 3px', zIndex: 6,
+                }} />
+                {/* Light reflection */}
+                <div style={{
+                  position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 7,
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 40%)',
+                  borderRadius: '4px 10px 10px 4px',
+                }} />
+
+                {/* Page peel corner — visible when book is expanded, before content */}
+                {isSelected && phase === 'expanding' && (
+                  <div
+                    onClick={(e) => { e.stopPropagation(); setPhase('content'); }}
+                    style={{ position: 'absolute', bottom: 0, right: 0, width: '80px', height: '80px', cursor: 'pointer', zIndex: 8 }}
+                  >
+                    {/* Paper page underneath (peeking through) */}
+                    <div style={{
+                      position: 'absolute', bottom: 0, right: 0,
+                      width: '70px', height: '70px',
+                      background: 'linear-gradient(135deg, #f5f1ea 0%, #e8e4dc 60%, #d4d0c8 100%)',
+                      borderRadius: '0 0 10px 0',
+                      animation: 'contentFadeIn 0.5s ease-out 0.3s both',
+                    }} />
+                    {/* Curled cover corner peeling up */}
+                    <div style={{
+                      position: 'absolute', bottom: '3px', right: '3px',
+                      width: '50px', height: '50px',
+                      background: gradient,
+                      zIndex: 9,
+                      transformOrigin: 'bottom right',
+                      animation: 'pagePeelHint 3s ease-in-out 0.6s infinite',
+                      boxShadow: '-4px -4px 10px rgba(0,0,0,0.2)',
+                      clipPath: 'polygon(100% 0%, 0% 100%, 100% 100%)',
+                    }} />
+                  </div>
+                )}
+              </div>
+
+              {/* 3D page edges (right side) */}
+              <div style={{
+                position: 'absolute',
+                right: '-10px', top: '3px', bottom: '3px', width: '10px',
+                background: 'linear-gradient(90deg, #e8e4dc, #f5f1ea, #e0dcd4)',
+                borderRadius: '0 3px 3px 0',
+                transform: 'rotateY(90deg)',
+                transformOrigin: 'left center',
+                boxShadow: 'inset -2px 0 4px rgba(0,0,0,0.1)',
+              }} />
+              {/* 3D bottom edge */}
+              <div style={{
+                position: 'absolute',
+                left: '4px', right: '4px', bottom: '-8px', height: '8px',
+                background: 'linear-gradient(180deg, #e0dcd4, #d4d0c8)',
+                borderRadius: '0 0 3px 3px',
+                transform: 'rotateX(-90deg)',
+                transformOrigin: 'top center',
+                boxShadow: 'inset 0 -1px 3px rgba(0,0,0,0.1)',
+              }} />
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
 function Desktop() {
   const { state, dispatch } = useDesktop();
   const [isMobile, setIsMobile] = useState(false);
@@ -5656,6 +6145,10 @@ function Desktop() {
       return w && w.isOpen && !w.isMinimized;
     });
 
+    // Floating books also act as a "side element" that needs terminal to slide over
+    const booksOpen = state.floatingBooksVisible;
+    const hasSideContent = openSideWindow || booksOpen;
+
     const screenW = window.innerWidth;
     const screenH = window.innerHeight;
     const menuBarH = 28;
@@ -5663,23 +6156,36 @@ function Desktop() {
     const gap = 10;
     const usableH = screenH - menuBarH - dockH;
 
-    if (openSideWindow) {
+    if (hasSideContent) {
       // Save original terminal size before any adjustments
       if (!terminalOrigRef.current) {
         terminalOrigRef.current = { width: terminal.size.width, height: terminal.size.height };
       }
 
-      const sideWin = state.windows[openSideWindow]!;
-      const sideW = sideWin.size.width;
-      const sideH = sideWin.size.height; // Keep the window's current/default height
+      // Determine how much space the side content takes
+      let sideW: number;
+      let sideH: number;
+      if (openSideWindow) {
+        const sideWin = state.windows[openSideWindow]!;
+        sideW = sideWin.size.width;
+        sideH = sideWin.size.height;
+        // Place side window on right edge, vertically centered in usable area
+        const sideX = screenW - gap - sideW;
+        const sideY = menuBarH + Math.round((usableH - sideH) / 2);
+        if (Math.abs(sideWin.position.x - sideX) > 10 || Math.abs(sideWin.position.y - sideY) > 10) {
+          dispatch({ type: 'MOVE_WINDOW', id: openSideWindow, position: { x: sideX, y: sideY } });
+        }
+      } else {
+        // Floating books take ~560px on the right (525px book + gaps)
+        sideW = 580;
+        sideH = 700;
+      }
 
-      // Place side window on right edge, vertically centered in usable area
       const sideX = screenW - gap - sideW;
-      const sideY = menuBarH + Math.round((usableH - sideH) / 2);
 
       // Check if terminal fits without shrinking
       const origTermW = terminalOrigRef.current.width;
-      const spaceForTerm = sideX - gap - gap; // left gap + right gap before side window
+      const spaceForTerm = sideX - gap - gap;
       const termW = Math.min(origTermW, spaceForTerm);
       const termH = terminal.size.height;
 
@@ -5695,10 +6201,6 @@ function Desktop() {
       }
       if (Math.abs(terminal.position.x - termX) > 10) {
         dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: termX, y: termY } });
-      }
-
-      if (Math.abs(sideWin.position.x - sideX) > 10 || Math.abs(sideWin.position.y - sideY) > 10) {
-        dispatch({ type: 'MOVE_WINDOW', id: openSideWindow, position: { x: sideX, y: sideY } });
       }
     } else {
       // Restore terminal to original size and center when side windows close
@@ -5716,6 +6218,7 @@ function Desktop() {
     // Stable dependency: only re-run when the set of open side windows changes
     ['education', 'experience', 'stocks'].filter(id => state.windows[id]?.isOpen && !state.windows[id]?.isMinimized).join(','),
     state.windows['terminal']?.isOpen,
+    state.floatingBooksVisible,
   ]);
 
   // Keyboard shortcuts
@@ -5812,6 +6315,7 @@ function Desktop() {
             );
           })}
 
+          <FloatingBooks />
           <DesktopDock />
         </>
       )}
@@ -5961,7 +6465,9 @@ function MobileLayout() {
       newLines.push({ type: 'output', text: 'Type "help" to see available commands.' });
     }
 
-    setHistory(prev => [...prev, ...newLines]);
+    const now = Date.now();
+    const stamped = newLines.map(l => ({ ...l, ts: now }));
+    setHistory(prev => [...prev, ...stamped]);
     setCmdHistory(prev => [raw, ...prev]);
     setHistoryIdx(-1);
     setInput('');

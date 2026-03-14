@@ -138,8 +138,8 @@ export default function AppWindow({ windowState, children, darkMode, titleBarBg 
           ? (isFocused ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.06)')
           : (isFocused ? '1px solid rgba(0, 0, 0, 0.18)' : '1px solid rgba(0, 0, 0, 0.1)'),
         boxShadow: windowState.isFullscreen ? 'none' : isFocused
-          ? '0 25px 60px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.12)'
-          : '0 18px 50px rgba(0,0,0,0.2)',
+          ? '0 24px 80px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.12)'
+          : '0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15)',
         opacity: entering ? 0 : 1,
         transform: entering ? 'scale(0.92)' : 'scale(1)',
         transition: 'opacity 0.25s ease-out, transform 0.25s ease-out, box-shadow 0.2s ease, border-color 0.2s ease, border-radius 0.2s ease, left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease',

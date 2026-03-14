@@ -222,6 +222,12 @@ function desktopReducer(state: DesktopState, action: DesktopAction): DesktopStat
     case 'LOCK_SCREEN':
       return { ...initialState };
 
+    case 'SHOW_FLOATING_BOOKS':
+      return { ...state, floatingBooksVisible: true };
+
+    case 'HIDE_FLOATING_BOOKS':
+      return { ...state, floatingBooksVisible: false };
+
     default:
       return state;
   }
@@ -232,6 +238,7 @@ const initialState: DesktopState = {
   focusedWindowId: null,
   nextZIndex: 100,
   bootComplete: false,
+  floatingBooksVisible: false,
   activeDetail: null,
   activeContent: null,
 };
