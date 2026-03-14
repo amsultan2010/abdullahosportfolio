@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { DesktopProvider, useDesktop } from './DesktopContext';
 import MacBackground from './MacBackground';
 import AppWindow from './AppWindow';
@@ -1212,8 +1212,8 @@ function SectorTreemap() {
 
   const getColor = (pct: number) => {
     const intensity = Math.min(Math.abs(pct) / maxAbs, 1);
-    if (pct >= 0) return `rgba(34, ${Math.round(120 + intensity * 77)}, ${Math.round(50 + intensity * 30)}, ${0.6 + intensity * 0.4})`;
-    return `rgba(${Math.round(180 + intensity * 68)}, ${Math.round(40 - intensity * 20)}, ${Math.round(40 - intensity * 15)}, ${0.6 + intensity * 0.4})`;
+    if (pct >= 0) return `rgba(${Math.round(30 + intensity * 10)}, ${Math.round(90 + intensity * 60)}, ${Math.round(60 + intensity * 30)}, ${0.5 + intensity * 0.35})`;
+    return `rgba(${Math.round(130 + intensity * 50)}, ${Math.round(50 - intensity * 15)}, ${Math.round(55 - intensity * 10)}, ${0.5 + intensity * 0.35})`;
   };
 
   // Simple treemap: arrange in rows
@@ -1236,7 +1236,7 @@ function SectorTreemap() {
   }
 
   return (
-    <div style={{ padding: '8px 10px' }}>
+    <div style={{ padding: '8px 10px', height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
         <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
           MARKET TREEMAP
@@ -1246,7 +1246,7 @@ function SectorTreemap() {
           LIVE
         </div>
       </div>
-      <div style={{ position: 'relative', width: '100%', height: '120px', borderRadius: 4, overflow: 'hidden' }}>
+      <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: '120px', borderRadius: 4, overflow: 'hidden' }}>
         {rows.map((row, ri) => {
           const rowWeight = row.items.reduce((a, b) => a + b.weight, 0);
           let xPos = 0;
@@ -2550,18 +2550,7 @@ function BloombergTopBar({ stocks, gameMode, onToggleGame }: { stocks: StockData
         ))}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <button
-          onClick={onToggleGame}
-          style={{
-            background: gameMode ? 'rgba(255,107,53,0.2)' : 'transparent',
-            border: '1px solid rgba(255,107,53,0.4)',
-            color: '#ff6b35', fontSize: '9px', fontWeight: 700, letterSpacing: '0.08em',
-            padding: '2px 8px', borderRadius: '3px', cursor: 'pointer',
-            fontFamily: "'SF Mono', monospace",
-          }}
-        >
-          {gameMode ? '\u2715 CLOSE GAME' : 'BEAT THE MARKET'}
-        </button>
+        {/* Game button hidden for now */}
         <span style={{ color: 'rgba(255,255,255,0.5)' }}>
           {time.toLocaleTimeString('en-US', { hour12: false })}
         </span>
@@ -2869,413 +2858,1079 @@ function BloombergBottomBar() {
   );
 }
 
-type GamePhase = 'setup' | 'building' | 'simulating' | 'results';
-interface PortfolioStock { symbol: string; name: string; allocation: number; }
-
 function StockPickerGame({ stocks }: { stocks: StockData[] }) {
-  const [phase, setPhase] = useState<GamePhase>('setup');
-  const [timespan, setTimespan] = useState<'1mo' | '3mo' | '1y'>('3mo');
-  const [portfolio, setPortfolio] = useState<PortfolioStock[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [results, setResults] = useState<{ portfolioReturns: number[]; spyReturns: number[]; finalReturn: number; spyReturn: number } | null>(null);
+  // ── Trading Simulator State ──
+  type TradeOrder = { id: number; type: 'buy' | 'sell'; qty: number; price: number; day: number; symbol: string };
+  type Position = { symbol: string; qty: number; avgCost: number };
+  type HistData = { symbol: string; name: string; closes: number[]; timestamps: number[] };
+  type OHLCBar = { open: number; high: number; low: number; close: number; volume: number };
 
-  const timespanLabel = timespan === '1mo' ? '1 Month' : timespan === '3mo' ? '3 Months' : '1 Year';
-  const timespanMultiplier = timespan === '1mo' ? 1 / 12 : timespan === '3mo' ? 3 / 12 : 1;
-  const totalAllocation = portfolio.reduce((s, p) => s + p.allocation, 0);
+  const TRADE_SYMBOLS = 'AAPL,MSFT,NVDA,TSLA,META,AMZN,GOOG,NFLX,AMD,JPM,V,BA,DIS,COIN,PLTR,UBER,LLY,XOM,GS,BTC';
 
-  const filteredStocks = STOCK_NAMES.filter(s => {
-    if (portfolio.find(p => p.symbol === s.symbol)) return false;
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return s.symbol.toLowerCase().includes(q) || s.name.toLowerCase().includes(q);
-  });
-
-  const addStock = (symbol: string, name: string) => {
-    if (portfolio.length >= 10) return;
-    setPortfolio(prev => [...prev, { symbol, name, allocation: 0 }]);
+  const getName = (sym: string) => {
+    const found = STOCK_NAMES.find(s => s.symbol === sym);
+    return found ? found.name : sym;
   };
 
-  const removeStock = (symbol: string) => {
-    setPortfolio(prev => prev.filter(p => p.symbol !== symbol));
+
+  // ── Seeded random for reproducible OHLC ──
+  const seededRandom = (seed: number) => {
+    let s = seed;
+    return () => { s = (s * 16807 + 0) % 2147483647; return s / 2147483647; };
   };
 
-  const setAllocation = (symbol: string, val: number) => {
-    setPortfolio(prev => prev.map(p => p.symbol === symbol ? { ...p, allocation: Math.max(0, Math.min(100, val)) } : p));
+  // ── Generate OHLC from closes ──
+  const generateOHLC = (closes: number[]): OHLCBar[] => {
+    const rng = seededRandom(42);
+    return closes.map((close, i) => {
+      const open = i === 0 ? close * (0.99 + rng() * 0.02) : closes[i - 1];
+      const highMult = 1 + rng() * 0.03;
+      const lowMult = 0.97 + rng() * 0.03;
+      const high = Math.max(open, close) * highMult;
+      const low = Math.min(open, close) * lowMult;
+      const volume = Math.floor(5000000 + rng() * 30000000);
+      return { open, high, low, close, volume };
+    });
   };
 
-  const equalWeight = () => {
-    if (portfolio.length === 0) return;
-    const w = Math.floor(100 / portfolio.length);
-    const remainder = 100 - w * portfolio.length;
-    setPortfolio(prev => prev.map((p, i) => ({ ...p, allocation: w + (i === 0 ? remainder : 0) })));
-  };
+  // ── Ranks & Achievements ──
+  const RANKS = [
+    { title: 'Intern', minXp: 0, color: 'rgba(255,255,255,0.4)' },
+    { title: 'Junior Analyst', minXp: 100, color: '#60a5fa' },
+    { title: 'Analyst', minXp: 300, color: '#818cf8' },
+    { title: 'Senior Analyst', minXp: 600, color: '#a78bfa' },
+    { title: 'Vice President', minXp: 1000, color: '#c084fc' },
+    { title: 'Director', minXp: 1600, color: '#f472b6' },
+    { title: 'Managing Director', minXp: 2500, color: '#ff6b35' },
+    { title: 'Wolf of Wall Street', minXp: 4000, color: '#fbbf24' },
+  ];
+  const ACHIEVEMENTS = [
+    { id: 'first_trade', label: 'First Blood', desc: 'Execute your first trade', icon: '\u2694\uFE0F' },
+    { id: 'profit_1k', label: 'Comma Club', desc: 'Earn $1,000+ profit', icon: '\uD83D\uDCB0' },
+    { id: 'profit_10k', label: 'Big Leagues', desc: 'Earn $10,000+ profit', icon: '\uD83D\uDCC8' },
+    { id: 'streak_3', label: 'Hot Streak', desc: '3 profitable trades in a row', icon: '\uD83D\uDD25' },
+    { id: 'streak_5', label: 'On Fire', desc: '5 profitable trades in a row', icon: '\u26A1' },
+    { id: 'buy_low', label: 'Bottom Fisher', desc: 'Buy at the daily low', icon: '\uD83C\uDFA3' },
+    { id: 'quick_flip', label: 'Scalper', desc: 'Profit within 2 days of buying', icon: '\u23F1\uFE0F' },
+    { id: 'diamond_hands', label: 'Diamond Hands', desc: 'Hold a position for 20+ days', icon: '\uD83D\uDC8E' },
+    { id: 'beat_market', label: 'Market Beater', desc: 'Outperform S&P 500', icon: '\uD83C\uDFC6' },
+    { id: 'ten_trades', label: 'Active Trader', desc: 'Execute 10+ trades', icon: '\uD83D\uDCCA' },
+  ];
+  const LEADERBOARD_ENTRIES = [
+    { name: 'Warren Buffett', firm: 'Berkshire Hathaway', annualReturn: 19.8, style: 'Value' },
+    { name: 'Jim Simons', firm: 'Renaissance Tech', annualReturn: 66.1, style: 'Quant' },
+    { name: 'Ray Dalio', firm: 'Bridgewater', annualReturn: 12.0, style: 'Macro' },
+    { name: 'George Soros', firm: 'Quantum Fund', annualReturn: 30.0, style: 'Macro' },
+    { name: 'Peter Lynch', firm: 'Magellan Fund', annualReturn: 29.2, style: 'Growth' },
+    { name: 'Carl Icahn', firm: 'Icahn Capital', annualReturn: 14.6, style: 'Activist' },
+    { name: 'Steve Cohen', firm: 'Point72', annualReturn: 30.0, style: 'Multi-Strat' },
+    { name: 'Ken Griffin', firm: 'Citadel', annualReturn: 26.0, style: 'Market Making' },
+    { name: 'Cathie Wood', firm: 'ARK Invest', annualReturn: 15.2, style: 'Disruptive' },
+    { name: 'S&P 500 Index', firm: 'Passive', annualReturn: 10.5, style: 'Index' },
+  ];
 
-  const runSimulation = async () => {
-    setPhase('simulating');
-    const symbols = portfolio.map(p => p.symbol).join(',');
+  // ── State ──
+  const [cash, setCash] = useState(100000);
+  const [portfolioHistory, setPortfolioHistory] = useState<number[]>([100000]);
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [orders, setOrders] = useState<TradeOrder[]>([]);
+  const [histDataMap, setHistDataMap] = useState<Record<string, HistData>>({});
+  const [loading, setLoading] = useState(true);
+  const [round, setRound] = useState(1);
+  const [totalRounds] = useState(3);
+  const [currentSymbol, setCurrentSymbol] = useState('');
+  const [visibleDays, setVisibleDays] = useState(0);
+  const [roundComplete, setRoundComplete] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [orderType, setOrderType] = useState<'market' | 'limit'>('market');
+  const [orderQty, setOrderQty] = useState(10);
+  const [limitPrice, setLimitPrice] = useState(0);
+  const [flashEffect, setFlashEffect] = useState<'buy' | 'sell' | null>(null);
+  const [pnlFlash, setPnlFlash] = useState(0);
+  const [dayPnl, setDayPnl] = useState(0);
+  const [revealed, setRevealed] = useState(false);
+  const [usedSymbols, setUsedSymbols] = useState<string[]>([]);
+  const [roundScores, setRoundScores] = useState<{ symbol: string; pnl: number; spReturn: number }[]>([]);
+  const [animatingCandle, setAnimatingCandle] = useState(-1);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const chartRef = useRef<SVGSVGElement | null>(null);
+  const totalDays = 60;
 
-    let historicalData: Record<string, number[]> = {};
-    try {
-      const res = await fetch(`/api/stock-history?symbols=${symbols},SPY&range=${timespan}`);
-      if (res.ok) historicalData = await res.json();
-    } catch { /* fallback below */ }
+  // ── Gamification state ──
+  const [xp, setXp] = useState(0);
+  const [profitStreak, setProfitStreak] = useState(0);
+  const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
+  const [achievementToast, setAchievementToast] = useState<{ label: string; icon: string; desc: string } | null>(null);
+  const [xpPopups, setXpPopups] = useState<{ id: number; amount: number; x: number }[]>([]);
+  const [buyDay, setBuyDay] = useState(-1);
+  const [started, setStarted] = useState(false);
 
-    // Generate random walk fallback
-    const generateWalk = (annualDrift: number, volatility: number, days: number): number[] => {
-      const prices = [100];
-      const dailyDrift = annualDrift / 252;
-      const dailyVol = volatility / Math.sqrt(252);
-      for (let i = 1; i < days; i++) {
-        const ret = dailyDrift + dailyVol * (Math.random() * 2 - 1);
-        prices.push(prices[i - 1] * (1 + ret));
+  // ── Rank calculation ──
+  const currentRank = useMemo(() => {
+    for (let i = RANKS.length - 1; i >= 0; i--) {
+      if (xp >= RANKS[i].minXp) return RANKS[i];
+    }
+    return RANKS[0];
+  }, [xp]);
+  const nextRank = useMemo(() => {
+    const idx = RANKS.findIndex(r => r.title === currentRank.title);
+    return idx < RANKS.length - 1 ? RANKS[idx + 1] : null;
+  }, [currentRank]);
+  const xpProgress = nextRank ? (xp - currentRank.minXp) / (nextRank.minXp - currentRank.minXp) : 1;
+
+  // ── Achievement unlock helper ──
+  const unlockAchievement = useCallback((id: string) => {
+    if (unlockedAchievements.includes(id)) return;
+    const ach = ACHIEVEMENTS.find(a => a.id === id);
+    if (!ach) return;
+    setUnlockedAchievements(prev => [...prev, id]);
+    setAchievementToast({ label: ach.label, icon: ach.icon, desc: ach.desc });
+    setXp(prev => prev + 150);
+    addXpPopup(150);
+    setTimeout(() => setAchievementToast(null), 3000);
+  }, [unlockedAchievements]);
+
+  // ── XP popup helper ──
+  const addXpPopup = useCallback((amount: number) => {
+    const id = Date.now() + Math.random();
+    setXpPopups(prev => [...prev, { id, amount, x: 50 + Math.random() * 200 }]);
+    setTimeout(() => setXpPopups(prev => prev.filter(p => p.id !== id)), 1500);
+  }, []);
+
+  // ── Fetch historical data ──
+  useEffect(() => {
+    const syms = TRADE_SYMBOLS.split(',');
+    fetch(`/api/stock-history?symbols=${syms.join(',')}&range=3mo`)
+      .then(r => r.json())
+      .then(json => {
+        const map: Record<string, HistData> = {};
+        for (const sym of syms) {
+          if (json.data?.[sym]) {
+            map[sym] = {
+              symbol: sym,
+              name: getName(sym),
+              closes: json.data[sym].closes,
+              timestamps: json.data[sym].timestamps,
+            };
+          }
+        }
+        setHistDataMap(map);
+        setLoading(false);
+      })
+      .catch(() => {
+        // Generate fallback data
+        const map: Record<string, HistData> = {};
+        const rng = seededRandom(99);
+        for (const sym of syms) {
+          let p = 100 + rng() * 400;
+          const closes: number[] = [];
+          const timestamps: number[] = [];
+          for (let i = 0; i < 70; i++) {
+            p *= 0.97 + rng() * 0.06;
+            closes.push(Math.round(p * 100) / 100);
+            timestamps.push(Date.now() - (70 - i) * 86400000);
+          }
+          map[sym] = { symbol: sym, name: getName(sym), closes, timestamps };
+        }
+        setHistDataMap(map);
+        setLoading(false);
+      });
+  }, []);
+
+  // ── Pick random stock for round ──
+  const startRound = useCallback((roundNum: number) => {
+    const available = Object.keys(histDataMap).filter(s => !usedSymbols.includes(s));
+    if (available.length === 0) return;
+    const rng = seededRandom(roundNum * 7 + 13);
+    const pick = available[Math.floor(rng() * available.length)];
+    setCurrentSymbol(pick);
+    setUsedSymbols(prev => [...prev, pick]);
+    setVisibleDays(0);
+    setRoundComplete(false);
+    setRevealed(false);
+    setDayPnl(0);
+    setAnimatingCandle(-1);
+  }, [histDataMap, usedSymbols]);
+
+  useEffect(() => {
+    if (!loading && Object.keys(histDataMap).length > 0 && !currentSymbol) {
+      startRound(1);
+    }
+  }, [loading, histDataMap, currentSymbol, startRound]);
+
+  // ── Day timer ──
+  useEffect(() => {
+    if (!currentSymbol || roundComplete || loading) return;
+    timerRef.current = setInterval(() => {
+      setVisibleDays(prev => {
+        const next = prev + 1;
+        setAnimatingCandle(next - 1);
+        setTimeout(() => setAnimatingCandle(-1), 400);
+        if (next >= totalDays) {
+          setRoundComplete(true);
+          if (timerRef.current) clearInterval(timerRef.current);
+        }
+        return next;
+      });
+    }, 800);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [currentSymbol, roundComplete, loading]);
+
+  // ── Current data ──
+  const histData = currentSymbol ? histDataMap[currentSymbol] : null;
+  const ohlcData = useMemo((): OHLCBar[] => histData ? generateOHLC(histData.closes) : [], [histData]);
+  const visibleOHLC = ohlcData.slice(0, visibleDays);
+  const currentPrice = visibleOHLC.length > 0 ? visibleOHLC[visibleOHLC.length - 1].close : 0;
+  const prevPrice = visibleOHLC.length > 1 ? visibleOHLC[visibleOHLC.length - 2].close : currentPrice;
+  const spread = currentPrice * 0.001;
+  const bidPrice = Math.round((currentPrice - spread / 2) * 100) / 100;
+  const askPrice = Math.round((currentPrice + spread / 2) * 100) / 100;
+
+  // ── Position for current symbol ──
+  const currentPos = positions.find(p => p.symbol === currentSymbol);
+  const unrealizedPnl = currentPos ? (currentPrice - currentPos.avgCost) * currentPos.qty : 0;
+  const totalPositionValue = positions.reduce((sum, p) => {
+    const price = histDataMap[p.symbol]?.closes?.[Math.min(visibleDays - 1, (histDataMap[p.symbol]?.closes?.length || 1) - 1)] || 0;
+    return sum + price * p.qty;
+  }, 0);
+  const portfolioValue = cash + totalPositionValue;
+  const totalPnl = portfolioValue - 100000;
+
+  // ── Track day P&L + achievement checks ──
+  useEffect(() => {
+    if (visibleOHLC.length > 1 && currentPos) {
+      const dayChange = (currentPrice - prevPrice) * currentPos.qty;
+      setDayPnl(dayChange);
+      if (Math.abs(dayChange) > 0.01) {
+        setPnlFlash(dayChange > 0 ? 1 : -1);
+        setTimeout(() => setPnlFlash(0), 600);
       }
-      return prices;
-    };
+      // Diamond hands: held 20+ days
+      if (buyDay >= 0 && visibleDays - buyDay >= 20) unlockAchievement('diamond_hands');
+    }
+    // Profit milestones
+    if (totalPnl >= 1000) unlockAchievement('profit_1k');
+    if (totalPnl >= 10000) unlockAchievement('profit_10k');
+  }, [visibleDays]);
 
-    const days = timespan === '1mo' ? 21 : timespan === '3mo' ? 63 : 252;
+  // ── Execute trade ──
+  const executeTrade = useCallback((side: 'buy' | 'sell', qty: number) => {
+    if (qty <= 0 || !currentSymbol) return;
+    const price = side === 'buy' ? askPrice : bidPrice;
+    const cost = price * qty;
 
-    // Get or generate SPY data
-    const spyPrices = historicalData['SPY'] && historicalData['SPY'].length > 5
-      ? historicalData['SPY']
-      : generateWalk(0.10, 0.15, days);
-
-    // Calculate portfolio returns
-    const portfolioDaily: number[] = Array(spyPrices.length).fill(0);
-    for (const pos of portfolio) {
-      const weight = pos.allocation / 100;
-      const prices = historicalData[pos.symbol] && historicalData[pos.symbol].length > 5
-        ? historicalData[pos.symbol]
-        : generateWalk(Math.random() * 0.4 - 0.1, 0.2 + Math.random() * 0.3, days);
-      const normalizedPrices = prices.map(p => p / prices[0]);
-      for (let i = 0; i < portfolioDaily.length; i++) {
-        const idx = Math.min(i, normalizedPrices.length - 1);
-        portfolioDaily[i] += normalizedPrices[idx] * weight;
-      }
+    if (side === 'buy') {
+      if (cost > cash) return;
+      setCash(prev => prev - cost);
+      setPositions(prev => {
+        const existing = prev.find(p => p.symbol === currentSymbol);
+        if (existing) {
+          const totalQty = existing.qty + qty;
+          const avgCost = (existing.avgCost * existing.qty + price * qty) / totalQty;
+          return prev.map(p => p.symbol === currentSymbol ? { ...p, qty: totalQty, avgCost } : p);
+        }
+        return [...prev, { symbol: currentSymbol, qty, avgCost: price }];
+      });
+    } else {
+      const pos = positions.find(p => p.symbol === currentSymbol);
+      if (!pos || pos.qty < qty) return;
+      setCash(prev => prev + cost);
+      setPositions(prev => {
+        const existing = prev.find(p => p.symbol === currentSymbol);
+        if (!existing) return prev;
+        if (existing.qty === qty) return prev.filter(p => p.symbol !== currentSymbol);
+        return prev.map(p => p.symbol === currentSymbol ? { ...p, qty: p.qty - qty } : p);
+      });
     }
 
-    const spyNorm = spyPrices.map(p => p / spyPrices[0]);
-    const portfolioReturns = portfolioDaily.map(v => (v - 1) * 100);
-    const spyReturns = spyNorm.map(v => (v - 1) * 100);
+    const newOrder: TradeOrder = { id: Date.now(), type: side, qty, price, day: visibleDays, symbol: currentSymbol };
+    setOrders(prev => [...prev, newOrder]);
 
-    setResults({
-      portfolioReturns,
-      spyReturns,
-      finalReturn: portfolioReturns[portfolioReturns.length - 1],
-      spyReturn: spyReturns[spyReturns.length - 1],
+    setFlashEffect(side);
+    setTimeout(() => setFlashEffect(null), 500);
+
+    // ── Gamification: XP + achievements ──
+    const baseXp = 25 + Math.floor(qty / 10) * 5;
+    setXp(prev => prev + baseXp);
+    addXpPopup(baseXp);
+
+    // First trade
+    if (orders.length === 0) unlockAchievement('first_trade');
+    // 10 trades
+    if (orders.length + 1 >= 10) unlockAchievement('ten_trades');
+
+    if (side === 'buy') {
+      setBuyDay(visibleDays);
+    }
+
+    if (side === 'sell') {
+      const pos = positions.find(p => p.symbol === currentSymbol);
+      if (pos) {
+        const tradeProfit = (price - pos.avgCost) * qty;
+        if (tradeProfit > 0) {
+          const newStreak = profitStreak + 1;
+          setProfitStreak(newStreak);
+          const streakBonus = Math.floor(newStreak * 15);
+          setXp(prev => prev + streakBonus);
+          if (streakBonus > 0) addXpPopup(streakBonus);
+          if (newStreak >= 3) unlockAchievement('streak_3');
+          if (newStreak >= 5) unlockAchievement('streak_5');
+          // Quick flip
+          if (buyDay >= 0 && visibleDays - buyDay <= 2) unlockAchievement('quick_flip');
+        } else {
+          setProfitStreak(0);
+        }
+      }
+    }
+  }, [currentSymbol, askPrice, bidPrice, cash, positions, visibleDays, orders, profitStreak, buyDay, unlockAchievement, addXpPopup]);
+
+  // ── Next round ──
+  const nextRound = useCallback(() => {
+    // Close all positions for current symbol
+    const pos = positions.find(p => p.symbol === currentSymbol);
+    if (pos) {
+      const proceeds = currentPrice * pos.qty;
+      setCash(prev => prev + proceeds);
+      setPositions(prev => prev.filter(p => p.symbol !== currentSymbol));
+    }
+
+    const spReturn = histData ? ((histData.closes[Math.min(totalDays - 1, histData.closes.length - 1)] / histData.closes[0]) - 1) * 100 : 0;
+    const roundPnl = orders.filter(o => o.symbol === currentSymbol).reduce((sum, o) => {
+      return sum + (o.type === 'sell' ? o.price * o.qty : -o.price * o.qty);
+    }, 0) + (pos ? currentPrice * pos.qty : 0);
+
+    setRoundScores(prev => [...prev, { symbol: currentSymbol, pnl: roundPnl, spReturn }]);
+
+    if (round >= totalRounds) {
+      setGameOver(true);
+    } else {
+      setRound(prev => prev + 1);
+      startRound(round + 1);
+    }
+  }, [positions, currentSymbol, currentPrice, round, totalRounds, startRound, histData, orders]);
+
+  // ── Format helpers ──
+  const fmt = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtPnl = (n: number) => (n >= 0 ? '+' : '') + fmt(n);
+
+  // ── Candlestick chart renderer ──
+  const CandlestickChart = useMemo(() => {
+    if (!visibleOHLC.length) return null;
+    const chartW = 700;
+    const chartH = 320;
+    const volH = 60;
+    const pad = { top: 20, right: 60, bottom: 5, left: 60 };
+    const plotW = chartW - pad.left - pad.right;
+    const plotH = chartH - pad.top - pad.bottom;
+
+    const allData = ohlcData.slice(0, Math.max(visibleDays, 1));
+    const minPrice = Math.min(...allData.map(d => d.low)) * 0.998;
+    const maxPrice = Math.max(...allData.map(d => d.high)) * 1.002;
+    const priceRange = maxPrice - minPrice || 1;
+    const maxVol = Math.max(...allData.map(d => d.volume));
+
+    const candleW = Math.max(2, Math.min(10, plotW / totalDays - 2));
+    const gap = plotW / totalDays;
+
+    const yScale = (p: number) => pad.top + plotH - ((p - minPrice) / priceRange) * plotH;
+    const volScale = (v: number) => (v / maxVol) * volH;
+
+    // Grid lines
+    const gridLines = [];
+    const priceStep = priceRange / 5;
+    for (let i = 0; i <= 5; i++) {
+      const price = minPrice + priceStep * i;
+      const y = yScale(price);
+      gridLines.push(
+        <g key={`grid-${i}`}>
+          <line x1={pad.left} y1={y} x2={chartW - pad.right} y2={y} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+          <text x={chartW - pad.right + 5} y={y + 4} fill="rgba(255,255,255,0.4)" fontSize="9" fontFamily="'SF Mono', monospace">{price.toFixed(2)}</text>
+        </g>
+      );
+    }
+
+    // Candles
+    const candles = visibleOHLC.map((d, i) => {
+      const x = pad.left + i * gap + gap / 2;
+      const isGreen = d.close >= d.open;
+      const color = isGreen ? '#4ade80' : '#f87171';
+      const bodyTop = yScale(Math.max(d.open, d.close));
+      const bodyBot = yScale(Math.min(d.open, d.close));
+      const bodyH = Math.max(1, bodyBot - bodyTop);
+      const isAnimating = i === animatingCandle;
+
+      return (
+        <g key={`candle-${i}`} style={{
+          opacity: isAnimating ? 0 : 1,
+          animation: isAnimating ? 'none' : undefined,
+          transition: 'opacity 0.3s ease',
+        }}>
+          {/* Wick */}
+          <line x1={x} y1={yScale(d.high)} x2={x} y2={yScale(d.low)} stroke={color} strokeWidth="1" />
+          {/* Body */}
+          <rect
+            x={x - candleW / 2}
+            y={bodyTop}
+            width={candleW}
+            height={bodyH}
+            fill={isGreen ? color : color}
+            stroke={color}
+            strokeWidth="0.5"
+            rx="0.5"
+          />
+        </g>
+      );
     });
-    setPhase('results');
-  };
 
-  // Setup screen
-  if (phase === 'setup') {
+    // Volume bars
+    const volBars = visibleOHLC.map((d, i) => {
+      const x = pad.left + i * gap + gap / 2;
+      const isGreen = d.close >= d.open;
+      const h = volScale(d.volume);
+      return (
+        <rect
+          key={`vol-${i}`}
+          x={x - candleW / 2}
+          y={chartH + volH - h}
+          width={candleW}
+          height={h}
+          fill={isGreen ? 'rgba(74,222,128,0.25)' : 'rgba(248,113,113,0.25)'}
+          rx="0.5"
+        />
+      );
+    });
+
+    // Current price line
+    const curY = yScale(currentPrice);
+
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', fontFamily: "'SF Mono', monospace", padding: '40px' }}>
-        <div style={{ fontSize: '28px', fontWeight: 700, color: '#ff6b35', letterSpacing: '0.05em', marginBottom: '8px' }}>
-          BEAT THE MARKET
+      <svg ref={chartRef} width="100%" height="100%" viewBox={`0 0 ${chartW} ${chartH + volH + 10}`} preserveAspectRatio="xMidYMid meet">
+        {/* Background */}
+        <rect width={chartW} height={chartH + volH + 10} fill="transparent" />
+        {gridLines}
+        {/* Separator line between chart and volume */}
+        <line x1={pad.left} y1={chartH} x2={chartW - pad.right} y2={chartH} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+        {candles}
+        {volBars}
+        {/* Current price dashed line */}
+        {visibleOHLC.length > 0 && (
+          <g>
+            <line x1={pad.left} y1={curY} x2={chartW - pad.right} y2={curY} stroke="#ff6b35" strokeWidth="1" strokeDasharray="4,3" opacity="0.7" />
+            <rect x={chartW - pad.right} y={curY - 10} width={55} height={20} rx="3" fill="#ff6b35" />
+            <text x={chartW - pad.right + 27} y={curY + 4} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="'SF Mono', monospace">{currentPrice.toFixed(2)}</text>
+            {/* Pulsing dot */}
+            <circle cx={pad.left + visibleDays * gap - gap / 2} cy={curY} r="3" fill="#ff6b35">
+              <animate attributeName="r" values="3;6;3" dur="1.5s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="1;0.4;1" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+          </g>
+        )}
+        {/* Order markers */}
+        {orders.filter(o => o.symbol === currentSymbol).map(o => {
+          const ox = pad.left + o.day * gap + gap / 2;
+          const oy = yScale(o.price);
+          return (
+            <g key={o.id}>
+              <polygon
+                points={o.type === 'buy'
+                  ? `${ox},${oy + 8} ${ox - 5},${oy + 14} ${ox + 5},${oy + 14}`
+                  : `${ox},${oy - 8} ${ox - 5},${oy - 14} ${ox + 5},${oy - 14}`}
+                fill={o.type === 'buy' ? '#4ade80' : '#f87171'}
+                opacity="0.9"
+              />
+            </g>
+          );
+        })}
+        {/* Day counter */}
+        <text x={pad.left} y={chartH + volH + 8} fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="'SF Mono', monospace">
+          Day {visibleDays}/{totalDays}
+        </text>
+      </svg>
+    );
+  }, [visibleOHLC, ohlcData, visibleDays, animatingCandle, currentPrice, orders, currentSymbol]);
+
+  // ── Max qty user can buy ──
+  const maxBuyQty = currentPrice > 0 ? Math.floor(cash / askPrice) : 0;
+  const maxSellQty = currentPos?.qty || 0;
+
+  // ── Start screen ──
+  if (!started && !loading) {
+    return (
+      <div style={{
+        height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        background: 'radial-gradient(ellipse at center, #0f1119 0%, #0a0c12 70%)',
+        fontFamily: "'SF Mono', monospace", color: '#fff', gap: '20px', padding: '40px',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        {/* Animated background grid */}
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.04, backgroundImage: 'linear-gradient(rgba(255,107,53,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,107,53,0.3) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        <div style={{ fontSize: '11px', letterSpacing: '0.3em', color: 'rgba(255,107,53,0.6)', textTransform: 'uppercase', zIndex: 1 }}>Bloomberg Terminal Presents</div>
+        <div style={{
+          fontSize: '42px', fontWeight: 900, color: '#ff6b35', letterSpacing: '0.05em', zIndex: 1,
+          textShadow: '0 0 60px rgba(255,107,53,0.3), 0 0 120px rgba(255,107,53,0.1)',
+        }}>
+          TRADING ARENA
         </div>
-        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginBottom: '32px' }}>
-          Can you outperform Wall Street&apos;s best?
+        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', maxWidth: '400px', textAlign: 'center', lineHeight: 1.8, zIndex: 1 }}>
+          Trade mystery stocks in real-time. Earn XP, unlock achievements, and climb the ranks from Intern to Wolf of Wall Street.
         </div>
-        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', marginBottom: '10px' }}>TIMESPAN</div>
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-          {(['1mo', '3mo', '1y'] as const).map(t => (
-            <button key={t} onClick={() => setTimespan(t)} style={{
-              background: timespan === t ? 'rgba(255,107,53,0.2)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${timespan === t ? '#ff6b35' : 'rgba(255,255,255,0.1)'}`,
-              color: timespan === t ? '#ff6b35' : 'rgba(255,255,255,0.5)',
-              padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px',
-              fontFamily: "'SF Mono', monospace", fontWeight: 600,
-            }}>
-              {t === '1mo' ? '1 Month' : t === '3mo' ? '3 Months' : '1 Year'}
-            </button>
+        <div style={{ display: 'flex', gap: '32px', margin: '16px 0', zIndex: 1 }}>
+          {[
+            { val: '$100K', label: 'STARTING CAPITAL' },
+            { val: '3', label: 'ROUNDS' },
+            { val: '60', label: 'TRADING DAYS' },
+          ].map((s, i) => (
+            <div key={i} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '24px', fontWeight: 800, color: '#ff6b35' }}>{s.val}</div>
+              <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.15em', marginTop: '4px' }}>{s.label}</div>
+            </div>
           ))}
         </div>
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginBottom: '6px' }}>STARTING CAPITAL</div>
-        <div style={{ fontSize: '24px', fontWeight: 700, color: '#4ade80', marginBottom: '32px' }}>$100,000</div>
-        <button onClick={() => setPhase('building')} style={{
-          background: '#ff6b35', border: 'none', color: '#fff', padding: '10px 28px',
-          borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
-          fontFamily: "'SF Mono', monospace", letterSpacing: '0.05em',
-        }}>
-          BUILD PORTFOLIO {'\u2192'}
+        <button onClick={() => setStarted(true)} style={{
+          padding: '14px 48px', border: '2px solid #ff6b35', borderRadius: '6px', cursor: 'pointer',
+          background: 'rgba(255,107,53,0.1)', color: '#ff6b35', fontSize: '14px', fontWeight: 800,
+          fontFamily: "'SF Mono', monospace", letterSpacing: '0.15em', zIndex: 1,
+          transition: 'all 0.3s ease', animation: 'pulse-glow 2s ease infinite',
+        }}
+          onMouseEnter={e => { (e.target as HTMLButtonElement).style.background = 'rgba(255,107,53,0.25)'; }}
+          onMouseLeave={e => { (e.target as HTMLButtonElement).style.background = 'rgba(255,107,53,0.1)'; }}
+        >
+          START TRADING
         </button>
+        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', marginTop: '8px', zIndex: 1 }}>
+          Can you beat the legends?
+        </div>
       </div>
     );
   }
 
-  // Building screen
-  if (phase === 'building') {
+  // ── Loading screen ──
+  if (loading) {
     return (
-      <div style={{ display: 'flex', height: '100%', fontFamily: "'SF Mono', monospace" }}>
-        {/* Left: Search */}
-        <div style={{ width: '60%', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: '12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{
+        height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: '#0a0c12', color: '#ff6b35', fontFamily: "'SF Mono', monospace",
+        flexDirection: 'column', gap: '16px',
+      }}>
+        <div style={{ fontSize: '24px', fontWeight: 700, letterSpacing: '0.1em' }}>LOADING MARKET DATA</div>
+        <div style={{
+          width: '200px', height: '3px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden',
+        }}>
+          <div style={{
+            width: '40%', height: '100%', background: '#ff6b35', borderRadius: '2px',
+            animation: 'loading-slide 1.5s ease-in-out infinite',
+          }} />
+        </div>
+        <style>{`@keyframes loading-slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }`}</style>
+      </div>
+    );
+  }
+
+  // ── Game over screen ──
+  if (gameOver) {
+    const totalReturn = ((portfolioValue / 100000) - 1) * 100;
+    const avgSpReturn = roundScores.reduce((s, r) => s + r.spReturn, 0) / roundScores.length;
+    const beatMarket = totalReturn > avgSpReturn;
+    // Build leaderboard with user inserted
+    const scaledReturn = totalReturn * (365 / (totalDays * totalRounds));
+    const leaderboardWithUser = [...LEADERBOARD_ENTRIES, { name: 'YOU', firm: currentRank.title, annualReturn: scaledReturn, style: 'Manual' }]
+      .sort((a, b) => b.annualReturn - a.annualReturn);
+    const userRankIdx = leaderboardWithUser.findIndex(e => e.name === 'YOU');
+
+    return (
+      <div className="bloomberg-scroll" style={{
+        height: '100%', overflowY: 'auto', background: 'radial-gradient(ellipse at top, #0f1119 0%, #0a0c12 70%)',
+        color: '#fff', fontFamily: "'SF Mono', monospace", padding: '32px 40px',
+      }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+            <div style={{ fontSize: '10px', letterSpacing: '0.3em', color: 'rgba(255,255,255,0.3)', marginBottom: '8px' }}>TRADING SESSION COMPLETE</div>
+            <div style={{
+              fontSize: '36px', fontWeight: 900, color: beatMarket ? '#4ade80' : '#f87171',
+              textShadow: `0 0 40px ${beatMarket ? 'rgba(74,222,128,0.25)' : 'rgba(248,113,113,0.25)'}`,
+              marginBottom: '8px',
+            }}>
+              {beatMarket ? 'YOU BEAT THE MARKET' : 'MARKET WINS'}
+            </div>
+            <div style={{ fontSize: '12px', color: currentRank.color, fontWeight: 700 }}>
+              Final Rank: {currentRank.title} ({xp} XP)
+            </div>
+          </div>
+
+          {/* Stats row */}
+          <div style={{ display: 'flex', gap: '20px', marginBottom: '24px', justifyContent: 'center' }}>
+            {[
+              { val: `${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(2)}%`, label: 'YOUR RETURN', color: totalReturn >= 0 ? '#4ade80' : '#f87171' },
+              { val: `$${fmt(portfolioValue)}`, label: 'FINAL VALUE', color: '#fff' },
+              { val: `${orders.length}`, label: 'TRADES', color: '#ff6b35' },
+              { val: `${unlockedAchievements.length}/${ACHIEVEMENTS.length}`, label: 'ACHIEVEMENTS', color: '#fbbf24' },
+            ].map((s, i) => (
+              <div key={i} style={{ textAlign: 'center', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', flex: 1 }}>
+                <div style={{ fontSize: '20px', fontWeight: 800, color: s.color, marginBottom: '4px' }}>{s.val}</div>
+                <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.15em' }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Round breakdown + Leaderboard side by side */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+            {/* Rounds */}
+            <div>
+              <div style={{ fontSize: '10px', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.4)', marginBottom: '10px' }}>ROUND BREAKDOWN</div>
+              {roundScores.map((r, i) => (
+                <div key={i} style={{
+                  display: 'flex', justifyContent: 'space-between', padding: '8px 10px', marginBottom: '4px',
+                  background: 'rgba(255,255,255,0.03)', borderRadius: '4px', borderLeft: `2px solid ${r.pnl >= 0 ? '#4ade80' : '#f87171'}`,
+                }}>
+                  <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px' }}>R{i + 1}: {r.symbol}</span>
+                  <span style={{ color: r.pnl >= 0 ? '#4ade80' : '#f87171', fontSize: '11px', fontWeight: 600 }}>{fmtPnl(r.pnl)}</span>
+                </div>
+              ))}
+            </div>
+            {/* Leaderboard */}
+            <div>
+              <div style={{ fontSize: '10px', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.4)', marginBottom: '10px' }}>LEADERBOARD (ANNUALIZED)</div>
+              {leaderboardWithUser.map((entry, i) => {
+                const isUser = entry.name === 'YOU';
+                return (
+                  <div key={i} style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '5px 8px', marginBottom: '2px', borderRadius: '3px',
+                    background: isUser ? 'rgba(255,107,53,0.12)' : 'rgba(255,255,255,0.02)',
+                    border: isUser ? '1px solid rgba(255,107,53,0.3)' : '1px solid transparent',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.25)', width: '16px' }}>#{i + 1}</span>
+                      <span style={{ fontSize: '10px', color: isUser ? '#ff6b35' : 'rgba(255,255,255,0.6)', fontWeight: isUser ? 800 : 500 }}>{entry.name}</span>
+                      <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.25)' }}>{entry.firm}</span>
+                    </div>
+                    <span style={{
+                      fontSize: '10px', fontWeight: 700,
+                      color: entry.annualReturn >= 0 ? '#4ade80' : '#f87171',
+                    }}>{entry.annualReturn >= 0 ? '+' : ''}{entry.annualReturn.toFixed(1)}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Achievements */}
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ fontSize: '10px', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.4)', marginBottom: '10px' }}>ACHIEVEMENTS UNLOCKED</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {ACHIEVEMENTS.map(a => {
+                const unlocked = unlockedAchievements.includes(a.id);
+                return (
+                  <div key={a.id} style={{
+                    padding: '6px 10px', borderRadius: '4px', fontSize: '10px',
+                    background: unlocked ? 'rgba(255,107,53,0.1)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${unlocked ? 'rgba(255,107,53,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                    color: unlocked ? '#ff6b35' : 'rgba(255,255,255,0.15)',
+                    opacity: unlocked ? 1 : 0.5,
+                  }}>
+                    {a.icon} {a.label}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Play again */}
+          <div style={{ textAlign: 'center' }}>
+            <button onClick={() => { setStarted(false); setGameOver(false); setCash(100000); setPositions([]); setOrders([]); setRound(1); setCurrentSymbol(''); setUsedSymbols([]); setRoundScores([]); setXp(0); setProfitStreak(0); setUnlockedAchievements([]); setVisibleDays(0); setRoundComplete(false); }} style={{
+              padding: '10px 32px', border: '2px solid #ff6b35', borderRadius: '6px', cursor: 'pointer',
+              background: 'rgba(255,107,53,0.1)', color: '#ff6b35', fontSize: '12px', fontWeight: 700,
+              fontFamily: "'SF Mono', monospace", letterSpacing: '0.1em',
+            }}>PLAY AGAIN</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Main trading UI ──
+  return (
+    <div style={{
+      height: '100%', display: 'grid',
+      gridTemplateColumns: '1fr 320px',
+      gridTemplateRows: '48px 1fr 40px',
+      background: '#0a0c12', fontFamily: "'SF Mono', monospace", color: '#fff',
+      overflow: 'hidden',
+    }}>
+      {/* Flash overlay */}
+      {flashEffect && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 50,
+          background: flashEffect === 'buy' ? 'rgba(74,222,128,0.08)' : 'rgba(248,113,113,0.08)',
+          pointerEvents: 'none',
+          animation: 'flash-fade 0.5s ease-out forwards',
+        }} />
+      )}
+      <style>{`
+        @keyframes flash-fade { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 8px rgba(255,107,53,0.3); } 50% { box-shadow: 0 0 20px rgba(255,107,53,0.6); } }
+        @keyframes count-up { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes xp-float { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-40px); opacity: 0; } }
+        @keyframes toast-in { 0% { transform: translateX(120%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+        @keyframes toast-out { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(120%); opacity: 0; } }
+      `}</style>
+
+      {/* Achievement toast */}
+      {achievementToast && (
+        <div style={{
+          position: 'absolute', top: '60px', right: '16px', zIndex: 100,
+          background: 'rgba(255,107,53,0.12)', border: '1px solid rgba(255,107,53,0.35)',
+          borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px',
+          animation: 'toast-in 0.4s ease-out',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.4), 0 0 20px rgba(255,107,53,0.15)',
+        }}>
+          <span style={{ fontSize: '22px' }}>{achievementToast.icon}</span>
+          <div>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: '#ff6b35', letterSpacing: '0.05em' }}>ACHIEVEMENT UNLOCKED</div>
+            <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>{achievementToast.label}</div>
+            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.5)' }}>{achievementToast.desc}</div>
+          </div>
+          <span style={{ fontSize: '11px', color: '#fbbf24', fontWeight: 700 }}>+150 XP</span>
+        </div>
+      )}
+
+      {/* XP float popups */}
+      {xpPopups.map(p => (
+        <div key={p.id} style={{
+          position: 'absolute', top: '40px', left: `${p.x}px`, zIndex: 90,
+          color: '#fbbf24', fontSize: '13px', fontWeight: 800, pointerEvents: 'none',
+          animation: 'xp-float 1.2s ease-out forwards',
+          textShadow: '0 0 8px rgba(251,191,36,0.4)',
+        }}>+{p.amount} XP</div>
+      ))}
+
+      {/* ── Portfolio Stats Bar ── */}
+      <div style={{
+        gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '24px', padding: '0 16px',
+        background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em' }}>ROUND</span>
+          <span style={{ fontSize: '13px', fontWeight: 700, color: '#ff6b35' }}>{round}/{totalRounds}</span>
+        </div>
+        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.08)' }} />
+        {[
+          { label: 'CASH', value: `$${fmt(cash)}`, color: '#fff' },
+          { label: 'PORTFOLIO', value: `$${fmt(portfolioValue)}`, color: '#fff' },
+          { label: 'TOTAL P&L', value: `$${fmtPnl(totalPnl)}`, color: totalPnl >= 0 ? '#4ade80' : '#f87171' },
+          { label: "DAY P&L", value: `$${fmtPnl(dayPnl)}`, color: dayPnl >= 0 ? '#4ade80' : '#f87171' },
+        ].map((item, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em' }}>{item.label}</span>
+            <span style={{
+              fontSize: '12px', fontWeight: 700, color: item.color,
+              animation: (item.label === 'TOTAL P&L' || item.label === "DAY P&L") && pnlFlash !== 0 ? 'count-up 0.4s ease' : 'none',
+              textShadow: pnlFlash !== 0 && (item.label === "DAY P&L") ? `0 0 12px ${pnlFlash > 0 ? 'rgba(74,222,128,0.5)' : 'rgba(248,113,113,0.5)'}` : 'none',
+            }}>{item.value}</span>
+          </div>
+        ))}
+        <div style={{ flex: 1 }} />
+        {/* Rank + XP bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '9px', fontWeight: 700, color: currentRank.color, letterSpacing: '0.05em' }}>{currentRank.title.toUpperCase()}</span>
+          <div style={{ width: '60px', height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ width: `${xpProgress * 100}%`, height: '100%', background: currentRank.color, borderRadius: '2px', transition: 'width 0.4s ease' }} />
+          </div>
+          <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)' }}>{xp}XP</span>
+          {profitStreak >= 2 && (
+            <span style={{ fontSize: '9px', color: '#fbbf24', fontWeight: 700, animation: 'count-up 0.3s ease' }}>{profitStreak}x streak</span>
+          )}
+        </div>
+        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.08)' }} />
+        {/* Day progress */}
+        <div style={{
+          width: '100px', height: '4px',
+          background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden',
+        }}>
+          <div style={{
+            width: `${(visibleDays / totalDays) * 100}%`, height: '100%',
+            background: roundComplete ? '#4ade80' : '#ff6b35', borderRadius: '2px',
+            transition: 'width 0.3s ease',
+          }} />
+        </div>
+      </div>
+
+      {/* ── Chart Area ── */}
+      <div style={{
+        padding: '12px', display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        borderRight: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        {/* Chart header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '16px', fontWeight: 800, color: '#ff6b35', letterSpacing: '0.05em' }}>
+              {revealed || roundComplete ? currentSymbol : '???'}
+            </span>
+            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
+              {revealed || roundComplete ? getName(currentSymbol) : 'Hidden Stock'}
+            </span>
+          </div>
+          {visibleOHLC.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>
+                O <span style={{ color: '#fff' }}>{visibleOHLC[visibleOHLC.length - 1].open.toFixed(2)}</span>
+              </span>
+              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>
+                H <span style={{ color: '#4ade80' }}>{visibleOHLC[visibleOHLC.length - 1].high.toFixed(2)}</span>
+              </span>
+              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>
+                L <span style={{ color: '#f87171' }}>{visibleOHLC[visibleOHLC.length - 1].low.toFixed(2)}</span>
+              </span>
+              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>
+                C <span style={{ color: currentPrice >= prevPrice ? '#4ade80' : '#f87171' }}>{currentPrice.toFixed(2)}</span>
+              </span>
+            </div>
+          )}
+        </div>
+        {/* SVG Chart */}
+        <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+          {CandlestickChart}
+        </div>
+      </div>
+
+      {/* ── Right Panel: Order Entry + Positions ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Order Entry */}
+        <div style={{
+          padding: '14px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+          background: 'rgba(255,255,255,0.01)',
+        }}>
+          <div style={{ fontSize: '10px', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.4)', marginBottom: '12px' }}>ORDER ENTRY</div>
+
+          {/* Bid/Ask */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', padding: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>BID</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#4ade80' }}>{bidPrice.toFixed(2)}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>SPREAD</div>
+              <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>{spread.toFixed(2)}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>ASK</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#f87171' }}>{askPrice.toFixed(2)}</div>
+            </div>
+          </div>
+
+          {/* Order type toggle */}
+          <div style={{ display: 'flex', marginBottom: '10px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+            {(['market', 'limit'] as const).map(t => (
+              <button key={t} onClick={() => setOrderType(t)} style={{
+                flex: 1, padding: '6px', border: 'none', cursor: 'pointer', fontSize: '10px', fontWeight: 600,
+                letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace", textTransform: 'uppercase',
+                background: orderType === t ? 'rgba(255,107,53,0.15)' : 'transparent',
+                color: orderType === t ? '#ff6b35' : 'rgba(255,255,255,0.3)',
+                transition: 'all 0.2s ease',
+              }}>{t}</button>
+            ))}
+          </div>
+
+          {/* Limit price input */}
+          {orderType === 'limit' && (
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginBottom: '4px', letterSpacing: '0.1em' }}>LIMIT PRICE</div>
+              <input
+                type="number"
+                value={limitPrice || currentPrice}
+                onChange={e => setLimitPrice(Number(e.target.value))}
+                style={{
+                  width: '100%', padding: '6px 8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '4px', color: '#fff', fontSize: '12px', fontFamily: "'SF Mono', monospace", outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+          )}
+
+          {/* Quantity */}
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginBottom: '4px', letterSpacing: '0.1em' }}>QUANTITY</div>
             <input
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search stocks..."
+              type="number"
+              value={orderQty}
+              onChange={e => setOrderQty(Math.max(1, Number(e.target.value)))}
               style={{
-                width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-                color: '#fff', padding: '8px 10px', borderRadius: '4px', fontSize: '11px',
-                fontFamily: "'SF Mono', monospace", outline: 'none', boxSizing: 'border-box',
+                width: '100%', padding: '6px 8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '4px', color: '#fff', fontSize: '12px', fontFamily: "'SF Mono', monospace", outline: 'none',
+                marginBottom: '6px', boxSizing: 'border-box',
               }}
             />
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {[10, 50, 100].map(q => (
+                <button key={q} onClick={() => setOrderQty(q)} style={{
+                  flex: 1, padding: '4px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px',
+                  background: orderQty === q ? 'rgba(255,107,53,0.12)' : 'transparent', cursor: 'pointer',
+                  color: orderQty === q ? '#ff6b35' : 'rgba(255,255,255,0.3)', fontSize: '10px',
+                  fontFamily: "'SF Mono', monospace", fontWeight: 600, transition: 'all 0.15s ease',
+                }}>{q}</button>
+              ))}
+              <button onClick={() => setOrderQty(maxBuyQty)} style={{
+                flex: 1, padding: '4px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px',
+                background: 'transparent', cursor: 'pointer', color: 'rgba(255,255,255,0.3)', fontSize: '10px',
+                fontFamily: "'SF Mono', monospace", fontWeight: 600, transition: 'all 0.15s ease',
+              }}>ALL</button>
+            </div>
           </div>
-          <div className="bloomberg-scroll" style={{ flex: 1, overflowY: 'auto' }}>
-            {filteredStocks.slice(0, 20).map(s => {
-              const stockData = stocks.find(st => st.symbol === s.symbol);
-              const sector = SECTORS.find(sec => sec.symbols.includes(s.symbol));
-              return (
-                <div key={s.symbol} onClick={() => addStock(s.symbol, s.name)}
-                  style={{
-                    padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer',
-                    transition: 'background 0.15s',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: '#fff', fontWeight: 600, fontSize: '11px', minWidth: '40px' }}>{s.symbol}</span>
-                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px' }}>{s.name}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {sector && (
-                      <span style={{
-                        fontSize: '8px', padding: '1px 5px', borderRadius: '3px',
-                        background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)',
-                      }}>{sector.name}</span>
-                    )}
-                    {stockData && (
-                      <>
-                        <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '10px' }}>${stockData.price < 1000 ? stockData.price.toFixed(2) : stockData.price.toFixed(0)}</span>
-                        <span style={{ color: stockData.pct >= 0 ? '#4ade80' : '#f87171', fontSize: '10px' }}>
-                          {stockData.pct >= 0 ? '+' : ''}{stockData.pct.toFixed(2)}%
-                        </span>
-                      </>
-                    )}
-                    <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '14px' }}>+</span>
-                  </div>
-                </div>
-              );
-            })}
+
+          {/* Buy/Sell buttons */}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => executeTrade('buy', orderQty)}
+              disabled={roundComplete || orderQty <= 0 || orderQty > maxBuyQty}
+              style={{
+                flex: 1, padding: '10px', border: 'none', borderRadius: '4px', cursor: roundComplete ? 'not-allowed' : 'pointer',
+                background: roundComplete ? 'rgba(74,222,128,0.08)' : 'rgba(74,222,128,0.15)',
+                color: roundComplete ? 'rgba(74,222,128,0.3)' : '#4ade80',
+                fontSize: '12px', fontWeight: 800, fontFamily: "'SF Mono', monospace", letterSpacing: '0.1em',
+                transition: 'all 0.2s ease',
+                boxShadow: !roundComplete ? '0 0 12px rgba(74,222,128,0.1)' : 'none',
+              }}
+              onMouseEnter={e => { if (!roundComplete) (e.target as HTMLButtonElement).style.background = 'rgba(74,222,128,0.25)'; }}
+              onMouseLeave={e => { if (!roundComplete) (e.target as HTMLButtonElement).style.background = 'rgba(74,222,128,0.15)'; }}
+            >
+              BUY
+            </button>
+            <button
+              onClick={() => executeTrade('sell', Math.min(orderQty, maxSellQty))}
+              disabled={roundComplete || maxSellQty <= 0}
+              style={{
+                flex: 1, padding: '10px', border: 'none', borderRadius: '4px', cursor: roundComplete || maxSellQty <= 0 ? 'not-allowed' : 'pointer',
+                background: roundComplete || maxSellQty <= 0 ? 'rgba(248,113,113,0.08)' : 'rgba(248,113,113,0.15)',
+                color: roundComplete || maxSellQty <= 0 ? 'rgba(248,113,113,0.3)' : '#f87171',
+                fontSize: '12px', fontWeight: 800, fontFamily: "'SF Mono', monospace", letterSpacing: '0.1em',
+                transition: 'all 0.2s ease',
+                boxShadow: !(roundComplete || maxSellQty <= 0) ? '0 0 12px rgba(248,113,113,0.1)' : 'none',
+              }}
+              onMouseEnter={e => { if (!(roundComplete || maxSellQty <= 0)) (e.target as HTMLButtonElement).style.background = 'rgba(248,113,113,0.25)'; }}
+              onMouseLeave={e => { if (!(roundComplete || maxSellQty <= 0)) (e.target as HTMLButtonElement).style.background = 'rgba(248,113,113,0.15)'; }}
+            >
+              SELL
+            </button>
           </div>
         </div>
-        {/* Right: Portfolio */}
-        <div style={{ width: '40%', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: '12px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ color: '#ff6b35', fontWeight: 700, fontSize: '11px', letterSpacing: '0.08em' }}>MY PORTFOLIO</span>
-            <span style={{ color: totalAllocation === 100 ? '#4ade80' : totalAllocation > 100 ? '#f87171' : 'rgba(255,255,255,0.4)', fontSize: '10px' }}>
-              {totalAllocation}% / 100%
-            </span>
-          </div>
-          <div className="bloomberg-scroll" style={{ flex: 1, overflowY: 'auto' }}>
-            {portfolio.length === 0 ? (
-              <div style={{ padding: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: '11px' }}>
-                Click stocks to add them
+
+        {/* Position Tracker */}
+        <div style={{ padding: '14px', borderBottom: '1px solid rgba(255,255,255,0.06)', flex: '0 0 auto' }}>
+          <div style={{ fontSize: '10px', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.4)', marginBottom: '10px' }}>POSITIONS</div>
+          {currentPos ? (
+            <div style={{
+              padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px',
+              borderLeft: `2px solid ${unrealizedPnl >= 0 ? '#4ade80' : '#f87171'}`,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#ff6b35' }}>{revealed || roundComplete ? currentSymbol : '???'}</span>
+                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>{currentPos.qty} shares</span>
               </div>
-            ) : (
-              portfolio.map(p => (
-                <div key={p.symbol} style={{
-                  padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  borderBottom: '1px solid rgba(255,255,255,0.03)',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <button onClick={() => removeStock(p.symbol)} style={{
-                      background: 'none', border: 'none', color: '#f87171', cursor: 'pointer',
-                      fontSize: '12px', padding: '0 2px', fontFamily: "'SF Mono', monospace",
-                    }}>{'\u2715'}</button>
-                    <span style={{ color: '#fff', fontSize: '11px', fontWeight: 600 }}>{p.symbol}</span>
-                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px' }}>{p.name}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <input
-                      type="number" min={0} max={100} value={p.allocation || ''}
-                      onChange={e => setAllocation(p.symbol, parseInt(e.target.value) || 0)}
-                      style={{
-                        width: '40px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-                        color: '#fff', textAlign: 'right', padding: '2px 4px', borderRadius: '3px',
-                        fontSize: '10px', fontFamily: "'SF Mono', monospace", outline: 'none',
-                      }}
-                    />
-                    <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px' }}>%</span>
-                  </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+                <div>
+                  <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>ENTRY</div>
+                  <div style={{ fontSize: '11px', color: '#fff' }}>{currentPos.avgCost.toFixed(2)}</div>
                 </div>
-              ))
-            )}
-          </div>
-          <div style={{ padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <button onClick={equalWeight} disabled={portfolio.length === 0} style={{
-              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-              color: 'rgba(255,255,255,0.6)', padding: '5px', borderRadius: '4px', cursor: 'pointer',
-              fontSize: '9px', fontFamily: "'SF Mono', monospace", width: '100%',
-            }}>EQUAL WEIGHT</button>
-            <button onClick={runSimulation} disabled={totalAllocation !== 100} style={{
-              background: totalAllocation === 100 ? '#ff6b35' : 'rgba(255,255,255,0.04)',
-              border: 'none', color: totalAllocation === 100 ? '#fff' : 'rgba(255,255,255,0.2)',
-              padding: '8px', borderRadius: '4px', cursor: totalAllocation === 100 ? 'pointer' : 'not-allowed',
-              fontSize: '11px', fontWeight: 700, fontFamily: "'SF Mono', monospace", width: '100%',
-            }}>RUN SIMULATION {'\u2192'}</button>
-            <button onClick={() => { setPhase('setup'); setPortfolio([]); setSearchQuery(''); }} style={{
-              background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)',
-              padding: '4px', cursor: 'pointer', fontSize: '9px', fontFamily: "'SF Mono', monospace",
-            }}>{'\u2190'} Back to setup</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Simulating screen
-  if (phase === 'simulating') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', fontFamily: "'SF Mono', monospace" }}>
-        <div style={{ fontSize: '14px', color: '#ff6b35', marginBottom: '16px', fontWeight: 600 }}>
-          Crunching numbers...
-        </div>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          {[0, 1, 2].map(i => (
-            <div key={i} style={{
-              width: '8px', height: '8px', borderRadius: '50%', background: '#ff6b35',
-              animation: `bbgPulse 1.2s ease-in-out ${i * 0.2}s infinite`,
-            }} />
-          ))}
-        </div>
-        <style>{`@keyframes bbgPulse { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }`}</style>
-      </div>
-    );
-  }
-
-  // Results screen
-  if (phase === 'results' && results) {
-    const { portfolioReturns, spyReturns, finalReturn, spyReturn } = results;
-    const allVals = [...portfolioReturns, ...spyReturns];
-    const minVal = Math.min(...allVals);
-    const maxVal = Math.max(...allVals);
-    const range = maxVal - minVal || 1;
-    const chartW = 500;
-    const chartH = 160;
-
-    const toPath = (data: number[]) => {
-      return data.map((v, i) => {
-        const x = (i / (data.length - 1)) * chartW;
-        const y = chartH - ((v - minVal) / range) * chartH;
-        return `${i === 0 ? 'M' : 'L'}${x},${y}`;
-      }).join(' ');
-    };
-
-    const finalValue = 100000 * (1 + finalReturn / 100);
-
-    // Leaderboard
-    const leaderboard = LEADERBOARD_FUNDS.map(f => ({
-      name: f.name,
-      returnPct: f.annualReturn * timespanMultiplier + (Math.random() * 6 - 3),
-    }));
-    leaderboard.push({ name: 'Your Portfolio', returnPct: finalReturn });
-    leaderboard.sort((a, b) => b.returnPct - a.returnPct);
-    const userRank = leaderboard.findIndex(l => l.name === 'Your Portfolio') + 1;
-    const beaten = leaderboard.length - userRank;
-    const maxReturn = Math.max(...leaderboard.map(l => Math.abs(l.returnPct)));
-
-    return (
-      <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', fontFamily: "'SF Mono', monospace", padding: '20px' }}>
-        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '4px' }}>
-          SIMULATION RESULTS — {timespanLabel.toUpperCase()}
-        </div>
-        <div style={{ display: 'flex', gap: '24px', marginBottom: '16px', alignItems: 'baseline' }}>
-          <div>
-            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>$100,000 {'\u2192'} </span>
-            <span style={{ color: finalReturn >= 0 ? '#4ade80' : '#f87171', fontSize: '20px', fontWeight: 700 }}>
-              ${finalValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-            </span>
-          </div>
-          <div>
-            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>RETURN </span>
-            <span style={{ color: finalReturn >= 0 ? '#4ade80' : '#f87171', fontSize: '14px', fontWeight: 700 }}>
-              {finalReturn >= 0 ? '+' : ''}{finalReturn.toFixed(2)}%
-            </span>
-          </div>
-          <div>
-            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>SPY </span>
-            <span style={{ color: spyReturn >= 0 ? '#4ade80' : '#f87171', fontSize: '14px' }}>
-              {spyReturn >= 0 ? '+' : ''}{spyReturn.toFixed(2)}%
-            </span>
-          </div>
-        </div>
-
-        {/* Chart */}
-        <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '6px', padding: '12px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.04)' }}>
-          <svg width="100%" viewBox={`0 0 ${chartW} ${chartH}`} style={{ display: 'block' }}>
-            {/* Zero line */}
-            <line x1={0} y1={chartH - ((0 - minVal) / range) * chartH} x2={chartW} y2={chartH - ((0 - minVal) / range) * chartH}
-              stroke="rgba(255,255,255,0.1)" strokeDasharray="4 4" />
-            <path d={toPath(spyReturns)} fill="none" stroke="rgba(96,165,250,0.5)" strokeWidth="1.5" />
-            <path d={toPath(portfolioReturns)} fill="none" stroke="#ff6b35" strokeWidth="2" />
-          </svg>
-          <div style={{ display: 'flex', gap: '16px', marginTop: '6px', justifyContent: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <div style={{ width: '12px', height: '2px', background: '#ff6b35' }} />
-              <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.5)' }}>Your Portfolio</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <div style={{ width: '12px', height: '2px', background: 'rgba(96,165,250,0.5)' }} />
-              <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.5)' }}>S&P 500</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Leaderboard */}
-        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '8px' }}>LEADERBOARD</div>
-        <div style={{ marginBottom: '16px' }}>
-          {leaderboard.map((entry, i) => {
-            const isUser = entry.name === 'Your Portfolio';
-            const barWidth = Math.abs(entry.returnPct) / (maxReturn || 1) * 100;
-            return (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 8px',
-                background: isUser ? 'rgba(255,107,53,0.1)' : 'transparent',
-                borderLeft: isUser ? '2px solid #ff6b35' : '2px solid transparent',
-                marginBottom: '1px', borderRadius: '2px',
-              }}>
-                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', minWidth: '16px' }}>#{i + 1}</span>
-                <span style={{ color: isUser ? '#ff6b35' : 'rgba(255,255,255,0.7)', fontSize: '10px', minWidth: '180px', fontWeight: isUser ? 700 : 400 }}>
-                  {entry.name}
-                </span>
-                <div style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.03)', borderRadius: '3px', overflow: 'hidden' }}>
+                <div>
+                  <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>CURRENT</div>
+                  <div style={{ fontSize: '11px', color: '#fff' }}>{currentPrice.toFixed(2)}</div>
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>UNREALIZED P&L</div>
                   <div style={{
-                    width: `${barWidth}%`, height: '100%', borderRadius: '3px',
-                    background: entry.returnPct >= 0 ? (isUser ? '#ff6b35' : '#4ade80') : '#f87171',
-                  }} />
+                    fontSize: '14px', fontWeight: 700, color: unrealizedPnl >= 0 ? '#4ade80' : '#f87171',
+                    textShadow: pnlFlash !== 0 ? `0 0 10px ${unrealizedPnl >= 0 ? 'rgba(74,222,128,0.4)' : 'rgba(248,113,113,0.4)'}` : 'none',
+                    transition: 'text-shadow 0.3s ease',
+                  }}>
+                    {fmtPnl(unrealizedPnl)} ({((unrealizedPnl / (currentPos.avgCost * currentPos.qty)) * 100).toFixed(2)}%)
+                  </div>
                 </div>
-                <span style={{
-                  color: entry.returnPct >= 0 ? (isUser ? '#ff6b35' : '#4ade80') : '#f87171',
-                  fontSize: '10px', fontWeight: 600, minWidth: '55px', textAlign: 'right',
-                }}>
-                  {entry.returnPct >= 0 ? '+' : ''}{entry.returnPct.toFixed(2)}%
-                </span>
               </div>
-            );
-          })}
+            </div>
+          ) : (
+            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px', textAlign: 'center', padding: '16px' }}>No open positions</div>
+          )}
         </div>
 
-        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 700, color: beaten > 6 ? '#4ade80' : '#ff6b35' }}>
-            {beaten > 6 ? `YOU BEAT ${beaten}/${LEADERBOARD_FUNDS.length} FUNDS!` : `${LEADERBOARD_FUNDS.length - beaten}/${LEADERBOARD_FUNDS.length} BEAT YOU`}
-          </span>
-        </div>
+        {/* Round complete actions */}
+        {roundComplete && (
+          <div style={{ padding: '14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{
+              padding: '10px', background: 'rgba(255,107,53,0.08)', borderRadius: '4px',
+              border: '1px solid rgba(255,107,53,0.2)', textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '10px', color: '#ff6b35', letterSpacing: '0.15em', marginBottom: '6px' }}>
+                ROUND {round} COMPLETE
+              </div>
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginBottom: '10px' }}>
+                Stock: <span style={{ color: '#ff6b35', fontWeight: 700 }}>{currentSymbol}</span> — {getName(currentSymbol)}
+              </div>
+              <button
+                onClick={nextRound}
+                style={{
+                  padding: '8px 24px', border: 'none', borderRadius: '4px', cursor: 'pointer',
+                  background: '#ff6b35', color: '#fff', fontSize: '11px', fontWeight: 700,
+                  fontFamily: "'SF Mono', monospace", letterSpacing: '0.1em',
+                  transition: 'all 0.2s ease', animation: 'pulse-glow 2s ease infinite',
+                }}
+              >
+                {round >= totalRounds ? 'VIEW RESULTS' : `NEXT ROUND →`}
+              </button>
+            </div>
+          </div>
+        )}
 
-        <div style={{ textAlign: 'center' }}>
-          <button onClick={() => { setPhase('setup'); setPortfolio([]); setSearchQuery(''); setResults(null); }} style={{
-            background: 'rgba(255,107,53,0.15)', border: '1px solid rgba(255,107,53,0.4)',
-            color: '#ff6b35', padding: '8px 24px', borderRadius: '4px', cursor: 'pointer',
-            fontSize: '11px', fontWeight: 700, fontFamily: "'SF Mono', monospace",
-          }}>TRY AGAIN</button>
+        {/* Order History */}
+        <div style={{ flex: 1, overflow: 'auto', padding: '14px', minHeight: 0 }}>
+          <div style={{ fontSize: '10px', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.4)', marginBottom: '10px' }}>ORDER HISTORY</div>
+          {orders.filter(o => o.symbol === currentSymbol).length === 0 ? (
+            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px', textAlign: 'center', padding: '12px' }}>No trades yet</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {orders.filter(o => o.symbol === currentSymbol).slice().reverse().map(o => (
+                <div key={o.id} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '6px 8px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px',
+                  borderLeft: `2px solid ${o.type === 'buy' ? '#4ade80' : '#f87171'}`,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{
+                      fontSize: '9px', fontWeight: 700, padding: '2px 5px', borderRadius: '2px',
+                      background: o.type === 'buy' ? 'rgba(74,222,128,0.12)' : 'rgba(248,113,113,0.12)',
+                      color: o.type === 'buy' ? '#4ade80' : '#f87171',
+                    }}>{o.type.toUpperCase()}</span>
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>{o.qty} @ {o.price.toFixed(2)}</span>
+                  </div>
+                  <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.25)' }}>D{o.day}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-    );
-  }
 
-  return null;
+      {/* ── Bottom Bar ── */}
+      <div style={{
+        gridColumn: '1 / -1', display: 'flex', alignItems: 'center', padding: '0 16px',
+        background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.06)',
+        fontSize: '9px', color: 'rgba(255,255,255,0.3)', gap: '16px', letterSpacing: '0.05em',
+      }}>
+        <span>TRADING ARENA v2.0</span>
+        <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
+        <span>{visibleDays}/{totalDays} DAYS</span>
+        <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
+        <span>{orders.length} TRADES</span>
+        <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
+        <span style={{ color: '#fbbf24' }}>{unlockedAchievements.length} ACHIEVEMENTS</span>
+        <span style={{ flex: 1 }} />
+        <span style={{ color: roundComplete ? '#4ade80' : '#ff6b35' }}>
+          {roundComplete ? 'MARKET CLOSED' : 'MARKET OPEN'}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 function BloombergTerminalView({ drillDown, setDrillDown }: {
@@ -3283,25 +3938,14 @@ function BloombergTerminalView({ drillDown, setDrillDown }: {
   setDrillDown: (v: { type: 'stock'; symbol: string; name: string } | { type: 'sector'; name: string } | null) => void;
 }) {
   const stocks = useStockData();
-  const [gameMode, setGameMode] = useState(false);
-
-  if (gameMode) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#0a0c12', fontFamily: "'SF Mono', monospace" }}>
-        <BloombergTopBar stocks={stocks} gameMode={gameMode} onToggleGame={() => setGameMode(false)} />
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          <StockPickerGame stocks={stocks} />
-        </div>
-        <BloombergBottomBar />
-      </div>
-    );
-  }
+  // Game mode disabled for now — code preserved but not accessible
+  const gameMode = false;
 
   const hasDrillDown = drillDown !== null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#0a0c12', fontFamily: "'SF Mono', monospace" }}>
-      <BloombergTopBar stocks={stocks} gameMode={gameMode} onToggleGame={() => setGameMode(true)} />
+      <BloombergTopBar stocks={stocks} gameMode={gameMode} onToggleGame={() => {}} />
       <div style={{ flex: 1, overflow: 'hidden', display: hasDrillDown ? 'block' : 'grid', gridTemplateColumns: hasDrillDown ? undefined : '58% 42%' }}>
         {hasDrillDown ? (
           <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', background: '#1c1c1e' }}>
@@ -3327,9 +3971,10 @@ function BloombergTerminalView({ drillDown, setDrillDown }: {
             </div>
             {/* Right column */}
             <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto' }}>
-              <SectorTreemap />
-              <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
-              <SectorPieChart stocks={stocks} />
+              <div style={{ display: 'flex', height: '180px' }}>
+                <div style={{ flex: 1, borderRight: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}><SectorTreemap /></div>
+                <div style={{ flex: 1, overflow: 'hidden' }}><SectorPieChart stocks={stocks} /></div>
+              </div>
               <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
               <CorrelationMatrix stocks={stocks} />
               <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
