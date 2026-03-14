@@ -4078,19 +4078,22 @@ function Desktop() {
       }
     } else {
       // Restore terminal to its original size if it was shrunk for the side-by-side layout
-      const needsRestore = terminal.position.x < 30 && terminal.size.width < screenW - 20;
+      // Only restore if the terminal is clearly in the slide-over position (far left, narrower than original)
+      const origW = 840, origH = 620;
+      const needsRestore = terminal.position.x < 30 && terminal.size.width < origW - 10;
 
       if (needsRestore) {
-        const origW = 840, origH = 620;
         const origX = Math.round((screenW - origW) / 2);
         const origY = menuBarH + Math.round((usableH - origH) / 2);
         dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: { width: origW, height: origH } });
         dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: origX, y: origY } });
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    // Only react to open/close changes, not every position tweak
-    Object.keys(state.windows).filter(id => ['education', 'experience', 'stocks'].includes(id) && state.windows[id]?.isOpen && !state.windows[id]?.isMinimized).join(','),
+    // Stable dependency: only re-run when the set of open side windows changes
+    ['education', 'experience', 'stocks'].filter(id => state.windows[id]?.isOpen && !state.windows[id]?.isMinimized).join(','),
+    state.windows['terminal']?.isOpen,
   ]);
 
   // Keyboard shortcuts
