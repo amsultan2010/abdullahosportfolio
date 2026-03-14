@@ -175,7 +175,7 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
         }}>
           {/* ── LIST VIEW ── */}
           <div style={{
-            padding: 'clamp(1rem, 2vw, 1.5rem) clamp(1.5rem, 3vw, 2.5rem) clamp(1.5rem, 3vw, 2.5rem)',
+            padding: 'clamp(0.75rem, 1.5vw, 1rem) clamp(1.25rem, 2.5vw, 2rem) clamp(0.5rem, 1vw, 0.75rem)',
             opacity: viewState === 'list' ? 1 : viewState === 'fading-out' ? 0 : 0,
             transform: viewState === 'list' ? 'scale(1)' : 'scale(0.97)',
             transition: 'opacity 0.3s ease, transform 0.3s ease',
@@ -188,13 +188,13 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
               color: 'rgba(255, 255, 255, 0.9)',
               fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-MediumItalic, sans-serif',
               fontStyle: 'italic',
-              margin: '0 0 1.25rem 0',
+              margin: '0 0 0.75rem 0',
               fontWeight: '600'
             }}>
               Education
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
               {currentEducation.map((edu) => (
                 <ExperienceCard
                   key={edu.id}
@@ -213,7 +213,7 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
               ))}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%', marginTop: '1.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', marginTop: '1rem' }}>
               {pastEducation.map((edu) => (
                 <ExperienceCard
                   key={edu.id}
@@ -238,12 +238,12 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
               color: 'rgba(255, 255, 255, 0.9)',
               fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-MediumItalic, sans-serif',
               fontStyle: 'italic',
-              margin: '2rem 0 1.25rem 0',
+              margin: '1.25rem 0 0.75rem 0',
               fontWeight: '600',
             }}>
               Certifications
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
               {[
                 {
                   title: 'Machine Learning for Trading Specialization',

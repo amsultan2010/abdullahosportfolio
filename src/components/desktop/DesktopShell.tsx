@@ -4002,6 +4002,7 @@ function TerminalContent() {
 function Desktop() {
   const { state, dispatch } = useDesktop();
   const [isMobile, setIsMobile] = useState(false);
+  const terminalOrigRef = useRef<{ width: number; height: number } | null>(null);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
@@ -4049,44 +4050,51 @@ function Desktop() {
     const usableH = screenH - menuBarH - dockH;
 
     if (openSideWindow) {
+      // Save original terminal size before any adjustments
+      if (!terminalOrigRef.current) {
+        terminalOrigRef.current = { width: terminal.size.width, height: terminal.size.height };
+      }
+
       const sideWin = state.windows[openSideWindow]!;
-      const sideDefaultW = sideWin.size.width; // e.g. 480 for stocks
+      const sideW = sideWin.size.width;
+      const sideH = sideWin.size.height; // Keep the window's current/default height
 
-      // Fit both windows side-by-side: terminal shrinks only as much as needed
-      const totalGaps = gap * 3; // left gap + middle gap + right gap
-      const available = screenW - totalGaps;
-      // Terminal gets remaining space after side window, but no wider than 840
-      const sideW = Math.min(sideDefaultW, Math.round(available * 0.38));
-      const termW = Math.min(840, available - sideW);
-      const termH = Math.min(usableH - gap * 2, 620);
-      const sideH = usableH - gap * 2;
+      // Place side window on right edge, vertically centered in usable area
+      const sideX = screenW - gap - sideW;
+      const sideY = menuBarH + Math.round((usableH - sideH) / 2);
 
-      const termX = gap;
-      const termY = menuBarH + Math.round((usableH - termH) / 2);
-      const sideX = termX + termW + gap;
-      const sideY = menuBarH + gap;
+      // Check if terminal fits without shrinking
+      const origTermW = terminalOrigRef.current.width;
+      const spaceForTerm = sideX - gap - gap; // left gap + right gap before side window
+      const termW = Math.min(origTermW, spaceForTerm);
+      const termH = terminal.size.height;
 
-      // Only move/resize if not already positioned there
-      if (Math.abs(terminal.position.x - termX) > 10 || Math.abs(terminal.size.width - termW) > 10) {
+      // Shift terminal left only as much as needed
+      const maxTermX = sideX - gap - termW;
+      const centeredX = Math.round((screenW - termW) / 2);
+      const termX = Math.max(gap, Math.min(centeredX, maxTermX));
+      const termY = terminal.position.y;
+
+      // Resize if needed, move if needed
+      if (Math.abs(terminal.size.width - termW) > 10) {
         dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: { width: termW, height: termH } });
+      }
+      if (Math.abs(terminal.position.x - termX) > 10) {
         dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: termX, y: termY } });
       }
 
-      if (Math.abs(sideWin.position.x - sideX) > 10 || Math.abs(sideWin.size.height - sideH) > 20) {
-        dispatch({ type: 'RESIZE_WINDOW', id: openSideWindow, size: { width: sideW, height: sideH } });
+      if (Math.abs(sideWin.position.x - sideX) > 10 || Math.abs(sideWin.position.y - sideY) > 10) {
         dispatch({ type: 'MOVE_WINDOW', id: openSideWindow, position: { x: sideX, y: sideY } });
       }
     } else {
-      // Restore terminal to its original size if it was shrunk for the side-by-side layout
-      // Only restore if the terminal is clearly in the slide-over position (far left, narrower than original)
-      const origW = 840, origH = 620;
-      const needsRestore = terminal.position.x < 30 && terminal.size.width < origW - 10;
-
-      if (needsRestore) {
-        const origX = Math.round((screenW - origW) / 2);
-        const origY = menuBarH + Math.round((usableH - origH) / 2);
-        dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: { width: origW, height: origH } });
-        dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: origX, y: origY } });
+      // Restore terminal to original size and center when side windows close
+      const origSize = terminalOrigRef.current;
+      if (origSize) {
+        const centeredX = Math.round((screenW - origSize.width) / 2);
+        const origY = menuBarH + Math.round((usableH - origSize.height) / 2);
+        dispatch({ type: 'RESIZE_WINDOW', id: 'terminal', size: { width: origSize.width, height: origSize.height } });
+        dispatch({ type: 'MOVE_WINDOW', id: 'terminal', position: { x: centeredX, y: origY } });
+        terminalOrigRef.current = null;
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

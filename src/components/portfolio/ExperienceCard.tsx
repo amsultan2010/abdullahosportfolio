@@ -411,7 +411,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
           background: rgba(255, 255, 255, 0.07);
           border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.08);
-          padding: 1.5rem;
+          padding: 1.25rem;
           overflow: hidden;
           transition: all 0.3s ease;
           cursor: pointer;
