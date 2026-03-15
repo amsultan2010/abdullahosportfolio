@@ -7,6 +7,8 @@ const REFRESH_TOKEN = import.meta.env.SPOTIFY_REFRESH_TOKEN || process.env.SPOTI
 const TOKEN_URL = 'https://accounts.spotify.com/api/token';
 const NOW_PLAYING_URL = 'https://api.spotify.com/v1/me/player/currently-playing';
 const RECENTLY_PLAYED_URL = 'https://api.spotify.com/v1/me/player/recently-played?limit=1';
+const DEV_PLAYLIST_ID = '2uud5zGJZf3U98FlTnQip8';
+const PLAYLIST_URL = `https://api.spotify.com/v1/playlists/${DEV_PLAYLIST_ID}/tracks?limit=50`;
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
 const notPlaying = () => new Response(JSON.stringify({ isPlaying: false }), { headers: jsonHeaders });
@@ -62,6 +64,19 @@ export const GET: APIRoute = async () => {
       if (track) {
         return new Response(JSON.stringify(trackPayload(track, false)), {
           headers: { ...jsonHeaders, 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' },
+        });
+      }
+    }
+
+    // Final fallback: random track from dev playlist
+    const plRes = await fetch(PLAYLIST_URL, { headers: { Authorization: `Bearer ${access_token}` } });
+    if (plRes.ok) {
+      const plData = await plRes.json();
+      const tracks = plData.items?.filter((i: any) => i.track)?.map((i: any) => i.track) || [];
+      if (tracks.length > 0) {
+        const randomTrack = tracks[Math.floor(Math.random() * tracks.length)];
+        return new Response(JSON.stringify({ ...trackPayload(randomTrack, false), isPlaylistFallback: true }), {
+          headers: { ...jsonHeaders, 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=60' },
         });
       }
     }
