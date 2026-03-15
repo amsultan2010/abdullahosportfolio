@@ -39,6 +39,11 @@ export default function DesktopDock() {
   const allItems = [...windowItems, { id: 'divider' as any, label: '', icon: null }, ...externalItems];
 
   const handleClick = (item: DockItem) => {
+    // Collapse terminal if it's fullscreened before doing anything
+    if (state.windows.terminal?.isFullscreen) {
+      dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' });
+    }
+
     if (item.isExternal && item.href) {
       if (item.href.startsWith('mailto:')) {
         window.location.href = item.href;

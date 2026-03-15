@@ -1250,6 +1250,10 @@ const DEV_PLAYLIST_TRACKS = [
 function NowPlaying() {
   const [track, setTrack] = useState<{ isPlaying: boolean; title: string; artist: string; album: string; albumArt: string; progressMs: number; durationMs: number; isPlaylistFallback?: boolean } | null>(null);
   const [progress, setProgress] = useState(0);
+  const [fallback] = useState(() => {
+    const t = DEV_PLAYLIST_TRACKS[Math.floor(Math.random() * DEV_PLAYLIST_TRACKS.length)];
+    return { isPlaying: true, title: t.title, artist: t.artist, album: 'session', albumArt: '', progressMs: Math.floor(Math.random() * 0.6 * t.durationMs), durationMs: t.durationMs, isPlaylistFallback: true };
+  });
 
   useEffect(() => {
     const fetchTrack = () => {
@@ -1268,33 +1272,36 @@ function NowPlaying() {
     return () => clearInterval(id);
   }, []);
 
+  const active = track || fallback;
+
   useEffect(() => {
-    if (!track) return;
+    if (!track) setProgress(fallback.progressMs);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     const id = setInterval(() => setProgress(p => {
       const next = p + 1000;
-      return next >= track.durationMs ? (track.isPlaylistFallback ? 0 : track.durationMs) : next;
+      return next >= active.durationMs ? (active.isPlaylistFallback ? 0 : active.durationMs) : next;
     }), 1000);
     return () => clearInterval(id);
-  }, [track]);
+  }, [active]);
 
   const fmtTime = (ms: number) => {
     const s = Math.floor(ms / 1000);
     return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
   };
 
-  if (!track) return null;
-
-  const isPlaylistFallback = track.isPlaylistFallback;
-  const pct = track.durationMs > 0 ? (progress / track.durationMs) * 100 : 0;
+  const isPlaylistFallback = active.isPlaylistFallback;
+  const pct = active.durationMs > 0 ? (progress / active.durationMs) * 100 : 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ color: '#fff', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Mono', monospace" }}>
-        {isPlaylistFallback ? '♫ DEV PLAYLIST' : track.isPlaying ? '♫ NOW PLAYING' : '♫ RECENTLY PLAYED'}
+        {isPlaylistFallback ? '♫ DEV PLAYLIST' : active.isPlaying ? '♫ NOW PLAYING' : '♫ RECENTLY PLAYED'}
       </div>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: 1 }}>
-        {track.albumArt ? (
-          <img src={track.albumArt} alt="" style={{ width: 48, height: 48, borderRadius: 6, flexShrink: 0 }} />
+        {active.albumArt ? (
+          <img src={active.albumArt} alt="" style={{ width: 48, height: 48, borderRadius: 6, flexShrink: 0 }} />
         ) : (
           <a href={DEV_PLAYLIST_URL} target="_blank" rel="noopener noreferrer" style={{ width: 48, height: 48, borderRadius: 6, flexShrink: 0, background: 'rgba(29, 185, 84, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
@@ -1302,17 +1309,17 @@ function NowPlaying() {
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
-            {track.title}
+            {active.title}
           </div>
           <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Mono', monospace" }}>
-            {track.artist}
+            {active.artist}
           </div>
           <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{ flex: 1, height: 2, background: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden' }}>
               <div style={{ width: `${pct}%`, height: '100%', background: '#1DB954', borderRadius: 1, transition: 'width 1s linear' }} />
             </div>
             <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace", flexShrink: 0 }}>
-              {fmtTime(progress)} / {fmtTime(track.durationMs)}
+              {fmtTime(progress)} / {fmtTime(active.durationMs)}
             </span>
           </div>
         </div>
@@ -1324,6 +1331,7 @@ function NowPlaying() {
 // ── Sector Treemap (finviz style) ──
 function SectorTreemap() {
   const stocks = useStockData();
+  const [expanded, setExpanded] = useState(false);
   if (!stocks.length) return null;
 
   // Build flat list of individual stocks with sector info
@@ -1362,48 +1370,62 @@ function SectorTreemap() {
     yPos += rowH;
   }
 
+  const treemapContent = (
+    <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: expanded ? '400px' : '160px', borderRadius: 4, overflow: 'hidden' }}>
+      {rows.map((row) => {
+        const rowWeight = row.items.reduce((a, b) => a + b.weight, 0);
+        let xPos = 0;
+        return row.items.map((item) => {
+          const w = (item.weight / rowWeight) * W;
+          const x = xPos;
+          xPos += w;
+          const symSize = expanded ? (w > 12 ? '16px' : '12px') : (w > 12 ? '13px' : '10px');
+          const pctSize = expanded ? '13px' : '11px';
+          return (
+            <div key={item.symbol} style={{
+              position: 'absolute',
+              left: `${x}%`, top: `${row.y}%`,
+              width: `${w}%`, height: `${row.h}%`,
+              background: getColor(item.pct),
+              border: '0.5px solid rgba(0,0,0,0.3)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden', cursor: 'default',
+            }}>
+              <div style={{ fontSize: symSize, fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.6)', fontFamily: "'SF Mono', monospace", lineHeight: 1.2 }}>
+                {item.symbol}
+              </div>
+              {w > 8 && (
+                <div style={{ fontSize: pctSize, fontWeight: 600, color: 'rgba(255,255,255,0.95)', fontFamily: "'SF Mono', monospace" }}>
+                  {item.pct >= 0 ? '+' : ''}{item.pct.toFixed(1)}%
+                </div>
+              )}
+            </div>
+          );
+        });
+      })}
+    </div>
+  );
+
   return (
-    <div style={{ padding: '10px 12px', height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+    <div style={{ padding: '10px 12px', height: expanded ? 'auto' : '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <div style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.1em', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
           MARKET TREEMAP
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
-          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
-          LIVE
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div
+            onClick={() => setExpanded(e => !e)}
+            style={{ cursor: 'pointer', fontSize: '9px', color: 'rgba(255,255,255,0.7)', fontFamily: "'SF Mono', monospace", padding: '2px 6px', borderRadius: '4px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', transition: 'all 0.2s' }}
+          >
+            {expanded ? '↙ Collapse' : '↗ Expand'}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
+            LIVE
+          </div>
         </div>
       </div>
-      <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: '160px', borderRadius: 4, overflow: 'hidden' }}>
-        {rows.map((row, ri) => {
-          const rowWeight = row.items.reduce((a, b) => a + b.weight, 0);
-          let xPos = 0;
-          return row.items.map((item, ii) => {
-            const w = (item.weight / rowWeight) * W;
-            const x = xPos;
-            xPos += w;
-            return (
-              <div key={item.symbol} style={{
-                position: 'absolute',
-                left: `${x}%`, top: `${row.y}%`,
-                width: `${w}%`, height: `${row.h}%`,
-                background: getColor(item.pct),
-                border: '0.5px solid rgba(0,0,0,0.3)',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                overflow: 'hidden', cursor: 'default',
-              }}>
-                <div style={{ fontSize: w > 12 ? '13px' : '10px', fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.6)', fontFamily: "'SF Mono', monospace", lineHeight: 1.2 }}>
-                  {item.symbol}
-                </div>
-                {w > 8 && (
-                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.95)', fontFamily: "'SF Mono', monospace" }}>
-                    {item.pct >= 0 ? '+' : ''}{item.pct.toFixed(1)}%
-                  </div>
-                )}
-              </div>
-            );
-          });
-        })}
-      </div>
+      {treemapContent}
     </div>
   );
 }
@@ -2800,18 +2822,18 @@ function CorrelationMatrix({ stocks }: { stocks: StockData[] }) {
   return (
     <div style={{ padding: '10px 14px' }}>
       <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.1em', marginBottom: '8px', fontWeight: 700, fontFamily: "'SF Mono', monospace" }}>SECTOR CORRELATION</div>
-      <div style={{ display: 'grid', gridTemplateColumns: `32px repeat(${sectorNames.length}, 1fr)`, gap: '2px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `40px repeat(${sectorNames.length}, 1fr)`, gap: '2px' }}>
         {/* Header row */}
         <div />
         {sectorNames.map(name => (
-          <div key={name} style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)', textAlign: 'center', fontFamily: "'SF Mono', monospace", padding: '2px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div key={name} style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', textAlign: 'center', fontFamily: "'SF Mono', monospace", padding: '2px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
             {name.slice(0, 4)}
           </div>
         ))}
         {/* Data rows */}
         {sectorNames.map((rowName, ri) => (
           <React.Fragment key={rowName}>
-            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)', fontFamily: "'SF Mono', monospace", display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '4px' }}>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', fontFamily: "'SF Mono', monospace", display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '4px', fontWeight: 600 }}>
               {rowName.slice(0, 4)}
             </div>
             {matrix[ri].map((val, ci) => (
@@ -2819,8 +2841,8 @@ function CorrelationMatrix({ stocks }: { stocks: StockData[] }) {
                 background: getColor(val),
                 borderRadius: '2px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                aspectRatio: '1', minHeight: '22px',
-                fontSize: '9px', color: 'rgba(255,255,255,0.95)', fontFamily: "'SF Mono', monospace", fontWeight: 600,
+                aspectRatio: '1', minHeight: '26px',
+                fontSize: '12px', color: 'rgba(255,255,255,0.95)', fontFamily: "'SF Mono', monospace", fontWeight: 700,
               }}>
                 {val.toFixed(1)}
               </div>
