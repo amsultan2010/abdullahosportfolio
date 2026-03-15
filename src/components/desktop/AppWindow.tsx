@@ -114,7 +114,7 @@ export default function AppWindow({ windowState, children, darkMode, titleBarBg 
 
   if (windowState.isMinimized) return null;
 
-  const borderRadius = windowState.isFullscreen ? '0px' : '12px';
+  const borderRadius = windowState.isFullscreen ? '12px' : '12px';
 
   return (
     <div

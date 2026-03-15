@@ -1,5 +1,6 @@
 import { useDesktop } from './DesktopContext';
 import { useState, useEffect, useRef } from 'react';
+import GitHubHeatmap from './GitHubHeatmap';
 
 
 /* ── Types ─────────────────────────────────────────── */
@@ -200,19 +201,30 @@ export default function DesktopMenuBar() {
           <SoundPanel spotify={spotify} />
         </TrayDropdown>
 
-        <span
-          style={{
-            fontSize: '12.5px',
-            color: '#fff',
-            fontWeight: 450,
-            marginLeft: '6px',
-            padding: '2px 8px',
-            borderRadius: '4px',
-            cursor: 'default',
-          }}
-        >
-          {date}&ensp;{time}
-        </span>
+        <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}>
+          <span
+            onMouseDown={(e) => { e.stopPropagation(); toggle('notif'); }}
+            style={{
+              fontSize: '12.5px',
+              color: '#fff',
+              fontWeight: 450,
+              marginLeft: '6px',
+              padding: '2px 8px',
+              borderRadius: '4px',
+              cursor: 'default',
+              background: activeMenu === 'notif' ? 'rgba(255,255,255,0.15)' : 'transparent',
+            }}
+          >
+            {date}&ensp;{time}
+          </span>
+          {activeMenu === 'notif' && (
+            <div style={{ ...panelStyle, right: 0, background: 'rgba(30, 30, 30, 0.92)', color: '#fff' }}>
+              <div style={{ padding: '10px 14px', minWidth: '320px' }}>
+                <GitHubHeatmap />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -260,10 +272,10 @@ function BarDropdown({ label, id, active, toggle, hover, children }: {
 
 /* ── System tray icon dropdown ─────────────────────── */
 
-function TrayDropdown({ id, active, toggle, icon, children, align }: {
+function TrayDropdown({ id, active, toggle, icon, children, align, dark }: {
   id: string; active: string | null;
   toggle: (id: string) => void;
-  icon: React.ReactNode; children: React.ReactNode; align?: 'left' | 'right';
+  icon: React.ReactNode; children: React.ReactNode; align?: 'left' | 'right'; dark?: boolean;
 }) {
   const open = active === id;
   return (
@@ -276,7 +288,7 @@ function TrayDropdown({ id, active, toggle, icon, children, align }: {
           display: 'flex', alignItems: 'center',
         }}
       >{icon}</div>
-      {open && <div style={{ ...panelStyle, ...(align === 'right' ? { right: 0 } : { left: 0 }) }}>{children}</div>}
+      {open && <div style={{ ...panelStyle, ...(align === 'right' ? { right: 0 } : { left: 0 }), ...(dark ? { background: 'rgba(30, 30, 30, 0.92)', color: '#fff' } : {}) }}>{children}</div>}
     </div>
   );
 }
@@ -347,10 +359,10 @@ function WifiPanel({ location, onOpenSettings }: { location: LocationData | null
             width: '28px', height: '28px', borderRadius: '50%', background: '#007aff',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
-            <svg width="14" height="12" viewBox="0 0 16 14" fill="none">
-              <path d="M8 12.5a1 1 0 100-2 1 1 0 000 2z" fill="white" />
-              <path d="M5.17 9.17a4 4 0 015.66 0" stroke="white" strokeWidth="1.3" strokeLinecap="round" fill="none" />
-              <path d="M2.93 6.93a7 7 0 0110.14 0" stroke="white" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+            <svg width="14" height="10" viewBox="0 0 16 12" fill="none">
+              <path d="M8 10.5a1 1 0 100-2 1 1 0 000 2z" fill="white" />
+              <path d="M5.17 7.17a4 4 0 015.66 0" stroke="white" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+              <path d="M2.93 4.93a7 7 0 0110.14 0" stroke="white" strokeWidth="1.3" strokeLinecap="round" fill="none" />
             </svg>
           </div>
           <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(0,0,0,0.85)', flex: 1 }}>Ronniel's Network</span>
@@ -560,11 +572,10 @@ function CtrlBtn({ children, size = 26 }: { children: React.ReactNode; size?: nu
 
 function WifiIconDark() {
   return (
-    <svg width="14" height="12" viewBox="0 0 16 14" fill="none" style={{ opacity: 0.6 }}>
-      <path d="M8 12.5a1 1 0 100-2 1 1 0 000 2z" fill="rgba(0,0,0,0.65)" />
-      <path d="M5.17 9.17a4 4 0 015.66 0" stroke="rgba(0,0,0,0.55)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-      <path d="M2.93 6.93a7 7 0 0110.14 0" stroke="rgba(0,0,0,0.4)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-      <path d="M0.69 4.69a10 10 0 0114.62 0" stroke="rgba(0,0,0,0.25)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+    <svg width="14" height="10" viewBox="0 0 16 12" fill="none" style={{ opacity: 0.6 }}>
+      <path d="M8 10.5a1 1 0 100-2 1 1 0 000 2z" fill="rgba(0,0,0,0.65)" />
+      <path d="M5.17 7.17a4 4 0 015.66 0" stroke="rgba(0,0,0,0.55)" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+      <path d="M2.93 4.93a7 7 0 0110.14 0" stroke="rgba(0,0,0,0.4)" strokeWidth="1.3" strokeLinecap="round" fill="none" />
     </svg>
   );
 }
@@ -583,11 +594,10 @@ function BatteryIcon() {
 
 function WifiIcon() {
   return (
-    <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
-      <path d="M8 12.5a1 1 0 100-2 1 1 0 000 2z" fill="rgba(255,255,255,1)" />
-      <path d="M5.17 9.17a4 4 0 015.66 0" stroke="rgba(255,255,255,0.95)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-      <path d="M2.93 6.93a7 7 0 0110.14 0" stroke="rgba(255,255,255,0.9)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-      <path d="M0.69 4.69a10 10 0 0114.62 0" stroke="rgba(255,255,255,0.75)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+    <svg width="18" height="14" viewBox="0 0 16 12" fill="none">
+      <path d="M8 10.5a1 1 0 100-2 1 1 0 000 2z" fill="rgba(255,255,255,1)" />
+      <path d="M5.17 7.17a4 4 0 015.66 0" stroke="rgba(255,255,255,0.95)" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+      <path d="M2.93 4.93a7 7 0 0110.14 0" stroke="rgba(255,255,255,0.85)" strokeWidth="1.3" strokeLinecap="round" fill="none" />
     </svg>
   );
 }

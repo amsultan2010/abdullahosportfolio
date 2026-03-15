@@ -5,6 +5,7 @@ import AppWindow from './AppWindow';
 import BootScreen from './BootScreen';
 import DesktopDock from './DesktopDock';
 import DesktopMenuBar from './DesktopMenuBar';
+import GitHubHeatmap from './GitHubHeatmap';
 import type { WindowId } from './types';
 
 // Section content
@@ -1096,74 +1097,7 @@ function BloombergNewsFeed() {
 }
 
 // ── Widget 1: GitHub Contribution Heatmap ──
-function GitHubHeatmap() {
-  const [weeks, setWeeks] = useState<number[][]>([]);
-  const [total, setTotal] = useState(0);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  useEffect(() => {
-    fetch('/api/github-contributions')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        if (d?.weeks) {
-          setWeeks(d.weeks);
-          setTotal(d.totalContributions);
-          if (d.lastUpdated) setLastUpdated(d.lastUpdated);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const getColor = (count: number) => {
-    if (count === 0) return 'rgba(255,255,255,0.04)';
-    if (count <= 1) return '#0e4429';
-    if (count <= 3) return '#006d32';
-    if (count <= 5) return '#26a641';
-    return '#39d353';
-  };
-
-  if (!weeks.length) return null;
-  const cellSize = 7;
-  const gap = 2;
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <div style={{ fontSize: '11px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace" }}>
-          GITHUB
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
-          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
-          LIVE
-        </div>
-      </div>
-      <div style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1, display: 'flex', alignItems: 'center' }}>
-        <svg width={weeks.length * (cellSize + gap)} height={7 * (cellSize + gap)} style={{ display: 'block' }}>
-          {weeks.map((week, wi) =>
-            week.map((count, di) => (
-              <rect
-                key={`${wi}-${di}`}
-                x={wi * (cellSize + gap)}
-                y={di * (cellSize + gap)}
-                width={cellSize}
-                height={cellSize}
-                rx={1.5}
-                fill={getColor(count)}
-              />
-            ))
-          )}
-        </svg>
-      </div>
-      <div style={{ marginTop: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', fontFamily: "'SF Mono', monospace" }}>
-        <span style={{ color: '#fff' }}>{total} contributions</span>
-        {lastUpdated && (
-          <span style={{ color: 'rgba(255,255,255,0.5)' }}>
-            Last updated {new Date(lastUpdated + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
+// GitHubHeatmap moved to ./GitHubHeatmap.tsx
 
 // ── Widget 2: Spotify Now Playing ──
 function SpotifyWidget() {
@@ -4262,10 +4196,7 @@ function MiddlePanel({ runCommand }: { runCommand: (cmd: string) => void }) {
 
       </div>
 
-      {/* GitHub Heatmap — pinned to bottom */}
-      <div style={{ marginTop: '20px' }}>
-        <GitHubHeatmap />
-      </div>
+      {/* GitHub Heatmap removed — moved to notification center */}
     </div>
   );
 }
@@ -5156,7 +5087,7 @@ function ChronographWatch() {
   const C = 100; // center
   const toRad = (deg: number) => deg * (Math.PI / 180);
   return (
-    <svg width="200" height="200" viewBox="0 0 200 200" fill="none" style={{ filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.1))' }}>
+    <svg width="160" height="160" viewBox="0 0 200 200" fill="none" style={{ filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.1))' }}>
       {/* Outer rings */}
       <circle cx={C} cy={C} r="94" stroke="rgba(255,255,255,0.6)" strokeWidth="1" fill="none" />
       <circle cx={C} cy={C} r="90" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" fill="none" />
@@ -5215,6 +5146,7 @@ function TerminalContent() {
   const [showCommands, setShowCommands] = useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const isSmallScreen = typeof window !== 'undefined' && window.innerHeight < 850;
 
   // Stagger-in elements (text is static, only rotating words animate)
   useEffect(() => {
@@ -5643,7 +5575,7 @@ function TerminalContent() {
         width: isFullscreen ? '100%' : undefined,
         flex: isFullscreen ? 'none' : 1,
         display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        padding: isFullscreen ? '28px 48px 50px 48px' : '28px 20px 14px 28px', borderRight: isFullscreen ? 'none' : '1px solid rgba(255,255,255,0.04)',
+        padding: isFullscreen ? (isSmallScreen ? '20px 28px 36px 28px' : '28px 48px 50px 48px') : '28px 20px 14px 28px', borderRight: isFullscreen ? 'none' : '1px solid rgba(255,255,255,0.04)',
         minWidth: 0, flexShrink: 0,
         overflowY: isFullscreen ? 'auto' : 'hidden',
         overflowX: 'hidden',
@@ -5655,10 +5587,10 @@ function TerminalContent() {
             {isFullscreen ? (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
-                  <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '42px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
+                  <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: isSmallScreen ? '32px' : '42px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
                     Ronniel Gandhe
                   </div>
-                  <div style={{ fontSize: '14px', marginBottom: '12px', fontFamily: "'SF Pro Text', -apple-system, sans-serif", letterSpacing: '0.3px' }}>
+                  <div style={{ fontSize: isSmallScreen ? '12px' : '14px', marginBottom: isSmallScreen ? '8px' : '12px', fontFamily: "'SF Pro Text', -apple-system, sans-serif", letterSpacing: '0.3px' }}>
                     <RollingTitles />
                   </div>
                 </div>
@@ -5677,11 +5609,11 @@ function TerminalContent() {
               </>
             )}
             {isFullscreen ? (() => {
-              const sHead: React.CSSProperties = { color: '#fff', fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.12em', marginBottom: '8px', fontFamily: "'SF Mono', monospace" };
-              const sPara: React.CSSProperties = { color: 'rgba(255,255,255,0.92)', fontSize: '14.5px', lineHeight: 1.65, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 };
-              const sRule: React.CSSProperties = { width: '40px', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '10px 0' };
+              const sHead: React.CSSProperties = { color: '#fff', fontSize: isSmallScreen ? '10px' : '11.5px', fontWeight: 700, letterSpacing: '0.12em', marginBottom: isSmallScreen ? '5px' : '8px', fontFamily: "'SF Mono', monospace" };
+              const sPara: React.CSSProperties = { color: 'rgba(255,255,255,0.92)', fontSize: isSmallScreen ? '12px' : '14.5px', lineHeight: isSmallScreen ? 1.5 : 1.65, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 };
+              const sRule: React.CSSProperties = { width: '40px', height: '1px', background: 'rgba(255,255,255,0.1)', margin: isSmallScreen ? '6px 0' : '10px 0' };
               return (
-              <div style={{ marginTop: '2px', display: 'flex', gap: '40px' }}>
+              <div style={{ marginTop: '2px', display: 'flex', gap: isSmallScreen ? '24px' : '40px' }}>
                 {/* ── Left Column ── */}
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                   {/* About */}
@@ -5693,7 +5625,6 @@ function TerminalContent() {
                     Most of my time is spent building software, studying markets, and trying to understand systems that actually move money and incentives in the real world. Over the last few years I have moved between software engineering, data science, and financial markets. Some of that was intentional. Some of it was just curiosity turning into a rabbit hole that got deeper than expected. Recently I have also gotten into growth engineering.
                   </div>
                   <div style={{ ...sPara, marginTop: '6px' }}>
-                    What interests me most is where software meets real economic systems. Trading infrastructure. Data tools. Internal software that makes people faster. I do not really see myself as one thing. Mostly just someone who likes understanding how systems work and then trying to build inside them. And if that does not work, I build my own system.
                   </div>
 
                   <div style={sRule} />
@@ -5708,7 +5639,7 @@ function TerminalContent() {
                   </div>
 
                   {/* Chronograph Watch */}
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, marginTop: '0px' }}>
+                  <div style={{ display: 'flex', justifyContent: isSmallScreen ? 'flex-end' : 'center', alignItems: 'center', flex: 1, marginTop: '0px' }}>
                     <ChronographWatch />
                   </div>
 
@@ -5763,14 +5694,14 @@ function TerminalContent() {
                       <div style={sRule} />
                       <div style={sHead}>ONLINE</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <a href="https://www.instagram.com/ronnielgandhe/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ ...sPara, fontSize: '12.5px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>
-                          Instagram — @ronnielgandhe
+                        <a href="https://www.instagram.com/ronnielgandhe/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ ...sPara, fontSize: '12.5px', textDecoration: 'none' }}>
+                          <span style={{ color: '#E1306C' }}>Instagram</span> <span style={{ color: '#fff' }}>— @ronnielgandhe</span>
                         </a>
-                        <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ ...sPara, fontSize: '12.5px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>
-                          LinkedIn — the professional version of me
+                        <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ ...sPara, fontSize: '12.5px', textDecoration: 'none' }}>
+                          <span style={{ color: '#0A66C2' }}>LinkedIn</span> <span style={{ color: '#fff' }}>— the professional version of me</span>
                         </a>
-                        <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ ...sPara, fontSize: '12.5px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>
-                          GitHub — projects and experiments
+                        <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ ...sPara, fontSize: '12.5px', textDecoration: 'none' }}>
+                          <span style={{ color: '#8b949e' }}>GitHub</span> <span style={{ color: '#fff' }}>— projects and experiments</span>
                         </a>
                       </div>
                     </div>
@@ -5782,9 +5713,6 @@ function TerminalContent() {
                     </div>
                   </div>
 
-                  <div style={{ marginTop: 'auto', paddingTop: '14px' }}>
-                    <GitHubHeatmap />
-                  </div>
                 </div>
               </div>
               );
@@ -5821,23 +5749,23 @@ function TerminalContent() {
         <div>
           {isFullscreen ? (
             <div style={{
-              position: 'absolute', bottom: '40px', left: '16px',
-              display: 'flex', gap: '16px', alignItems: 'center',
-              fontFamily: "'SF Mono', monospace", fontSize: '15px',
-              zIndex: 5,
+              display: 'flex', flexDirection: isSmallScreen ? 'column' : 'row',
+              gap: isSmallScreen ? '4px' : '16px', alignItems: isSmallScreen ? 'flex-start' : 'center',
+              fontFamily: "'SF Mono', monospace", fontSize: isSmallScreen ? '12px' : '15px',
+              marginTop: isSmallScreen ? '14px' : '24px', paddingBottom: isSmallScreen ? '20px' : '40px',
             }}>
               <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
-                💼 linkedin
+                💼 {isSmallScreen ? 'linkedin.com/in/ronniel-gandhe' : 'linkedin'}
               </a>
-              <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
+              {!isSmallScreen && <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>}
               <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
-                🐙 github
+                🐙 {isSmallScreen ? 'github.com/ronnielgandhe' : 'github'}
               </a>
-              <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
+              {!isSmallScreen && <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>}
               <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
                 ✉️ ronnielgandhe@gmail.com
               </a>
-              <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
+              {!isSmallScreen && <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>}
               <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
             </div>
           ) : (
@@ -6025,12 +5953,13 @@ function FloatingBooks() {
   const [readerPage, setReaderPage] = useState(0);
   const [readerPages, setReaderPages] = useState<string[]>([]);
 
-  // Book dimensions - smaller for 2x2 grid
-  const SMALL_W = 210;
-  const SMALL_H = 280;
-  const BIG_H = 700;
-  const BIG_W = Math.round(BIG_H * 3 / 4); // 525px, maintains 3:4
-  const GRID_GAP = 16;
+  // Book dimensions - responsive for different screen sizes
+  const isSmallScreen = typeof window !== 'undefined' && window.innerHeight < 850;
+  const SMALL_W = isSmallScreen ? 160 : 210;
+  const SMALL_H = isSmallScreen ? 213 : 280;
+  const BIG_H = isSmallScreen ? 550 : 700;
+  const BIG_W = Math.round(BIG_H * 3 / 4);
+  const GRID_GAP = isSmallScreen ? 12 : 16;
   // 2x2 grid: total width = 2 * SMALL_W + GAP
   const GRID_W = 2 * SMALL_W + GRID_GAP;
   const GRID_H = 2 * SMALL_H + GRID_GAP;
@@ -6149,7 +6078,7 @@ function FloatingBooks() {
   const screenH = typeof window !== 'undefined' ? window.innerHeight : 900;
   // Expanded book position: right side, vertically centered
   const expandedTop = Math.round((screenH - BIG_H) / 2);
-  const expandedRight = 30;
+  const expandedRight = isSmallScreen ? 15 : 30;
 
   return (
     <>
@@ -6204,6 +6133,49 @@ function FloatingBooks() {
         }}
       />
 
+      {/* Glowing X close button — follows expanded book or sits above grid */}
+      <div
+        onClick={handleDismiss}
+        style={{
+          position: 'fixed',
+          top: isOpen
+            ? `${expandedTop - 44}px`
+            : `${Math.round((screenH - GRID_H) / 2) - 52}px`,
+          right: isOpen
+            ? `${expandedRight}px`
+            : `${(isSmallScreen ? 60 : 120) - 6}px`,
+          zIndex: 10003,
+          transition: 'top 0.5s cubic-bezier(0.16, 1, 0.3, 1), right 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+          width: '36px',
+          height: '36px',
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.1)',
+          border: '1px solid rgba(255,255,255,0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          pointerEvents: 'auto',
+          fontSize: '18px',
+          color: 'rgba(255,255,255,0.9)',
+          fontWeight: 300,
+          boxShadow: '0 0 15px rgba(255,255,255,0.2), 0 0 30px rgba(255,255,255,0.1)',
+          backdropFilter: 'blur(10px)',
+          transition: 'all 0.2s ease',
+          opacity: exiting ? 0 : 1,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+          e.currentTarget.style.boxShadow = '0 0 20px rgba(255,255,255,0.35), 0 0 40px rgba(255,255,255,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+          e.currentTarget.style.boxShadow = '0 0 15px rgba(255,255,255,0.2), 0 0 30px rgba(255,255,255,0.1)';
+        }}
+      >
+        ✕
+      </div>
+
       {/* Floating books container */}
       <div style={{ position: 'fixed', zIndex: 9999, pointerEvents: 'none', inset: 0, perspective: '1200px' }}>
         {FLOATING_BOOKS.map((book, idx) => {
@@ -6220,7 +6192,7 @@ function FloatingBooks() {
           // 2x2 grid position calculations
           const col = idx % 2;       // 0=left, 1=right
           const row = Math.floor(idx / 2); // 0=top, 1=bottom
-          const gridRight = 120;
+          const gridRight = isSmallScreen ? 60 : 120;
           const gridTop = Math.round((screenH - GRID_H) / 2);
           const idleRight = `${gridRight + (1 - col) * (SMALL_W + GRID_GAP)}px`;
           const idleTop = `${gridTop + row * (SMALL_H + GRID_GAP)}px`;
@@ -6246,19 +6218,27 @@ function FloatingBooks() {
               transition: isHovered ? 'transform 0.15s ease-out' : 'transform 0.5s ease-out',
             };
           } else if (isOther) {
-            // Non-selected book: fade and shrink in place
-            bookStyle = {
-              position: 'fixed',
-              right: idleRight,
-              top: idleTop,
-              width: `${SMALL_W}px`,
-              height: `${SMALL_H}px`,
-              opacity: phase === 'closing' ? 1 : 0.15,
-              transform: `scale(0.9) rotateY(-8deg)`,
-              filter: 'blur(2px)',
-              transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
-              zIndex: 9998,
-            };
+            // Non-selected book: hide completely if launched from store, otherwise fade
+            if (state.floatingBookSlug) {
+              bookStyle = {
+                position: 'fixed', right: idleRight, top: idleTop,
+                width: `${SMALL_W}px`, height: `${SMALL_H}px`,
+                opacity: 0, pointerEvents: 'none' as const,
+              };
+            } else {
+              bookStyle = {
+                position: 'fixed',
+                right: idleRight,
+                top: idleTop,
+                width: `${SMALL_W}px`,
+                height: `${SMALL_H}px`,
+                opacity: phase === 'closing' ? 1 : 0.15,
+                transform: `scale(0.9) rotateY(-8deg)`,
+                filter: 'blur(2px)',
+                transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
+                zIndex: 9998,
+              };
+            }
           } else if (isSelected) {
             // Selected book: expand or close (reverse)
             const isExpanded = phase === 'expanding' || phase === 'content' || phase === 'flipping';

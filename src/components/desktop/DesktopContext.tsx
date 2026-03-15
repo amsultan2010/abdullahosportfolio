@@ -4,11 +4,15 @@ import { WINDOW_DEFAULTS } from './types';
 
 function createWindow(id: WindowId, zIndex: number, titleOverride?: string): WindowState {
   const defaults = WINDOW_DEFAULTS[id];
-  // Center window on screen
   const screenW = typeof window !== 'undefined' ? window.innerWidth : 1440;
   const screenH = typeof window !== 'undefined' ? window.innerHeight : 900;
-  const x = Math.max(0, Math.round((screenW - defaults.width) / 2));
-  const y = Math.max(28, Math.round((screenH - defaults.height) / 2));
+  // Clamp window size to fit screen (leave room for dock + menu bar)
+  const maxW = screenW - 40;
+  const maxH = screenH - 28 - 70;
+  const w = Math.min(defaults.width, maxW);
+  const h = Math.min(defaults.height, maxH);
+  const x = Math.max(0, Math.round((screenW - w) / 2));
+  const y = Math.max(28, Math.round((screenH - h) / 2));
   return {
     id,
     title: titleOverride || defaults.title,
@@ -17,7 +21,7 @@ function createWindow(id: WindowId, zIndex: number, titleOverride?: string): Win
     isFullscreen: false,
     zIndex,
     position: { x, y },
-    size: { width: defaults.width, height: defaults.height },
+    size: { width: w, height: h },
   };
 }
 
@@ -39,12 +43,21 @@ function desktopReducer(state: DesktopState, action: DesktopAction): DesktopStat
           nextZIndex: state.nextZIndex + 1,
         };
       }
+
+      // Only one window at a time (besides terminal) — close others
+      const cleaned: typeof baseWindows = {};
+      for (const [wid, w] of Object.entries(baseWindows)) {
+        if (wid === 'terminal' || wid === action.id) cleaned[wid as WindowId] = w;
+      }
+
       if (existing?.isMinimized) {
         return {
           ...state,
           focusedWindowId: action.id,
+          floatingBooksVisible: false,
+          floatingBookSlug: null,
           windows: {
-            ...baseWindows,
+            ...cleaned,
             [action.id]: { ...existing, isMinimized: false, zIndex: state.nextZIndex },
           },
           nextZIndex: state.nextZIndex + 1,
@@ -54,7 +67,9 @@ function desktopReducer(state: DesktopState, action: DesktopAction): DesktopStat
       return {
         ...state,
         focusedWindowId: action.id,
-        windows: { ...baseWindows, [action.id]: win },
+        floatingBooksVisible: false,
+        floatingBookSlug: null,
+        windows: { ...cleaned, [action.id]: win },
         nextZIndex: state.nextZIndex + 1,
       };
     }

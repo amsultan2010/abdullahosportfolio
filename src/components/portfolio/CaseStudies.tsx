@@ -164,7 +164,7 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
         {/* Book covers grid */}
         <div className="cs-grid" style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+          gridTemplateColumns: 'repeat(2, 1fr)',
           gap: '28px 24px',
           opacity: cardAnimated ? 1 : 0,
           transform: cardAnimated ? 'translateY(0)' : 'translateY(20px)',

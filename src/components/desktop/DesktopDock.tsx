@@ -21,7 +21,7 @@ export default function DesktopDock() {
   const dockRef = useRef<HTMLDivElement>(null);
 
   const windowItems: DockItem[] = [
-    { id: 'terminal', label: 'Terminal', icon: <DockImage src="/usethisTERMIANL.png" alt="Terminal" /> },
+    { id: 'terminal', label: 'Terminal', icon: <DockImage src="/usethisTERMIANL.png" alt="Terminal" cropScale={1.15} /> },
     { id: 'projects', label: 'Projects', icon: <DockImage src="/vscode.png" alt="VS Code" /> },
     { id: 'deep-research', label: 'Deep Research', icon: <DockImage src="/books.png" alt="Books" cropScale={1.18} /> },
     { id: 'blog', label: 'My Thoughts', icon: <DockImage src="/notes.png" alt="Notes" /> },
@@ -38,9 +38,6 @@ export default function DesktopDock() {
 
   const allItems = [...windowItems, { id: 'divider' as any, label: '', icon: null }, ...externalItems];
 
-  // Portfolio windows are mutually exclusive — opening one auto-closes others
-  const PORTFOLIO_WINDOWS: WindowId[] = ['education', 'experience', 'projects', 'blog', 'calendar', 'photos'];
-
   const handleClick = (item: DockItem) => {
     if (item.isExternal && item.href) {
       if (item.href.startsWith('mailto:')) {
@@ -52,20 +49,29 @@ export default function DesktopDock() {
     }
     const id = item.id as WindowId;
 
+    // Books/Deep Research: use floating cards instead of a window
+    if (id === 'deep-research') {
+      if (state.floatingBooksVisible) {
+        dispatch({ type: 'HIDE_FLOATING_BOOKS' });
+      } else {
+        // Close other windows (except terminal) before showing books
+        Object.keys(state.windows).forEach(winId => {
+          if (winId !== 'terminal') {
+            dispatch({ type: 'CLOSE_WINDOW', id: winId as WindowId });
+          }
+        });
+        dispatch({ type: 'SHOW_FLOATING_BOOKS' });
+      }
+      return;
+    }
+
     const win = state.windows[id];
     if (win?.isMinimized) {
       dispatch({ type: 'RESTORE_WINDOW', id });
     } else if (win?.isOpen) {
       dispatch({ type: 'FOCUS_WINDOW', id });
     } else {
-      // Auto-close other portfolio windows when opening a new one
-      if (PORTFOLIO_WINDOWS.includes(id)) {
-        PORTFOLIO_WINDOWS.forEach(pid => {
-          if (pid !== id && state.windows[pid]?.isOpen) {
-            dispatch({ type: 'CLOSE_WINDOW', id: pid });
-          }
-        });
-      }
+      // Reducer handles closing other windows automatically
       dispatch({ type: 'OPEN_WINDOW', id });
     }
   };
