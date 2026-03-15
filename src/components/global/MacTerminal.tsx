@@ -4,9 +4,10 @@ import { FaRegFolderClosed } from 'react-icons/fa6';
 export default function MacTerminal() {
   const welcomeMessage = `Ronniel Gandhe — Software Engineer
 
-Location: Waterloo, ON
-Email: ronnielgandhe@gmail.com
+LinkedIn: linkedin.com/in/ronniel-gandhe
 GitHub: github.com/ronnielgandhe
+Email: ronnielgandhe@gmail.com
+Location: Waterloo, ON
 
 
 I build systems that think, design that feels, and code that connects ideas to impact.

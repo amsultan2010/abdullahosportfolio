@@ -86,6 +86,165 @@ const SMART_COMMANDS: Record<string, { window: WindowId; output: string }> = {
   'open calendar.app':     { window: 'calendar',      output: 'Opening Calendar.app...' },
 };
 
+// ── Rolling titles ribbon for fullscreen subtitle ──
+function RollingTitles() {
+  const titles = [
+    'Software Engineer', 'Data Scientist', 'Trader', 'Gym Bro',
+    'Growth Engineer', 'Dog Lover', 'Carnivore Diet Enjoyer',
+    'Night Owl', 'Coffee Addict', 'Market Watcher',
+    'System Builder', 'Rabbit Hole Explorer', 'Open Source Fan',
+    'Terminal Dweller', 'Full Stack Dev', 'Quantitative Thinker',
+  ];
+  const colors = [
+    '#60a5fa', '#c084fc', '#4ade80', '#fbbf24', '#f472b6',
+    '#22d3ee', '#fb923c', '#a78bfa', '#34d399', '#f87171',
+    '#38bdf8', '#e879f9', '#86efac', '#fcd34d', '#fb7185',
+    '#67e8f9',
+  ];
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLSpanElement>(null);
+  const [built, setBuilt] = useState<{ text: string; color: string }[]>([]);
+  const [charIdx, setCharIdx] = useState(0);
+  const [titleIdx, setTitleIdx] = useState(0);
+  const [phase, setPhase] = useState<'typing' | 'pause' | 'reverse-erase' | 'reverse-pause'>('typing');
+  const [reverseIdx, setReverseIdx] = useState(0);
+  const [reverseCharIdx, setReverseCharIdx] = useState(0);
+  const [overflowed, setOverflowed] = useState(false);
+
+  // Check if content overflows the container
+  const checkOverflow = useCallback(() => {
+    if (containerRef.current && contentRef.current) {
+      const containerWidth = containerRef.current.offsetWidth - 10; // leave room for cursor
+      const contentWidth = contentRef.current.scrollWidth;
+      return contentWidth >= containerWidth;
+    }
+    return false;
+  }, []);
+
+  useEffect(() => {
+    if (phase === 'typing') {
+      // Check overflow after each render
+      if (overflowed) {
+        // We've hit the edge — pause then reverse
+        const t = setTimeout(() => {
+          const finalBuilt = [...built];
+          const currentTitle = titles[titleIdx];
+          if (charIdx > 0) {
+            finalBuilt.push({ text: currentTitle.slice(0, charIdx), color: colors[titleIdx % colors.length] });
+          }
+          setBuilt(finalBuilt);
+          setPhase('reverse-erase');
+          setReverseIdx(finalBuilt.length - 1);
+          setReverseCharIdx(finalBuilt[finalBuilt.length - 1]?.text.length || 0);
+          setOverflowed(false);
+        }, 1500);
+        return () => clearTimeout(t);
+      }
+
+      const title = titles[titleIdx];
+      if (charIdx < title.length) {
+        // Before typing next char, check if we're close to the edge
+        if (containerRef.current && contentRef.current) {
+          const containerWidth = containerRef.current.offsetWidth - 20; // leave comfortable margin
+          const contentWidth = contentRef.current.scrollWidth;
+          if (contentWidth >= containerWidth) {
+            // We're at the edge — don't add more characters, treat as overflow
+            setOverflowed(true);
+            return;
+          }
+        }
+        const t = setTimeout(() => setCharIdx(c => c + 1), 35);
+        return () => clearTimeout(t);
+      } else {
+        // Title done — add separator and move to next
+        const newBuilt = [...built, { text: title, color: colors[titleIdx % colors.length] }];
+        if (titleIdx + 1 < titles.length) {
+          setBuilt(newBuilt);
+          setTitleIdx(i => i + 1);
+          setCharIdx(0);
+        } else {
+          // All titles typed — pause then reverse
+          setBuilt(newBuilt);
+          const t = setTimeout(() => {
+            setPhase('reverse-erase');
+            setReverseIdx(newBuilt.length - 1);
+            setReverseCharIdx(newBuilt[newBuilt.length - 1].text.length);
+          }, 1500);
+          return () => clearTimeout(t);
+        }
+      }
+    }
+
+    if (phase === 'reverse-erase') {
+      if (reverseCharIdx > 0) {
+        const t = setTimeout(() => setReverseCharIdx(c => c - 1), 20);
+        return () => clearTimeout(t);
+      } else if (reverseIdx > 0) {
+        const t = setTimeout(() => {
+          setReverseIdx(i => i - 1);
+          setReverseCharIdx(built[reverseIdx - 1].text.length);
+        }, 50);
+        return () => clearTimeout(t);
+      } else {
+        // All erased — restart
+        const t = setTimeout(() => {
+          setBuilt([]);
+          setTitleIdx(0);
+          setCharIdx(0);
+          setPhase('typing');
+        }, 800);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [phase, charIdx, titleIdx, reverseIdx, reverseCharIdx, overflowed]);
+
+  // After each render during typing, check if we've overflowed
+  useEffect(() => {
+    if (phase === 'typing' && !overflowed && checkOverflow()) {
+      setOverflowed(true);
+    }
+  });
+
+  // Build display items
+  const displayItems: { text: string; color: string }[] = [];
+  if (phase === 'typing') {
+    displayItems.push(...built);
+    const currentTitle = titles[titleIdx];
+    if (charIdx > 0) {
+      displayItems.push({ text: currentTitle.slice(0, charIdx), color: colors[titleIdx % colors.length] });
+    }
+  } else if (phase === 'reverse-erase') {
+    for (let i = 0; i < reverseIdx; i++) {
+      displayItems.push(built[i]);
+    }
+    if (reverseCharIdx > 0 && built[reverseIdx]) {
+      displayItems.push({ text: built[reverseIdx].text.slice(0, reverseCharIdx), color: built[reverseIdx].color });
+    }
+  }
+
+  const cursorColor = displayItems.length > 0 ? displayItems[displayItems.length - 1].color : colors[0];
+
+  return (
+    <div ref={containerRef} style={{ overflow: 'hidden', whiteSpace: 'nowrap', minHeight: '20px', width: '100%' }}>
+      <span ref={contentRef} style={{ display: 'inline' }}>
+        {displayItems.map((item, i) => (
+          <span key={i}>
+            <span style={{ color: item.color, fontWeight: 600, fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>{item.text}</span>
+            {i < displayItems.length - 1 && <span style={{ color: 'rgba(255,255,255,0.15)', margin: '0 6px' }}>·</span>}
+          </span>
+        ))}
+      </span>
+      <span style={{
+        display: 'inline-block', width: '2px', height: '14px',
+        background: cursorColor, marginLeft: '1px',
+        animation: 'blink 1s step-end infinite',
+        verticalAlign: 'text-bottom',
+      }} />
+    </div>
+  );
+}
+
 // ── Rotating words component (character-by-character typing) ──
 function RotatingWords() {
   const words = [
@@ -963,17 +1122,17 @@ function GitHubHeatmap() {
   };
 
   if (!weeks.length) return null;
-  const cellSize = 5;
-  const gap = 1.5;
+  const cellSize = 7;
+  const gap = 2;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-        <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace" }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <div style={{ fontSize: '11px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', fontFamily: "'SF Mono', monospace" }}>
           GITHUB
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
-          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
           LIVE
         </div>
       </div>
@@ -987,14 +1146,14 @@ function GitHubHeatmap() {
                 y={di * (cellSize + gap)}
                 width={cellSize}
                 height={cellSize}
-                rx={1}
+                rx={1.5}
                 fill={getColor(count)}
               />
             ))
           )}
         </svg>
       </div>
-      <div style={{ marginTop: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>
+      <div style={{ marginTop: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', fontFamily: "'SF Mono', monospace" }}>
         <span style={{ color: '#fff' }}>{total} contributions</span>
         {lastUpdated && (
           <span style={{ color: 'rgba(255,255,255,0.5)' }}>
@@ -2021,6 +2180,7 @@ const GOOGLE_COLORS = ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#4285F4', '#
 const WHARTON_COLORS = ['#4A7EC1','#4A7EC1','#4A7EC1','#4A7EC1','#4A7EC1','#4A7EC1','#4A7EC1','#fff','#fff','#fff','#fff','#fff','#fff','#fff'];
 // Amazon: 3 yellow, 3 white, space white, "Web" all yellow, space white, "Ser" white, "vic" yellow, "es" white
 const AMAZON_COLORS = ['#FF9900','#FF9900','#FF9900','#fff','#fff','#fff','#fff','#FF9900','#FF9900','#FF9900','#fff','#fff','#fff','#fff','#FF9900','#FF9900','#FF9900','#fff','#fff'];
+const SALESFORCE_COLORS = ['#00A1E0','#00A1E0','#00A1E0','#00A1E0','#00A1E0','#00A1E0','#00A1E0','#00A1E0','#00A1E0','#00A1E0'];
 
 function BrandText({ text, colors }: { text: string; colors: string[] }) {
   return <>{text.split('').map((ch, i) => <span key={i} style={{ color: colors[i % colors.length] }}>{ch}</span>)}</>;
@@ -2030,11 +2190,12 @@ const CERTIFICATIONS = [
   { name: 'Machine Learning for Trading Specialization', issuer: 'Google Cloud', status: '', issuerColors: GOOGLE_COLORS },
   { name: 'Finance & Quantitative Modeling for Analysts', issuer: 'Wharton Online', status: '', issuerColors: WHARTON_COLORS },
   { name: 'AWS Cloud Practitioner', issuer: 'Amazon Web Services', status: 'In Progress', issuerColors: AMAZON_COLORS },
+  { name: 'Salesforce Certified B2C Commerce Cloud Developer', issuer: 'Salesforce', status: 'In Progress', issuerColors: SALESFORCE_COLORS },
 ];
 
 const sectionLabel: React.CSSProperties = {
-  color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: 700,
-  letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Mono', monospace",
+  color: '#fff', fontSize: '11px', fontWeight: 700,
+  letterSpacing: '0.1em', marginBottom: '10px', fontFamily: "'SF Mono', monospace",
 };
 
 // ── Chronograph Clock ──
@@ -4073,49 +4234,36 @@ function StocksApp() {
 
 function MiddlePanel({ runCommand }: { runCommand: (cmd: string) => void }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '28px 20px 14px 20px' }}>
-      {/* Tech Stack */}
-      <div style={{ marginTop: '16px' }}>
-        <div style={sectionLabel}>TECH STACK</div>
-        {TECH_STACK.map(cat => (
-          <div key={cat.category} style={{ marginBottom: '8px' }}>
-            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', fontFamily: "'SF Mono', monospace", marginBottom: '4px', textTransform: 'uppercase' as const }}>{cat.category}</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-              {cat.items.map((item, i) => {
-                const theme = CATEGORY_THEME[cat.category] || { color: '#fff', rgb: '255,255,255' };
-                const opacity = 0.18 - (i * 0.02);
-                return (
-                  <span key={item} style={{
-                    fontSize: '10px', padding: '2px 8px', borderRadius: 4,
-                    background: `rgba(${theme.rgb},${Math.max(opacity, 0.06)})`,
-                    border: `0.5px solid rgba(${theme.rgb},0.25)`,
-                    color: theme.color, fontFamily: "'SF Mono', monospace",
-                  }}>{item}</span>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Certifications */}
-      <div style={{ marginTop: '16px' }}>
-        <div style={sectionLabel}>CERTIFICATIONS</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {CERTIFICATIONS.map(cert => (
-            <div key={cert.name} style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '11px', color: '#fff', fontFamily: "'SF Mono', monospace", fontWeight: 600 }}>{cert.name}</span>
-              <span style={{ fontSize: '10px', fontFamily: "'SF Mono', monospace", fontWeight: 600 }}>· <BrandText text={cert.issuer} colors={cert.issuerColors} /></span>
-              {cert.status && (
-                <span style={{ fontSize: '9px', color: '#fbbf24', fontFamily: "'SF Mono', monospace", fontWeight: 600, padding: '1px 6px', borderRadius: 3, background: 'rgba(251,191,36,0.1)', border: '0.5px solid rgba(251,191,36,0.2)' }}>{cert.status}</span>
-              )}
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '28px 24px 14px 24px', justifyContent: 'space-between' }}>
+      <div>
+        {/* Tech Stack */}
+        <div style={{ marginTop: '16px' }}>
+          <div style={sectionLabel}>TECH STACK</div>
+          {TECH_STACK.map(cat => (
+            <div key={cat.category} style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '10px', color: '#fff', fontFamily: "'SF Mono', monospace", marginBottom: '5px', textTransform: 'uppercase' as const, fontWeight: 600 }}>{cat.category}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                {cat.items.map((item, i) => {
+                  const theme = CATEGORY_THEME[cat.category] || { color: '#fff', rgb: '255,255,255' };
+                  const opacity = 0.18 - (i * 0.02);
+                  return (
+                    <span key={item} style={{
+                      fontSize: '11.5px', padding: '3px 10px', borderRadius: 5,
+                      background: `rgba(${theme.rgb},${Math.max(opacity, 0.06)})`,
+                      border: `0.5px solid rgba(${theme.rgb},0.25)`,
+                      color: theme.color, fontFamily: "'SF Mono', monospace",
+                    }}>{item}</span>
+                  );
+                })}
+              </div>
             </div>
           ))}
         </div>
+
       </div>
 
-      {/* GitHub Heatmap */}
-      <div style={{ marginTop: '16px' }}>
+      {/* GitHub Heatmap — pinned to bottom */}
+      <div style={{ marginTop: '20px' }}>
         <GitHubHeatmap />
       </div>
     </div>
@@ -4992,6 +5140,68 @@ function CompactTickers() {
   );
 }
 
+function ChronographWatch() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setTime(new Date()), 50);
+    return () => clearInterval(id);
+  }, []);
+  const h = time.getHours() % 12;
+  const m = time.getMinutes();
+  const s = time.getSeconds();
+  const ms = time.getMilliseconds();
+  const hAngle = (h * 30 + m * 0.5) - 90;
+  const mAngle = (m * 6 + s * 0.1) - 90;
+  const sAngle = (s * 6 + ms * 0.006) - 90;
+  const C = 100; // center
+  const toRad = (deg: number) => deg * (Math.PI / 180);
+  return (
+    <svg width="200" height="200" viewBox="0 0 200 200" fill="none" style={{ filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.1))' }}>
+      {/* Outer rings */}
+      <circle cx={C} cy={C} r="94" stroke="rgba(255,255,255,0.6)" strokeWidth="1" fill="none" />
+      <circle cx={C} cy={C} r="90" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" fill="none" />
+      {/* Brand name */}
+      <text x={C} y="48" textAnchor="middle" fill="rgba(255,255,255,0.85)" fontSize="7" fontFamily="'SF Pro Display', -apple-system, sans-serif" fontWeight="500" letterSpacing="3">GANDHE</text>
+      {/* Hour markers */}
+      {Array.from({ length: 12 }).map((_, i) => {
+        const a = toRad(i * 30 - 90);
+        const r1 = i % 3 === 0 ? 74 : 78;
+        const r2 = 86;
+        return <line key={i} x1={C + r1 * Math.cos(a)} y1={C + r1 * Math.sin(a)} x2={C + r2 * Math.cos(a)} y2={C + r2 * Math.sin(a)} stroke="rgba(255,255,255,0.9)" strokeWidth={i % 3 === 0 ? 2.5 : 1} strokeLinecap="round" />;
+      })}
+      {/* Minute ticks */}
+      {Array.from({ length: 60 }).map((_, i) => {
+        if (i % 5 === 0) return null;
+        const a = toRad(i * 6 - 90);
+        return <line key={`t${i}`} x1={C + 83 * Math.cos(a)} y1={C + 83 * Math.sin(a)} x2={C + 86 * Math.cos(a)} y2={C + 86 * Math.sin(a)} stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />;
+      })}
+      {/* Sub-dial top — 30min */}
+      <circle cx={C} cy={68} r="15" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" fill="none" />
+      <line x1={C} y1={68} x2={C + 11 * Math.cos(toRad(m * 12 - 90))} y2={68 + 11 * Math.sin(toRad(m * 12 - 90))} stroke="rgba(255,255,255,0.8)" strokeWidth="0.8" strokeLinecap="round" />
+      {/* Sub-dial left — running seconds */}
+      <circle cx={68} cy={C} r="15" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" fill="none" />
+      <line x1={68} y1={C} x2={68 + 11 * Math.cos(toRad(sAngle))} y2={C + 11 * Math.sin(toRad(sAngle))} stroke="rgba(255,255,255,0.9)" strokeWidth="0.8" strokeLinecap="round" />
+      {/* Sub-dial right — 12hr */}
+      <circle cx={132} cy={C} r="15" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" fill="none" />
+      <line x1={132} y1={C} x2={132 + 11 * Math.cos(toRad(hAngle))} y2={C + 11 * Math.sin(toRad(hAngle))} stroke="rgba(255,255,255,0.8)" strokeWidth="0.8" strokeLinecap="round" />
+      {/* Hour hand */}
+      <line x1={C} y1={C} x2={C + 46 * Math.cos(toRad(hAngle))} y2={C + 46 * Math.sin(toRad(hAngle))} stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+      {/* Minute hand */}
+      <line x1={C} y1={C} x2={C + 64 * Math.cos(toRad(mAngle))} y2={C + 64 * Math.sin(toRad(mAngle))} stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+      {/* Second hand — bright white */}
+      <line x1={C - 14 * Math.cos(toRad(sAngle))} y1={C - 14 * Math.sin(toRad(sAngle))} x2={C + 78 * Math.cos(toRad(sAngle))} y2={C + 78 * Math.sin(toRad(sAngle))} stroke="#fff" strokeWidth="0.8" strokeLinecap="round" />
+      {/* Center */}
+      <circle cx={C} cy={C} r="4" fill="rgba(255,255,255,0.8)" />
+      <circle cx={C} cy={C} r="1.8" fill="#fff" />
+      {/* Crown */}
+      <rect x="192" y="96" width="7" height="8" rx="1.5" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" />
+      {/* Pushers */}
+      <rect x="190" y="70" width="8" height="4" rx="1" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.6" />
+      <rect x="190" y="126" width="8" height="4" rx="1" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.6" />
+    </svg>
+  );
+}
+
 function TerminalContent() {
   const { state, dispatch } = useDesktop();
   const isFullscreen = state.windows.terminal?.isFullscreen ?? false;
@@ -5285,10 +5495,11 @@ function TerminalContent() {
         <div style={{ gridRow: '1 / 3', borderLeft: '1px solid rgba(255,255,255,0.04)', padding: '20px 16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <WorldClock />
           <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11.5px' }}>
-            <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
-            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ ronnielgandhe@gmail.com</a>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px' }}>
+            <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>💼 linkedin.com/in/ronniel-gandhe</a>
             <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 github.com/ronnielgandhe</a>
+            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ ronnielgandhe@gmail.com</a>
+            <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
           </div>
         </div>
 
@@ -5325,10 +5536,11 @@ function TerminalContent() {
           <div style={{ width: '40px', height: '1px', background: 'rgba(255,255,255,0.12)', marginBottom: '20px' }} />
 
           {/* Info row */}
-          <div style={{ display: 'flex', gap: '20px', fontSize: '12px', fontFamily: "'SF Mono', monospace", marginBottom: '24px' }}>
-            <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
-            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+          <div style={{ display: 'flex', gap: '20px', fontSize: '13px', fontFamily: "'SF Mono', monospace", marginBottom: '24px' }}>
+            <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>💼 LinkedIn</a>
             <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
+            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+            <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
           </div>
 
           {/* Command pills — horizontal */}
@@ -5386,10 +5598,11 @@ function TerminalContent() {
           <img src="/icons/rglogo.png" alt="RG" style={{ width: '44px', opacity: 0.7, filter: 'brightness(0) invert(1)', marginBottom: '12px' }} />
           <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '26px', fontWeight: 700, color: '#fff', letterSpacing: '-0.5px' }}>Ronniel Gandhe</div>
           <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '6px' }}>Software Engineer · <RotatingWords /></div>
-          <div style={{ display: 'flex', gap: '16px', fontSize: '11.5px', fontFamily: "'SF Mono', monospace", marginBottom: '20px' }}>
-            <span style={{ color: 'rgba(255,255,255,0.4)' }}>📍 Waterloo</span>
-            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+          <div style={{ display: 'flex', gap: '16px', fontSize: '13px', fontFamily: "'SF Mono', monospace", marginBottom: '20px' }}>
+            <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>💼 LinkedIn</a>
             <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
+            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+            <span style={{ color: 'rgba(255,255,255,0.4)' }}>📍 Waterloo</span>
           </div>
 
           {/* Glass cards row */}
@@ -5427,10 +5640,10 @@ function TerminalContent() {
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden', position: 'relative' as const }}>
       {/* Left — hero + portfolio (main focus) */}
       <div style={{
-        width: isFullscreen ? '38%' : undefined,
+        width: isFullscreen ? '100%' : undefined,
         flex: isFullscreen ? 'none' : 1,
         display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        padding: isFullscreen ? '20px 20px 8px 28px' : '28px 20px 14px 28px', borderRight: '1px solid rgba(255,255,255,0.04)',
+        padding: isFullscreen ? '28px 48px 50px 48px' : '28px 20px 14px 28px', borderRight: isFullscreen ? 'none' : '1px solid rgba(255,255,255,0.04)',
         minWidth: 0, flexShrink: 0,
         overflowY: isFullscreen ? 'auto' : 'hidden',
         overflowX: 'hidden',
@@ -5439,65 +5652,143 @@ function TerminalContent() {
         {/* Hero text */}
         <div>
           <div style={{ fontFamily: "'SF Mono', 'JetBrains Mono', monospace", fontSize: '14px', lineHeight: 1.6, color: '#e0e0e0' }}>
-            <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '34px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
-              Ronniel Gandhe
-            </div>
-            <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', fontWeight: 400, marginBottom: isFullscreen ? '8px' : '16px' }}>
-              Software Engineer
-            </div>
             {isFullscreen ? (
-              <div style={{ marginTop: '0px' }}>
-                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '10px', fontFamily: "'SF Mono', monospace" }}>
-                  ABOUT
-                </div>
-                <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', lineHeight: 1.7, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 }}>
-                  Software engineer studying Computer Science at Wilfrid Laurier University, previously in the Waterloo CS &amp; Laurier BBA double degree program. Currently building growth systems at Augmentor Labs in New York. I like working across the stack — from low-level systems and infrastructure to product-facing features and data pipelines. Outside of work, I spend time on quantitative projects, reading, and exploring new tools.
-                </div>
-                <div style={{ marginTop: '12px' }}>
-                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Mono', monospace" }}>
-                    INTERESTS
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
+                  <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '42px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
+                    Ronniel Gandhe
                   </div>
-                  <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', lineHeight: 1.7, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div>
-                      <div style={{ color: '#fff', fontWeight: 600, marginBottom: '2px' }}>Building</div>
-                      <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                        <li>Currently building Enttor — looking for cracked engineers.</li>
-                        <li>Reach out at zzhang@enttor.ai if you want to build something meaningful.</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <div style={{ color: '#fff', fontWeight: 600, marginBottom: '2px' }}>Reading</div>
-                      <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                        <li>Zero to One, Laws of Human Nature, Outliers, A Promised Land.</li>
-                        <li>Sam Altman's "What I Wish Someone Had Told Me."</li>
-                        <li>All books are fiction — written by biased humans.</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <div style={{ color: '#fff', fontWeight: 600, marginBottom: '2px' }}>Health</div>
-                      <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                        <li>Dairy-avoidant pescatarian borrowing from Bryan Johnson's playbook.</li>
-                        <li>Soulcycle 3–4x a week, religiously.</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <div style={{ color: '#fff', fontWeight: 600, marginBottom: '2px' }}>Finance</div>
-                      <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                        <li>Fascinated by market microstructure and quantitative strategies.</li>
-                        <li>I build models to understand how markets move.</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <div style={{ color: '#fff', fontWeight: 600, marginBottom: '2px' }}>Philosophy</div>
-                      <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                        <li>Aggressive minimalist. Urgency over complacency.</li>
-                        <li>Dress for the person you want to become.</li>
-                      </ul>
-                    </div>
+                  <div style={{ fontSize: '14px', marginBottom: '12px', fontFamily: "'SF Pro Text', -apple-system, sans-serif", letterSpacing: '0.3px' }}>
+                    <RollingTitles />
                   </div>
+                </div>
+                <div style={{ color: '#fff', fontSize: '11px', fontWeight: 700, fontFamily: "'SF Pro Display', -apple-system, sans-serif", textAlign: 'right', paddingTop: '8px', flexShrink: 0, marginLeft: '16px' }}>
+                  {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                 </div>
               </div>
             ) : (
+              <>
+                <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '34px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
+                  Ronniel Gandhe
+                </div>
+                <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', fontWeight: 400, marginBottom: '16px' }}>
+                  Software Engineer
+                </div>
+              </>
+            )}
+            {isFullscreen ? (() => {
+              const sHead: React.CSSProperties = { color: '#fff', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', marginBottom: '6px', fontFamily: "'SF Mono', monospace" };
+              const sPara: React.CSSProperties = { color: 'rgba(255,255,255,0.75)', fontSize: '12.5px', lineHeight: 1.6, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 };
+              const sRule: React.CSSProperties = { width: '40px', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '10px 0' };
+              return (
+              <div style={{ marginTop: '2px', display: 'flex', gap: '40px' }}>
+                {/* ── Left Column ── */}
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                  {/* About */}
+                  <div style={sHead}>ABOUT</div>
+                  <div style={sPara}>
+                    Currently based in Waterloo, Canada. Waterloo is a weird place. Half the people here are trying to build startups, the other half are trying to get into big tech, and the rest end up falling into strange rabbit holes like trading, crypto, or building random tools at 2AM. I fall somewhere in that third group.
+                  </div>
+                  <div style={{ ...sPara, marginTop: '6px' }}>
+                    Most of my time is spent building software, studying markets, and trying to understand systems that actually move money and incentives in the real world. Over the last few years I have moved between software engineering, data science, and financial markets. Some of that was intentional. Some of it was just curiosity turning into a rabbit hole that got deeper than expected. Recently I have also gotten into growth engineering.
+                  </div>
+                  <div style={{ ...sPara, marginTop: '6px' }}>
+                    What interests me most is where software meets real economic systems. Trading infrastructure. Data tools. Internal software that makes people faster. I do not really see myself as one thing. Mostly just someone who likes understanding how systems work and then trying to build inside them. And if that does not work, I build my own system.
+                  </div>
+
+                  <div style={sRule} />
+
+                  {/* Software */}
+                  <div style={sHead}>SOFTWARE</div>
+                  <div style={sPara}>
+                    Software is probably the most powerful skill you can have right now. If you know how to code, you can build almost anything. You do not need permission from anyone, you just sit down and make it.
+                  </div>
+                  <div style={{ ...sPara, marginTop: '6px' }}>
+                    Most of the things I build end up somewhere between software engineering, data systems, and financial markets. I like tools that interact with real incentives. Things where the outcome actually matters and you can see the result of what you built.
+                  </div>
+
+                  {/* Chronograph Watch */}
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, marginTop: '32px' }}>
+                    <ChronographWatch />
+                  </div>
+
+
+                </div>
+
+                {/* ── Right Column ── */}
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                  {/* Reading */}
+                  <div style={sHead}>READING</div>
+                  <div style={sPara}>
+                    Most of what I read falls into biographies, strategy, and people trying to explain how the world actually works. I like biographies because they show how messy reality actually is.
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '10px' }}>
+                    {[
+                      'Zero to One — Peter Thiel',
+                      'The Laws of Human Nature — Robert Greene',
+                      'Poor Charlie\'s Almanack — Charlie Munger',
+                      'The Power Broker — Robert Caro',
+                    ].map((book, i) => (
+                      <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
+                        <span style={{ color: '#fff', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>›</span>
+                        <span style={{ ...sPara, fontSize: '12.5px', lineHeight: 1.5 }}>{book}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={sRule} />
+
+                  {/* Health */}
+                  <div style={sHead}>HEALTH</div>
+                  <div style={sPara}>
+                    Coding and trading are both very good ways to destroy your body if you are not careful. I try to keep some structure around it. I lift about four times a week, try to get around ten thousand steps a day, and my diet is almost carnivore at this point. It keeps me sharp and offsets the reality of staring at screens most of the day.
+                  </div>
+
+                  {/* Current Focus + Online (left) | Markets (right) */}
+                  <div style={{ display: 'flex', gap: '48px', marginTop: '14px' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={sHead}>CURRENT FOCUS</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {[
+                          'Building software and internal tools',
+                          'Studying financial markets and trading systems',
+                          'Turning ideas into working products quickly',
+                        ].map((item, i) => (
+                          <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
+                            <span style={{ color: '#fff', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>›</span>
+                            <span style={{ ...sPara, fontSize: '12.5px', lineHeight: 1.5 }}>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={sRule} />
+                      <div style={sHead}>ONLINE</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <a href="https://www.instagram.com/ronnielgandhe/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ ...sPara, fontSize: '12.5px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>
+                          Instagram — @ronnielgandhe
+                        </a>
+                        <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ ...sPara, fontSize: '12.5px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>
+                          LinkedIn — the professional version of me
+                        </a>
+                        <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ ...sPara, fontSize: '12.5px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>
+                          GitHub — projects and experiments
+                        </a>
+                      </div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={sHead}>MARKETS</div>
+                      <div style={sPara}>
+                        Markets are one of the most honest systems in the world. They do not care where you went to school or about your opinions. They only care about decisions and consequences. At first I thought markets were about intelligence. Then I realized they are mostly about self-control.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 'auto', paddingTop: '14px' }}>
+                    <GitHubHeatmap />
+                  </div>
+                </div>
+              </div>
+              );
+            })() : (
               <>
                 <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.7 }}>
                   Using {showRotating && <RotatingWords />}
@@ -5526,52 +5817,65 @@ function TerminalContent() {
 
         {/* Spacer — only in non-fullscreen; in fullscreen space-between handles it */}
 
-        {/* Bottom section: Quick Start, Contact + GitHub */}
+        {/* Bottom section: Contact */}
         <div>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', marginTop: isFullscreen ? '8px' : '16px' }}>
-            <div style={{ fontFamily: "'SF Mono', monospace", display: 'flex', flexDirection: 'column', gap: isFullscreen ? '2px' : '6px', fontSize: isFullscreen ? '12px' : '13px' }}>
-              <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
+          {isFullscreen ? (
+            <div style={{
+              position: 'absolute', bottom: '40px', left: '16px',
+              display: 'flex', gap: '12px', alignItems: 'center',
+              fontFamily: "'SF Mono', monospace", fontSize: '12px',
+              zIndex: 5,
+            }}>
+              <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                💼 linkedin
+              </a>
+              <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
+              <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                🐙 github
+              </a>
+              <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
               <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
                 ✉️ ronnielgandhe@gmail.com
               </a>
-              <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
-                🐙 github.com/ronnielgandhe
-              </a>
-              <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
-                💼 linkedin.com/in/ronniel-gandhe
-              </a>
+              <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
+              <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
             </div>
-          </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', marginTop: '16px' }}>
+              <div style={{ fontFamily: "'SF Mono', monospace", display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '14px' }}>
+                <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                  💼 linkedin.com/in/ronniel-gandhe
+                </a>
+                <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                  🐙 github.com/ronnielgandhe
+                </a>
+                <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                  ✉️ ronnielgandhe@gmail.com
+                </a>
+                <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
+              </div>
+            </div>
+          )}
         </div>
         {/* Empty space — right whitespace */}
       </div>
 
-      {/* Middle — Site Guide, Tech Stack, Stats, Certs, GitHub heatmap */}
+      {/* Middle — Tech Stack, Certs, GitHub heatmap (fullscreen only) */}
       {isFullscreen && (
-        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+        <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden' }}>
           <MiddlePanel runCommand={runCommand} />
         </div>
       )}
 
-      {/* Right panel */}
+      {/* Right panel — hidden in fullscreen */}
       <div ref={scrollRef} onClick={() => inputRef.current?.focus()} style={{
-        width: isFullscreen ? '30%' : undefined,
         flex: isFullscreen ? 'none' : 1,
+        width: isFullscreen ? 0 : undefined,
         flexShrink: 0,
-        display: 'flex', flexDirection: 'column',
-        justifyContent: isFullscreen ? 'space-between' : undefined,
+        display: isFullscreen ? 'none' : 'flex', flexDirection: 'column',
         cursor: 'text', fontFamily: "'SF Mono', monospace", overflow: 'hidden',
-        borderLeft: isFullscreen ? '1px solid rgba(255,255,255,0.04)' : undefined,
       }}>
-        {isFullscreen ? (
-          /* ═══ FULLSCREEN: Date only ═══ */
-          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-            {/* Date header */}
-            <div style={{ padding: '12px 14px 0', textAlign: 'right', color: '#fff', fontSize: '11px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            </div>
-          </div>
-        ) : (
+        {isFullscreen ? null : (
           /* ═══ NORMAL: original layout ═══ */
           <>
             <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
@@ -6588,10 +6892,10 @@ function MobileLayout() {
     const lines = [
       'Ronniel Gandhe — Software Engineer',
       '',
-      'Location: Waterloo, ON',
-      'Email: ronnielgandhe@gmail.com',
-      'GitHub: github.com/ronnielgandhe',
       'LinkedIn: linkedin.com/in/ronniel-gandhe',
+      'GitHub: github.com/ronnielgandhe',
+      'Email: ronnielgandhe@gmail.com',
+      'Location: Waterloo, ON',
       '',
       '"I build systems that think, design that feels,',
       ' and code that connects ideas to impact."',
