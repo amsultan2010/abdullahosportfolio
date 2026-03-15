@@ -5677,8 +5677,8 @@ function TerminalContent() {
               </>
             )}
             {isFullscreen ? (() => {
-              const sHead: React.CSSProperties = { color: '#fff', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', marginBottom: '6px', fontFamily: "'SF Mono', monospace" };
-              const sPara: React.CSSProperties = { color: 'rgba(255,255,255,0.75)', fontSize: '12.5px', lineHeight: 1.6, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 };
+              const sHead: React.CSSProperties = { color: '#fff', fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.12em', marginBottom: '8px', fontFamily: "'SF Mono', monospace" };
+              const sPara: React.CSSProperties = { color: 'rgba(255,255,255,0.92)', fontSize: '14.5px', lineHeight: 1.65, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 };
               const sRule: React.CSSProperties = { width: '40px', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '10px 0' };
               return (
               <div style={{ marginTop: '2px', display: 'flex', gap: '40px' }}>
