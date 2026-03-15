@@ -5828,23 +5828,89 @@ function TerminalContent() {
         )}
       </div>
 
-      {/* Subtle glowing corner expand — bottom right, non-fullscreen only */}
+      {/* Collapse hint — bottom right, fullscreen only */}
+      {isFullscreen && (
+        <div
+          onClick={() => dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' })}
+          style={{
+            position: 'absolute',
+            bottom: 12,
+            right: 12,
+            cursor: 'pointer',
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '5px 10px 5px 12px',
+            borderRadius: '8px',
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(8px)',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+          }}
+        >
+          <span style={{
+            fontSize: '11px',
+            fontWeight: 500,
+            color: 'rgba(255,255,255,0.7)',
+            fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+            letterSpacing: '0.02em',
+          }}>Collapse</span>
+          <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
+            <path d="M1 17V1h17" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      )}
+
+      {/* Expand hint — bottom right, non-fullscreen only */}
       {!isFullscreen && (
         <div
           onClick={() => dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' })}
           style={{
             position: 'absolute',
-            bottom: 10,
-            right: 10,
+            bottom: 12,
+            right: 12,
             cursor: 'pointer',
             zIndex: 10,
-            animation: 'cornerPulse 2.5s ease-in-out infinite',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '5px 10px 5px 12px',
+            borderRadius: '8px',
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(8px)',
+            animation: 'expandHintPulse 3s ease-in-out infinite',
+            transition: 'all 0.2s ease',
           }}
-          onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.animation = 'none'; }}
-          onMouseLeave={e => { e.currentTarget.style.animation = 'cornerPulse 2.5s ease-in-out infinite'; }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
+            e.currentTarget.style.animation = 'none';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+            e.currentTarget.style.animation = 'expandHintPulse 3s ease-in-out infinite';
+          }}
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M18 1v17H1" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <span style={{
+            fontSize: '11px',
+            fontWeight: 500,
+            color: 'rgba(255,255,255,0.7)',
+            fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+            letterSpacing: '0.02em',
+          }}>Click to expand</span>
+          <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
+            <path d="M18 1v17H1" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       )}
@@ -5858,6 +5924,10 @@ function TerminalContent() {
 @keyframes cornerPulse {
   0%, 100% { opacity: 0.25; filter: drop-shadow(0 0 1px rgba(255,255,255,0.2)); }
   50% { opacity: 0.85; filter: drop-shadow(0 0 8px rgba(255,255,255,0.6)); }
+}
+@keyframes expandHintPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
 @keyframes expandGlow {
   0%, 100% { filter: drop-shadow(0 0 2px rgba(97,218,251,0.4)); }
@@ -6630,11 +6700,15 @@ function Desktop() {
       }
 
       // Determine how much space the side content takes
-      let sideW: number;
-      let sideH: number;
       const sideWin = state.windows[openSideWindow]!;
-      sideW = sideWin.size.width;
-      sideH = sideWin.size.height;
+      const is13Inch = screenH < 900 || screenW < 1500;
+      // On 13-inch displays, scale down side windows to prevent terminal compression
+      const sideW = is13Inch ? Math.min(sideWin.size.width, Math.round(screenW * 0.38)) : sideWin.size.width;
+      const sideH = is13Inch ? Math.min(sideWin.size.height, usableH - 20) : sideWin.size.height;
+      // Resize side window if needed on small screens
+      if (is13Inch && (Math.abs(sideWin.size.width - sideW) > 10 || Math.abs(sideWin.size.height - sideH) > 10)) {
+        dispatch({ type: 'RESIZE_WINDOW', id: openSideWindow, size: { width: sideW, height: sideH } });
+      }
       // Place side window on right edge, vertically centered in usable area
       const sideX = screenW - gap - sideW;
       const sideY = menuBarH + Math.round((usableH - sideH) / 2);
@@ -6642,10 +6716,11 @@ function Desktop() {
         dispatch({ type: 'MOVE_WINDOW', id: openSideWindow, position: { x: sideX, y: sideY } });
       }
 
-      // Check if terminal fits without shrinking
+      // Check if terminal fits without shrinking — ensure minimum width
       const origTermW = terminalOrigRef.current.width;
       const spaceForTerm = sideX - gap - gap;
-      const termW = Math.min(origTermW, spaceForTerm);
+      const minTermW = is13Inch ? 500 : 600;
+      const termW = Math.max(minTermW, Math.min(origTermW, spaceForTerm));
       const termH = terminal.size.height;
 
       // Shift terminal left only as much as needed
