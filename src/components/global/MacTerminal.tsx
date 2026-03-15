@@ -95,14 +95,14 @@ I build systems that think, design that feels, and code that connects ideas to i
           ronnielgandhe.com — zsh
         </span>
       </div>
-      <div className='p-6 text-gray-100 font-mono text-sm h-[calc(500px-1.5rem)] flex flex-col'>
+      <div className='p-6 text-gray-100 font-mono text-base h-[calc(500px-1.5rem)] flex flex-col'>
         <div className='flex-1 overflow-y-auto' ref={scrollRef}>
           <div className='space-y-1'>
             {lines.map((l, i) => {
               // First line is the name/title - make it bold and larger
               if (i === 0) {
                 return (
-                  <div key={i} className='text-white font-bold text-base mb-2'>
+                  <div key={i} className='text-white font-bold text-xl mb-3'>
                     {l}
                   </div>
                 );
@@ -120,23 +120,30 @@ I build systems that think, design that feels, and code that connects ideas to i
                 );
               }
               // Info lines with colored labels (syntax highlighting)
+              if (l.startsWith('LinkedIn:')) {
+                return (
+                  <div key={i} className='text-gray-100'>
+                    <span style={{ color: '#c084fc' }}>LinkedIn:</span> {l.substring(9)}
+                  </div>
+                );
+              }
               if (l.startsWith('Location:')) {
                 return (
-                  <div key={i} className='text-gray-300'>
+                  <div key={i} className='text-gray-100'>
                     <span style={{ color: '#ff79c6' }}>Location:</span> {l.substring(9)}
                   </div>
                 );
               }
               if (l.startsWith('Email:')) {
                 return (
-                  <div key={i} className='text-gray-300'>
+                  <div key={i} className='text-gray-100'>
                     <span style={{ color: '#f1fa8c' }}>Email:</span> {l.substring(6)}
                   </div>
                 );
               }
               if (l.startsWith('GitHub:')) {
                 return (
-                  <div key={i} className='text-gray-300'>
+                  <div key={i} className='text-gray-100'>
                     <span style={{ color: '#8be9fd' }}>GitHub:</span> {l.substring(7)}
                   </div>
                 );
@@ -144,14 +151,14 @@ I build systems that think, design that feels, and code that connects ideas to i
               // Blurb line - positioned with spacing
               if (l.includes('I build systems')) {
                 return (
-                  <div key={i} className='text-gray-300 mt-8'>
+                  <div key={i} className='text-gray-100 mt-8'>
                     {l}
                   </div>
                 );
               }
               // Regular lines
               return (
-                <div key={i} className='text-gray-300'>
+                <div key={i} className='text-gray-100'>
                   {l}
                 </div>
               );
