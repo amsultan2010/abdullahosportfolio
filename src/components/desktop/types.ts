@@ -34,6 +34,7 @@ export interface DesktopState {
   nextZIndex: number;
   bootComplete: boolean;
   floatingBooksVisible: boolean;
+  floatingBookSlug: string | null;
   // Sub-window content
   activeDetail: DetailContent | null;
   activeContent: ContentViewData | null;
@@ -55,7 +56,7 @@ export type DesktopAction =
   | { type: 'CLOSE_CONTENT' }
   | { type: 'DESELECT_ALL' }
   | { type: 'LOCK_SCREEN' }
-  | { type: 'SHOW_FLOATING_BOOKS' }
+  | { type: 'SHOW_FLOATING_BOOKS'; slug?: string }
   | { type: 'HIDE_FLOATING_BOOKS' };
 
 // Default window configs

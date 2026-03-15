@@ -52,16 +52,6 @@ export default function DesktopDock() {
     }
     const id = item.id as WindowId;
 
-    // Books/Deep Research: use floating cards instead of a window
-    if (id === 'deep-research') {
-      if (state.floatingBooksVisible) {
-        dispatch({ type: 'HIDE_FLOATING_BOOKS' });
-      } else {
-        dispatch({ type: 'SHOW_FLOATING_BOOKS' });
-      }
-      return;
-    }
-
     const win = state.windows[id];
     if (win?.isMinimized) {
       dispatch({ type: 'RESTORE_WINDOW', id });

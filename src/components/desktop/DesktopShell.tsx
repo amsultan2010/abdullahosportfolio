@@ -6039,8 +6039,15 @@ function FloatingBooks() {
     if (state.floatingBooksVisible) {
       setEntering(false);
       setExiting(false);
-      setSelected(null);
-      setPhase('idle');
+      if (state.floatingBookSlug) {
+        // Auto-open a specific book from the Apple Books window
+        setSelected(state.floatingBookSlug);
+        setPhase('stacking');
+        setTimeout(() => setPhase('expanding'), 400);
+      } else {
+        setSelected(null);
+        setPhase('idle');
+      }
     }
   }, [state.floatingBooksVisible]);
 

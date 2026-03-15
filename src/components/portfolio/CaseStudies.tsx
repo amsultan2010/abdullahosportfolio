@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { getTagColor, companyBrands } from './tagColors';
 import type { ContentViewData } from './ContentViewer';
 import { contentMap } from './contentData';
+import { useDesktop } from '../desktop/DesktopContext';
 
 interface CaseStudiesProps {
   onContentClick?: (content: ContentViewData) => void;
@@ -28,7 +29,27 @@ const researchPapers = [
     readingTime: 16,
     coverGradient: ['#1a0a0a', '#2a1515', '#3d2020'],
     coverAccent: '#e8554a',
-  }
+  },
+  {
+    slug: "enterprise-software-cost",
+    company: "SAP",
+    title: "Why Enterprise Software Costs Millions",
+    summary: "Understanding why companies pay enormous sums for tools that often look like spreadsheets.",
+    tags: ["Enterprise", "Software", "Business", "Research"],
+    readingTime: 12,
+    coverGradient: ['#0a1a0a', '#152e15', '#1e4420'],
+    coverAccent: '#4ade80',
+  },
+  {
+    slug: "attention-economy",
+    company: "DEEP FOCUS",
+    title: "The Attention Economy Is Rewiring Human Motivation",
+    summary: "Why the ability to focus may become the most valuable skill in the modern economy.",
+    tags: ["Psychology", "Technology", "Economics", "Research"],
+    readingTime: 13,
+    coverGradient: ['#1a0a14', '#2e1525', '#44203a'],
+    coverAccent: '#f472b6',
+  },
 ];
 
 const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
@@ -36,6 +57,11 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
   const [cardAnimated, setCardAnimated] = useState(!!windowMode);
   const [activeSection, setActiveSection] = useState('All');
   const sectionRef = useRef<HTMLDivElement>(null);
+  let desktopDispatch: any = null;
+  try {
+    const ctx = useDesktop();
+    desktopDispatch = ctx.dispatch;
+  } catch {}
 
   useEffect(() => {
     if (windowMode) {
@@ -62,6 +88,11 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
   }, [windowMode]);
 
   const handleCardClick = (slug: string) => {
+    if (windowMode && desktopDispatch) {
+      // Open FloatingBooks overlay with this specific book's animation
+      desktopDispatch({ type: 'SHOW_FLOATING_BOOKS', slug });
+      return;
+    }
     const data = contentMap[slug];
     if (data && onContentClick) onContentClick(data);
   };
@@ -152,21 +183,55 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
   );
 };
 
-// ── Book Cover Card ──
+// ── Book Cover Card with 3D perspective hover ──
 function BookCard({ paper, onClick }: {
   paper: typeof researchPapers[0];
   onClick: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
+  const [rotateX, setRotateX] = useState(0);
+  const [rotateY, setRotateY] = useState(0);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    setRotateY((x - 0.5) * 25);
+    setRotateX((0.5 - y) * 15);
+  };
+
+  const handleMouseLeave = () => {
+    setHovered(false);
+    setRotateX(0);
+    setRotateY(0);
+  };
+
+  const renderCompanyLogo = () => {
+    if (paper.company === 'NDX') {
+      return <img src="/NASDAQ_Logo.svg.png" alt="Nasdaq" height={18} style={{ filter: 'brightness(0) invert(1)', opacity: 0.7 }} />;
+    }
+    if (paper.company === 'IKIGAI') {
+      return <img src="/ikigai.png" alt="Ikigai" height={30} style={{ opacity: 0.7 }} />;
+    }
+    return (
+      <span style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.6)', letterSpacing: '2px', fontFamily: "'SF Mono', monospace" }}>
+        {paper.company}
+      </span>
+    );
+  };
 
   return (
     <div
+      ref={cardRef}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{ cursor: 'pointer' }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ cursor: 'pointer', perspective: '800px' }}
     >
-      {/* Book cover */}
+      {/* Book cover with 3D rotation */}
       <div style={{
         width: '100%',
         aspectRatio: '3 / 4',
@@ -174,43 +239,29 @@ function BookCard({ paper, onClick }: {
         overflow: 'hidden',
         position: 'relative',
         boxShadow: hovered
-          ? '0 12px 32px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.15)'
+          ? '0 20px 40px rgba(0,0,0,0.3), 0 8px 16px rgba(0,0,0,0.2)'
           : '0 4px 16px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.1)',
-        transform: hovered ? 'scale(1.03)' : 'scale(1)',
-        transition: 'all 0.25s ease',
+        transform: hovered
+          ? `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`
+          : 'rotateX(0) rotateY(0) scale(1)',
+        transition: hovered ? 'box-shadow 0.25s ease' : 'all 0.4s ease',
         background: `linear-gradient(160deg, ${paper.coverGradient[0]}, ${paper.coverGradient[1]}, ${paper.coverGradient[2]})`,
+        transformStyle: 'preserve-3d',
       }}>
         {/* Spine edge */}
         <div style={{
           position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px',
-          background: 'rgba(0,0,0,0.3)',
+          background: 'linear-gradient(to right, rgba(0,0,0,0.4), rgba(255,255,255,0.05))',
         }} />
+
 
         {/* Content */}
         <div style={{
           position: 'absolute', inset: 0, padding: '24px 20px 20px',
           display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
         }}>
-          {/* Top: company/logo area */}
-          <div>
-            {paper.company === 'NDX' ? (
-              <img
-                src="/NASDAQ_Logo.svg.png"
-                alt="Nasdaq"
-                height={18}
-                style={{ filter: 'brightness(0) invert(1)', opacity: 0.7 }}
-              />
-            ) : (
-              <img
-                src="/ikigai.png"
-                alt="Ikigai"
-                height={30}
-                style={{ opacity: 0.7 }}
-              />
-            )}
-          </div>
+          <div>{renderCompanyLogo()}</div>
 
-          {/* Center: Title */}
           <div>
             <h3 style={{
               fontSize: '15px', fontWeight: 700, color: 'rgba(255,255,255,0.95)',
@@ -222,14 +273,13 @@ function BookCard({ paper, onClick }: {
             <p style={{
               fontSize: '11px', color: 'rgba(255,255,255,0.5)',
               lineHeight: 1.4, margin: 0,
-              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const,
               overflow: 'hidden',
             }}>
               {paper.summary}
             </p>
           </div>
 
-          {/* Bottom: accent line */}
           <div style={{
             height: '2px', width: '40px', borderRadius: '1px',
             background: paper.coverAccent, opacity: 0.6,

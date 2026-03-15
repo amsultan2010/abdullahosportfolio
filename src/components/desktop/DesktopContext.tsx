@@ -24,10 +24,7 @@ function createWindow(id: WindowId, zIndex: number, titleOverride?: string): Win
 function desktopReducer(state: DesktopState, action: DesktopAction): DesktopState {
   switch (action.type) {
     case 'OPEN_WINDOW': {
-      // When opening books (deep-research), close all other windows first
-      const baseWindows = action.id === 'deep-research'
-        ? {}
-        : state.windows;
+      const baseWindows = state.windows;
 
       const existing = baseWindows[action.id];
       if (existing?.isOpen && !existing.isMinimized) {
@@ -228,10 +225,10 @@ function desktopReducer(state: DesktopState, action: DesktopAction): DesktopStat
       return { ...initialState };
 
     case 'SHOW_FLOATING_BOOKS':
-      return { ...state, floatingBooksVisible: true };
+      return { ...state, floatingBooksVisible: true, floatingBookSlug: action.slug || null };
 
     case 'HIDE_FLOATING_BOOKS':
-      return { ...state, floatingBooksVisible: false };
+      return { ...state, floatingBooksVisible: false, floatingBookSlug: null };
 
     default:
       return state;
@@ -244,6 +241,7 @@ const initialState: DesktopState = {
   nextZIndex: 100,
   bootComplete: false,
   floatingBooksVisible: false,
+  floatingBookSlug: null,
   activeDetail: null,
   activeContent: null,
 };
