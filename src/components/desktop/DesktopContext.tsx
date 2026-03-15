@@ -162,8 +162,8 @@ function desktopReducer(state: DesktopState, action: DesktopAction): DesktopStat
             ...win,
             isFullscreen: true,
             prevBounds: { position: win.position, size: win.size },
-            position: { x: 0, y: 28 },
-            size: { width: window.innerWidth, height: window.innerHeight - 28 - 76 },
+            position: { x: 20, y: 28 },
+            size: { width: window.innerWidth - 40, height: window.innerHeight - 28 - 46 },
           },
         },
       };

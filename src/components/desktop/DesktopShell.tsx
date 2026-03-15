@@ -5161,7 +5161,7 @@ function ChronographWatch() {
       <circle cx={C} cy={C} r="94" stroke="rgba(255,255,255,0.6)" strokeWidth="1" fill="none" />
       <circle cx={C} cy={C} r="90" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" fill="none" />
       {/* Brand name */}
-      <text x={C} y="48" textAnchor="middle" fill="rgba(255,255,255,0.85)" fontSize="7" fontFamily="'SF Pro Display', -apple-system, sans-serif" fontWeight="500" letterSpacing="3">GANDHE</text>
+      <text x={C} y="48" textAnchor="middle" fill="#fff" fontSize="7" fontFamily="'SF Pro Display', -apple-system, sans-serif" fontWeight="700" letterSpacing="3">GANDHE</text>
       {/* Hour markers */}
       {Array.from({ length: 12 }).map((_, i) => {
         const a = toRad(i * 30 - 90);
@@ -5708,7 +5708,7 @@ function TerminalContent() {
                   </div>
 
                   {/* Chronograph Watch */}
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, marginTop: '32px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, marginTop: '0px' }}>
                     <ChronographWatch />
                   </div>
 
