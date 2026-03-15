@@ -6857,349 +6857,746 @@ function Desktop() {
   );
 }
 
-function MobileLayout() {
-  const [history, setHistory] = useState<TerminalLine[]>([]);
-  const [input, setInput] = useState('');
-  const [cmdHistory, setCmdHistory] = useState<string[]>([]);
-  const [historyIdx, setHistoryIdx] = useState(-1);
-  const [introDone, setIntroDone] = useState(false);
-  const [introText, setIntroText] = useState('');
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const scrollRef = React.useRef<HTMLDivElement>(null);
+type MobileTab = 'home' | 'work' | 'projects' | 'research' | 'more';
+type MobileSection = 'education' | 'blog' | 'calendar' | 'stocks' | null;
 
-  const mobileCommands: Record<string, { desc: string; href?: string; action?: string }> = {
-    'github':    { desc: 'View my GitHub profile', href: 'https://github.com/ronnielgandhe' },
-    'email':     { desc: 'Send me an email', href: 'mailto:ronnielgandhe@gmail.com' },
-    'calendar':  { desc: 'Book a meeting with me', href: 'https://calendly.com/ronnielgandhe' },
-    'spotify':   { desc: 'Listen to my dev playlist', href: 'https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8' },
-    'linkedin':  { desc: 'Connect on LinkedIn', href: 'https://linkedin.com/in/ronnielgandhe' },
-  };
+// ── MobileBooks: iOS Notes-style research articles ──
+function MobileBooks({ onContentClick }: { onContentClick: (content: ContentViewData) => void }) {
+  const [contentMap, setContentMap] = useState<Record<string, ContentViewData>>({});
+  const [tapped, setTapped] = useState<string | null>(null);
 
   useEffect(() => {
-    const lines = [
-      'Ronniel Gandhe — Software Engineer',
-      '',
-      'LinkedIn: linkedin.com/in/ronniel-gandhe',
-      'GitHub: github.com/ronnielgandhe',
-      'Email: ronnielgandhe@gmail.com',
-      'Location: Waterloo, ON',
-      '',
-      '"I build systems that think, design that feels,',
-      ' and code that connects ideas to impact."',
-      '',
-      '—————————————————————————————————————',
-      '',
-      'Available commands:',
-      '',
-      '  github       View my GitHub profile',
-      '  email        Send me an email',
-      '  calendar     Book a meeting with me',
-      '  spotify      Listen to my dev playlist',
-      '',
-      '  help         Show this list again',
-      '  clear        Clear terminal',
-      '',
-      'Type a command and press Enter to explore.',
-      '—————————————————————————————————————',
-    ];
-    const full = lines.join('\n');
-    let i = 0;
-    const speed = 6;
-    const interval = setInterval(() => {
-      if (i < full.length) {
-        setIntroText(full.slice(0, i + 1));
-        i++;
-      } else {
-        clearInterval(interval);
-        setIntroDone(true);
-      }
-    }, speed);
-    return () => clearInterval(interval);
+    import('../portfolio/contentData').then(mod => {
+      setContentMap(mod.contentMap as Record<string, ContentViewData>);
+    });
   }, []);
 
-  useEffect(() => {
-    if (introDone) inputRef.current?.focus();
-  }, [introDone]);
-
-  useEffect(() => {
-    scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight);
-  }, [history, introText]);
-
-  const prompt = 'ronniel ~ % ';
-
-  const runCommand = (raw: string) => {
-    const cmd = raw.trim().toLowerCase();
-    const newLines: TerminalLine[] = [
-      { type: 'prompt', text: prompt + raw, command: raw },
-    ];
-
-    if (!cmd) {
-      // empty
-    } else if (cmd === 'help') {
-      newLines.push({ type: 'system', text: '\nAvailable commands:\n' });
-      Object.entries(mobileCommands).forEach(([name, { desc }]) => {
-        newLines.push({ type: 'output', text: `  \x1b[cmd]${name}\x1b[/cmd]${' '.repeat(Math.max(1, 13 - name.length))}${desc}` });
-      });
-      newLines.push({ type: 'output', text: '' });
-      newLines.push({ type: 'output', text: '  \x1b[cmd]help\x1b[/cmd]         Show this list again' });
-      newLines.push({ type: 'output', text: '  \x1b[cmd]clear\x1b[/cmd]        Clear terminal' });
-    } else if (cmd === 'clear') {
-      setHistory([]);
-      setInput('');
-      return;
-    } else if (mobileCommands[cmd]) {
-      const { desc, href } = mobileCommands[cmd];
-      newLines.push({ type: 'system', text: `Opening ${desc.toLowerCase()}...` });
-      if (href) {
-        setTimeout(() => {
-          if (href.startsWith('mailto:')) {
-            window.location.href = href;
-          } else {
-            window.open(href, '_blank');
-          }
-        }, 300);
-      }
-    } else if (cmd === 'whoami') {
-      newLines.push({ type: 'output', text: 'ronniel' });
-    } else if (cmd === 'pwd') {
-      newLines.push({ type: 'output', text: '/Users/ronniel/portfolio' });
-    } else if (cmd === 'ls') {
-      Object.keys(mobileCommands).forEach(name => {
-        newLines.push({ type: 'output', text: `  📁 ${name}/` });
-      });
-    } else if (cmd.startsWith('echo ')) {
-      newLines.push({ type: 'output', text: raw.replace(/^echo\s+/i, '').replace(/^["']|["']$/g, '') });
-    } else {
-      newLines.push({ type: 'error', text: `zsh: command not found: ${cmd.split(' ')[0]}` });
-      newLines.push({ type: 'output', text: 'Type "help" to see available commands.' });
-    }
-
-    const now = Date.now();
-    const stamped = newLines.map(l => ({ ...l, ts: now }));
-    setHistory(prev => [...prev, ...stamped]);
-    setCmdHistory(prev => [raw, ...prev]);
-    setHistoryIdx(-1);
-    setInput('');
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      runCommand(input);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      if (cmdHistory.length > 0) {
-        const newIdx = Math.min(historyIdx + 1, cmdHistory.length - 1);
-        setHistoryIdx(newIdx);
-        setInput(cmdHistory[newIdx]);
-      }
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (historyIdx > 0) {
-        const newIdx = historyIdx - 1;
-        setHistoryIdx(newIdx);
-        setInput(cmdHistory[newIdx]);
-      } else {
-        setHistoryIdx(-1);
-        setInput('');
-      }
-    }
-  };
-
-  const renderColoredLine = (text: string) => {
-    const parts = text.split(/\x1b\[cmd\]|\x1b\[\/cmd\]/);
-    return parts.map((part, idx) => (
-      idx % 2 === 1
-        ? <span key={idx} style={{ color: '#60a5fa', fontWeight: 700 }}>{part}</span>
-        : <span key={idx} style={{ color: 'rgba(255,255,255,0.55)' }}>{part}</span>
-    ));
-  };
-
-  const getLineColor = (line: TerminalLine) => {
-    switch (line.type) {
-      case 'prompt': return '#4ade80';
-      case 'error': return '#f87171';
-      case 'system': return '#22d3ee';
-      default: return 'rgba(255,255,255,0.75)';
+  const handleBookTap = (slug: string) => {
+    setTapped(slug);
+    const content = contentMap[slug];
+    if (content) {
+      setTimeout(() => {
+        onContentClick(content);
+        setTimeout(() => setTapped(null), 300);
+      }, 200);
     }
   };
 
   return (
-    <div style={{
-      position: 'absolute',
-      inset: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      animation: 'mobileFadeIn 0.8s ease-out',
-    }}>
-      {/* Mobile menu bar */}
-      <div style={{
-        height: '44px',
-        minHeight: '44px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'rgba(0, 0, 0, 0.3)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: '0.5px solid rgba(255,255,255,0.1)',
-        fontFamily: "'SF Pro Text', -apple-system, sans-serif",
-      }}>
-        <span style={{
-          color: 'rgba(255,255,255,0.95)',
-          fontSize: '14px',
-          fontWeight: 600,
-          letterSpacing: '0.02em',
-        }}>
-          Terminal — ronniel
-        </span>
-      </div>
-
-      {/* Terminal body */}
-      <div
-        ref={scrollRef}
-        onClick={() => inputRef.current?.focus()}
-        style={{
-          flex: 1,
-          padding: '16px 16px',
-          fontFamily: "'SF Mono', 'Menlo', monospace",
-          fontSize: '12px',
-          color: '#e0e0e0',
-          lineHeight: 1.65,
-          overflowY: 'auto',
-          cursor: 'text',
-          background: 'rgba(15, 15, 20, 0.72)',
-        }}
-      >
-        {/* Intro text */}
-        <pre style={{
-          margin: 0,
-          fontFamily: 'inherit',
-          fontSize: 'inherit',
-          lineHeight: 'inherit',
-          whiteSpace: 'pre-wrap',
-          wordBreak: 'break-word',
-          color: 'rgba(255,255,255,0.7)',
-        }}>
-          {introText.split('\n').map((line, i) => {
-            if (i === 0) return <div key={i} style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>{line}</div>;
-            if (line.startsWith('Location:')) return <div key={i}><span style={{ color: '#ff6b9d', fontWeight: 600 }}>Location: </span><span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{line.replace('Location: ', '')}</span></div>;
-            if (line.startsWith('Email:')) return <div key={i}><span style={{ color: '#fbbf24', fontWeight: 600 }}>Email: </span><span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{line.replace('Email: ', '')}</span></div>;
-            if (line.startsWith('GitHub:')) return <div key={i}><span style={{ color: '#22d3ee', fontWeight: 600 }}>GitHub: </span><span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{line.replace('GitHub: ', '')}</span></div>;
-            if (line.startsWith('"')) return <div key={i} style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.45)' }}>{line}</div>;
-            if (line.startsWith('Available commands:')) return <div key={i} style={{ color: '#4ade80', fontWeight: 700 }}>{line}</div>;
-            if (line.startsWith('Type a command')) return <div key={i} style={{ color: 'rgba(255,255,255,0.5)' }}>{line}</div>;
-            if (line.match(/^\s{2}\w/)) {
-              const parts = line.match(/^(\s{2})(\S+)(\s+)(.+)$/);
-              if (parts) {
-                return <div key={i}>{parts[1]}<span style={{ color: '#60a5fa', fontWeight: 700 }}>{parts[2]}</span>{parts[3]}<span style={{ color: 'rgba(255,255,255,0.55)' }}>{parts[4]}</span></div>;
-              }
-            }
-            if (line.startsWith('——')) return <div key={i} style={{ color: 'rgba(255,255,255,0.15)' }}>{line}</div>;
-            return <div key={i}>{line}</div>;
-          })}
-        </pre>
-
-        {/* Command history */}
-        {history.map((line, i) => (
-          <div key={i} style={{ color: getLineColor(line), whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-            {line.type === 'prompt' ? (
-              <>
-                <span style={{ color: '#4ade80', fontWeight: 700 }}>{prompt}</span>
-                <span style={{ color: '#fff', fontWeight: 500 }}>{line.command}</span>
-              </>
-            ) : line.text.includes('\x1b[cmd]') ? (
-              renderColoredLine(line.text)
-            ) : (
-              line.text
-            )}
-          </div>
-        ))}
-
-        {/* Active prompt */}
-        {introDone && (
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ color: '#4ade80', fontWeight: 700, whiteSpace: 'pre' }}>{prompt}</span>
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              spellCheck={false}
-              autoComplete="off"
-              autoCapitalize="off"
-              autoCorrect="off"
-              style={{
-                flex: 1,
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                font: 'inherit',
-                color: '#fff',
-                padding: 0,
-                margin: 0,
-                caretColor: '#4ade80',
-                fontSize: '12px',
-              }}
-            />
-          </div>
-        )}
-
-        {/* Blinking cursor during intro */}
-        {!introDone && (
-          <span style={{
-            display: 'inline-block',
-            width: '8px',
-            height: '14px',
-            background: '#4ade80',
-            verticalAlign: 'text-bottom',
-            animation: 'blink 1s step-end infinite',
-          }} />
-        )}
-      </div>
-
-      {/* Quick action bar at bottom */}
-      <div style={{
-        display: 'flex',
-        gap: '6px',
-        padding: '8px 12px',
-        background: 'rgba(0, 0, 0, 0.4)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderTop: '0.5px solid rgba(255,255,255,0.1)',
-        overflowX: 'auto',
-        WebkitOverflowScrolling: 'touch',
-      }}>
-        {Object.entries(mobileCommands).map(([cmd]) => (
-          <button
-            key={cmd}
-            onClick={() => runCommand(cmd)}
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      {FLOATING_BOOKS.map((book, idx) => {
+        const gradient = `linear-gradient(160deg, ${book.coverGradient[0]}, ${book.coverGradient[1]}, ${book.coverGradient[2]})`;
+        const isTapped = tapped === book.slug;
+        return (
+          <div
+            key={book.slug}
+            onClick={() => handleBookTap(book.slug)}
             style={{
-              padding: '6px 12px',
-              borderRadius: '8px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '0.5px solid rgba(255,255,255,0.15)',
-              color: '#60a5fa',
-              fontSize: '11px',
-              fontWeight: 600,
-              fontFamily: "'SF Mono', monospace",
+              borderRadius: '16px',
+              overflow: 'hidden',
+              background: gradient,
+              border: `1px solid ${book.coverAccent}25`,
+              boxShadow: `0 12px 40px rgba(0,0,0,0.5), 0 0 30px ${book.coverAccent}15`,
               cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
+              WebkitTapHighlightColor: 'transparent',
+              transform: isTapped ? 'scale(0.97)' : 'scale(1)',
+              transition: 'transform 0.2s ease',
+              animation: `mobileFadeIn 0.4s ease-out ${idx * 0.08}s both`,
+              position: 'relative' as const,
             }}
           >
-            {cmd}
-          </button>
-        ))}
+            {/* Spine edge */}
+            <div style={{
+              position: 'absolute', left: 0, top: 0, bottom: 0, width: '6px',
+              background: `linear-gradient(180deg, ${book.coverGradient[0]}ee, ${book.coverGradient[2]}cc)`,
+              borderRight: `1px solid ${book.coverAccent}15`,
+              zIndex: 2,
+            }} />
+
+            <div style={{ padding: '20px 18px 18px 24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* Company / Publisher tag */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{
+                  fontSize: '9px', fontWeight: 800, letterSpacing: '0.18em',
+                  color: book.coverAccent, fontFamily: "'SF Mono', monospace",
+                  textTransform: 'uppercase' as const,
+                }}>
+                  {book.company}
+                </span>
+                <span style={{
+                  fontSize: '9px', color: 'rgba(255,255,255,0.35)',
+                  fontFamily: "'SF Mono', monospace",
+                }}>
+                  {book.readingTime} min read
+                </span>
+              </div>
+
+              {/* Title */}
+              <div style={{
+                fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+                fontWeight: 700, fontSize: '18px', color: '#fff',
+                lineHeight: 1.25, letterSpacing: '-0.3px',
+              }}>
+                {book.title}
+              </div>
+
+              {/* Summary */}
+              <div style={{
+                fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+                fontSize: '13px', color: 'rgba(255,255,255,0.6)',
+                lineHeight: 1.5,
+              }}>
+                {book.summary}
+              </div>
+
+              {/* Read indicator */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px',
+              }}>
+                <div style={{
+                  width: '20px', height: '2px', borderRadius: '1px',
+                  background: book.coverAccent, opacity: 0.6,
+                }} />
+                <span style={{
+                  fontSize: '10px', fontWeight: 600, color: book.coverAccent,
+                  fontFamily: "'SF Pro Text', sans-serif", opacity: 0.8,
+                }}>
+                  Tap to read →
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── MobileStocks: Bloomberg terminal experience for mobile ──
+function MobileStocks() {
+  const [drillDown, setDrillDown] = useState<{ type: 'stock'; symbol: string; name: string } | { type: 'sector'; name: string } | null>(null);
+
+  return (
+    <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', fontFamily: "'SF Mono', monospace", background: '#1c1c1e' }}>
+      <div style={{ padding: '14px 14px 0' }}>
+        <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '-0.01em' }}>
+          My Watchlist
+        </div>
       </div>
+      <div>
+        {drillDown ? (
+          drillDown.type === 'stock' ? (
+            <StockDetailView
+              symbol={drillDown.symbol}
+              name={drillDown.name}
+              onBack={() => setDrillDown(null)}
+              onSectorClick={(name) => setDrillDown({ type: 'sector', name })}
+            />
+          ) : (
+            <SectorDetailView
+              sectorName={drillDown.name}
+              onBack={() => setDrillDown(null)}
+              onStockClick={(symbol, name) => setDrillDown({ type: 'stock', symbol, name })}
+            />
+          )
+        ) : (
+          <>
+            <div style={{ padding: '12px 14px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80', animation: 'livePulse 2s ease-in-out infinite' }} />
+                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '0.02em' }}>LIVE</span>
+              </div>
+              <div style={{ color: '#fff', fontSize: '12px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+              </div>
+            </div>
+            <StockGrid onStockClick={(symbol, name) => setDrillDown({ type: 'stock', symbol, name })} />
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 14px' }} />
+            <SectorSparklines onSectorClick={(name) => setDrillDown({ type: 'sector', name })} />
+            <ScrollingNewsTape />
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 14px' }} />
+            <EconomicCalendar />
+          </>
+        )}
+      </div>
+      <style>{`@keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.bloomberg-scroll::-webkit-scrollbar { display: none; }
+.bloomberg-scroll { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
+    </div>
+  );
+}
+
+function MobileProjects({ onCardClick }: { onCardClick: (detail: DetailContent) => void }) {
+  // Import project data from Projects component — these are the same projects
+  const mobileProjects = [
+    {
+      title: 'QuantZoo',
+      desc: 'Production-grade Python framework for systematic quantitative trading research with backtesting, walk-forward validation, and live paper trading.',
+      coverImage: '/trading.png',
+      gradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+      tech: ['Python', 'PyTorch', 'FastAPI', 'NumPy'],
+      repoUrl: 'https://github.com/ronnielgandhe/quantzoo',
+    },
+    {
+      title: 'CreatorScope',
+      desc: 'Go-to-market automation tool for brands to discover and evaluate TikTok creators for partnerships at scale with a proprietary Creator Intent Score.',
+      coverImage: '/cover.png',
+      gradient: 'linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%)',
+      tech: ['Python', 'FastAPI', 'SQLAlchemy'],
+      repoUrl: 'https://github.com/ronnielgandhe/creatorscope',
+    },
+    {
+      title: 'YourNews',
+      desc: 'AI-powered personalized news aggregator that learns reading preferences and ranks articles using TF-IDF, BM25, and GPT-4 summarization.',
+      coverImage: '/yournews-cover.png',
+      gradient: 'linear-gradient(135deg, #1a1a1a 0%, #2d1f3d 50%, #1a1a2e 100%)',
+      tech: ['Python', 'GPT-4 API', 'React', 'FastAPI'],
+      repoUrl: 'https://github.com/ronnielgandhe/yournews',
+    },
+    {
+      title: 'How Many Clicks',
+      desc: 'A Wikipedia racing game — navigate between two random articles using only hyperlinks. Features BFS pathfinding and competitive leaderboards.',
+      coverImage: '/howmanyclicks-cover.png',
+      gradient: 'linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 50%, #1a1a2e 100%)',
+      tech: ['React', 'JavaScript', 'Wikipedia API'],
+      repoUrl: 'https://github.com/ronnielgandhe/howmanyclicks',
+    },
+  ];
+
+  return (
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {mobileProjects.map((proj, i) => (
+        <div
+          key={i}
+          onClick={() => window.open(proj.repoUrl, '_blank')}
+          style={{
+            borderRadius: '16px',
+            overflow: 'hidden',
+            background: proj.gradient,
+            border: '1px solid rgba(255,255,255,0.08)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+            cursor: 'pointer',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          {/* Cover image */}
+          <div style={{ width: '100%', height: '160px', overflow: 'hidden' }}>
+            <img src={proj.coverImage} alt={proj.title} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
+          </div>
+          {/* Content */}
+          <div style={{ padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 700, fontSize: '18px', color: '#fff' }}>
+                {proj.title}
+              </div>
+              <a href={proj.repoUrl} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ color: 'rgba(255,255,255,0.5)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              </a>
+            </div>
+            <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: '12px' }}>
+              {proj.desc}
+            </div>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {proj.tech.map(t => (
+                <span key={t} style={{
+                  padding: '3px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 600,
+                  fontFamily: "'SF Mono', monospace",
+                  background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)',
+                  border: '0.5px solid rgba(255,255,255,0.12)',
+                }}>
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MobileCalendarIcon() {
+  const now = new Date();
+  const month = now.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  const day = now.getDate();
+  return (
+    <div style={{ width: '28px', height: '28px', borderRadius: '7px', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: '#fff' }}>
+      <div style={{ height: '9px', background: '#ea4335', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: '5px', fontWeight: 800, color: 'white', letterSpacing: '0.5px' }}>{month}</span>
+      </div>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+        <span style={{ fontSize: '13px', fontWeight: 300, color: '#1a1a1a', lineHeight: 1 }}>{day}</span>
+      </div>
+    </div>
+  );
+}
+
+function MobileLayout() {
+  const [activeTab, setActiveTab] = useState<MobileTab>('home');
+  const [activeSection, setActiveSection] = useState<MobileSection>(null);
+  const [activeDetail, setActiveDetail] = useState<DetailContent | null>(null);
+  const [activeContent, setActiveContent] = useState<ContentViewData | null>(null);
+
+  const handleCardClick = (detail: DetailContent) => setActiveDetail(detail);
+  const handleContentClick = (content: ContentViewData) => setActiveContent(content);
+
+  const goToTab = (tab: MobileTab) => { setActiveTab(tab); setActiveSection(null); };
+
+  // Shared styles
+  const glass: React.CSSProperties = {
+    background: 'rgba(20, 20, 28, 0.82)',
+    backdropFilter: 'saturate(140%) blur(24px)',
+    WebkitBackdropFilter: 'saturate(140%) blur(24px)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: '16px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+  };
+  const sHead: React.CSSProperties = { color: '#fff', fontSize: '10px', fontWeight: 700, letterSpacing: '0.14em', marginBottom: '6px', fontFamily: "'SF Mono', monospace" };
+  const sPara: React.CSSProperties = { color: 'rgba(255,255,255,0.88)', fontSize: '13px', lineHeight: 1.6, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 };
+
+  const dockIcon = (src: string, alt: string) => (
+    <img src={src} alt={alt} style={{ width: '28px', height: '28px', borderRadius: '7px', objectFit: 'cover', pointerEvents: 'none' }} />
+  );
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const TABS: { id: MobileTab; label: string; icon: React.ReactNode }[] = [
+    { id: 'home', label: 'Terminal', icon: dockIcon('/usethisTERMIANL.png', 'Terminal') },
+    { id: 'work', label: 'Work', icon: <span style={{ fontSize: '24px' }}>💼</span> },
+    { id: 'projects', label: 'Projects', icon: dockIcon('/vscode.png', 'VS Code') },
+    { id: 'research', label: 'Research', icon: dockIcon('/books.png', 'Books') },
+    { id: 'more', label: 'More', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+  ];
+
+  const QUICK_START = [
+    { id: 'work' as MobileTab, label: 'experience', color: '#c084fc', icon: '💼' },
+    { id: 'education' as const, label: 'education', color: '#60a5fa', icon: '🎓', section: true },
+    { id: 'projects' as MobileTab, label: 'projects', color: '#4ade80', icon: '⚡' },
+    { id: 'stocks' as const, label: 'stocks', color: '#4ade80', icon: '📈', section: true },
+    { id: 'research' as MobileTab, label: 'research', color: '#f472b6', icon: '🔬' },
+    { id: 'blog' as const, label: 'notes', color: '#fbbf24', icon: '✍️', section: true },
+  ];
+
+  const DRAWER_APPS: { id: MobileSection | 'ext'; label: string; icon: React.ReactNode; href?: string }[] = [
+    { id: 'education', label: 'Photos', icon: <img src="/icons/photos.png" alt="Education" style={{ width: '52px', height: '52px', borderRadius: '13px', objectFit: 'cover' }} /> },
+    { id: 'blog', label: 'Notes', icon: <img src="/notes.png" alt="Notes" style={{ width: '52px', height: '52px', borderRadius: '13px', objectFit: 'cover' }} /> },
+    { id: 'stocks', label: 'Stocks', icon: <img src="/usethisonestocks1111.png" alt="Stocks" style={{ width: '52px', height: '52px', borderRadius: '13px', objectFit: 'cover' }} /> },
+    { id: 'calendar', label: 'Calendar', icon: <div style={{ width: '52px', height: '52px', borderRadius: '13px', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: '#fff' }}>
+      <div style={{ height: '16px', background: '#ea4335', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: '8px', fontWeight: 800, color: 'white', letterSpacing: '0.5px' }}>{new Date().toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}</span>
+      </div>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+        <span style={{ fontSize: '24px', fontWeight: 300, color: '#1a1a1a', lineHeight: 1 }}>{new Date().getDate()}</span>
+      </div>
+    </div> },
+    { id: 'ext', label: 'GitHub', icon: <div style={{ width: '52px', height: '52px', borderRadius: '13px', background: 'linear-gradient(135deg, #2d2d2d, #434343)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>, href: 'https://github.com/ronnielgandhe' },
+    { id: 'ext', label: 'Mail', icon: <img src="/mail.png" alt="Mail" style={{ width: '52px', height: '52px', borderRadius: '13px', objectFit: 'cover' }} />, href: 'mailto:ronnielgandhe@gmail.com' },
+    { id: 'ext', label: 'Spotify', icon: <img src="/spotify.png" alt="Spotify" style={{ width: '52px', height: '52px', borderRadius: '13px', objectFit: 'cover' }} />, href: 'https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8' },
+    { id: 'ext', label: 'LinkedIn', icon: <div style={{ width: '52px', height: '52px', borderRadius: '13px', background: '#0A66C2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></div>, href: 'https://linkedin.com/in/ronniel-gandhe' },
+  ];
+
+  // ── Home Tab Content ──
+  const HomeContent = () => (
+    <div style={{ padding: '0 20px 120px', animation: 'mobileFadeIn 0.4s ease-out' }}>
+      {/* Scrolling ticker strip */}
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 10,
+        padding: '10px 0', marginBottom: '16px',
+        fontFamily: "'SF Mono', monospace", fontSize: '10px',
+        background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        marginLeft: '-20px', marginRight: '-20px',
+        borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          display: 'inline-flex', gap: '24px', whiteSpace: 'nowrap',
+          animation: 'tickerScroll 20s linear infinite',
+          paddingLeft: '20px',
+        }}>
+          <CompactTickers /><span style={{ color: 'rgba(255,255,255,0.1)' }}>│</span>
+          <CompactTickers /><span style={{ color: 'rgba(255,255,255,0.1)' }}>│</span>
+          <CompactTickers />
+        </div>
+      </div>
+
+      {/* Hero card */}
+      <div style={{ ...glass, padding: 0, overflow: 'hidden', marginBottom: '20px' }}>
+        {/* Title bar */}
+        <div style={{
+          display: 'flex', alignItems: 'center', padding: '10px 14px',
+          borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)',
+        }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f57' }} />
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#febc2e' }} />
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#28c840' }} />
+          </div>
+          <span style={{ flex: 1, textAlign: 'center', fontFamily: "'SF Mono', monospace", fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
+            ronnielgandhe.tech — zsh
+          </span>
+          <div style={{ width: '42px' }} />
+        </div>
+        {/* Hero content */}
+        <div style={{ padding: '20px 18px 24px' }}>
+          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '28px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
+            Ronniel Gandhe
+          </div>
+          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Pro Text', sans-serif", marginBottom: '12px' }}>
+            Software Engineer
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.5, fontFamily: "'SF Mono', monospace" }}>
+            Using <RotatingWords /> to create<br />elegant and scalable solutions<br />to real world problems.
+          </div>
+          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Pro Text', sans-serif", marginTop: '12px' }}>
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+          </div>
+        </div>
+      </div>
+
+      {/* About */}
+      <div style={{ ...glass, padding: '18px', marginBottom: '14px' }}>
+        <div style={sHead}>ABOUT</div>
+        <div style={sPara}>
+          Currently based in Waterloo, Canada. Most of my time is spent building software, studying markets, and trying to understand systems that actually move money and incentives in the real world.
+        </div>
+        <div style={{ ...sPara, marginTop: '8px' }}>
+          Over the last few years I have moved between software engineering, data science, and financial markets. Some of that was intentional. Some of it was just curiosity turning into a rabbit hole that got deeper than expected.
+        </div>
+      </div>
+
+      {/* Software */}
+      <div style={{ ...glass, padding: '18px', marginBottom: '14px' }}>
+        <div style={sHead}>SOFTWARE</div>
+        <div style={sPara}>
+          Software is probably the most powerful skill you can have right now. If you know how to code, you can build almost anything. You do not need permission from anyone, you just sit down and make it.
+        </div>
+      </div>
+
+      {/* Reading + Current Focus side by side */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+        <div style={{ ...glass, padding: '16px', flex: 1 }}>
+          <div style={sHead}>READING</div>
+          {['Zero to One — Thiel', "Poor Charlie's Almanack", 'The Power Broker — Caro', 'Laws of Human Nature'].map((book, i) => (
+            <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginBottom: '3px' }}>
+              <span style={{ color: '#fff', fontSize: '8px', fontFamily: "'SF Mono', monospace" }}>›</span>
+              <span style={{ ...sPara, fontSize: '11px', lineHeight: 1.45 }}>{book}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ ...glass, padding: '16px', flex: 1 }}>
+          <div style={sHead}>CURRENT FOCUS</div>
+          {['Building software & internal tools', 'Studying financial markets', 'Turning ideas into products'].map((item, i) => (
+            <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginBottom: '3px' }}>
+              <span style={{ color: '#fff', fontSize: '8px', fontFamily: "'SF Mono', monospace" }}>›</span>
+              <span style={{ ...sPara, fontSize: '11px', lineHeight: 1.45 }}>{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Online links */}
+      <div style={{ ...glass, padding: '16px', marginBottom: '14px' }}>
+        <div style={sHead}>ONLINE</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <a href="https://www.instagram.com/ronnielgandhe/" target="_blank" rel="noopener" style={{ ...sPara, fontSize: '12px', textDecoration: 'none' }}>
+            <span style={{ color: '#E1306C' }}>Instagram</span> <span style={{ color: '#fff' }}>— @ronnielgandhe</span>
+          </a>
+          <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ ...sPara, fontSize: '12px', textDecoration: 'none' }}>
+            <span style={{ color: '#0A66C2' }}>LinkedIn</span> <span style={{ color: '#fff' }}>— the professional version of me</span>
+          </a>
+          <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ ...sPara, fontSize: '12px', textDecoration: 'none' }}>
+            <span style={{ color: '#8b949e' }}>GitHub</span> <span style={{ color: '#fff' }}>— projects and experiments</span>
+          </a>
+        </div>
+      </div>
+
+      {/* Quick Start Grid */}
+      <div style={{ marginBottom: '14px' }}>
+        <div style={{ ...sHead, marginBottom: '10px', paddingLeft: '2px' }}>QUICK START</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+          {QUICK_START.map(qs => (
+            <button
+              key={qs.label}
+              onClick={() => {
+                if ('section' in qs && qs.section) {
+                  setActiveSection(qs.id as MobileSection);
+                } else {
+                  goToTab(qs.id as MobileTab);
+                }
+              }}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                padding: '12px 6px', borderRadius: '12px',
+                background: `${qs.color}18`, border: `1px solid ${qs.color}30`,
+                color: qs.color, fontSize: '10px', fontWeight: 600,
+                fontFamily: "'SF Mono', monospace", cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              <span style={{ fontSize: '18px' }}>{qs.icon}</span>
+              {qs.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Spotify */}
+      <div style={{ ...glass, padding: '14px', marginBottom: '14px' }}>
+        <NowPlaying />
+      </div>
+
+      {/* Contact */}
+      <div style={{ ...glass, padding: '16px', marginBottom: '20px' }}>
+        <div style={sHead}>CONTACT</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontFamily: "'SF Mono', monospace", fontSize: '12px' }}>
+          <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>💼 linkedin.com/in/ronniel-gandhe</a>
+          <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>🐙 github.com/ronnielgandhe</a>
+          <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fff', textDecoration: 'none' }}>✉️ ronnielgandhe@gmail.com</a>
+          <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
+        </div>
+      </div>
+
+      {/* Watch */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+        <ChronographWatch />
+      </div>
+
+      {/* World Clocks */}
+      <div style={{ textAlign: 'center', fontFamily: "'SF Mono', monospace", fontSize: '10px', marginBottom: '20px' }}>
+        <CompactClocks />
+      </div>
+    </div>
+  );
+
+  // ── Section Content (Work, Projects, Research tabs) ──
+  const SectionTab = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', animation: 'mobileFadeIn 0.3s ease-out' }}>
+      {/* Header */}
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 10,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '14px 16px', minHeight: '50px',
+        background: 'rgba(10, 12, 20, 0.88)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '0.5px solid rgba(255,255,255,0.08)',
+      }}>
+        <span style={{ fontFamily: "'SF Mono', monospace", fontSize: '13px', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
+          {title}
+        </span>
+      </div>
+      {/* Content */}
+      <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', paddingBottom: '100px' }}>
+        {children}
+      </div>
+    </div>
+  );
+
+  // ── App Drawer (slide-up from bottom) ──
+  const AppDrawer = () => (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={() => setDrawerOpen(false)}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 60,
+          background: 'rgba(0,0,0,0.5)',
+          animation: 'mobileFadeIn 0.2s ease-out',
+        }}
+      />
+      {/* Drawer */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 70,
+        background: 'rgba(20, 20, 28, 0.95)',
+        backdropFilter: 'saturate(180%) blur(40px)', WebkitBackdropFilter: 'saturate(180%) blur(40px)',
+        borderTop: '0.5px solid rgba(255,255,255,0.12)',
+        borderRadius: '20px 20px 0 0',
+        padding: '12px 20px', paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 16px)',
+        animation: 'mobileDrawerUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+      }}>
+        {/* Handle bar */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+          <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.2)' }} />
+        </div>
+        {/* App grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', justifyItems: 'center' }}>
+          {DRAWER_APPS.map((app, i) => (
+            <button
+              key={`${app.label}-${i}`}
+              onClick={() => {
+                setDrawerOpen(false);
+                if (app.href) {
+                  if (app.href.startsWith('mailto:')) window.location.href = app.href;
+                  else window.open(app.href, '_blank');
+                } else if (app.id !== 'ext') {
+                  setActiveSection(app.id as MobileSection);
+                }
+              }}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+                background: 'none', border: 'none', cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent', padding: 0,
+              }}
+            >
+              {app.icon}
+              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)', fontFamily: "'SF Pro Text', sans-serif", fontWeight: 500 }}>
+                {app.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+      animation: 'mobileFadeIn 0.6s ease-out',
+      touchAction: 'manipulation',
+    }}>
+      {/* Main content area */}
+      <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', position: 'relative' }}>
+        {activeTab === 'home' && <HomeContent />}
+        {activeTab === 'work' && (
+          <SectionTab title="Experience">
+            <Experience onCardClick={handleCardClick} windowMode />
+          </SectionTab>
+        )}
+        {activeTab === 'projects' && (
+          <SectionTab title="Projects">
+            <MobileProjects onCardClick={handleCardClick} />
+          </SectionTab>
+        )}
+        {activeTab === 'research' && (
+          <SectionTab title="Deep Research">
+            <MobileBooks onContentClick={handleContentClick} />
+          </SectionTab>
+        )}
+        {/* Drawer renders as overlay, not a tab */}
+      </div>
+
+      {/* ── Bottom Tab Bar ── */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+        display: 'flex', justifyContent: 'space-around', alignItems: 'center',
+        height: '80px', paddingBottom: 'env(safe-area-inset-bottom, 16px)',
+        background: 'rgba(10, 10, 18, 0.75)',
+        backdropFilter: 'saturate(180%) blur(28px)', WebkitBackdropFilter: 'saturate(180%) blur(28px)',
+        borderTop: '0.5px solid rgba(255,255,255,0.1)',
+      }}>
+        {TABS.map(tab => {
+          const isActive = tab.id === 'more' ? drawerOpen : activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                if (tab.id === 'more') { setDrawerOpen(prev => !prev); return; }
+                setDrawerOpen(false);
+                goToTab(tab.id);
+              }}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: isActive ? '#60a5fa' : 'rgba(255,255,255,0.35)',
+                fontSize: '10px', fontWeight: isActive ? 600 : 500,
+                fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+                padding: '6px 12px',
+                WebkitTapHighlightColor: 'transparent',
+                transition: 'color 0.2s ease',
+              }}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── App Drawer ── */}
+      {drawerOpen && <AppDrawer />}
+
+      {/* ── Section Overlay (from More tab) ── */}
+      {activeSection && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 100,
+          background: 'rgba(10, 12, 20, 0.97)',
+          backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+          display: 'flex', flexDirection: 'column',
+          animation: 'mobileSlideUp 0.3s ease-out',
+          overflowY: 'auto', overscrollBehavior: 'contain',
+        }}>
+          {/* Header */}
+          <div style={{
+            position: 'sticky', top: 0, zIndex: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '14px 16px', minHeight: '50px',
+            background: 'rgba(10, 12, 20, 0.9)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '0.5px solid rgba(255,255,255,0.08)',
+          }}>
+            <button
+              onClick={() => setActiveSection(null)}
+              style={{
+                background: 'none', border: 'none', color: '#60a5fa', fontSize: '15px',
+                cursor: 'pointer', fontFamily: "'SF Pro Text', sans-serif", padding: '4px 0',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              ← Back
+            </button>
+            <span style={{ fontFamily: "'SF Mono', monospace", fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>
+              {activeSection === 'education' ? 'Education' : activeSection === 'blog' ? 'My Thoughts' : activeSection === 'stocks' ? 'Stocks' : 'Calendar'}
+            </span>
+            <div style={{ width: '50px' }} />
+          </div>
+          {/* Section content */}
+          <div style={{ flex: 1, paddingBottom: '40px' }}>
+            {activeSection === 'education' && <Education onCardClick={handleCardClick} windowMode />}
+            {activeSection === 'blog' && <Blog onContentClick={handleContentClick} windowMode />}
+            {activeSection === 'stocks' && <MobileStocks />}
+            {activeSection === 'calendar' && <Calendar windowMode />}
+          </div>
+        </div>
+      )}
+
+      {/* ── Detail Overlay ── */}
+      {activeDetail && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 200,
+          animation: 'mobileSlideRight 0.3s ease-out',
+        }}>
+          <DetailPanel detail={activeDetail} onClose={() => setActiveDetail(null)} />
+        </div>
+      )}
+
+      {/* ── Content Overlay ── */}
+      {activeContent && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 200,
+          animation: 'mobileSlideRight 0.3s ease-out',
+        }}>
+          <ContentViewer content={activeContent} onClose={() => setActiveContent(null)} />
+        </div>
+      )}
 
       <style>{`
         @keyframes mobileFadeIn {
-          from { opacity: 0; transform: translateY(20px); }
+          from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes blink {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0; }
+        @keyframes mobileSlideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes mobileSlideRight {
+          from { transform: translateX(30%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes mobileDrawerUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+        @keyframes tickerScroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-33.33%); }
         }
       `}</style>
     </div>
