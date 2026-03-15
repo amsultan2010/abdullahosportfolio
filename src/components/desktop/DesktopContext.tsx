@@ -24,14 +24,19 @@ function createWindow(id: WindowId, zIndex: number, titleOverride?: string): Win
 function desktopReducer(state: DesktopState, action: DesktopAction): DesktopState {
   switch (action.type) {
     case 'OPEN_WINDOW': {
-      const existing = state.windows[action.id];
+      // When opening books (deep-research), close all other windows first
+      const baseWindows = action.id === 'deep-research'
+        ? {}
+        : state.windows;
+
+      const existing = baseWindows[action.id];
       if (existing?.isOpen && !existing.isMinimized) {
         // Already open — just focus it
         return {
           ...state,
           focusedWindowId: action.id,
           windows: {
-            ...state.windows,
+            ...baseWindows,
             [action.id]: { ...existing, zIndex: state.nextZIndex },
           },
           nextZIndex: state.nextZIndex + 1,
@@ -42,7 +47,7 @@ function desktopReducer(state: DesktopState, action: DesktopAction): DesktopStat
           ...state,
           focusedWindowId: action.id,
           windows: {
-            ...state.windows,
+            ...baseWindows,
             [action.id]: { ...existing, isMinimized: false, zIndex: state.nextZIndex },
           },
           nextZIndex: state.nextZIndex + 1,
@@ -52,7 +57,7 @@ function desktopReducer(state: DesktopState, action: DesktopAction): DesktopStat
       return {
         ...state,
         focusedWindowId: action.id,
-        windows: { ...state.windows, [action.id]: win },
+        windows: { ...baseWindows, [action.id]: win },
         nextZIndex: state.nextZIndex + 1,
       };
     }
