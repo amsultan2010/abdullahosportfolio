@@ -71,6 +71,28 @@ const CompanyLogo = ({ company }: { company: string }) => {
     );
   }
 
+  if (company === 'SAP') {
+    return (
+      <img
+        src="/sap_white_transparent.png"
+        alt="SAP"
+        height={40}
+        style={{ opacity: 0.9 }}
+      />
+    );
+  }
+
+  if (company === 'DEEP FOCUS') {
+    return (
+      <img
+        src="/lotus_white_transparent.png"
+        alt="Deep Focus"
+        height={50}
+        style={{ opacity: 0.9 }}
+      />
+    );
+  }
+
   return null;
 };
 
@@ -114,7 +136,6 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
 
     const timer = setTimeout(() => {
       const elements = Array.from(container.querySelectorAll('p, h2, h3, blockquote, ul, ol, pre, table, hr, div.callout'));
-      elements.forEach(el => el.classList.add('cv-scroll-reveal'));
 
       const scrollRect = scrollRoot.getBoundingClientRect();
 
@@ -130,12 +151,13 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
         }
       });
 
-      // Stagger-reveal items already in view
-      initiallyVisible.forEach((el, i) => {
-        staggerTimers.push(setTimeout(() => {
-          el.classList.add('cv-scroll-revealed');
-        }, i * 120));
+      // Already-visible items: mark as revealed immediately (no dim flash)
+      initiallyVisible.forEach(el => {
+        el.classList.add('cv-scroll-reveal', 'cv-scroll-revealed');
       });
+
+      // Only below-fold items get the dim-then-reveal treatment
+      belowFold.forEach(el => el.classList.add('cv-scroll-reveal'));
 
       // IntersectionObserver for items below the fold
       if (belowFold.length > 0) {

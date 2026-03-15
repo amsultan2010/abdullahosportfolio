@@ -87,9 +87,7 @@ function ParticleCloud() {
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={logo.count}
-          array={new Float32Array(logo.targets)}
-          itemSize={3}
+          args={[new Float32Array(logo.targets), 3]}
         />
       </bufferGeometry>
       <pointsMaterial
@@ -138,7 +136,7 @@ function Atmosphere() {
   return (
     <points ref={ref}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
       <pointsMaterial
         size={0.006}

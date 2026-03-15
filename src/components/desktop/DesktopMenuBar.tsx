@@ -92,7 +92,7 @@ export default function DesktopMenuBar() {
 
   return (
     <div ref={barRef} style={{
-      position: 'fixed', top: 0, left: 0, right: 0, height: '28px', zIndex: 9999,
+      position: 'fixed', top: 0, left: 0, right: 0, height: '28px', zIndex: 10010,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px',
       background: 'rgba(30, 30, 30, 0.55)',
       backdropFilter: 'saturate(160%) blur(28px)', WebkitBackdropFilter: 'saturate(160%) blur(28px)',
@@ -243,7 +243,7 @@ const panelStyle: React.CSSProperties = {
   backdropFilter: 'saturate(200%) blur(50px)', WebkitBackdropFilter: 'saturate(200%) blur(50px)',
   borderRadius: '10px', border: '0.5px solid rgba(0,0,0,0.12)',
   boxShadow: '0 12px 48px rgba(0,0,0,0.2), 0 0 0 0.5px rgba(0,0,0,0.06), inset 0 0.5px 0 rgba(255,255,255,0.6)',
-  zIndex: 10000,
+  zIndex: 10011,
   color: 'rgba(0,0,0,0.85)',
 };
 

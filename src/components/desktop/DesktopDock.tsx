@@ -32,7 +32,7 @@ export default function DesktopDock() {
 
   const externalItems: DockItem[] = [
     { id: 'github', label: 'GitHub', icon: <AppIcon gradient="linear-gradient(135deg, #2d2d2d 0%, #434343 100%)" iconEl={<BsGithub size={24} color="white" />} />, isExternal: true, href: 'https://github.com/ronnielgandhe' },
-    { id: 'email' as any, label: 'Email Me', icon: <DockImage src="/mail.png" alt="Mail" cropScale={1.18} /> },
+    { id: 'email' as any, label: 'Email Me', icon: <DockImage src="/usethismailicon.png" alt="Mail" cropScale={1.2} /> },
     { id: 'spotify', label: 'Dev Playlist', icon: <DockImage src="/spotify.png" alt="Spotify" />, isExternal: true, href: 'https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8' },
   ];
 
@@ -48,22 +48,6 @@ export default function DesktopDock() {
       return;
     }
     const id = item.id as WindowId;
-
-    // Books/Deep Research: use floating cards instead of a window
-    if (id === 'deep-research') {
-      if (state.floatingBooksVisible) {
-        dispatch({ type: 'HIDE_FLOATING_BOOKS' });
-      } else {
-        // Close other windows (except terminal) before showing books
-        Object.keys(state.windows).forEach(winId => {
-          if (winId !== 'terminal') {
-            dispatch({ type: 'CLOSE_WINDOW', id: winId as WindowId });
-          }
-        });
-        dispatch({ type: 'SHOW_FLOATING_BOOKS' });
-      }
-      return;
-    }
 
     const win = state.windows[id];
     if (win?.isMinimized) {
@@ -164,7 +148,7 @@ export default function DesktopDock() {
               key={item.id}
               item={item}
               scale={scale}
-              isOpen={!item.isExternal && isOpen(item.id)}
+              isOpen={!('isExternal' in item && item.isExternal) && isOpen(item.id)}
               onClick={() => handleClick(item)}
             />
           );

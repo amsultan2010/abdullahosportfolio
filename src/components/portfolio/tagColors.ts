@@ -98,4 +98,6 @@ export const companyBrands: Record<string, { color: string; bgColor: string }> =
   'Spotify': { color: '#1DB954', bgColor: 'rgba(29, 185, 84, 0.12)' },
   'NDX': { color: '#4FC3F7', bgColor: 'rgba(79, 195, 247, 0.12)' },
   'IKIGAI': { color: '#FB923C', bgColor: 'rgba(251, 146, 60, 0.12)' },
+  'SAP': { color: '#4ade80', bgColor: 'rgba(74, 222, 128, 0.12)' },
+  'DEEP FOCUS': { color: '#f472b6', bgColor: 'rgba(244, 114, 182, 0.12)' },
 };

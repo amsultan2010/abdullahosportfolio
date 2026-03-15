@@ -239,7 +239,7 @@ export default function WifiSettings() {
     return () => { abortRef.current?.abort(); };
   }, []);
 
-  const isRunning = phase !== 'idle' && phase !== 'complete';
+  const isRunning = phase === 'ping' || phase === 'download' || phase === 'upload';
   const maxGauge = results ? Math.max(results.download, results.upload, 100) : 200;
 
   return (
@@ -320,14 +320,14 @@ export default function WifiSettings() {
         {/* Progress phases */}
         {isRunning && (
           <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>
-            <span style={{ color: phase === 'ping' ? '#007aff' : phase !== 'idle' ? '#34c759' : undefined }}>
-              {phase === 'ping' ? '● Ping' : '✓ Ping'}
+            <span style={{ color: (phase as string) === 'ping' ? '#007aff' : (phase as string) !== 'idle' ? '#34c759' : undefined }}>
+              {(phase as string) === 'ping' ? '● Ping' : '✓ Ping'}
             </span>
-            <span style={{ color: phase === 'download' ? '#007aff' : (phase === 'upload' || phase === 'complete') ? '#34c759' : undefined }}>
-              {phase === 'download' ? '● Download' : (phase === 'upload' || phase === 'complete') ? '✓ Download' : '○ Download'}
+            <span style={{ color: (phase as string) === 'download' ? '#007aff' : ((phase as string) === 'upload' || (phase as string) === 'complete') ? '#34c759' : undefined }}>
+              {(phase as string) === 'download' ? '● Download' : ((phase as string) === 'upload' || (phase as string) === 'complete') ? '✓ Download' : '○ Download'}
             </span>
-            <span style={{ color: phase === 'upload' ? '#007aff' : phase === 'complete' ? '#34c759' : undefined }}>
-              {phase === 'upload' ? '● Upload' : phase === 'complete' ? '✓ Upload' : '○ Upload'}
+            <span style={{ color: (phase as string) === 'upload' ? '#007aff' : (phase as string) === 'complete' ? '#34c759' : undefined }}>
+              {(phase as string) === 'upload' ? '● Upload' : (phase as string) === 'complete' ? '✓ Upload' : '○ Upload'}
             </span>
           </div>
         )}

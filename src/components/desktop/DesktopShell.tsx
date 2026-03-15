@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { DesktopProvider, useDesktop } from './DesktopContext';
-import MacBackground from './MacBackground';
+import Background from '../portfolio/Background';
 import AppWindow from './AppWindow';
 import BootScreen from './BootScreen';
 import DesktopDock from './DesktopDock';
@@ -44,7 +45,7 @@ function WindowContent({ id }: { id: WindowId }) {
     case 'projects':
       return <Projects onCardClick={handleCardClick} windowMode />;
     case 'deep-research':
-      return <CaseStudies onContentClick={handleContentClick} windowMode />;
+      return <BooksApplet />;
     case 'blog':
       return <Blog onContentClick={handleContentClick} windowMode />;
     case 'calendar':
@@ -63,7 +64,7 @@ function WindowContent({ id }: { id: WindowId }) {
 }
 
 interface TerminalLine {
-  type: 'prompt' | 'output' | 'error' | 'system';
+  type: 'prompt' | 'output' | 'error' | 'system' | 'human';
   text: string;
   command?: string;
   ts?: number; // timestamp for auto-fade
@@ -1531,7 +1532,7 @@ function MountainClimber() {
   const [hintVisible, setHintVisible] = useState(true);
   const [typedChars, setTypedChars] = useState(0);
   const keysDown = useRef<Set<string>>(new Set());
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number>(0);
   const fullMessage = 'YOU\nJUST\nNEED TO\nKEEP ON\nPUSHING';
 
   // Fixed coordinate system — 240x400 ensures consistent proportions
@@ -1897,7 +1898,7 @@ function AnimatedSparkline({ history, color, delay, sparkW, sparkH, animReady, i
   history: number[]; color: string; delay: number; sparkW: number; sparkH: number; animReady: boolean; idx: number;
 }) {
   const [progress, setProgress] = useState(0);
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number>(0);
 
   const min = Math.min(...history);
   const max = Math.max(...history);
@@ -5203,20 +5204,17 @@ function TerminalContent() {
     } else if (SMART_COMMANDS[cmd]) {
       const { window: win, output } = SMART_COMMANDS[cmd];
       newLines.push({ type: 'system', text: output });
-      if (win === 'deep-research') dispatch({ type: 'SHOW_FLOATING_BOOKS' });
-      else openWindow(win);
+      openWindow(win);
     } else if (COMMANDS[cmd]) {
       const { window: winId, desc } = COMMANDS[cmd];
       newLines.push({ type: 'system', text: `Opening ${desc.toLowerCase()}...` });
-      if (winId === 'deep-research') dispatch({ type: 'SHOW_FLOATING_BOOKS' });
-      else openWindow(winId);
+      openWindow(winId);
     } else if (cmd.startsWith('cd ')) {
       const target = cmd.replace('cd ', '').replace(/[\/~]/g, '').trim();
       if (COMMANDS[target]) {
         const { window: winId2, desc } = COMMANDS[target];
         newLines.push({ type: 'system', text: `Opening ${desc.toLowerCase()}...` });
-        if (winId2 === 'deep-research') dispatch({ type: 'SHOW_FLOATING_BOOKS' });
-        else openWindow(winId2);
+        openWindow(winId2);
       } else {
         newLines.push({ type: 'error', text: `cd: no such directory: ${target}` });
         newLines.push({ type: 'output', text: 'Type "help" to see available commands.' });
@@ -5226,8 +5224,7 @@ function TerminalContent() {
       if (COMMANDS[target]) {
         const { window: winId3, desc } = COMMANDS[target];
         newLines.push({ type: 'system', text: `Opening ${desc.toLowerCase()}...` });
-        if (winId3 === 'deep-research') dispatch({ type: 'SHOW_FLOATING_BOOKS' });
-        else openWindow(winId3);
+        openWindow(winId3);
       } else {
         newLines.push({ type: 'error', text: `open: "${target}" not found` });
         newLines.push({ type: 'output', text: 'Type "help" to see available commands.' });
@@ -5337,7 +5334,7 @@ function TerminalContent() {
 
   // ============= DESIGN MODE =============
   // Change to preview: 'bento' | 'bigtype' | 'dashboard' | 'split'
-  const DESIGN_MODE = 'split';
+  const DESIGN_MODE = 'split' as 'split' | 'bento' | 'bigtype' | 'dashboard';
 
   // Auto-fade old terminal lines after 15s
   useEffect(() => {
@@ -5639,7 +5636,7 @@ function TerminalContent() {
                   </div>
 
                   {/* Chronograph Watch */}
-                  <div style={{ display: 'flex', justifyContent: isSmallScreen ? 'flex-end' : 'center', alignItems: 'center', flex: 1, marginTop: '0px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, marginTop: '0px' }}>
                     <ChronographWatch />
                   </div>
 
@@ -5662,7 +5659,7 @@ function TerminalContent() {
                     ].map((book, i) => (
                       <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
                         <span style={{ color: '#fff', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>›</span>
-                        <span style={{ ...sPara, fontSize: '12.5px', lineHeight: 1.5 }}>{book}</span>
+                        <span style={{ ...sPara }}>{book}</span>
                       </div>
                     ))}
                   </div>
@@ -5687,7 +5684,7 @@ function TerminalContent() {
                         ].map((item, i) => (
                           <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
                             <span style={{ color: '#fff', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>›</span>
-                            <span style={{ ...sPara, fontSize: '12.5px', lineHeight: 1.5 }}>{item}</span>
+                            <span style={{ ...sPara }}>{item}</span>
                           </div>
                         ))}
                       </div>
@@ -5872,8 +5869,8 @@ function TerminalContent() {
   );
 }
 
-// ── Floating Books (3D books with stack + expand + slide-over content) ──
-const FLOATING_BOOKS = [
+// ── Books data ──
+const BOOKS_DATA = [
   {
     slug: 'investor-behavior-gap',
     title: 'Why Investors Underperform the Markets They Invest In',
@@ -5923,7 +5920,6 @@ function ReaderPage({ text }: { text: string }) {
         if (trimmed.startsWith('## ')) return <h2 key={i} style={{ fontSize: '17px', fontWeight: 700, margin: '16px 0 8px', fontFamily: "'Georgia', serif" }}>{trimmed.slice(3)}</h2>;
         if (trimmed.startsWith('# ')) return <h1 key={i} style={{ fontSize: '19px', fontWeight: 700, margin: '18px 0 10px', fontFamily: "'Georgia', serif" }}>{trimmed.slice(2)}</h1>;
         if (trimmed === '') return <div key={i} style={{ height: '8px' }} />;
-        // Handle bold (**text**)
         const parts = trimmed.split(/(\*\*[^*]+\*\*)/g);
         return (
           <p key={i} style={{ margin: '0 0 4px', textAlign: 'justify' }}>
@@ -5939,173 +5935,296 @@ function ReaderPage({ text }: { text: string }) {
   );
 }
 
-function FloatingBooks() {
-  const { state, dispatch } = useDesktop();
+// ── 3D Book rendering helper (shared between applet grid and expanded view) ──
+function Book3D({ book, isOpen, isSelected, isHovered, phase, gradient, rotY, rotX, contentData, readerMode, readerPages, readerPage, setReaderMode, setReaderPages, setReaderPage, handleClose }: {
+  book: typeof BOOKS_DATA[0]; isOpen: boolean; isSelected: boolean; isHovered: boolean;
+  phase: string; gradient: string; rotY: number; rotX: number;
+  contentData: ContentViewData | null; readerMode: boolean; readerPages: string[];
+  readerPage: number; setReaderMode: (v: boolean | ((p: boolean) => boolean)) => void;
+  setReaderPages: (v: string[]) => void; setReaderPage: (v: number | ((p: number) => number)) => void;
+  handleClose: () => void;
+}) {
+  return (
+    <>
+      {/* 3D Book front face */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        borderRadius: '4px 10px 10px 4px',
+        overflow: 'hidden',
+        background: gradient,
+        boxShadow: (isSelected && isOpen)
+          ? `0 40px 100px rgba(0,0,0,0.7), 0 15px 40px rgba(0,0,0,0.5), -8px 8px 25px rgba(0,0,0,0.3)`
+          : isHovered
+            ? `0 30px 80px rgba(0,0,0,0.6), 0 10px 30px rgba(0,0,0,0.4)`
+            : `0 20px 60px rgba(0,0,0,0.5), 0 6px 20px rgba(0,0,0,0.3)`,
+        transition: 'box-shadow 0.4s ease',
+      }}>
+        {/* Spine edge */}
+        <div style={{
+          position: 'absolute', left: 0, top: 0, bottom: 0, width: isOpen && isSelected ? '10px' : '8px',
+          background: `linear-gradient(90deg, ${book.coverGradient[0]}ee, ${book.coverGradient[1]}cc)`,
+          borderRight: '1px solid rgba(255,255,255,0.06)',
+          transition: 'width 0.4s ease', zIndex: 2,
+        }} />
+        {/* Spine highlight */}
+        <div style={{
+          position: 'absolute', left: '2px', top: '8px', bottom: '8px', width: '1px',
+          background: 'rgba(255,255,255,0.12)', borderRadius: '1px', zIndex: 3,
+        }} />
+
+        {/* Book cover content */}
+        {!(isSelected && phase === 'content') ? (
+          <div style={{
+            position: 'absolute', inset: 0,
+            padding: isOpen && isSelected ? '40px 30px 30px 36px' : '28px 22px 22px 26px',
+            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+            transition: 'padding 0.7s ease', zIndex: 5,
+          }}>
+            <div>
+              {book.company === 'NDX' ? (
+                <img src="/NASDAQ_Logo.svg.png" alt="Nasdaq"
+                  height={isOpen && isSelected ? 32 : 22}
+                  style={{ filter: 'brightness(0) invert(1)', opacity: 0.9, transition: 'height 0.6s ease' }} />
+              ) : book.company === 'IKIGAI' ? (
+                <img src="/ikigai.png" alt="Ikigai"
+                  height={isOpen && isSelected ? 50 : 36}
+                  style={{ opacity: 0.9, transition: 'height 0.6s ease' }} />
+              ) : book.company === 'SAP' ? (
+                <img src="/sap_white_transparent.png" alt="SAP"
+                  height={isOpen && isSelected ? 36 : 24}
+                  style={{ opacity: 0.9, transition: 'height 0.6s ease' }} />
+              ) : book.company === 'DEEP FOCUS' ? (
+                <img src="/lotus_white_transparent.png" alt="Deep Focus"
+                  height={isOpen && isSelected ? 44 : 30}
+                  style={{ opacity: 0.9, transition: 'height 0.6s ease' }} />
+              ) : (
+                <span style={{
+                  fontSize: isOpen && isSelected ? '14px' : '10px', fontWeight: 700,
+                  letterSpacing: '0.15em', color: book.coverAccent, opacity: 0.85,
+                  fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+                  transition: 'font-size 0.6s ease', textTransform: 'uppercase',
+                }}>{book.company}</span>
+              )}
+            </div>
+            <div>
+              <h3 style={{
+                fontSize: isOpen && isSelected ? '24px' : '17px',
+                fontWeight: 700, color: '#ffffff', lineHeight: 1.35, margin: '0 0 10px',
+                fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+                transition: 'font-size 0.6s ease', textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+              }}>{book.title}</h3>
+              <p style={{
+                fontSize: isOpen && isSelected ? '14px' : '12px',
+                color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, margin: 0,
+                transition: 'font-size 0.6s ease',
+              }}>{book.summary}</p>
+            </div>
+            <div>
+              <div style={{
+                height: '2px', width: isOpen && isSelected ? '60px' : '40px',
+                borderRadius: '1px', background: book.coverAccent, opacity: 0.7,
+                transition: 'width 0.6s ease',
+                marginBottom: isOpen && isSelected ? '12px' : '0',
+              }} />
+              {isOpen && isSelected && phase === 'expanding' && (
+                <span style={{
+                  fontSize: '13px', color: 'rgba(255,255,255,0.45)',
+                  fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+                  animation: 'contentFadeIn 0.5s ease-out 0.6s both', letterSpacing: '0.02em',
+                }}>Tap to open →</span>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* Content phase: show the ContentViewer inside the book */
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: readerMode ? '#f5f1ea' : 'rgba(20, 20, 20, 0.85)',
+            overflow: 'hidden', display: 'flex', flexDirection: 'column',
+            borderRadius: '4px 10px 10px 4px', zIndex: 10, transition: 'background 0.3s ease',
+          }}>
+            {/* Top bar: reader toggle + close */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 14px 0', zIndex: 11 }}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!readerMode && contentData?.markdown) {
+                    const text = contentData.markdown;
+                    const chunks: string[] = [];
+                    const paragraphs = text.split('\n\n');
+                    let current = '';
+                    for (const p of paragraphs) {
+                      if (current.length + p.length > 800 && current.length > 200) { chunks.push(current.trim()); current = p + '\n\n'; }
+                      else { current += p + '\n\n'; }
+                    }
+                    if (current.trim()) chunks.push(current.trim());
+                    setReaderPages(chunks); setReaderPage(0);
+                  }
+                  setReaderMode(!readerMode);
+                }}
+                style={{
+                  background: readerMode ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)',
+                  border: `1px solid ${readerMode ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'}`,
+                  color: readerMode ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)',
+                  borderRadius: '6px', padding: '4px 10px', cursor: 'pointer',
+                  fontSize: '10px', fontFamily: "'SF Mono', monospace",
+                  transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '4px',
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                </svg>
+                {readerMode ? 'Scroll' : 'Reader'}
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleClose(); }}
+                style={{
+                  background: readerMode ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)',
+                  border: `1px solid ${readerMode ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'}`,
+                  color: readerMode ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)',
+                  borderRadius: '6px', padding: '4px 12px', cursor: 'pointer',
+                  fontSize: '11px', fontFamily: "'SF Mono', monospace", transition: 'all 0.15s',
+                }}
+              >ESC</button>
+            </div>
+            {contentData ? (
+              readerMode ? (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <div style={{ flex: 1, display: 'flex', gap: '1px', background: 'rgba(0,0,0,0.08)', margin: '8px 10px', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ flex: 1, background: '#f8f5ef', padding: '24px 20px 16px 24px', overflowY: 'auto', fontSize: '11px', lineHeight: 1.7, color: '#2a2a2a', fontFamily: "'Georgia', 'Times New Roman', serif", borderRight: '1px solid rgba(0,0,0,0.06)' }}>
+                      <ReaderPage text={readerPages[readerPage * 2] || ''} />
+                      <div style={{ position: 'absolute', bottom: '8px', left: '20px', fontSize: '9px', color: 'rgba(0,0,0,0.25)' }}>{readerPage * 2 + 1}</div>
+                    </div>
+                    <div style={{ flex: 1, background: '#faf7f2', padding: '24px 24px 16px 20px', overflowY: 'auto', fontSize: '11px', lineHeight: 1.7, color: '#2a2a2a', fontFamily: "'Georgia', 'Times New Roman', serif" }}>
+                      <ReaderPage text={readerPages[readerPage * 2 + 1] || ''} />
+                      <div style={{ position: 'absolute', bottom: '8px', right: '20px', fontSize: '9px', color: 'rgba(0,0,0,0.25)' }}>{readerPage * 2 + 2}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', padding: '4px 0 8px' }}>
+                    <button onClick={(e) => { e.stopPropagation(); setReaderPage(p => Math.max(0, p - 1)); }} disabled={readerPage === 0}
+                      style={{ background: 'none', border: 'none', cursor: readerPage === 0 ? 'default' : 'pointer', color: readerPage === 0 ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.5)', fontSize: '16px', padding: '2px 8px' }}>‹</button>
+                    <span style={{ fontSize: '10px', color: 'rgba(0,0,0,0.4)', fontFamily: "'SF Mono', monospace" }}>
+                      {readerPage * 2 + 1}–{Math.min(readerPage * 2 + 2, readerPages.length)} of {readerPages.length}
+                    </span>
+                    <button onClick={(e) => { e.stopPropagation(); setReaderPage(p => Math.min(Math.ceil(readerPages.length / 2) - 1, p + 1)); }}
+                      disabled={readerPage >= Math.ceil(readerPages.length / 2) - 1}
+                      style={{ background: 'none', border: 'none', cursor: readerPage >= Math.ceil(readerPages.length / 2) - 1 ? 'default' : 'pointer', color: readerPage >= Math.ceil(readerPages.length / 2) - 1 ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.5)', fontSize: '16px', padding: '2px 8px' }}>›</button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ flex: 1, overflow: 'hidden' }}>
+                  <ContentViewer content={contentData} onClose={handleClose} windowMode />
+                </div>
+              )
+            ) : (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>Loading...</div>
+            )}
+          </div>
+        )}
+
+        {/* Grain texture */}
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.04, pointerEvents: 'none', backgroundImage: 'radial-gradient(rgba(255,255,255,1) 1px, transparent 1px)', backgroundSize: '3px 3px', zIndex: 6 }} />
+        {/* Light reflection */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 7, background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 40%)', borderRadius: '4px 10px 10px 4px' }} />
+
+        {/* Page peel corner */}
+        {isSelected && phase === 'expanding' && (
+          <div style={{ position: 'absolute', bottom: 0, right: 0, width: '80px', height: '80px', cursor: 'pointer', zIndex: 8 }}>
+            <div style={{ position: 'absolute', bottom: 0, right: 0, width: '70px', height: '70px', background: 'linear-gradient(135deg, #f5f1ea 0%, #e8e4dc 60%, #d4d0c8 100%)', borderRadius: '0 0 10px 0', animation: 'contentFadeIn 0.5s ease-out 0.3s both' }} />
+            <div style={{ position: 'absolute', bottom: '3px', right: '3px', width: '50px', height: '50px', background: gradient, zIndex: 9, transformOrigin: 'bottom right', animation: 'pagePeelHint 3s ease-in-out 0.6s infinite', boxShadow: '-4px -4px 10px rgba(0,0,0,0.2)', clipPath: 'polygon(100% 0%, 0% 100%, 100% 100%)' }} />
+          </div>
+        )}
+      </div>
+
+      {/* 3D page edges (right side) */}
+      <div style={{ position: 'absolute', right: '-10px', top: '3px', bottom: '3px', width: '10px', background: 'linear-gradient(90deg, #e8e4dc, #f5f1ea, #e0dcd4)', borderRadius: '0 3px 3px 0', transform: 'rotateY(90deg)', transformOrigin: 'left center', boxShadow: 'inset -2px 0 4px rgba(0,0,0,0.1)' }} />
+      {/* 3D bottom edge */}
+      <div style={{ position: 'absolute', left: '4px', right: '4px', bottom: '-8px', height: '8px', background: 'linear-gradient(180deg, #e0dcd4, #d4d0c8)', borderRadius: '0 0 3px 3px', transform: 'rotateX(-90deg)', transformOrigin: 'top center', boxShadow: 'inset 0 -1px 3px rgba(0,0,0,0.1)' }} />
+    </>
+  );
+}
+
+// ── Books Applet (renders inside AppWindow with 2x2 grid, expands out on click) ──
+function BooksApplet() {
   const [selected, setSelected] = useState<string | null>(null);
-  const [phase, setPhase] = useState<'idle' | 'stacking' | 'expanding' | 'flipping' | 'content' | 'closing'>('idle');
-  const [entering, setEntering] = useState(true);
-  const [exiting, setExiting] = useState(false);
+  const [phase, setPhase] = useState<'idle' | 'expanding' | 'peeling' | 'content' | 'closing'>('idle');
   const [contentData, setContentData] = useState<ContentViewData | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
-  const [mousePos, setMousePos] = useState<Record<string, { x: number; y: number }>>({});
   const bookRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [readerMode, setReaderMode] = useState(false);
   const [readerPage, setReaderPage] = useState(0);
   const [readerPages, setReaderPages] = useState<string[]>([]);
+  const [bookRects, setBookRects] = useState<Record<string, DOMRect>>({});
+  const [sidebarCategory, setSidebarCategory] = useState('All');
 
-  // Book dimensions - responsive for different screen sizes
-  const isSmallScreen = typeof window !== 'undefined' && window.innerHeight < 850;
-  const SMALL_W = isSmallScreen ? 160 : 210;
-  const SMALL_H = isSmallScreen ? 213 : 280;
+  const screenH = typeof window !== 'undefined' ? window.innerHeight : 900;
+  const screenW = typeof window !== 'undefined' ? window.innerWidth : 1440;
+  const isSmallScreen = screenH < 850;
   const BIG_H = isSmallScreen ? 550 : 700;
   const BIG_W = Math.round(BIG_H * 3 / 4);
-  const GRID_GAP = isSmallScreen ? 12 : 16;
-  // 2x2 grid: total width = 2 * SMALL_W + GAP
-  const GRID_W = 2 * SMALL_W + GRID_GAP;
-  const GRID_H = 2 * SMALL_H + GRID_GAP;
+  const expandedTop = Math.round((screenH - BIG_H) / 2);
+  const expandedLeft = Math.round((screenW - BIG_W) / 2);
 
-  useEffect(() => {
-    if (state.floatingBooksVisible) {
-      setEntering(false);
-      setExiting(false);
-      if (state.floatingBookSlug) {
-        // Auto-open a specific book from the Apple Books window
-        setSelected(state.floatingBookSlug);
-        setPhase('stacking');
-        setTimeout(() => setPhase('expanding'), 400);
-      } else {
-        setSelected(null);
-        setPhase('idle');
-      }
-    }
-  }, [state.floatingBooksVisible]);
-
-  // Load content when selected
   useEffect(() => {
     if (selected) {
       import('../portfolio/contentData').then(mod => {
         const data = mod.contentMap[selected];
         if (data) setContentData(data as ContentViewData);
       });
-    } else {
-      setContentData(null);
-    }
+    } else { setContentData(null); }
   }, [selected]);
 
-  // Auto-close books when another window opens
-  const windowCount = Object.keys(state.windows).length;
-  const prevWindowCount = useRef(windowCount);
   useEffect(() => {
-    if (prevWindowCount.current < windowCount && state.floatingBooksVisible) {
-      // A new window was opened — close books with reverse animation
-      if (selected) {
-        handleClose();
-        setTimeout(() => {
-          setExiting(true);
-          setTimeout(() => {
-            dispatch({ type: 'HIDE_FLOATING_BOOKS' });
-            setExiting(false);
-          }, 300);
-        }, 500);
-      } else {
-        setExiting(true);
-        setTimeout(() => {
-          dispatch({ type: 'HIDE_FLOATING_BOOKS' });
-          setExiting(false);
-        }, 300);
-      }
-    }
-    prevWindowCount.current = windowCount;
-  }, [windowCount]);
-
-  // Escape key — instantly dismiss (only when books are visible)
-  useEffect(() => {
-    if (!state.floatingBooksVisible) return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        e.stopImmediatePropagation();
-        if (phase === 'content' || phase === 'expanding' || phase === 'stacking' || phase === 'flipping') {
+        if (phase === 'content' || phase === 'expanding' || phase === 'peeling') {
+          e.stopImmediatePropagation();
           handleClose();
-        } else if (phase === 'idle') {
-          handleDismiss();
         }
       }
     };
-    window.addEventListener('keydown', handleKey, true);
-    return () => window.removeEventListener('keydown', handleKey, true);
-  }, [phase, dispatch, state.floatingBooksVisible]);
-
-  if (!state.floatingBooksVisible) return null;
+    if (phase !== 'idle') {
+      window.addEventListener('keydown', handleKey, true);
+      return () => window.removeEventListener('keydown', handleKey, true);
+    }
+  }, [phase]);
 
   const handleBookClick = (slug: string) => {
     if (phase === 'idle') {
-      // First click: stack and expand the book
+      const el = bookRefs.current[slug];
+      if (el) setBookRects(prev => ({ ...prev, [slug]: el.getBoundingClientRect() }));
       setSelected(slug);
-      setPhase('stacking');
-      setTimeout(() => setPhase('expanding'), 400);
+      setPhase('expanding');
     } else if (phase === 'expanding' && selected === slug) {
-      // Second click on enlarged book: page-flip animation, then show content
-      setPhase('flipping');
-      setTimeout(() => setPhase('content'), 700);
+      // User clicks the expanded book — peel page back to reveal content
+      setPhase('peeling');
+      setTimeout(() => setPhase('content'), 1000);
     }
   };
 
   const handleClose = () => {
-    // Reverse animation: content → closing (shrink) → idle
     setPhase('closing');
-    setTimeout(() => {
-      setSelected(null);
-      setPhase('idle');
-      setReaderMode(false);
-      setReaderPage(0);
-    }, 500);
+    setTimeout(() => { setSelected(null); setPhase('idle'); setReaderMode(false); setReaderPage(0); }, 500);
   };
 
-  const handleDismiss = () => {
-    if (selected) {
-      handleClose();
-      return;
-    }
-    // Fade out all books, then hide
-    setExiting(true);
-    setTimeout(() => {
-      dispatch({ type: 'HIDE_FLOATING_BOOKS' });
-      setExiting(false);
-    }, 300);
-  };
+  const isOpen = phase === 'expanding' || phase === 'peeling' || phase === 'content';
 
-  const isOpen = phase === 'expanding' || phase === 'flipping' || phase === 'content';
-  const screenH = typeof window !== 'undefined' ? window.innerHeight : 900;
-  // Expanded book position: right side, vertically centered
-  const expandedTop = Math.round((screenH - BIG_H) / 2);
-  const expandedRight = isSmallScreen ? 15 : 30;
+  const sidebarItems = [
+    { icon: '🏠', label: 'Home', category: 'Apple Books' },
+    { icon: '🏪', label: 'Book Store', category: 'Apple Books' },
+    { icon: '📖', label: 'All', category: 'Library' },
+    { icon: '📑', label: 'Want to Read', category: 'Library' },
+    { icon: '✅', label: 'Finished', category: 'Library' },
+    { icon: '📚', label: 'Deep Research', category: 'My Collections' },
+  ];
 
   return (
-    <>
+    <div style={{ height: '100%', display: 'flex', background: '#f5f5f5' }}>
       <style>{`
-        @keyframes floatBook1 {
-          0%,100% { transform: translateY(0) rotateY(-12deg) rotateX(4deg); }
-          50% { transform: translateY(-12px) rotateY(-8deg) rotateX(2deg); }
-        }
-        @keyframes floatBook2 {
-          0%,100% { transform: translateY(0) rotateY(-12deg) rotateX(4deg); }
-          50% { transform: translateY(-10px) rotateY(-14deg) rotateX(5deg); }
-        }
-        @keyframes bookSlideIn {
-          from { opacity: 0; transform: translateX(120px) rotateY(-25deg) scale(0.8); }
-          to { opacity: 1; transform: translateX(0) rotateY(-12deg) scale(1); }
-        }
-        @keyframes bookSlideOut {
-          from { opacity: 1; transform: scale(1); }
-          to { opacity: 0; transform: translateX(200px) scale(0.3); }
-        }
-        @keyframes bookPageFlip {
-          0% { transform: perspective(1200px) rotateY(0deg) scale(1); }
-          15% { transform: perspective(1200px) rotateY(-35deg) scale(1.02); }
-          40% { transform: perspective(1200px) rotateY(-90deg) scale(1.01); }
-          60% { transform: perspective(1200px) rotateY(-130deg) scale(1); }
-          80% { transform: perspective(1200px) rotateY(-165deg) scale(0.99); }
-          100% { transform: perspective(1200px) rotateY(-180deg) scale(1); }
+        @keyframes bookCoverPeel {
+          0% { transform: perspective(1200px) rotateY(0deg); transform-origin: left center; }
+          100% { transform: perspective(1200px) rotateY(-160deg); transform-origin: left center; }
         }
         @keyframes contentFadeIn {
           from { opacity: 0; transform: translateY(20px); }
@@ -6115,315 +6234,249 @@ function FloatingBooks() {
           0%,100% { transform: rotate(0deg) scale(1); }
           50% { transform: rotate(-3deg) scale(1.05); }
         }
-        @keyframes pagePeelCurl {
-          from { width: 40px; height: 40px; }
-          to { width: 60px; height: 60px; }
-        }
       `}</style>
 
-      {/* Clickable backdrop to dismiss */}
-      <div
-        onClick={handleDismiss}
-        style={{
-          position: 'fixed', inset: 0, zIndex: 9997,
-          background: isOpen ? 'rgba(0,0,0,0.3)' : 'transparent',
-          pointerEvents: 'auto',
-          opacity: exiting ? 0 : 1,
-          transition: 'background 0.4s ease, opacity 0.3s ease',
-        }}
-      />
+      {/* ── Sidebar ── */}
+      <div style={{
+        width: '180px', minWidth: '180px', background: 'rgba(245,245,245,0.95)',
+        borderRight: '1px solid rgba(0,0,0,0.08)', padding: '12px 0',
+        display: 'flex', flexDirection: 'column', gap: '2px',
+        fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '13px',
+        overflowY: 'auto',
+      }}>
+        {/* Search */}
+        <div style={{ padding: '4px 14px 10px' }}>
+          <div style={{
+            background: 'rgba(0,0,0,0.04)', borderRadius: '6px', padding: '5px 8px',
+            display: 'flex', alignItems: 'center', gap: '5px', color: 'rgba(0,0,0,0.35)', fontSize: '12px',
+          }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Search
+          </div>
+        </div>
 
-      {/* Glowing X close button — follows expanded book or sits above grid */}
-      <div
-        onClick={handleDismiss}
-        style={{
-          position: 'fixed',
-          top: isOpen
-            ? `${expandedTop - 44}px`
-            : `${Math.round((screenH - GRID_H) / 2) - 52}px`,
-          right: isOpen
-            ? `${expandedRight}px`
-            : `${(isSmallScreen ? 60 : 120) - 6}px`,
-          zIndex: 10003,
-          transition: 'top 0.5s cubic-bezier(0.16, 1, 0.3, 1), right 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-          width: '36px',
-          height: '36px',
-          borderRadius: '50%',
-          background: 'rgba(255,255,255,0.1)',
-          border: '1px solid rgba(255,255,255,0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          pointerEvents: 'auto',
-          fontSize: '18px',
-          color: 'rgba(255,255,255,0.9)',
-          fontWeight: 300,
-          boxShadow: '0 0 15px rgba(255,255,255,0.2), 0 0 30px rgba(255,255,255,0.1)',
-          backdropFilter: 'blur(10px)',
-          transition: 'all 0.2s ease',
-          opacity: exiting ? 0 : 1,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
-          e.currentTarget.style.boxShadow = '0 0 20px rgba(255,255,255,0.35), 0 0 40px rgba(255,255,255,0.15)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-          e.currentTarget.style.boxShadow = '0 0 15px rgba(255,255,255,0.2), 0 0 30px rgba(255,255,255,0.1)';
-        }}
-      >
-        ✕
+        {(() => {
+          let lastCategory = '';
+          return sidebarItems.map((item, i) => {
+            const isActive = sidebarCategory === item.label;
+            const showHeader = item.category !== lastCategory;
+            lastCategory = item.category;
+            return (
+              <React.Fragment key={i}>
+                {showHeader && (
+                  <div style={{
+                    padding: `${i === 0 ? '2px' : '14px'} 14px 4px`,
+                    fontSize: '11px', fontWeight: 700, color: 'rgba(0,0,0,0.45)',
+                    textTransform: 'uppercase', letterSpacing: '0.03em',
+                  }}>{item.category}</div>
+                )}
+                <div
+                  onClick={() => setSidebarCategory(item.label)}
+                  style={{
+                    padding: '4px 14px', margin: '0 8px', borderRadius: '6px',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px',
+                    background: isActive ? 'rgba(59,130,246,0.12)' : 'transparent',
+                    color: isActive ? '#2563eb' : 'rgba(0,0,0,0.75)',
+                    fontWeight: isActive ? 600 : 400,
+                    transition: 'background 0.15s',
+                  }}
+                >
+                  <span style={{ fontSize: '14px', width: '18px', textAlign: 'center' }}>{item.icon}</span>
+                  {item.label}
+                </div>
+              </React.Fragment>
+            );
+          });
+        })()}
       </div>
 
-      {/* Floating books container */}
-      <div style={{ position: 'fixed', zIndex: 9999, pointerEvents: 'none', inset: 0, perspective: '1200px' }}>
-        {FLOATING_BOOKS.map((book, idx) => {
-          const isSelected = selected === book.slug;
-          const isOther = selected && !isSelected;
-          const isHovered = hovered === book.slug && phase === 'idle';
-          const gradient = `linear-gradient(160deg, ${book.coverGradient[0]}, ${book.coverGradient[1]}, ${book.coverGradient[2]})`;
+      {/* ── Main content area ── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Header */}
+        <div style={{ padding: '20px 28px 8px' }}>
+          <h2 style={{
+            fontSize: '26px', fontWeight: 800, color: '#1a1a1a', margin: 0,
+            fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+          }}>All</h2>
+          <div style={{ height: '1px', background: 'rgba(0,0,0,0.08)', marginTop: '12px' }} />
+        </div>
 
-          // Mouse tracking for 3D rotation
-          const mp = mousePos[book.slug] || { x: 0.5, y: 0.5 };
-          const rotY = isHovered ? (mp.x - 0.5) * 25 : -12;
-          const rotX = isHovered ? -(mp.y - 0.5) * 15 : 4;
+        {/* Book grid */}
+        <div style={{
+          flex: 1, overflowY: 'auto', padding: '16px 28px 28px',
+          display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '24px 20px', alignContent: 'start', perspective: '1200px',
+        }}>
+          {BOOKS_DATA.map((book) => {
+            const isBookSelected = selected === book.slug;
+            const isBookHovered = hovered === book.slug && phase === 'idle';
+            const gradient = `linear-gradient(160deg, ${book.coverGradient[0]}, ${book.coverGradient[1]}, ${book.coverGradient[2]})`;
 
-          // 2x2 grid position calculations
-          const col = idx % 2;       // 0=left, 1=right
-          const row = Math.floor(idx / 2); // 0=top, 1=bottom
-          const gridRight = isSmallScreen ? 60 : 120;
-          const gridTop = Math.round((screenH - GRID_H) / 2);
-          const idleRight = `${gridRight + (1 - col) * (SMALL_W + GRID_GAP)}px`;
-          const idleTop = `${gridTop + row * (SMALL_H + GRID_GAP)}px`;
-
-          // When stacking: other book slides behind selected
-          // When expanding: selected book grows to BIG size
-          // When content: selected is big with content visible inside
-          let bookStyle: React.CSSProperties = {};
-
-          if (phase === 'idle' || (!isSelected && !isOther)) {
-            // Normal floating state
-            bookStyle = {
-              position: 'fixed',
-              right: idleRight,
-              top: idleTop,
-              width: `${SMALL_W}px`,
-              height: `${SMALL_H}px`,
-              opacity: exiting ? 0 : 1,
-              transform: isHovered
-                ? `perspective(600px) rotateY(${rotY}deg) rotateX(${rotX}deg) scale(1.05)`
-                : undefined,
-              animation: 'none',
-              transition: isHovered ? 'transform 0.15s ease-out' : 'transform 0.5s ease-out',
-            };
-          } else if (isOther) {
-            // Non-selected book: hide completely if launched from store, otherwise fade
-            if (state.floatingBookSlug) {
-              bookStyle = {
-                position: 'fixed', right: idleRight, top: idleTop,
-                width: `${SMALL_W}px`, height: `${SMALL_H}px`,
-                opacity: 0, pointerEvents: 'none' as const,
-              };
-            } else {
-              bookStyle = {
-                position: 'fixed',
-                right: idleRight,
-                top: idleTop,
-                width: `${SMALL_W}px`,
-                height: `${SMALL_H}px`,
-                opacity: phase === 'closing' ? 1 : 0.15,
-                transform: `scale(0.9) rotateY(-8deg)`,
-                filter: 'blur(2px)',
-                transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
-                zIndex: 9998,
-              };
+            if (isBookSelected && phase !== 'idle') {
+              return (
+                <div key={book.slug} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ aspectRatio: '3/4', visibility: 'hidden' }} />
+                </div>
+              );
             }
-          } else if (isSelected) {
-            // Selected book: expand or close (reverse)
-            const isExpanded = phase === 'expanding' || phase === 'content' || phase === 'flipping';
-            const isClosing = phase === 'closing';
-            bookStyle = {
-              position: 'fixed',
-              right: isExpanded && !isClosing ? `${expandedRight}px` : idleRight,
-              top: isExpanded && !isClosing ? `${expandedTop}px` : idleTop,
-              width: isExpanded && !isClosing ? `${BIG_W}px` : `${SMALL_W}px`,
-              height: isExpanded && !isClosing ? `${BIG_H}px` : `${SMALL_H}px`,
-              opacity: isClosing ? 0.8 : 1,
-              transform: phase === 'stacking' ? 'scale(1.02)' : (isClosing ? 'rotateY(-12deg) scale(1)' : 'none'),
-              animation: phase === 'flipping' ? 'bookPageFlip 0.7s ease-in-out forwards' : 'none',
-              transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-              zIndex: 10001,
-            };
-          }
 
-          return (
-            <div
-              key={book.slug}
-              ref={el => { bookRefs.current[book.slug] = el; }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleBookClick(book.slug);
-              }}
-              onMouseEnter={() => phase === 'idle' && setHovered(book.slug)}
-              onMouseLeave={() => { setHovered(null); setMousePos(p => ({ ...p, [book.slug]: { x: 0.5, y: 0.5 } })); }}
-              onMouseMove={(e) => {
-                if (phase !== 'idle') return;
-                const el = bookRefs.current[book.slug];
-                if (!el) return;
-                const rect = el.getBoundingClientRect();
-                setMousePos(p => ({
-                  ...p,
-                  [book.slug]: {
-                    x: (e.clientX - rect.left) / rect.width,
-                    y: (e.clientY - rect.top) / rect.height,
-                  }
-                }));
-              }}
-              style={{
-                ...bookStyle,
-                pointerEvents: exiting ? 'none' : 'auto',
-                cursor: phase === 'idle' ? 'pointer' : 'default',
-                transformStyle: 'preserve-3d',
-                zIndex: bookStyle.zIndex || (isSelected ? 10001 : isHovered ? 10000 : 9999),
-              } as React.CSSProperties}
-            >
-              {/* 3D Book front face */}
-              <div style={{
-                position: 'absolute', inset: 0,
-                borderRadius: '4px 10px 10px 4px',
-                overflow: 'hidden',
-                background: gradient,
-                boxShadow: (isSelected && isOpen)
-                  ? `0 40px 100px rgba(0,0,0,0.7), 0 15px 40px rgba(0,0,0,0.5), -8px 8px 25px rgba(0,0,0,0.3)`
-                  : isHovered
-                    ? `0 30px 80px rgba(0,0,0,0.6), 0 10px 30px rgba(0,0,0,0.4)`
-                    : `0 20px 60px rgba(0,0,0,0.5), 0 6px 20px rgba(0,0,0,0.3)`,
-                transition: 'box-shadow 0.4s ease',
-              }}>
-                {/* Spine edge */}
-                <div style={{
-                  position: 'absolute', left: 0, top: 0, bottom: 0, width: isOpen && isSelected ? '10px' : '8px',
-                  background: `linear-gradient(90deg, ${book.coverGradient[0]}ee, ${book.coverGradient[1]}cc)`,
-                  borderRight: '1px solid rgba(255,255,255,0.06)',
-                  transition: 'width 0.4s ease',
-                  zIndex: 2,
-                }} />
-                {/* Spine highlight */}
-                <div style={{
-                  position: 'absolute', left: '2px', top: '8px', bottom: '8px', width: '1px',
-                  background: 'rgba(255,255,255,0.12)', borderRadius: '1px', zIndex: 3,
-                }} />
-
-                {/* Book cover content — scales with the book */}
-                {!(isSelected && phase === 'content') ? (
+            return (
+              <div key={book.slug} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div
+                  ref={el => { bookRefs.current[book.slug] = el; }}
+                  onClick={() => handleBookClick(book.slug)}
+                  onMouseEnter={() => phase === 'idle' && setHovered(book.slug)}
+                  onMouseLeave={() => setHovered(null)}
+                  style={{
+                    position: 'relative', aspectRatio: '3/4', cursor: 'pointer',
+                    transformStyle: 'preserve-3d',
+                    transform: isBookHovered ? 'scale(1.04)' : 'scale(1)',
+                    transition: 'transform 0.2s ease-out',
+                    borderRadius: '4px',
+                    boxShadow: isBookHovered
+                      ? '0 12px 40px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.15)'
+                      : '0 4px 16px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.1)',
+                  }}
+                >
+                  {/* Book cover */}
                   <div style={{
-                    position: 'absolute', inset: 0,
-                    padding: isOpen && isSelected ? '40px 30px 30px 36px' : '28px 22px 22px 26px',
-                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                    transition: 'padding 0.7s ease',
-                    zIndex: 5,
+                    position: 'absolute', inset: 0, borderRadius: '4px 8px 8px 4px',
+                    overflow: 'hidden', background: gradient,
                   }}>
-                    <div>
-                      {book.company === 'NDX' ? (
-                        <img src="/NASDAQ_Logo.svg.png" alt="Nasdaq"
-                          height={isOpen && isSelected ? 32 : 22}
-                          style={{ filter: 'brightness(0) invert(1)', opacity: 0.9, transition: 'height 0.6s ease' }} />
-                      ) : book.company === 'IKIGAI' ? (
-                        <img src="/ikigai.png" alt="Ikigai"
-                          height={isOpen && isSelected ? 50 : 36}
-                          style={{ opacity: 0.9, transition: 'height 0.6s ease' }} />
-                      ) : (
-                        <span style={{
-                          fontSize: isOpen && isSelected ? '14px' : '10px',
-                          fontWeight: 700,
-                          letterSpacing: '0.15em',
-                          color: book.coverAccent,
-                          opacity: 0.85,
-                          fontFamily: "'SF Pro Display', -apple-system, sans-serif",
-                          transition: 'font-size 0.6s ease',
-                          textTransform: 'uppercase',
-                        }}>
-                          {book.company}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <h3 style={{
-                        fontSize: isOpen && isSelected ? '24px' : '17px',
-                        fontWeight: 700, color: '#ffffff',
-                        lineHeight: 1.35, margin: '0 0 10px',
-                        fontFamily: "'SF Pro Display', -apple-system, sans-serif",
-                        transition: 'font-size 0.6s ease',
-                        textShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                      }}>
-                        {book.title}
-                      </h3>
-                      <p style={{
-                        fontSize: isOpen && isSelected ? '14px' : '12px',
-                        color: 'rgba(255,255,255,0.7)',
-                        lineHeight: 1.5, margin: 0,
-                        transition: 'font-size 0.6s ease',
-                      }}>
-                        {book.summary}
-                      </p>
-                    </div>
-                    <div>
+                    {/* Spine */}
+                    <div style={{
+                      position: 'absolute', left: 0, top: 0, bottom: 0, width: '6px',
+                      background: `linear-gradient(90deg, ${book.coverGradient[0]}ee, ${book.coverGradient[1]}cc)`,
+                      borderRight: '1px solid rgba(255,255,255,0.06)', zIndex: 2,
+                    }} />
+                    <div style={{
+                      position: 'absolute', left: '2px', top: '6px', bottom: '6px', width: '1px',
+                      background: 'rgba(255,255,255,0.1)', zIndex: 3,
+                    }} />
+                    {/* Cover content */}
+                    <div style={{
+                      position: 'absolute', inset: 0, padding: '20px 16px 16px 20px',
+                      display: 'flex', flexDirection: 'column', justifyContent: 'space-between', zIndex: 5,
+                    }}>
+                      <div>
+                        {book.company === 'NDX' ? (
+                          <img src="/NASDAQ_Logo.svg.png" alt="Nasdaq" height={18}
+                            style={{ filter: 'brightness(0) invert(1)', opacity: 0.9 }} />
+                        ) : book.company === 'IKIGAI' ? (
+                          <img src="/ikigai.png" alt="Ikigai" height={28} style={{ opacity: 0.9 }} />
+                        ) : book.company === 'SAP' ? (
+                          <img src="/sap_white_transparent.png" alt="SAP" height={20}
+                            style={{ opacity: 0.9 }} />
+                        ) : book.company === 'DEEP FOCUS' ? (
+                          <img src="/lotus_white_transparent.png" alt="Deep Focus" height={26}
+                            style={{ opacity: 0.9 }} />
+                        ) : (
+                          <span style={{
+                            fontSize: '9px', fontWeight: 700, letterSpacing: '0.15em',
+                            color: book.coverAccent, opacity: 0.85, textTransform: 'uppercase',
+                            fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+                          }}>{book.company}</span>
+                        )}
+                      </div>
+                      <div>
+                        <h3 style={{
+                          fontSize: '14px', fontWeight: 700, color: '#fff', lineHeight: 1.3,
+                          margin: '0 0 6px', fontFamily: "'SF Pro Display', -apple-system, sans-serif",
+                          textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                        }}>{book.title}</h3>
+                      </div>
                       <div style={{
-                        height: '2px', width: isOpen && isSelected ? '60px' : '40px',
-                        borderRadius: '1px', background: book.coverAccent, opacity: 0.7,
-                        transition: 'width 0.6s ease',
-                        marginBottom: isOpen && isSelected ? '12px' : '0',
+                        height: '2px', width: '30px', borderRadius: '1px',
+                        background: book.coverAccent, opacity: 0.7,
                       }} />
-                      {isOpen && isSelected && phase === 'expanding' && (
-                        <span style={{
-                          fontSize: '13px', color: 'rgba(255,255,255,0.45)',
-                          fontFamily: "'SF Pro Text', -apple-system, sans-serif",
-                          animation: 'contentFadeIn 0.5s ease-out 0.6s both',
-                          letterSpacing: '0.02em',
-                        }}>
-                          Click to read →
-                        </span>
-                      )}
                     </div>
+                    {/* Grain + reflection */}
+                    <div style={{ position: 'absolute', inset: 0, opacity: 0.04, pointerEvents: 'none', backgroundImage: 'radial-gradient(rgba(255,255,255,1) 1px, transparent 1px)', backgroundSize: '3px 3px', zIndex: 6 }} />
+                    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 7, background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 40%)', borderRadius: '4px 8px 8px 4px' }} />
                   </div>
-                ) : (
-                  /* Content phase: show the ContentViewer inside the book */
+                </div>
+                {/* Label below book */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 2px' }}>
+                  <span style={{
+                    fontSize: '11px', color: 'rgba(0,0,0,0.55)',
+                    fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px',
+                  }}>{book.readingTime} min read</span>
+                  <span style={{ fontSize: '14px', color: 'rgba(0,0,0,0.3)', cursor: 'pointer', letterSpacing: '1px' }}>···</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Expanded book overlay (portaled to body to escape AppWindow clipping) ── */}
+      {selected && phase !== 'idle' && createPortal(
+        <>
+          <div onClick={handleClose} style={{ position: 'fixed', inset: 0, zIndex: 9997, background: isOpen ? 'rgba(0,0,0,0.4)' : 'transparent', transition: 'background 0.4s ease' }} />
+          <div onClick={handleClose} style={{
+            position: 'fixed', top: `${expandedTop - 44}px`, left: `${expandedLeft}px`,
+            zIndex: 10003, width: '36px', height: '36px', borderRadius: '50%',
+            background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', fontSize: '18px', color: 'rgba(255,255,255,0.9)', fontWeight: 300,
+            boxShadow: '0 0 15px rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)',
+          }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+          >✕</div>
+          {(() => {
+            const book = BOOKS_DATA.find(b => b.slug === selected)!;
+            const gradient = `linear-gradient(160deg, ${book.coverGradient[0]}, ${book.coverGradient[1]}, ${book.coverGradient[2]})`;
+            const originRect = bookRects[selected];
+            const isExpanded = phase === 'expanding' || phase === 'peeling' || phase === 'content';
+            const isClosing = phase === 'closing';
+            const fromLeft = originRect ? originRect.left : expandedLeft;
+            const fromTop = originRect ? originRect.top : expandedTop;
+            const fromW = originRect ? originRect.width : BIG_W;
+            const fromH = originRect ? originRect.height : BIG_H;
+            const isPeeling = phase === 'peeling';
+            const isContent = phase === 'content';
+            return (
+              <div
+                style={{
+                  position: 'fixed',
+                  left: isExpanded && !isClosing ? `${expandedLeft}px` : `${fromLeft}px`,
+                  top: isExpanded && !isClosing ? `${expandedTop}px` : `${fromTop}px`,
+                  width: isExpanded && !isClosing ? `${BIG_W}px` : `${fromW}px`,
+                  height: isExpanded && !isClosing ? `${BIG_H}px` : `${fromH}px`,
+                  zIndex: 10001,
+                  transform: isClosing ? 'scale(0.95)' : 'none',
+                  transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                  opacity: isClosing ? 0 : 1,
+                  perspective: '1200px',
+                }}
+              >
+                {/* Content layer — sits behind the cover, revealed as cover peels */}
+                {(isPeeling || isContent) && (
                   <div style={{
-                    position: 'absolute', inset: 0,
-                    background: readerMode ? '#f5f1ea' : 'rgba(20, 20, 20, 0.85)',
-                    overflow: 'hidden',
-                    display: 'flex', flexDirection: 'column',
-                    borderRadius: '4px 10px 10px 4px',
-                    zIndex: 10,
+                    position: 'absolute', inset: 0, borderRadius: '4px 10px 10px 4px',
+                    background: readerMode ? '#f5f1ea' : 'rgba(20, 20, 20, 0.95)',
+                    overflow: 'hidden', display: 'flex', flexDirection: 'column', zIndex: 1,
+                    animation: 'contentFadeIn 0.4s ease-out both',
                     transition: 'background 0.3s ease',
                   }}>
-                    {/* Top bar: reader toggle + close */}
-                    <div style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '8px 14px 0',
-                      zIndex: 11,
-                    }}>
+                    {/* Top bar */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 14px 0', zIndex: 11 }}>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           if (!readerMode && contentData?.markdown) {
-                            // Split markdown into pages (~800 chars each for two-page spread)
                             const text = contentData.markdown;
                             const chunks: string[] = [];
                             const paragraphs = text.split('\n\n');
                             let current = '';
                             for (const p of paragraphs) {
-                              if (current.length + p.length > 800 && current.length > 200) {
-                                chunks.push(current.trim());
-                                current = p + '\n\n';
-                              } else {
-                                current += p + '\n\n';
-                              }
+                              if (current.length + p.length > 800 && current.length > 200) { chunks.push(current.trim()); current = p + '\n\n'; }
+                              else { current += p + '\n\n'; }
                             }
                             if (current.trim()) chunks.push(current.trim());
-                            setReaderPages(chunks);
-                            setReaderPage(0);
+                            setReaderPages(chunks); setReaderPage(0);
                           }
                           setReaderMode(!readerMode);
                         }}
@@ -6431,8 +6484,8 @@ function FloatingBooks() {
                           background: readerMode ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)',
                           border: `1px solid ${readerMode ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'}`,
                           color: readerMode ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)',
-                          borderRadius: '6px', padding: '4px 10px',
-                          cursor: 'pointer', fontSize: '10px', fontFamily: "'SF Mono', monospace",
+                          borderRadius: '6px', padding: '4px 10px', cursor: 'pointer',
+                          fontSize: '10px', fontFamily: "'SF Mono', monospace",
                           transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '4px',
                         }}
                       >
@@ -6448,166 +6501,73 @@ function FloatingBooks() {
                           background: readerMode ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)',
                           border: `1px solid ${readerMode ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'}`,
                           color: readerMode ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)',
-                          borderRadius: '6px', padding: '4px 12px',
-                          cursor: 'pointer', fontSize: '11px', fontFamily: "'SF Mono', monospace",
-                          transition: 'all 0.15s',
+                          borderRadius: '6px', padding: '4px 12px', cursor: 'pointer',
+                          fontSize: '11px', fontFamily: "'SF Mono', monospace", transition: 'all 0.15s',
                         }}
-                      >
-                        ESC
-                      </button>
+                      >ESC</button>
                     </div>
                     {contentData ? (
                       readerMode ? (
-                        /* Two-page spread reader */
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                          <div style={{
-                            flex: 1, display: 'flex', gap: '1px',
-                            background: 'rgba(0,0,0,0.08)',
-                            margin: '8px 10px',
-                            borderRadius: '4px',
-                            overflow: 'hidden',
-                          }}>
-                            {/* Left page */}
-                            <div style={{
-                              flex: 1, background: '#f8f5ef', padding: '24px 20px 16px 24px',
-                              overflowY: 'auto', fontSize: '11px', lineHeight: 1.7,
-                              color: '#2a2a2a', fontFamily: "'Georgia', 'Times New Roman', serif",
-                              borderRight: '1px solid rgba(0,0,0,0.06)',
-                            }}>
+                          <div style={{ flex: 1, display: 'flex', gap: '1px', background: 'rgba(0,0,0,0.08)', margin: '8px 10px', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ flex: 1, background: '#f8f5ef', padding: '24px 20px 16px 24px', overflowY: 'auto', fontSize: '11px', lineHeight: 1.7, color: '#2a2a2a', fontFamily: "'Georgia', 'Times New Roman', serif", borderRight: '1px solid rgba(0,0,0,0.06)' }}>
                               <ReaderPage text={readerPages[readerPage * 2] || ''} />
-                              <div style={{ position: 'absolute', bottom: '8px', left: '20px', fontSize: '9px', color: 'rgba(0,0,0,0.25)' }}>
-                                {readerPage * 2 + 1}
-                              </div>
                             </div>
-                            {/* Right page */}
-                            <div style={{
-                              flex: 1, background: '#faf7f2', padding: '24px 24px 16px 20px',
-                              overflowY: 'auto', fontSize: '11px', lineHeight: 1.7,
-                              color: '#2a2a2a', fontFamily: "'Georgia', 'Times New Roman', serif",
-                            }}>
+                            <div style={{ flex: 1, background: '#faf7f2', padding: '24px 24px 16px 20px', overflowY: 'auto', fontSize: '11px', lineHeight: 1.7, color: '#2a2a2a', fontFamily: "'Georgia', 'Times New Roman', serif" }}>
                               <ReaderPage text={readerPages[readerPage * 2 + 1] || ''} />
-                              <div style={{ position: 'absolute', bottom: '8px', right: '20px', fontSize: '9px', color: 'rgba(0,0,0,0.25)' }}>
-                                {readerPage * 2 + 2}
-                              </div>
                             </div>
                           </div>
-                          {/* Page navigation */}
-                          <div style={{
-                            display: 'flex', justifyContent: 'center', alignItems: 'center',
-                            gap: '16px', padding: '4px 0 8px',
-                          }}>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setReaderPage(p => Math.max(0, p - 1)); }}
-                              disabled={readerPage === 0}
-                              style={{
-                                background: 'none', border: 'none', cursor: readerPage === 0 ? 'default' : 'pointer',
-                                color: readerPage === 0 ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.5)',
-                                fontSize: '16px', padding: '2px 8px',
-                              }}
-                            >
-                              ‹
-                            </button>
+                          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', padding: '4px 0 8px' }}>
+                            <button onClick={(e) => { e.stopPropagation(); setReaderPage(p => Math.max(0, p - 1)); }} disabled={readerPage === 0}
+                              style={{ background: 'none', border: 'none', cursor: readerPage === 0 ? 'default' : 'pointer', color: readerPage === 0 ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.5)', fontSize: '16px', padding: '2px 8px' }}>‹</button>
                             <span style={{ fontSize: '10px', color: 'rgba(0,0,0,0.4)', fontFamily: "'SF Mono', monospace" }}>
                               {readerPage * 2 + 1}–{Math.min(readerPage * 2 + 2, readerPages.length)} of {readerPages.length}
                             </span>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setReaderPage(p => Math.min(Math.ceil(readerPages.length / 2) - 1, p + 1)); }}
+                            <button onClick={(e) => { e.stopPropagation(); setReaderPage(p => Math.min(Math.ceil(readerPages.length / 2) - 1, p + 1)); }}
                               disabled={readerPage >= Math.ceil(readerPages.length / 2) - 1}
-                              style={{
-                                background: 'none', border: 'none',
-                                cursor: readerPage >= Math.ceil(readerPages.length / 2) - 1 ? 'default' : 'pointer',
-                                color: readerPage >= Math.ceil(readerPages.length / 2) - 1 ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.5)',
-                                fontSize: '16px', padding: '2px 8px',
-                              }}
-                            >
-                              ›
-                            </button>
+                              style={{ background: 'none', border: 'none', cursor: readerPage >= Math.ceil(readerPages.length / 2) - 1 ? 'default' : 'pointer', color: readerPage >= Math.ceil(readerPages.length / 2) - 1 ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.5)', fontSize: '16px', padding: '2px 8px' }}>›</button>
                           </div>
                         </div>
                       ) : (
                         <div style={{ flex: 1, overflow: 'hidden' }}>
-                          <ContentViewer
-                            content={contentData}
-                            onClose={handleClose}
-                            windowMode
-                          />
+                          <ContentViewer content={contentData} onClose={handleClose} windowMode />
                         </div>
                       )
                     ) : (
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>
-                        Loading...
-                      </div>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>Loading...</div>
                     )}
                   </div>
                 )}
 
-                {/* Grain texture */}
-                <div style={{
-                  position: 'absolute', inset: 0, opacity: 0.04, pointerEvents: 'none',
-                  backgroundImage: 'radial-gradient(rgba(255,255,255,1) 1px, transparent 1px)',
-                  backgroundSize: '3px 3px', zIndex: 6,
-                }} />
-                {/* Light reflection */}
-                <div style={{
-                  position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 7,
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 40%)',
-                  borderRadius: '4px 10px 10px 4px',
-                }} />
-
-                {/* Page peel corner — visible when book is expanded, before content */}
-                {isSelected && phase === 'expanding' && (
+                {/* Book cover — peels away like opening a book from the right edge */}
+                {!isContent && (
                   <div
-                    onClick={(e) => { e.stopPropagation(); setPhase('content'); }}
-                    style={{ position: 'absolute', bottom: 0, right: 0, width: '80px', height: '80px', cursor: 'pointer', zIndex: 8 }}
+                    onClick={(e) => { e.stopPropagation(); if (phase === 'expanding') { setPhase('peeling'); setTimeout(() => setPhase('content'), 1000); } }}
+                    style={{
+                      position: 'absolute', inset: 0, zIndex: 2,
+                      transformOrigin: 'left center',
+                      transform: isPeeling ? 'rotateY(-160deg)' : 'rotateY(0deg)',
+                      transition: isPeeling ? 'transform 1s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
+                      cursor: phase === 'expanding' ? 'pointer' : 'default',
+                      backfaceVisibility: 'hidden',
+                    }}
                   >
-                    {/* Paper page underneath (peeking through) */}
-                    <div style={{
-                      position: 'absolute', bottom: 0, right: 0,
-                      width: '70px', height: '70px',
-                      background: 'linear-gradient(135deg, #f5f1ea 0%, #e8e4dc 60%, #d4d0c8 100%)',
-                      borderRadius: '0 0 10px 0',
-                      animation: 'contentFadeIn 0.5s ease-out 0.3s both',
-                    }} />
-                    {/* Curled cover corner peeling up */}
-                    <div style={{
-                      position: 'absolute', bottom: '3px', right: '3px',
-                      width: '50px', height: '50px',
-                      background: gradient,
-                      zIndex: 9,
-                      transformOrigin: 'bottom right',
-                      animation: 'pagePeelHint 3s ease-in-out 0.6s infinite',
-                      boxShadow: '-4px -4px 10px rgba(0,0,0,0.2)',
-                      clipPath: 'polygon(100% 0%, 0% 100%, 100% 100%)',
-                    }} />
+                    <Book3D
+                      book={book} isOpen={isOpen} isSelected={true} isHovered={false}
+                      phase={phase} gradient={gradient} rotY={0} rotX={0}
+                      contentData={null} readerMode={false} readerPages={[]}
+                      readerPage={0} setReaderMode={setReaderMode} setReaderPages={setReaderPages}
+                      setReaderPage={setReaderPage} handleClose={handleClose}
+                    />
                   </div>
                 )}
               </div>
-
-              {/* 3D page edges (right side) */}
-              <div style={{
-                position: 'absolute',
-                right: '-10px', top: '3px', bottom: '3px', width: '10px',
-                background: 'linear-gradient(90deg, #e8e4dc, #f5f1ea, #e0dcd4)',
-                borderRadius: '0 3px 3px 0',
-                transform: 'rotateY(90deg)',
-                transformOrigin: 'left center',
-                boxShadow: 'inset -2px 0 4px rgba(0,0,0,0.1)',
-              }} />
-              {/* 3D bottom edge */}
-              <div style={{
-                position: 'absolute',
-                left: '4px', right: '4px', bottom: '-8px', height: '8px',
-                background: 'linear-gradient(180deg, #e0dcd4, #d4d0c8)',
-                borderRadius: '0 0 3px 3px',
-                transform: 'rotateX(-90deg)',
-                transformOrigin: 'top center',
-                boxShadow: 'inset 0 -1px 3px rgba(0,0,0,0.1)',
-              }} />
-            </div>
-          );
-        })}
-      </div>
-    </>
+            );
+          })()}
+        </>,
+        document.body
+      )}
+    </div>
   );
 }
 
@@ -6648,15 +6608,13 @@ function Desktop() {
     const MIN_WIDTH_FOR_SLIDE = 1024;
     if (window.innerWidth < MIN_WIDTH_FOR_SLIDE) return;
 
-    const sideWindows = ['education', 'experience', 'stocks'] as const;
+    const sideWindows = ['education', 'experience', 'stocks', 'deep-research'] as const;
     const openSideWindow = sideWindows.find(id => {
       const w = state.windows[id];
       return w && w.isOpen && !w.isMinimized;
     });
 
-    // Floating books also act as a "side element" that needs terminal to slide over
-    const booksOpen = state.floatingBooksVisible;
-    const hasSideContent = openSideWindow || booksOpen;
+    const hasSideContent = !!openSideWindow;
 
     const screenW = window.innerWidth;
     const screenH = window.innerHeight;
@@ -6674,23 +6632,15 @@ function Desktop() {
       // Determine how much space the side content takes
       let sideW: number;
       let sideH: number;
-      if (openSideWindow) {
-        const sideWin = state.windows[openSideWindow]!;
-        sideW = sideWin.size.width;
-        sideH = sideWin.size.height;
-        // Place side window on right edge, vertically centered in usable area
-        const sideX = screenW - gap - sideW;
-        const sideY = menuBarH + Math.round((usableH - sideH) / 2);
-        if (Math.abs(sideWin.position.x - sideX) > 10 || Math.abs(sideWin.position.y - sideY) > 10) {
-          dispatch({ type: 'MOVE_WINDOW', id: openSideWindow, position: { x: sideX, y: sideY } });
-        }
-      } else {
-        // Floating books 2x2 grid takes ~560px on the right (2*210 + 16 gap + margins)
-        sideW = 2 * 210 + 16 + 120 + 40;  // grid + right margin + buffer
-        sideH = 700;
-      }
-
+      const sideWin = state.windows[openSideWindow]!;
+      sideW = sideWin.size.width;
+      sideH = sideWin.size.height;
+      // Place side window on right edge, vertically centered in usable area
       const sideX = screenW - gap - sideW;
+      const sideY = menuBarH + Math.round((usableH - sideH) / 2);
+      if (Math.abs(sideWin.position.x - sideX) > 10 || Math.abs(sideWin.position.y - sideY) > 10) {
+        dispatch({ type: 'MOVE_WINDOW', id: openSideWindow, position: { x: sideX, y: sideY } });
+      }
 
       // Check if terminal fits without shrinking
       const origTermW = terminalOrigRef.current.width;
@@ -6725,9 +6675,8 @@ function Desktop() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     // Stable dependency: only re-run when the set of open side windows changes
-    ['education', 'experience', 'stocks'].filter(id => state.windows[id]?.isOpen && !state.windows[id]?.isMinimized).join(','),
+    ['education', 'experience', 'stocks', 'deep-research'].filter(id => state.windows[id]?.isOpen && !state.windows[id]?.isMinimized).join(','),
     state.windows['terminal']?.isOpen,
-    state.floatingBooksVisible,
   ]);
 
   // Keyboard shortcuts
@@ -6756,7 +6705,7 @@ function Desktop() {
   if (isMobile) {
     return (
       <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0b1220' }}>
-        <MacBackground />
+        <Background />
         <BootScreen />
         {state.bootComplete && <MobileLayout />}
       </div>
@@ -6776,7 +6725,7 @@ function Desktop() {
         cursor: 'default',
       }}
     >
-      <MacBackground />
+      <Background />
       <BootScreen key={state.bootComplete ? 'booted' : 'booting'} />
 
       {state.bootComplete && (
@@ -6790,7 +6739,7 @@ function Desktop() {
             const titleBarBgMap: Record<string, string> = {
               projects: '#252526',
               blog: '#f0f0f0',
-              'deep-research': '#f0f0f0',
+              'deep-research': '#f5f5f5',
               calendar: '#ffffff',
               stocks: '#1c1c1e',
             };
@@ -6824,7 +6773,6 @@ function Desktop() {
             );
           })}
 
-          <FloatingBooks />
           <DesktopDock />
         </>
       )}
@@ -6884,7 +6832,7 @@ function MobileBooks({ onContentClick }: { onContentClick: (content: ContentView
 
   return (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-      {FLOATING_BOOKS.map((book, idx) => {
+      {BOOKS_DATA.map((book, idx) => {
         const gradient = `linear-gradient(160deg, ${book.coverGradient[0]}, ${book.coverGradient[1]}, ${book.coverGradient[2]})`;
         const isTapped = tapped === book.slug;
         return (
@@ -6916,13 +6864,26 @@ function MobileBooks({ onContentClick }: { onContentClick: (content: ContentView
             <div style={{ padding: '20px 18px 18px 24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {/* Company / Publisher tag */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{
-                  fontSize: '9px', fontWeight: 800, letterSpacing: '0.18em',
-                  color: book.coverAccent, fontFamily: "'SF Mono', monospace",
-                  textTransform: 'uppercase' as const,
-                }}>
-                  {book.company}
-                </span>
+                {book.company === 'NDX' ? (
+                  <img src="/NASDAQ_Logo.svg.png" alt="Nasdaq" height={16}
+                    style={{ filter: 'brightness(0) invert(1)', opacity: 0.9 }} />
+                ) : book.company === 'IKIGAI' ? (
+                  <img src="/ikigai.png" alt="Ikigai" height={24} style={{ opacity: 0.9 }} />
+                ) : book.company === 'SAP' ? (
+                  <img src="/sap_white_transparent.png" alt="SAP" height={18}
+                    style={{ opacity: 0.9 }} />
+                ) : book.company === 'DEEP FOCUS' ? (
+                  <img src="/lotus_white_transparent.png" alt="Deep Focus" height={24}
+                    style={{ opacity: 0.9 }} />
+                ) : (
+                  <span style={{
+                    fontSize: '9px', fontWeight: 800, letterSpacing: '0.18em',
+                    color: book.coverAccent, fontFamily: "'SF Mono', monospace",
+                    textTransform: 'uppercase' as const,
+                  }}>
+                    {book.company}
+                  </span>
+                )}
                 <span style={{
                   fontSize: '9px', color: 'rgba(255,255,255,0.35)',
                   fontFamily: "'SF Mono', monospace",
@@ -7190,7 +7151,7 @@ function MobileLayout() {
       </div>
     </div> },
     { id: 'ext', label: 'GitHub', icon: <div style={{ width: '52px', height: '52px', borderRadius: '13px', background: 'linear-gradient(135deg, #2d2d2d, #434343)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>, href: 'https://github.com/ronnielgandhe' },
-    { id: 'ext', label: 'Mail', icon: <img src="/mail.png" alt="Mail" style={{ width: '52px', height: '52px', borderRadius: '13px', objectFit: 'cover' }} />, href: 'mailto:ronnielgandhe@gmail.com' },
+    { id: 'ext', label: 'Mail', icon: <img src="/usethismailicon.png" alt="Mail" style={{ width: '52px', height: '52px', borderRadius: '13px', objectFit: 'cover' }} />, href: 'mailto:ronnielgandhe@gmail.com' },
     { id: 'ext', label: 'Spotify', icon: <img src="/spotify.png" alt="Spotify" style={{ width: '52px', height: '52px', borderRadius: '13px', objectFit: 'cover' }} />, href: 'https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8' },
     { id: 'ext', label: 'LinkedIn', icon: <div style={{ width: '52px', height: '52px', borderRadius: '13px', background: '#0A66C2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></div>, href: 'https://linkedin.com/in/ronniel-gandhe' },
   ];

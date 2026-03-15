@@ -65,7 +65,7 @@ export const WINDOW_DEFAULTS: Record<WindowId, { title: string; width: number; h
   education:       { title: 'Education — Finder',           width: 880, height: 780, x: 120, y: 50 },
   experience:      { title: 'Experience — Finder',          width: 960, height: 820, x: 160, y: 40 },
   projects:        { title: 'Projects — Visual Studio Code', width: 960, height: 680, x: 80, y: 35 },
-  'deep-research': { title: 'Deep Research — Preview',      width: 950, height: 680, x: 140, y: 50 },
+  'deep-research': { title: 'Books',                          width: 880, height: 620, x: 140, y: 50 },
   blog:            { title: 'My Thoughts — Notes',          width: 900, height: 620, x: 110, y: 60 },
   calendar:        { title: 'Calendar',                      width: 900, height: 680, x: 120, y: 40 },
   email:           { title: 'New Message',                   width: 640, height: 520, x: 180, y: 80 },
