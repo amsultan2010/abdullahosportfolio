@@ -5651,7 +5651,7 @@ function TerminalContent() {
       }}>
         {/* Hero text */}
         <div>
-          <div style={{ fontFamily: "'SF Mono', 'JetBrains Mono', monospace", fontSize: '14px', lineHeight: 1.6, color: '#e0e0e0' }}>
+          <div style={{ fontFamily: "'SF Mono', 'JetBrains Mono', monospace", fontSize: isFullscreen ? '15.5px' : '14px', lineHeight: 1.6, color: isFullscreen ? '#f0f0f0' : '#e0e0e0' }}>
             {isFullscreen ? (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
@@ -5822,8 +5822,8 @@ function TerminalContent() {
           {isFullscreen ? (
             <div style={{
               position: 'absolute', bottom: '40px', left: '16px',
-              display: 'flex', gap: '12px', alignItems: 'center',
-              fontFamily: "'SF Mono', monospace", fontSize: '12px',
+              display: 'flex', gap: '16px', alignItems: 'center',
+              fontFamily: "'SF Mono', monospace", fontSize: '15px',
               zIndex: 5,
             }}>
               <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
