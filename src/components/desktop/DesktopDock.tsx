@@ -270,48 +270,31 @@ function DockButton({ item, scale, isOpen, onClick }: {
 
 // ── Icon Components ────────────────────────────────────────────
 
-function DockImage({ src, alt, contain, cropScale }: { src: string; alt: string; contain?: boolean; cropScale?: number }) {
-  const s = contain ? BASE_SIZE - 2 : BASE_SIZE - 6;
-  if (cropScale) {
-    // Wrap in overflow:hidden container and scale image to crop dark edges
-    return (
-      <div style={{
-        width: `${s}px`,
-        height: `${s}px`,
-        borderRadius: '11px',
-        overflow: 'hidden',
-        pointerEvents: 'none',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <img
-          src={src}
-          alt={alt}
-          draggable={false}
-          style={{
-            width: `${s * cropScale}px`,
-            height: `${s * cropScale}px`,
-            objectFit: 'cover',
-            pointerEvents: 'none',
-          }}
-        />
-      </div>
-    );
-  }
+function DockImage({ src, alt, cropScale = 1.12 }: { src: string; alt: string; contain?: boolean; cropScale?: number }) {
+  const s = BASE_SIZE - 6;
   return (
-    <img
-      src={src}
-      alt={alt}
-      draggable={false}
-      style={{
-        width: `${s}px`,
-        height: `${s}px`,
-        borderRadius: '11px',
-        objectFit: contain ? 'contain' : 'cover',
-        pointerEvents: 'none',
-      }}
-    />
+    <div style={{
+      width: `${s}px`,
+      height: `${s}px`,
+      borderRadius: '11px',
+      overflow: 'hidden',
+      pointerEvents: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <img
+        src={src}
+        alt={alt}
+        draggable={false}
+        style={{
+          width: `${s * cropScale}px`,
+          height: `${s * cropScale}px`,
+          objectFit: 'cover',
+          pointerEvents: 'none',
+        }}
+      />
+    </div>
   );
 }
 

@@ -6922,7 +6922,7 @@ function Desktop() {
 }
 
 type MobileTab = 'home' | 'work' | 'projects' | 'research' | 'more';
-type MobileSection = 'education' | 'blog' | 'calendar' | 'stocks' | null;
+type MobileSection = 'education' | 'experience' | 'blog' | 'calendar' | 'stocks' | null;
 
 // ── MobileBooks: iOS Notes-style research articles ──
 function MobileBooks({ onContentClick }: { onContentClick: (content: ContentViewData) => void }) {
@@ -7209,15 +7209,35 @@ function MobileCalendarIcon() {
 }
 
 function MobileLayout() {
-  const [activeTab, setActiveTab] = useState<MobileTab>('home');
   const [activeSection, setActiveSection] = useState<MobileSection>(null);
   const [activeDetail, setActiveDetail] = useState<DetailContent | null>(null);
   const [activeContent, setActiveContent] = useState<ContentViewData | null>(null);
+  const [slideIndex, setSlideIndex] = useState(0);
+  const [cardFlipped, setCardFlipped] = useState(false);
+  const [expandedPanel, setExpandedPanel] = useState<'sound' | 'wifi' | 'notif' | null>(null);
+  const [mobileSpotify, setMobileSpotify] = useState<{ isPlaying: boolean; title: string; artist: string; albumArt: string; progressMs: number; durationMs: number; trackUrl?: string; fetchedAt?: number } | null>(null);
+  const [mobileLocation, setMobileLocation] = useState<{ city: string; region: string } | null>(null);
+
+  // Spotify polling for mobile control center
+  useEffect(() => {
+    const poll = () => {
+      fetch('/api/spotify').then(r => r.json()).then(d => {
+        if (d?.title) setMobileSpotify({ ...d, fetchedAt: Date.now() });
+        else setMobileSpotify(null);
+      }).catch(() => {});
+    };
+    poll();
+    const id = setInterval(poll, 15000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Location for WiFi panel
+  useEffect(() => {
+    fetch('https://ipapi.co/json/').then(r => r.json()).then(d => setMobileLocation({ city: d.city, region: d.region_code || d.region })).catch(() => setMobileLocation({ city: 'Toronto', region: 'ON' }));
+  }, []);
 
   const handleCardClick = (detail: DetailContent) => setActiveDetail(detail);
   const handleContentClick = (content: ContentViewData) => setActiveContent(content);
-
-  const goToTab = (tab: MobileTab) => { setActiveTab(tab); setActiveSection(null); };
 
   // Shared styles
   const glass: React.CSSProperties = {
@@ -7231,298 +7251,42 @@ function MobileLayout() {
   const sHead: React.CSSProperties = { color: '#fff', fontSize: '10px', fontWeight: 700, letterSpacing: '0.14em', marginBottom: '6px', fontFamily: "'SF Mono', monospace" };
   const sPara: React.CSSProperties = { color: 'rgba(255,255,255,0.88)', fontSize: '13px', lineHeight: 1.6, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 };
 
-  const dockIcon = (src: string, alt: string) => (
-    <img src={src} alt={alt} style={{ width: '28px', height: '28px', borderRadius: '7px', objectFit: 'cover', pointerEvents: 'none' }} />
-  );
+  const SLIDE_TITLES = ['ABOUT', 'SOFTWARE', 'READING', 'CURRENT FOCUS'];
+  const nextSlide = () => setSlideIndex(i => (i + 1) % 4);
+  const prevSlide = () => setSlideIndex(i => (i + 3) % 4);
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const TABS: { id: MobileTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'home', label: 'Terminal', icon: dockIcon('/usethisTERMIANL.png', 'Terminal') },
-    { id: 'work', label: 'Work', icon: <span style={{ fontSize: '24px' }}>💼</span> },
-    { id: 'projects', label: 'Projects', icon: dockIcon('/vscode.png', 'VS Code') },
-    { id: 'research', label: 'Research', icon: dockIcon('/books.png', 'Books') },
-    { id: 'more', label: 'More', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-  ];
-
-  const QUICK_START = [
-    { id: 'work' as MobileTab, label: 'experience', color: '#c084fc', icon: '💼' },
-    { id: 'education' as const, label: 'education', color: '#60a5fa', icon: '🎓', section: true },
-    { id: 'projects' as MobileTab, label: 'projects', color: '#4ade80', icon: '⚡' },
-    { id: 'stocks' as const, label: 'stocks', color: '#4ade80', icon: '📈', section: true },
-    { id: 'research' as MobileTab, label: 'research', color: '#f472b6', icon: '🔬' },
-    { id: 'blog' as const, label: 'notes', color: '#fbbf24', icon: '✍️', section: true },
-  ];
-
-  const DRAWER_APPS: { id: MobileSection | 'ext'; label: string; icon: React.ReactNode; href?: string }[] = [
-    { id: 'education', label: 'Photos', icon: <img src="/icons/photos.png" alt="Education" style={{ width: '52px', height: '52px', borderRadius: '13px', objectFit: 'cover' }} /> },
-    { id: 'blog', label: 'Notes', icon: <img src="/notes.png" alt="Notes" style={{ width: '52px', height: '52px', borderRadius: '13px', objectFit: 'cover' }} /> },
-    { id: 'stocks', label: 'Stocks', icon: <img src="/usethisonestocks1111.png" alt="Stocks" style={{ width: '52px', height: '52px', borderRadius: '13px', objectFit: 'cover' }} /> },
-    { id: 'calendar', label: 'Calendar', icon: <div style={{ width: '52px', height: '52px', borderRadius: '13px', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: '#fff' }}>
-      <div style={{ height: '16px', background: '#ea4335', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: '8px', fontWeight: 800, color: 'white', letterSpacing: '0.5px' }}>{new Date().toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}</span>
-      </div>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
-        <span style={{ fontSize: '24px', fontWeight: 300, color: '#1a1a1a', lineHeight: 1 }}>{new Date().getDate()}</span>
-      </div>
-    </div> },
-    { id: 'ext', label: 'GitHub', icon: <div style={{ width: '52px', height: '52px', borderRadius: '13px', background: 'linear-gradient(135deg, #2d2d2d, #434343)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>, href: 'https://github.com/ronnielgandhe' },
-    { id: 'ext', label: 'Mail', icon: <img src="/usethismailicon.png" alt="Mail" style={{ width: '52px', height: '52px', borderRadius: '13px', objectFit: 'cover' }} />, href: 'mailto:ronnielgandhe@gmail.com' },
-    { id: 'ext', label: 'Spotify', icon: <img src="/spotify.png" alt="Spotify" style={{ width: '52px', height: '52px', borderRadius: '13px', objectFit: 'cover' }} />, href: 'https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8' },
-    { id: 'ext', label: 'LinkedIn', icon: <div style={{ width: '52px', height: '52px', borderRadius: '13px', background: '#0A66C2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></div>, href: 'https://linkedin.com/in/ronniel-gandhe' },
-  ];
-
-  // ── Home Tab Content ──
-  const HomeContent = () => (
-    <div style={{ padding: '0 20px 120px', animation: 'mobileFadeIn 0.4s ease-out' }}>
-      {/* Scrolling ticker strip */}
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 10,
-        padding: '10px 0', marginBottom: '16px',
-        fontFamily: "'SF Mono', monospace", fontSize: '10px',
-        background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        marginLeft: '-20px', marginRight: '-20px',
-        borderBottom: '0.5px solid rgba(255,255,255,0.06)',
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          display: 'inline-flex', gap: '24px', whiteSpace: 'nowrap',
-          animation: 'tickerScroll 20s linear infinite',
-          paddingLeft: '20px',
-        }}>
-          <CompactTickers /><span style={{ color: 'rgba(255,255,255,0.1)' }}>│</span>
-          <CompactTickers /><span style={{ color: 'rgba(255,255,255,0.1)' }}>│</span>
-          <CompactTickers />
-        </div>
-      </div>
-
-      {/* Hero card */}
-      <div style={{ ...glass, padding: 0, overflow: 'hidden', marginBottom: '20px' }}>
-        {/* Title bar */}
-        <div style={{
-          display: 'flex', alignItems: 'center', padding: '10px 14px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)',
-        }}>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f57' }} />
-            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#febc2e' }} />
-            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#28c840' }} />
-          </div>
-          <span style={{ flex: 1, textAlign: 'center', fontFamily: "'SF Mono', monospace", fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
-            ronnielgandhe.tech — zsh
-          </span>
-          <div style={{ width: '42px' }} />
-        </div>
-        {/* Hero content */}
-        <div style={{ padding: '20px 18px 24px' }}>
-          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '28px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
-            Ronniel Gandhe
-          </div>
-          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Pro Text', sans-serif", marginBottom: '12px' }}>
-            Software Engineer
-          </div>
-          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.5, fontFamily: "'SF Mono', monospace" }}>
-            Using <RotatingWords /> to create<br />elegant and scalable solutions<br />to real world problems.
-          </div>
-          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Pro Text', sans-serif", marginTop: '12px' }}>
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-          </div>
-        </div>
-      </div>
-
-      {/* About */}
-      <div style={{ ...glass, padding: '18px', marginBottom: '14px' }}>
-        <div style={sHead}>ABOUT</div>
-        <div style={sPara}>
-          Currently based in Waterloo, Canada. Most of my time is spent building software, studying markets, and trying to understand systems that actually move money and incentives in the real world.
-        </div>
-        <div style={{ ...sPara, marginTop: '8px' }}>
-          Over the last few years I have moved between software engineering, data science, and financial markets. Some of that was intentional. Some of it was just curiosity turning into a rabbit hole that got deeper than expected.
-        </div>
-      </div>
-
-      {/* Software */}
-      <div style={{ ...glass, padding: '18px', marginBottom: '14px' }}>
-        <div style={sHead}>SOFTWARE</div>
-        <div style={sPara}>
-          Software is probably the most powerful skill you can have right now. If you know how to code, you can build almost anything. You do not need permission from anyone, you just sit down and make it.
-        </div>
-      </div>
-
-      {/* Reading + Current Focus side by side */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
-        <div style={{ ...glass, padding: '16px', flex: 1 }}>
-          <div style={sHead}>READING</div>
-          {['Zero to One — Thiel', "Poor Charlie's Almanack", 'The Power Broker — Caro', 'Laws of Human Nature'].map((book, i) => (
-            <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginBottom: '3px' }}>
-              <span style={{ color: '#fff', fontSize: '8px', fontFamily: "'SF Mono', monospace" }}>›</span>
-              <span style={{ ...sPara, fontSize: '11px', lineHeight: 1.45 }}>{book}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{ ...glass, padding: '16px', flex: 1 }}>
-          <div style={sHead}>CURRENT FOCUS</div>
-          {['Building software & internal tools', 'Studying financial markets', 'Turning ideas into products'].map((item, i) => (
-            <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginBottom: '3px' }}>
-              <span style={{ color: '#fff', fontSize: '8px', fontFamily: "'SF Mono', monospace" }}>›</span>
-              <span style={{ ...sPara, fontSize: '11px', lineHeight: 1.45 }}>{item}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Online links */}
-      <div style={{ ...glass, padding: '16px', marginBottom: '14px' }}>
-        <div style={sHead}>ONLINE</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <a href="https://www.instagram.com/ronnielgandhe/" target="_blank" rel="noopener" style={{ ...sPara, fontSize: '12px', textDecoration: 'none' }}>
-            <span style={{ color: '#E1306C' }}>Instagram</span> <span style={{ color: '#fff' }}>— @ronnielgandhe</span>
-          </a>
-          <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ ...sPara, fontSize: '12px', textDecoration: 'none' }}>
-            <span style={{ color: '#0A66C2' }}>LinkedIn</span> <span style={{ color: '#fff' }}>— the professional version of me</span>
-          </a>
-          <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ ...sPara, fontSize: '12px', textDecoration: 'none' }}>
-            <span style={{ color: '#8b949e' }}>GitHub</span> <span style={{ color: '#fff' }}>— projects and experiments</span>
-          </a>
-        </div>
-      </div>
-
-      {/* Quick Start Grid */}
-      <div style={{ marginBottom: '14px' }}>
-        <div style={{ ...sHead, marginBottom: '10px', paddingLeft: '2px' }}>QUICK START</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-          {QUICK_START.map(qs => (
-            <button
-              key={qs.label}
-              onClick={() => {
-                if ('section' in qs && qs.section) {
-                  setActiveSection(qs.id as MobileSection);
-                } else {
-                  goToTab(qs.id as MobileTab);
-                }
-              }}
-              style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-                padding: '12px 6px', borderRadius: '12px',
-                background: `${qs.color}18`, border: `1px solid ${qs.color}30`,
-                color: qs.color, fontSize: '10px', fontWeight: 600,
-                fontFamily: "'SF Mono', monospace", cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              <span style={{ fontSize: '18px' }}>{qs.icon}</span>
-              {qs.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Spotify */}
-      <div style={{ ...glass, padding: '14px', marginBottom: '14px' }}>
-        <NowPlaying />
-      </div>
-
-      {/* Contact */}
-      <div style={{ ...glass, padding: '16px', marginBottom: '20px' }}>
-        <div style={sHead}>CONTACT</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontFamily: "'SF Mono', monospace", fontSize: '12px' }}>
-          <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>💼 linkedin.com/in/ronniel-gandhe</a>
-          <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>🐙 github.com/ronnielgandhe</a>
-          <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fff', textDecoration: 'none' }}>✉️ ronnielgandhe@gmail.com</a>
-          <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
-        </div>
-      </div>
-
-      {/* Watch */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-        <ChronographWatch />
-      </div>
-
-      {/* World Clocks */}
-      <div style={{ textAlign: 'center', fontFamily: "'SF Mono', monospace", fontSize: '10px', marginBottom: '20px' }}>
-        <CompactClocks />
-      </div>
+  const mIcon = (src: string, alt: string, scale = 1.12) => (
+    <div style={{ width: '56px', height: '56px', borderRadius: '14px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <img src={src} alt={alt} style={{ width: `${56 * scale}px`, height: `${56 * scale}px`, objectFit: 'cover', pointerEvents: 'none' }} />
     </div>
   );
 
-  // ── Section Content (Work, Projects, Research tabs) ──
-  const SectionTab = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', animation: 'mobileFadeIn 0.3s ease-out' }}>
-      {/* Header */}
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 10,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '14px 16px', minHeight: '50px',
-        background: 'rgba(10, 12, 20, 0.88)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: '0.5px solid rgba(255,255,255,0.08)',
-      }}>
-        <span style={{ fontFamily: "'SF Mono', monospace", fontSize: '13px', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
-          {title}
-        </span>
-      </div>
-      {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', paddingBottom: '100px' }}>
-        {children}
-      </div>
-    </div>
-  );
-
-  // ── App Drawer (slide-up from bottom) ──
-  const AppDrawer = () => (
-    <>
-      {/* Backdrop */}
-      <div
-        onClick={() => setDrawerOpen(false)}
-        style={{
-          position: 'fixed', inset: 0, zIndex: 60,
-          background: 'rgba(0,0,0,0.5)',
-          animation: 'mobileFadeIn 0.2s ease-out',
-        }}
-      />
-      {/* Drawer */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 70,
-        background: 'rgba(20, 20, 28, 0.95)',
-        backdropFilter: 'saturate(180%) blur(40px)', WebkitBackdropFilter: 'saturate(180%) blur(40px)',
-        borderTop: '0.5px solid rgba(255,255,255,0.12)',
-        borderRadius: '20px 20px 0 0',
-        padding: '12px 20px', paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 16px)',
-        animation: 'mobileDrawerUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-      }}>
-        {/* Handle bar */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-          <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.2)' }} />
+  const APP_GRID: { label: string; icon: React.ReactNode; action: () => void }[] = [
+    { label: 'VS Code', icon: mIcon('/vscode.png', 'VS Code'), action: () => setActiveSection('experience') },
+    { label: 'Deep Research', icon: mIcon('/books.png', 'Deep Research', 1.18), action: () => setActiveSection('blog') },
+    { label: 'My Thoughts', icon: mIcon('/notes.png', 'My Thoughts'), action: () => setActiveSection('blog') },
+    { label: 'Stocks', icon: mIcon('/usethisonestocks1111.png', 'Stocks'), action: () => setActiveSection('stocks') },
+    { label: 'Photos', icon: mIcon('/icons/photos.png', 'Photos'), action: () => setActiveSection('education') },
+    { label: 'Calendar', icon: (() => {
+      const now = new Date();
+      const monthStr = now.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+      const dayNum = now.getDate();
+      return (
+        <div style={{ width: '56px', height: '56px', borderRadius: '14px', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: '#fff' }}>
+          <div style={{ height: '18px', background: '#ea4335', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '9px', fontWeight: 800, color: 'white', letterSpacing: '0.5px' }}>{monthStr}</span>
+          </div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+            <span style={{ fontSize: '22px', fontWeight: 300, color: '#1a1a1a', lineHeight: 1 }}>{dayNum}</span>
+          </div>
         </div>
-        {/* App grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', justifyItems: 'center' }}>
-          {DRAWER_APPS.map((app, i) => (
-            <button
-              key={`${app.label}-${i}`}
-              onClick={() => {
-                setDrawerOpen(false);
-                if (app.href) {
-                  if (app.href.startsWith('mailto:')) window.location.href = app.href;
-                  else window.open(app.href, '_blank');
-                } else if (app.id !== 'ext') {
-                  setActiveSection(app.id as MobileSection);
-                }
-              }}
-              style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
-                background: 'none', border: 'none', cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent', padding: 0,
-              }}
-            >
-              {app.icon}
-              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)', fontFamily: "'SF Pro Text', sans-serif", fontWeight: 500 }}>
-                {app.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </>
-  );
+      );
+    })(), action: () => setActiveSection('calendar') },
+    { label: 'GitHub', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'linear-gradient(135deg, #2d2d2d, #434343)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>, action: () => window.open('https://github.com/ronnielgandhe', '_blank') },
+    { label: 'Mail', icon: mIcon('/usethismailicon.png', 'Mail', 1.25), action: () => { window.location.href = 'mailto:ronnielgandhe@gmail.com'; } },
+    { label: 'Spotify', icon: mIcon('/spotify.png', 'Spotify'), action: () => window.open('https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8', '_blank') },
+    { label: 'LinkedIn', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: '#0A66C2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></div>, action: () => window.open('https://linkedin.com/in/ronniel-gandhe', '_blank') },
+  ];
 
   return (
     <div style={{
@@ -7530,68 +7294,297 @@ function MobileLayout() {
       animation: 'mobileFadeIn 0.6s ease-out',
       touchAction: 'manipulation',
     }}>
-      {/* Main content area */}
+      {/* Main scrollable content */}
       <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', position: 'relative' }}>
-        {activeTab === 'home' && <HomeContent />}
-        {activeTab === 'work' && (
-          <SectionTab title="Experience">
-            <Experience onCardClick={handleCardClick} windowMode />
-          </SectionTab>
-        )}
-        {activeTab === 'projects' && (
-          <SectionTab title="Projects">
-            <MobileProjects onCardClick={handleCardClick} />
-          </SectionTab>
-        )}
-        {activeTab === 'research' && (
-          <SectionTab title="Deep Research">
-            <MobileBooks onContentClick={handleContentClick} />
-          </SectionTab>
-        )}
-        {/* Drawer renders as overlay, not a tab */}
-      </div>
+        <div style={{ padding: '0 20px 40px', animation: 'mobileFadeIn 0.4s ease-out' }}>
+          {/* Scrolling ticker strip */}
+          <div style={{
+            position: 'sticky', top: 0, zIndex: 10,
+            padding: '10px 0', marginBottom: '16px',
+            fontFamily: "'SF Mono', monospace", fontSize: '10px',
+            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+            marginLeft: '-20px', marginRight: '-20px',
+            borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              display: 'inline-flex', gap: '24px', whiteSpace: 'nowrap',
+              animation: 'tickerScroll 20s linear infinite',
+              paddingLeft: '20px',
+            }}>
+              <CompactTickers /><span style={{ color: 'rgba(255,255,255,0.1)' }}>│</span>
+              <CompactTickers /><span style={{ color: 'rgba(255,255,255,0.1)' }}>│</span>
+              <CompactTickers />
+            </div>
+          </div>
 
-      {/* ── Bottom Tab Bar ── */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-        display: 'flex', justifyContent: 'space-around', alignItems: 'center',
-        height: '80px', paddingBottom: 'env(safe-area-inset-bottom, 16px)',
-        background: 'rgba(10, 10, 18, 0.75)',
-        backdropFilter: 'saturate(180%) blur(28px)', WebkitBackdropFilter: 'saturate(180%) blur(28px)',
-        borderTop: '0.5px solid rgba(255,255,255,0.1)',
-      }}>
-        {TABS.map(tab => {
-          const isActive = tab.id === 'more' ? drawerOpen : activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => {
-                if (tab.id === 'more') { setDrawerOpen(prev => !prev); return; }
-                setDrawerOpen(false);
-                goToTab(tab.id);
-              }}
+          {/* Flippable Hero Card */}
+          <div style={{ perspective: '1000px', marginBottom: '20px' }}>
+            <div
+              onClick={() => setCardFlipped(f => !f)}
               style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: isActive ? '#60a5fa' : 'rgba(255,255,255,0.35)',
-                fontSize: '10px', fontWeight: isActive ? 600 : 500,
-                fontFamily: "'SF Pro Text', -apple-system, sans-serif",
-                padding: '6px 12px',
-                WebkitTapHighlightColor: 'transparent',
-                transition: 'color 0.2s ease',
+                position: 'relative',
+                transformStyle: 'preserve-3d',
+                transform: cardFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                cursor: 'pointer',
               }}
             >
-              {tab.icon}
-              {tab.label}
+              {/* Front: Hero */}
+              <div style={{
+                ...glass, padding: 0, overflow: 'hidden',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+              }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', padding: '10px 14px',
+                  borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)',
+                }}>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f57' }} />
+                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#febc2e' }} />
+                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#28c840' }} />
+                  </div>
+                  <span style={{ flex: 1, textAlign: 'center', fontFamily: "'SF Mono', monospace", fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
+                    ronnielgandhe.tech — zsh
+                  </span>
+                  <div style={{ width: '42px' }} />
+                </div>
+                <div style={{ padding: '20px 18px 24px' }}>
+                  <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '28px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
+                    Ronniel Gandhe
+                  </div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Pro Text', sans-serif", marginBottom: '12px' }}>
+                    Software Engineer
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.5, fontFamily: "'SF Mono', monospace" }}>
+                    Using <RotatingWords /> to create<br />elegant and scalable solutions<br />to real world problems.
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Pro Text', sans-serif" }}>
+                      {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Mono', monospace" }}>tap to flip ↻</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Back: Slides */}
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  ...glass, padding: '18px',
+                  position: 'absolute', top: 0, left: 0, right: 0,
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  transform: 'rotateY(180deg)',
+                  minHeight: '100%',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <button onClick={(e) => { e.stopPropagation(); prevSlide(); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: '16px', cursor: 'pointer', padding: '4px 8px', WebkitTapHighlightColor: 'transparent' }}>‹</button>
+                  <div style={sHead}>{SLIDE_TITLES[slideIndex]}</div>
+                  <button onClick={(e) => { e.stopPropagation(); nextSlide(); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: '16px', cursor: 'pointer', padding: '4px 8px', WebkitTapHighlightColor: 'transparent' }}>›</button>
+                </div>
+                <div key={slideIndex} style={{ animation: 'mobileFadeIn 0.25s ease-out' }}>
+                  {slideIndex === 0 && (
+                    <div>
+                      <div style={sPara}>
+                        Currently based in Waterloo, Canada. Most of my time is spent building software, studying markets, and trying to understand systems that actually move money and incentives in the real world.
+                      </div>
+                      <div style={{ ...sPara, marginTop: '8px' }}>
+                        Over the last few years I have moved between software engineering, data science, and financial markets. Some of that was intentional. Some of it was just curiosity turning into a rabbit hole that got deeper than expected.
+                      </div>
+                    </div>
+                  )}
+                  {slideIndex === 1 && (
+                    <div style={sPara}>
+                      Software is probably the most powerful skill you can have right now. If you know how to code, you can build almost anything. You do not need permission from anyone, you just sit down and make it.
+                    </div>
+                  )}
+                  {slideIndex === 2 && (
+                    <div>
+                      {['Zero to One — Thiel', "Poor Charlie's Almanack", 'The Power Broker — Caro', 'Laws of Human Nature'].map((book, i) => (
+                        <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginBottom: '3px' }}>
+                          <span style={{ color: '#fff', fontSize: '8px', fontFamily: "'SF Mono', monospace" }}>›</span>
+                          <span style={{ ...sPara, fontSize: '12px', lineHeight: 1.45 }}>{book}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {slideIndex === 3 && (
+                    <div>
+                      {['Building software & internal tools', 'Studying financial markets', 'Turning ideas into products'].map((item, i) => (
+                        <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginBottom: '3px' }}>
+                          <span style={{ color: '#fff', fontSize: '8px', fontFamily: "'SF Mono', monospace" }}>›</span>
+                          <span style={{ ...sPara, fontSize: '12px', lineHeight: 1.45 }}>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {[0, 1, 2, 3].map(i => (
+                      <div key={i} style={{
+                        width: i === slideIndex ? '16px' : '6px', height: '6px',
+                        borderRadius: '3px',
+                        background: i === slideIndex ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.2)',
+                        transition: 'all 0.2s ease',
+                      }} />
+                    ))}
+                  </div>
+                  <div onClick={(e) => { e.stopPropagation(); setCardFlipped(false); }} style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Mono', monospace", cursor: 'pointer' }}>↻ flip back</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* App Grid (iOS home screen style) */}
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '18px 12px', justifyItems: 'center' }}>
+              {APP_GRID.map((app, i) => (
+                <button
+                  key={`${app.label}-${i}`}
+                  onClick={app.action}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    WebkitTapHighlightColor: 'transparent', padding: 0,
+                  }}
+                >
+                  {app.icon}
+                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)', fontFamily: "'SF Pro Text', sans-serif", fontWeight: 500 }}>
+                    {app.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Watch */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+            <ChronographWatch />
+          </div>
+
+          {/* World Clocks */}
+          <div style={{ textAlign: 'center', fontFamily: "'SF Mono', monospace", fontSize: '10px', marginBottom: '14px' }}>
+            <CompactClocks />
+          </div>
+
+          {/* Control Center: Sound, WiFi, Notifications */}
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+            {/* Sound / Spotify */}
+            <button onClick={() => setExpandedPanel(expandedPanel === 'sound' ? null : 'sound')} style={{
+              ...glass, flex: 1, padding: '14px', border: expandedPanel === 'sound' ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.08)',
+              cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+              WebkitTapHighlightColor: 'transparent', color: '#fff', textAlign: 'center',
+            }}>
+              <svg width="20" height="18" viewBox="0 0 16 14" fill="none">
+                <path d="M2 5h2l4-3v10l-4-3H2a1 1 0 01-1-1V6a1 1 0 011-1z" fill="rgba(255,255,255,0.9)" />
+                <path d="M11 4.5a3.5 3.5 0 010 5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+                <path d="M13 2.5a6.5 6.5 0 010 9" stroke="rgba(255,255,255,0.5)" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+              </svg>
+              <span style={{ fontSize: '10px', fontFamily: "'SF Pro Text', sans-serif", fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>Sound</span>
             </button>
-          );
-        })}
+
+            {/* WiFi */}
+            <button onClick={() => setExpandedPanel(expandedPanel === 'wifi' ? null : 'wifi')} style={{
+              ...glass, flex: 1, padding: '14px', border: expandedPanel === 'wifi' ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.08)',
+              cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+              WebkitTapHighlightColor: 'transparent', color: '#fff', textAlign: 'center',
+            }}>
+              <svg width="20" height="16" viewBox="0 0 16 12" fill="none">
+                <path d="M8 10.5a1 1 0 100-2 1 1 0 000 2z" fill="rgba(255,255,255,1)" />
+                <path d="M5.17 7.17a4 4 0 015.66 0" stroke="rgba(255,255,255,0.9)" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+                <path d="M2.93 4.93a7 7 0 0110.14 0" stroke="rgba(255,255,255,0.75)" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+              </svg>
+              <span style={{ fontSize: '10px', fontFamily: "'SF Pro Text', sans-serif", fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>Wi-Fi</span>
+            </button>
+
+            {/* Notifications */}
+            <button onClick={() => setExpandedPanel(expandedPanel === 'notif' ? null : 'notif')} style={{
+              ...glass, flex: 1, padding: '14px', border: expandedPanel === 'notif' ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.08)',
+              cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+              WebkitTapHighlightColor: 'transparent', color: '#fff', textAlign: 'center',
+            }}>
+              <svg width="18" height="20" viewBox="0 0 16 18" fill="none">
+                <path d="M8 1a4 4 0 00-4 4v3l-2 2v1h12v-1l-2-2V5a4 4 0 00-4-4z" fill="rgba(255,255,255,0.9)" />
+                <path d="M6 14a2 2 0 004 0" stroke="rgba(255,255,255,0.9)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+              </svg>
+              <span style={{ fontSize: '10px', fontFamily: "'SF Pro Text', sans-serif", fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>Activity</span>
+            </button>
+          </div>
+
+          {/* Expanded Panel */}
+          {expandedPanel === 'sound' && (
+            <div style={{ ...glass, padding: '16px', marginBottom: '14px', animation: 'mobileFadeIn 0.2s ease-out' }}>
+              <div style={{ ...sHead, marginBottom: '10px' }}>{mobileSpotify?.isPlaying ? '♫ NOW PLAYING' : '♫ SPOTIFY'}</div>
+              {mobileSpotify ? (
+                <div>
+                  <a href={mobileSpotify.trackUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', gap: '12px', alignItems: 'center', textDecoration: 'none', color: 'inherit', marginBottom: '12px' }}>
+                    {mobileSpotify.albumArt && <img src={mobileSpotify.albumArt} alt="" style={{ width: '52px', height: '52px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />}
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mobileSpotify.title}</div>
+                      <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mobileSpotify.artist}</div>
+                      <div style={{ fontSize: '10px', color: '#1DB954', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                        Spotify
+                      </div>
+                    </div>
+                  </a>
+                  {/* Progress bar */}
+                  <div style={{ height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${mobileSpotify.durationMs > 0 ? (mobileSpotify.progressMs / mobileSpotify.durationMs) * 100 : 0}%`, background: '#1DB954', borderRadius: '2px' }} />
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '12px 0', color: 'rgba(255,255,255,0.4)', fontSize: '13px' }}>Not currently playing</div>
+              )}
+              {/* Volume slider */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '14px' }}>
+                <svg width="12" height="10" viewBox="0 0 16 14" fill="none" style={{ opacity: 0.45, flexShrink: 0 }}>
+                  <path d="M2 5h2l4-3v10l-4-3H2a1 1 0 01-1-1V6a1 1 0 011-1z" fill="rgba(255,255,255,0.55)" />
+                </svg>
+                <div style={{ flex: 1, height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', position: 'relative' }}>
+                  <div style={{ height: '100%', width: '70%', background: 'rgba(255,255,255,0.4)', borderRadius: '2px' }} />
+                  <div style={{ position: 'absolute', top: '-4px', left: '70%', transform: 'translateX(-50%)', width: '10px', height: '10px', borderRadius: '50%', background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
+                </div>
+                <svg width="14" height="10" viewBox="0 0 16 14" fill="none" style={{ opacity: 0.45, flexShrink: 0 }}>
+                  <path d="M2 5h2l4-3v10l-4-3H2a1 1 0 01-1-1V6a1 1 0 011-1z" fill="rgba(255,255,255,0.55)" />
+                  <path d="M11 4.5a3.5 3.5 0 010 5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+                  <path d="M13 2.5a6.5 6.5 0 010 9" stroke="rgba(255,255,255,0.25)" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+                </svg>
+              </div>
+            </div>
+          )}
+
+          {expandedPanel === 'wifi' && (
+            <div style={{ ...glass, padding: 0, marginBottom: '14px', animation: 'mobileFadeIn 0.2s ease-out', overflow: 'hidden' }}>
+              <WifiSettings />
+            </div>
+          )}
+
+          {expandedPanel === 'notif' && (
+            <div style={{ ...glass, padding: '14px', marginBottom: '14px', animation: 'mobileFadeIn 0.2s ease-out' }}>
+              <GitHubHeatmap />
+            </div>
+          )}
+
+          {/* Contact */}
+          <div style={{ ...glass, padding: '16px', marginBottom: '20px' }}>
+            <div style={sHead}>CONTACT</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontFamily: "'SF Mono', monospace", fontSize: '12px' }}>
+              <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>💼 linkedin.com/in/ronniel-gandhe</a>
+              <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>🐙 github.com/ronnielgandhe</a>
+              <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fff', textDecoration: 'none' }}>✉️ ronnielgandhe@gmail.com</a>
+              <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* ── App Drawer ── */}
-      {drawerOpen && <AppDrawer />}
-
-      {/* ── Section Overlay (from More tab) ── */}
+      {/* ── Section Overlay ── */}
       {activeSection && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 100,
@@ -7620,13 +7613,14 @@ function MobileLayout() {
               ← Back
             </button>
             <span style={{ fontFamily: "'SF Mono', monospace", fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>
-              {activeSection === 'education' ? 'Education' : activeSection === 'blog' ? 'My Thoughts' : activeSection === 'stocks' ? 'Stocks' : 'Calendar'}
+              {activeSection === 'education' ? 'Photos' : activeSection === 'experience' ? 'Experience' : activeSection === 'blog' ? 'My Thoughts' : activeSection === 'stocks' ? 'Stocks' : 'Calendar'}
             </span>
             <div style={{ width: '50px' }} />
           </div>
           {/* Section content */}
           <div style={{ flex: 1, paddingBottom: '40px' }}>
             {activeSection === 'education' && <Education onCardClick={handleCardClick} windowMode />}
+            {activeSection === 'experience' && <Experience onCardClick={handleCardClick} windowMode />}
             {activeSection === 'blog' && <Blog onContentClick={handleContentClick} windowMode />}
             {activeSection === 'stocks' && <MobileStocks />}
             {activeSection === 'calendar' && <Calendar windowMode />}
