@@ -49,6 +49,35 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
 
   const projects = [
     {
+      id: 0,
+      title: "RonnielOS",
+      description: "My portfolio reimagined as a fully interactive macOS desktop environment. Draggable windows, a working terminal, stock tracker, notification center, Spotify integration — all running in your browser.",
+      gradient: "#000000",
+      coverImage: "/icons/rglogo.png",
+      repoUrl: "https://github.com/ronnielgandhe/rg-portfolio",
+      detail: {
+        type: 'project' as const,
+        id: 0,
+        title: "RonnielOS",
+        gradient: "#000000",
+        coverImage: "/icons/rglogo.png",
+        liveUrl: "/desktop",
+        architecture: "Full macOS desktop in React + Astro. Reducer-based window management, spring-physics dock, live Spotify menu bar, OpenAI terminal.",
+        technicalChallenges: [
+          "Window management with focus stacking and z-index tracking in React",
+          "Real-time Spotify integration with graceful fallbacks",
+          "Dual desktop + iOS mobile experience from shared components"
+        ],
+        lessonsLearned: [
+          "Reducer-based state scales better than useState for coordinating windows",
+          "Dock magnification needs cosine falloff for natural feel",
+          "Abstracting interaction patterns enables desktop + mobile from one codebase"
+        ],
+        techStack: ["React", "TypeScript", "Astro", "Three.js", "Framer Motion", "OpenAI"],
+        repoUrl: "https://github.com/ronnielgandhe/rg-portfolio"
+      } satisfies ProjectDetail
+    },
+    {
       id: 1,
       title: "QuantZoo",
       description: "Production-grade Python framework for systematic strategy research, backtesting, walk-forward validation, real-time streaming, and risk analytics. Built with PyTorch, Hugging Face, and FastAPI.",
@@ -266,9 +295,18 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
                 background: project.gradient,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                position: 'relative'
               }}>
-                {project.coverImage ? (
+                {project.id === 0 && project.coverImage ? (
+                  <div style={{ width: '100%', height: '100%', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img
+                      src={project.coverImage}
+                      alt={`${project.title} logo`}
+                      style={{ width: '80px', height: '80px', opacity: 0.6, filter: 'brightness(0) invert(1)' }}
+                    />
+                  </div>
+                ) : project.coverImage ? (
                   <img
                     src={project.coverImage}
                     alt={`${project.title} preview`}

@@ -82,6 +82,22 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
       summary: "Why do insanely talented people fail while mediocre disciplined people win? The answer lies not in ability, but in the neurochemistry of consistency and the mathematics of showing up.",
       tags: ["Psychology", "Behavioral Economics", "Research"],
       readingTime: 16
+    },
+    {
+      slug: "enterprise-software-cost",
+      company: "SAP",
+      title: "Why Enterprise Software Costs Millions",
+      summary: "Understanding why companies pay enormous sums for tools that often look like spreadsheets.",
+      tags: ["Technology", "Business", "Enterprise", "Research"],
+      readingTime: 12
+    },
+    {
+      slug: "attention-economy",
+      company: "DEEP FOCUS",
+      title: "The Attention Economy Is Rewiring Human Motivation",
+      summary: "Why the ability to focus may become the most valuable skill in the modern economy.",
+      tags: ["Psychology", "Technology", "Economics", "Research"],
+      readingTime: 13
     }
   ];
 
@@ -105,7 +121,11 @@ const CaseStudies = ({ onContentClick }: CaseStudiesProps) => {
 
   const paper = researchPapers[activeIndex];
 
-  const LogoComponent = paper.company === 'IKIGAI' ? <IkigaiLogo height={40} /> : <NasdaqLogo height={28} />;
+  const LogoComponent = paper.company === 'IKIGAI' ? <IkigaiLogo height={40} />
+    : paper.company === 'NDX' ? <NasdaqLogo height={28} />
+    : paper.company === 'SAP' ? <img src="/sap_white_transparent.png" alt="SAP" height={24} style={{ opacity: 0.8 }} />
+    : paper.company === 'DEEP FOCUS' ? <img src="/lotus_white_transparent.png" alt="Deep Focus" height={32} style={{ opacity: 0.8 }} />
+    : <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)', letterSpacing: '2px', fontFamily: "'SF Mono', monospace", textTransform: 'uppercase' as const }}>{paper.company}</span>;
 
   return (
     <div

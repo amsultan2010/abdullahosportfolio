@@ -70,6 +70,28 @@ const CompanyLogo = ({ company }: { company: string }) => {
     );
   }
 
+  if (company === 'SAP') {
+    return (
+      <img
+        src="/sap_white_transparent.png"
+        alt="SAP"
+        height={50}
+        style={{ opacity: 0.9 }}
+      />
+    );
+  }
+
+  if (company === 'DEEP FOCUS') {
+    return (
+      <img
+        src="/lotus_white_transparent.png"
+        alt="Deep Focus"
+        height={60}
+        style={{ opacity: 0.9 }}
+      />
+    );
+  }
+
   return null;
 };
 
