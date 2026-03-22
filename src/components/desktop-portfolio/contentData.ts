@@ -520,7 +520,6 @@ The investor who earns the market return is not the one with the best stock pick
 `
   },
 
-
   'enterprise-software-cost': {
     type: 'deep-research',
     slug: 'enterprise-software-cost',

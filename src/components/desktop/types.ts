@@ -1,5 +1,5 @@
-import type { DetailContent } from '../portfolio/DetailPanel';
-import type { ContentViewData } from '../portfolio/ContentViewer';
+import type { DetailContent } from '../desktop-portfolio/DetailPanel';
+import type { ContentViewData } from '../desktop-portfolio/ContentViewer';
 
 export type WindowId =
   | 'terminal'

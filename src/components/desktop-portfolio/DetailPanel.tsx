@@ -76,7 +76,7 @@ export interface ProjectDetail {
   lessonsLearned: string[];
   techStack: string[];
   repoUrl?: string;
-  liveUrl?: string;
+  sections?: { title: string; content: string }[];
 }
 
 export type DetailContent = EducationDetail | ExperienceDetail | ProjectDetail;
@@ -128,9 +128,7 @@ const CloseButton = ({ onClose }: { onClose: () => void }) => (
 
 const DetailPanel = ({ detail, onClose, windowMode }: DetailPanelProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
-  const [livePanelHidden, setLivePanelHidden] = useState(false);
   const hasVideo = detail.type === 'project' && !!(detail as ProjectDetail).demoVideo;
-  const hasLiveUrl = detail.type === 'project' && !!(detail as ProjectDetail).liveUrl;
 
   // Escape key + body scroll lock (skip in windowMode)
   useEffect(() => {
@@ -313,175 +311,6 @@ const DetailPanel = ({ detail, onClose, windowMode }: DetailPanelProps) => {
               flex: 1 !important;
               border-left: none !important;
               border-top: 0.5px solid rgba(255,255,255,0.15) !important;
-            }
-          }
-        `}</style>
-      </>
-    );
-  }
-
-  // ── Live URL split layout (RonnielOS) ──
-  if (hasLiveUrl) {
-    const projectDetail = detail as ProjectDetail;
-    return (
-      <>
-        {/* Backdrop */}
-        <div
-          onClick={onClose}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'rgba(0, 0, 0, 0.7)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            zIndex: 200,
-            animation: 'detailFadeIn 0.3s ease-out forwards'
-          }}
-        />
-
-        {/* Split Container */}
-        <div
-          ref={panelRef}
-          role="dialog"
-          aria-modal="true"
-          tabIndex={-1}
-          className="video-split-container"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: 201,
-            display: 'flex',
-            outline: 'none',
-            animation: 'detailFadeIn 0.4s ease-out forwards'
-          }}
-        >
-          {/* Left: Live Demo iframe */}
-          <div
-            className="video-split-left"
-            style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'stretch',
-              justifyContent: 'center',
-              padding: livePanelHidden ? '0' : '1.5rem',
-              minWidth: 0,
-              position: 'relative',
-              transition: 'padding 0.35s ease',
-            }}
-          >
-            <iframe
-              src={projectDetail.liveUrl}
-              style={{
-                width: '100%',
-                height: '100%',
-                borderRadius: livePanelHidden ? '0' : '14px',
-                border: livePanelHidden ? 'none' : '0.5px solid rgba(255,255,255,0.1)',
-                boxShadow: livePanelHidden ? 'none' : '0 20px 60px rgba(0,0,0,0.5)',
-                background: '#000',
-                transition: 'border-radius 0.35s ease',
-              }}
-              allow="autoplay; fullscreen"
-            />
-            {/* Toggle arrow */}
-            <button
-              onClick={() => setLivePanelHidden(!livePanelHidden)}
-              className="live-panel-toggle"
-              style={{
-                position: 'absolute',
-                right: livePanelHidden ? '16px' : '-14px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: '28px',
-                height: '56px',
-                borderRadius: '0 8px 8px 0',
-                background: 'rgba(30, 30, 30, 0.85)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderLeft: 'none',
-                color: 'rgba(255,255,255,0.6)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 10,
-                transition: 'all 0.35s ease',
-                backdropFilter: 'blur(8px)',
-              }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                style={{ transform: livePanelHidden ? 'rotate(180deg)' : 'none', transition: 'transform 0.35s ease' }}>
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Right: Details */}
-          <div
-            className="video-split-right"
-            style={{
-              width: livePanelHidden ? '0px' : '420px',
-              minWidth: livePanelHidden ? '0px' : '360px',
-              maxWidth: livePanelHidden ? '0px' : '480px',
-              height: '100%',
-              overflowY: livePanelHidden ? 'hidden' : 'auto',
-              overflowX: 'hidden',
-              background: 'rgba(20, 20, 20, 0.75)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-              borderLeft: livePanelHidden ? 'none' : '0.5px solid rgba(255, 255, 255, 0.12)',
-              boxShadow: livePanelHidden ? 'none' : '0 25px 60px rgba(0, 0, 0, 0.5), inset 0 0 0 0.5px rgba(255, 255, 255, 0.05)',
-              animation: 'detailSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              transition: 'width 0.35s ease, min-width 0.35s ease, max-width 0.35s ease',
-              opacity: livePanelHidden ? 0 : 1,
-            }}
-          >
-            <CloseButton onClose={onClose} />
-            <div style={{ padding: '2rem 2rem 3rem', clear: 'both', whiteSpace: 'nowrap' as const }}>
-              <div style={{ whiteSpace: 'normal' as const }}>
-                <ProjectContent detail={projectDetail} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <style>{`
-          .live-panel-toggle:hover {
-            background: rgba(50, 50, 50, 0.95) !important;
-            color: rgba(255,255,255,0.9) !important;
-          }
-          @keyframes detailSlideIn {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
-          }
-          @keyframes detailFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          @media (max-width: 900px) {
-            .video-split-container {
-              flex-direction: column !important;
-            }
-            .video-split-left {
-              flex: none !important;
-              height: 50vh !important;
-              padding: 0.5rem !important;
-            }
-            .live-panel-toggle {
-              display: none !important;
-            }
-            .video-split-right {
-              width: 100% !important;
-              min-width: unset !important;
-              max-width: unset !important;
-              flex: 1 !important;
-              border-left: none !important;
-              border-top: 0.5px solid rgba(255,255,255,0.15) !important;
-              opacity: 1 !important;
             }
           }
         `}</style>
@@ -1513,20 +1342,14 @@ const ProjectContent = ({ detail }: { detail: ProjectDetail }) => {
           width: '100%',
           height: '120px',
           borderRadius: '12px',
-          background: detail.liveUrl ? '#000' : detail.gradient,
+          background: detail.gradient,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           marginBottom: '1.5rem',
           overflow: 'hidden'
         }}>
-          {detail.liveUrl && detail.coverImage ? (
-            <img
-              src={detail.coverImage}
-              alt={`${detail.title} logo`}
-              style={{ width: '50px', height: '50px', opacity: 0.5, filter: 'brightness(0) invert(1)' }}
-            />
-          ) : detail.coverImage ? (
+          {detail.coverImage ? (
             <img
               src={detail.coverImage}
               alt={`${detail.title} preview`}

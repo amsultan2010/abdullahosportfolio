@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { DesktopProvider, useDesktop } from './DesktopContext';
-import Background from '../portfolio/Background';
+import Background from './MacBackground';
 import AppWindow from './AppWindow';
 import BootScreen from './BootScreen';
 import DesktopDock from './DesktopDock';
@@ -9,20 +9,20 @@ import DesktopMenuBar from './DesktopMenuBar';
 import GitHubHeatmap from './GitHubHeatmap';
 import type { WindowId } from './types';
 
-// Section content
-import Education from '../portfolio/Education';
-import Experience from '../portfolio/Experience';
-import Projects from '../portfolio/Projects';
-import CaseStudies from '../portfolio/CaseStudies';
-import Blog from '../portfolio/Blog';
-import Calendar from '../portfolio/Calendar';
-import EmailCompose from '../portfolio/EmailCompose';
-import Photos from '../portfolio/Photos';
-import WifiSettings from '../portfolio/WifiSettings';
-import DetailPanel from '../portfolio/DetailPanel';
-import ContentViewer from '../portfolio/ContentViewer';
-import type { DetailContent } from '../portfolio/DetailPanel';
-import type { ContentViewData } from '../portfolio/ContentViewer';
+// Section content — uses desktop-portfolio (master copies, untouched)
+import Education from '../desktop-portfolio/Education';
+import Experience from '../desktop-portfolio/Experience';
+import Projects from '../desktop-portfolio/Projects';
+import CaseStudies from '../desktop-portfolio/CaseStudies';
+import Blog from '../desktop-portfolio/Blog';
+import Calendar from '../desktop-portfolio/Calendar';
+import EmailCompose from '../desktop-portfolio/EmailCompose';
+import Photos from '../desktop-portfolio/Photos';
+import WifiSettings from '../desktop-portfolio/WifiSettings';
+import DetailPanel from '../desktop-portfolio/DetailPanel';
+import ContentViewer from '../desktop-portfolio/ContentViewer';
+import type { DetailContent } from '../desktop-portfolio/DetailPanel';
+import type { ContentViewData } from '../desktop-portfolio/ContentViewer';
 
 function WindowContent({ id }: { id: WindowId }) {
   const { dispatch } = useDesktop();

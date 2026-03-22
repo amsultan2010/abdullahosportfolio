@@ -83,37 +83,18 @@ function getTechColor(tech: string): { bg: string; text: string; border: string 
   return fallbackColors[Math.abs(hash) % fallbackColors.length];
 }
 
-  const projects = [
-    {
-      id: 0,
-      title: "RonnielOS",
-      description: "My portfolio reimagined as a fully interactive macOS desktop environment. Draggable windows, a working terminal, stock tracker, notification center, Spotify integration — all running in your browser.",
-      gradient: "#000000",
-      coverImage: "/icons/rglogo.png",
-      repoUrl: "https://github.com/ronnielgandhe/rg-portfolio",
-      detail: {
-        type: 'project' as const,
-        id: 0,
-        title: "RonnielOS",
-        gradient: "#000000",
-        coverImage: "/icons/rglogo.png",
-        liveUrl: "/desktop",
-        architecture: "Full macOS desktop in React + Astro. Reducer-based window management, spring-physics dock, live Spotify menu bar, OpenAI terminal.",
-        technicalChallenges: [
-          "Window management with focus stacking and z-index tracking in React",
-          "Real-time Spotify integration with graceful fallbacks",
-          "Dual desktop + iOS mobile experience from shared components"
-        ],
-        lessonsLearned: [
-          "Reducer-based state scales better than useState for coordinating windows",
-          "Dock magnification needs cosine falloff for natural feel",
-          "Abstracting interaction patterns enables desktop + mobile from one codebase"
-        ],
-        techStack: ["React", "TypeScript", "Astro", "Three.js", "Framer Motion", "OpenAI"],
-        repoUrl: "https://github.com/ronnielgandhe/rg-portfolio"
-      } satisfies ProjectDetail
-    },
-    {
+const projects = [
+  {
+    id: 1,
+    title: "QuantZoo",
+    description: "A production-grade Python framework for systematic quantitative trading research. QuantZoo provides an end-to-end pipeline from strategy ideation through backtesting, walk-forward validation, and live paper trading — all with built-in risk analytics and a real-time streaming dashboard. The framework supports custom strategy plugins, ML-based signal generation with PyTorch, and sentiment analysis via Hugging Face transformers, making it a complete toolkit for exploring and validating systematic trading ideas.",
+    gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+    coverImage: "/trading.png",
+    repoUrl: "https://github.com/ronnielgandhe/quantzoo",
+    language: "Python",
+    files: ["README.md", "architecture.md", "backend.md", "frontend.md", "impact.md", "takeaways.md"],
+    detail: {
+      type: 'project' as const,
       id: 1,
       title: "QuantZoo",
       gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
@@ -569,115 +550,9 @@ const Projects = ({ onCardClick, windowMode }: ProjectsProps) => {
           gap: '2px',
           borderRight: '1px solid #252526',
         }}>
-        Projects
-      </h2>
-
-      {/* Carousel */}
-      <div
-        className="projects-carousel"
-        style={{
-          opacity: cardAnimated ? 1 : 0,
-          transform: cardAnimated ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'opacity 0.8s ease-out 0.15s, transform 0.8s ease-out 0.15s'
-        }}
-      >
-        {/* Cards with overlapping arrows */}
-        <div className="projects-carousel-row">
-          {/* Cards Grid */}
-          <div
-            key={`${safePageIndex}-${effectivePerPage}`}
-            className={`projects-page-grid projects-grid-${effectivePerPage}`}
-            style={{ animation: 'projFadeSlide 0.4s ease-out forwards' }}
-          >
-          {pageProjects.map((project) => (
-            <div
-              key={project.id}
-              className="glass-project-card"
-              data-project-id={project.id}
-              onClick={() => {
-                if (onCardClick && project.detail) {
-                  onCardClick(project.detail);
-                } else if (project.repoUrl) {
-                  window.open(project.repoUrl, '_blank', 'noopener,noreferrer');
-                }
-              }}
-              style={{ cursor: 'pointer' }}
-            >
-              {/* Cover Image */}
-              <div style={{
-                width: '100%',
-                height: '200px',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                marginBottom: '1.25rem',
-                background: project.gradient,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative'
-              }}>
-                {project.id === 0 && project.coverImage ? (
-                  <div style={{ width: '100%', height: '100%', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <img
-                      src={project.coverImage}
-                      alt={`${project.title} logo`}
-                      style={{ width: '80px', height: '80px', opacity: 0.6, filter: 'brightness(0) invert(1)' }}
-                    />
-                  </div>
-                ) : project.coverImage ? (
-                  <img
-                    src={project.coverImage}
-                    alt={`${project.title} preview`}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
-                  />
-                ) : (
-                  <span style={{
-                    fontSize: '2rem',
-                    fontFamily: 'NeueMontreal-Medium, sans-serif',
-                    color: 'rgba(255, 255, 255, 0.15)',
-                    fontWeight: '500',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase'
-                  }}>
-                    {project.title}
-                  </span>
-                )}
-              </div>
-
-              {/* Title */}
-              <h3 style={{
-                fontSize: 'clamp(1.05rem, 2vw, 1.3rem)',
-                color: 'rgba(255, 255, 255, 0.9)',
-                fontFamily: 'NeueMontreal-Medium, sans-serif',
-                margin: '0 0 0.75rem 0',
-                fontWeight: '500'
-              }}>
-                {project.title}
-              </h3>
-
-              {/* Description */}
-              <p style={{
-                color: 'rgba(255, 255, 255, 0.7)',
-                fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
-                fontFamily: 'NeueMontreal-Light, sans-serif',
-                lineHeight: '1.7',
-                margin: 0,
-                fontWeight: '300'
-              }}>
-                {project.description}
-              </p>
-            </div>
-          ))}
-          </div>
-
-          {/* Navigation arrows - absolute positioned */}
-          <button
-            onClick={(e) => { e.stopPropagation(); goPrev(); }}
-            aria-label="Previous projects"
-            className={`proj-nav-btn proj-nav-prev${safePageIndex === 0 ? ' proj-nav-hidden' : ''}`}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6" />
+          <ActivityIcon active label="Explorer">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M3 7V5a2 2 0 012-2h4l2 2h8a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
             </svg>
           </ActivityIcon>
           <ActivityIcon label="Search">

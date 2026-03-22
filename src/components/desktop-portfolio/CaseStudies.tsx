@@ -87,38 +87,11 @@ const CaseStudies = ({ onContentClick, windowMode }: CaseStudiesProps) => {
     return () => observer.disconnect();
   }, [windowMode]);
 
-  const researchPapers = [
-    {
-      slug: "investor-behavior-gap",
-      company: "NDX",
-      title: "Why Investors Underperform the Markets They Invest In",
-      summary: "Financial markets produce strong long-term returns, yet the average investor consistently earns far less. This paper investigates why this gap exists, and why it is driven by behavior, not poor asset selection.",
-      tags: ["Finance", "Behavioral Economics", "Markets", "Research"],
-      readingTime: 14
-    },
-    {
-      slug: "discipline-paradox",
-      company: "IKIGAI",
-      title: "The Discipline Paradox",
-      summary: "Why do insanely talented people fail while mediocre disciplined people win? The answer lies not in ability, but in the neurochemistry of consistency and the mathematics of showing up.",
-      tags: ["Psychology", "Behavioral Economics", "Research"],
-      readingTime: 16
-    },
-    {
-      slug: "enterprise-software-cost",
-      company: "SAP",
-      title: "Why Enterprise Software Costs Millions",
-      summary: "Understanding why companies pay enormous sums for tools that often look like spreadsheets.",
-      tags: ["Technology", "Business", "Enterprise", "Research"],
-      readingTime: 12
-    },
-    {
-      slug: "attention-economy",
-      company: "DEEP FOCUS",
-      title: "The Attention Economy Is Rewiring Human Motivation",
-      summary: "Why the ability to focus may become the most valuable skill in the modern economy.",
-      tags: ["Psychology", "Technology", "Economics", "Research"],
-      readingTime: 13
+  const handleCardClick = (slug: string) => {
+    if (windowMode && desktopDispatch) {
+      // Open FloatingBooks overlay with this specific book's animation
+      desktopDispatch({ type: 'SHOW_FLOATING_BOOKS', slug });
+      return;
     }
     const data = contentMap[slug];
     if (data && onContentClick) onContentClick(data);
@@ -383,11 +356,15 @@ function ScrollModeFallback({ sectionRef, titleAnimated, cardAnimated, onContent
   const hasInteracted = useRef(false);
   const paper = researchPapers[activeIndex];
 
-  const LogoComponent = paper.company === 'IKIGAI' ? <IkigaiLogo height={40} />
-    : paper.company === 'NDX' ? <NasdaqLogo height={28} />
-    : paper.company === 'SAP' ? <img src="/sap_white_transparent.png" alt="SAP" height={24} style={{ opacity: 0.8 }} />
-    : paper.company === 'DEEP FOCUS' ? <img src="/lotus_white_transparent.png" alt="Deep Focus" height={32} style={{ opacity: 0.8 }} />
-    : <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)', letterSpacing: '2px', fontFamily: "'SF Mono', monospace", textTransform: 'uppercase' as const }}>{paper.company}</span>;
+  const switchPaper = (indexOrUpdater: number | ((prev: number) => number)) => {
+    hasInteracted.current = true;
+    setActiveIndex(indexOrUpdater);
+  };
+
+  const handleCardClick = () => {
+    const data = contentMap[paper.slug];
+    if (data && onContentClick) onContentClick(data);
+  };
 
   return (
     <div

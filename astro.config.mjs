@@ -19,6 +19,9 @@ export default defineConfig({
   // Vite configuration
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      dedupe: ['react', 'react-dom'],
+    },
   },
 
   // Markdown configuration

@@ -2104,7 +2104,6 @@ export const FocusAdvantageChart = () => {
   );
 };
 
-
 // ─── Chart Registry ───────────────────────────────────────────
 
 export const chartRegistry: Record<string, React.FC> = {
