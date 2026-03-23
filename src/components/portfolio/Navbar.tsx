@@ -200,31 +200,6 @@ const Navbar = () => {
           }}>
             Projects
           </a>
-          <a href="#deep-research" style={{
-            color: 'rgba(255, 255, 255, 0.75)',
-            textDecoration: 'none',
-            fontSize: '1.25rem',
-            fontStyle: 'italic',
-            fontFamily: 'MenoBanner-Condensed, sans-serif',
-            transition: 'all 0.3s ease',
-            padding: '0.5rem 1rem',
-            borderRadius: '8px',
-            margin: 0
-          }} onClick={(e) => {
-            e.preventDefault();
-            document.getElementById('deep-research')?.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center'
-            });
-            handleButtonHover(e);
-          }} onMouseEnter={(e) => {
-            (e.target as HTMLElement).style.color = '#ccc';
-            handleButtonHover(e);
-          }} onMouseLeave={(e) => {
-            (e.target as HTMLElement).style.color = 'rgba(255, 255, 255, 0.75)';
-          }}>
-            Deep Research
-          </a>
           <a href="#blog" style={{
             color: 'rgba(255, 255, 255, 0.75)',
             textDecoration: 'none',
@@ -414,32 +389,6 @@ const Navbar = () => {
             (e.target as HTMLElement).style.backgroundColor = 'transparent';
           }}>
             projects
-          </a>
-          <a href="#deep-research" style={{
-            color: 'rgba(255, 255, 255, 0.75)',
-            textDecoration: 'none',
-            fontSize: '0.9rem',
-            fontStyle: 'italic',
-            fontFamily: 'NeueMontreal-Medium, sans-serif',
-            padding: '0.5rem 0.8rem',
-            borderRadius: '6px',
-            transition: 'all 0.3s ease',
-            width: '100%',
-            textAlign: 'left'
-          }} onClick={(e) => {
-            e.preventDefault();
-            document.getElementById('deep-research')?.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center'
-            });
-            handleButtonHover(e);
-            setIsMenuOpen(false);
-          }} onMouseEnter={(e) => {
-            (e.target as HTMLElement).style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
-          }} onMouseLeave={(e) => {
-            (e.target as HTMLElement).style.backgroundColor = 'transparent';
-          }}>
-            deep research
           </a>
           <a href="#blog" style={{
             color: 'rgba(255, 255, 255, 0.75)',

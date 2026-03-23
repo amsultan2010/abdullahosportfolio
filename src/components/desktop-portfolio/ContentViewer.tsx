@@ -3,7 +3,7 @@ import MarkdownRenderer from './MarkdownRenderer';
 import { getTagColor, companyBrands } from './tagColors';
 
 export interface ContentViewData {
-  type: 'blog' | 'case-study' | 'deep-research';
+  type: 'blog' | 'case-study';
   slug: string;
   title: string;
   company?: string;
@@ -101,7 +101,6 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
   const markdownRef = useRef<HTMLDivElement>(null);
   const hasAnimatedRef = useRef(false);
   const brand = content.company ? companyBrands[content.company] : null;
-  const isDeepResearch = content.type === 'deep-research';
   const shouldAnimate = !hasAnimatedRef.current;
   if (!hasAnimatedRef.current) hasAnimatedRef.current = true;
 
@@ -194,15 +193,10 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
         }}
         className={`content-viewer-panel${shouldAnimate ? ' cv-cascade-animate' : ''}`}
       >
-        <div style={{ maxWidth: content.type === 'deep-research' ? '120ch' : '90ch', margin: '0 auto' }}>
+        <div style={{ maxWidth: '90ch', margin: '0 auto' }}>
             <div className="cv-terminal-content" style={{ padding: 'clamp(1.5rem, 3vw, 2.5rem)' }}>
               <header style={{ marginBottom: '2rem' }}>
-                {isDeepResearch && content.company && (
-                  <div className="cv-cascade-item cv-cascade-0" style={{ marginBottom: '1.75rem' }}>
-                    <CompanyLogo company={content.company} />
-                  </div>
-                )}
-                {!isDeepResearch && content.company && brand && (
+                {content.company && brand && (
                   <div className="cv-cascade-item cv-cascade-0" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
                     <CompanyLogo company={content.company} />
                     {content.company !== 'Uber' && (
@@ -324,7 +318,7 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
 
         {/* Glass Pane Terminal Window */}
         <div style={{
-          maxWidth: content.type === 'deep-research' ? '120ch' : '90ch',
+          maxWidth: '90ch',
           margin: '0 auto 4rem',
           padding: '0 2rem',
         }}>
@@ -344,16 +338,8 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
             >
               {/* Header */}
               <header style={{ marginBottom: '2.5rem' }}>
-                {/* Logo for deep research */}
-                {isDeepResearch && content.company && (
-                  <div className="cv-cascade-item cv-cascade-0" style={{
-                    marginBottom: '1.75rem',
-                  }}>
-                    <CompanyLogo company={content.company} />
-                  </div>
-                )}
-                {/* Company branding for case studies */}
-                {!isDeepResearch && content.company && brand && (
+                {/* Company branding */}
+                {content.company && brand && (
                   <div className="cv-cascade-item cv-cascade-0" style={{
                     display: 'flex',
                     alignItems: 'center',

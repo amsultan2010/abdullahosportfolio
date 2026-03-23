@@ -6,7 +6,6 @@ export type WindowId =
   | 'education'
   | 'experience'
   | 'projects'
-  | 'deep-research'
   | 'blog'
   | 'calendar'
   | 'email'
@@ -33,8 +32,6 @@ export interface DesktopState {
   focusedWindowId: WindowId | null;
   nextZIndex: number;
   bootComplete: boolean;
-  floatingBooksVisible: boolean;
-  floatingBookSlug: string | null;
   // Sub-window content
   activeDetail: DetailContent | null;
   activeContent: ContentViewData | null;
@@ -56,8 +53,7 @@ export type DesktopAction =
   | { type: 'CLOSE_CONTENT' }
   | { type: 'DESELECT_ALL' }
   | { type: 'LOCK_SCREEN' }
-  | { type: 'SHOW_FLOATING_BOOKS'; slug?: string }
-  | { type: 'HIDE_FLOATING_BOOKS' };
+;
 
 // Default window configs
 export const WINDOW_DEFAULTS: Record<WindowId, { title: string; width: number; height: number; x: number; y: number }> = {
@@ -65,7 +61,6 @@ export const WINDOW_DEFAULTS: Record<WindowId, { title: string; width: number; h
   education:       { title: 'Education — Finder',           width: 880, height: 780, x: 120, y: 50 },
   experience:      { title: 'Experience — Finder',          width: 960, height: 820, x: 160, y: 40 },
   projects:        { title: 'Projects — Visual Studio Code', width: 960, height: 680, x: 80, y: 35 },
-  'deep-research': { title: 'Books',                          width: 880, height: 620, x: 140, y: 50 },
   blog:            { title: 'My Thoughts — Notes',          width: 900, height: 620, x: 110, y: 60 },
   calendar:        { title: 'Calendar',                      width: 900, height: 600, x: 120, y: 35 },
   email:           { title: 'New Message',                   width: 640, height: 520, x: 180, y: 80 },

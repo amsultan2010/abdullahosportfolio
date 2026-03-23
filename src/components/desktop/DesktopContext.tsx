@@ -54,8 +54,6 @@ function desktopReducer(state: DesktopState, action: DesktopAction): DesktopStat
         return {
           ...state,
           focusedWindowId: action.id,
-          floatingBooksVisible: false,
-          floatingBookSlug: null,
           windows: {
             ...cleaned,
             [action.id]: { ...existing, isMinimized: false, zIndex: state.nextZIndex },
@@ -67,8 +65,6 @@ function desktopReducer(state: DesktopState, action: DesktopAction): DesktopStat
       return {
         ...state,
         focusedWindowId: action.id,
-        floatingBooksVisible: false,
-        floatingBookSlug: null,
         windows: { ...cleaned, [action.id]: win },
         nextZIndex: state.nextZIndex + 1,
       };
@@ -239,12 +235,6 @@ function desktopReducer(state: DesktopState, action: DesktopAction): DesktopStat
     case 'LOCK_SCREEN':
       return { ...initialState };
 
-    case 'SHOW_FLOATING_BOOKS':
-      return { ...state, floatingBooksVisible: true, floatingBookSlug: action.slug || null };
-
-    case 'HIDE_FLOATING_BOOKS':
-      return { ...state, floatingBooksVisible: false, floatingBookSlug: null };
-
     default:
       return state;
   }
@@ -255,8 +245,6 @@ const initialState: DesktopState = {
   focusedWindowId: null,
   nextZIndex: 100,
   bootComplete: false,
-  floatingBooksVisible: false,
-  floatingBookSlug: null,
   activeDetail: null,
   activeContent: null,
 };

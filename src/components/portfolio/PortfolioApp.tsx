@@ -7,7 +7,6 @@ import MainContent from './MainContent';
 import Education from './Education';
 import Experience from './Experience';
 import Projects from './Projects';
-import CaseStudies from './CaseStudies';
 import Blog from './Blog';
 import DetailPanel from './DetailPanel';
 import ContentViewer from './ContentViewer';
@@ -28,7 +27,6 @@ function PortfolioApp() {
       <Education onCardClick={(detail) => setActiveDetail(detail)} />
       <Experience onCardClick={(detail) => setActiveDetail(detail)} />
       <Projects onCardClick={(detail) => setActiveDetail(detail)} />
-      <CaseStudies onContentClick={(content) => setActiveContent(content)} />
       <Blog onContentClick={(content) => setActiveContent(content)} />
 
       {activeDetail && (

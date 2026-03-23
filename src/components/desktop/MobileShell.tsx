@@ -2,7 +2,6 @@ import { useState } from 'react';
 import Education from '../desktop-portfolio/Education';
 import Experience from '../desktop-portfolio/Experience';
 import Projects from '../desktop-portfolio/Projects';
-import CaseStudies from '../desktop-portfolio/CaseStudies';
 import Blog from '../desktop-portfolio/Blog';
 import DetailPanel from '../desktop-portfolio/DetailPanel';
 import ContentViewer from '../desktop-portfolio/ContentViewer';
@@ -10,16 +9,15 @@ import type { DetailContent } from '../desktop-portfolio/DetailPanel';
 import type { ContentViewData } from '../desktop-portfolio/ContentViewer';
 import { HiAcademicCap } from 'react-icons/hi2';
 import { BsBriefcaseFill, BsGithub, BsSpotify } from 'react-icons/bs';
-import { FaCode, FaMicroscope } from 'react-icons/fa6';
+import { FaCode } from 'react-icons/fa6';
 import { HiPencilSquare } from 'react-icons/hi2';
 
-type SectionId = 'education' | 'experience' | 'projects' | 'research' | 'blog' | null;
+type SectionId = 'education' | 'experience' | 'projects' | 'blog' | null;
 
 const SECTIONS = [
   { id: 'education' as const, label: 'Education', icon: <HiAcademicCap size={20} />, color: '#667eea' },
   { id: 'experience' as const, label: 'Experience', icon: <BsBriefcaseFill size={18} />, color: '#f5576c' },
   { id: 'projects' as const, label: 'Projects', icon: <FaCode size={18} />, color: '#4facfe' },
-  { id: 'research' as const, label: 'Research', icon: <FaMicroscope size={18} />, color: '#43e97b' },
   { id: 'blog' as const, label: 'Thoughts', icon: <HiPencilSquare size={18} />, color: '#fa709a' },
 ];
 
@@ -235,7 +233,6 @@ export default function MobileShell() {
             {activeSection === 'education' && <Education onCardClick={handleCardClick} windowMode />}
             {activeSection === 'experience' && <Experience onCardClick={handleCardClick} windowMode />}
             {activeSection === 'projects' && <Projects onCardClick={handleCardClick} windowMode />}
-            {activeSection === 'research' && <CaseStudies onContentClick={handleContentClick} windowMode />}
             {activeSection === 'blog' && <Blog onContentClick={handleContentClick} windowMode />}
           </div>
         </div>

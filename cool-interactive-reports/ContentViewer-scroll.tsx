@@ -3,7 +3,7 @@ import MarkdownRenderer from './MarkdownRenderer';
 import { getTagColor, companyBrands } from './tagColors';
 
 export interface ContentViewData {
-  type: 'blog' | 'case-study';
+  type: 'blog' | 'case-study' | 'deep-research';
   slug: string;
   title: string;
   company?: string;
@@ -99,6 +99,9 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const markdownRef = useRef<HTMLDivElement>(null);
   const brand = content.company ? companyBrands[content.company] : null;
+  const isDeepResearch = content.type === 'deep-research';
+
+
   // Escape key + body scroll lock
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -241,7 +244,7 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
 
         {/* Glass Pane Terminal Window */}
         <div style={{
-          maxWidth: '90ch',
+          maxWidth: content.type === 'deep-research' ? '120ch' : '90ch',
           margin: '0 auto 4rem',
           padding: '0 2rem',
         }}>
@@ -261,8 +264,16 @@ const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
             >
               {/* Header */}
               <header style={{ marginBottom: '2.5rem' }}>
-                {/* Company branding */}
-                {content.company && brand && (
+                {/* Logo for deep research */}
+                {isDeepResearch && content.company && (
+                  <div className="cv-cascade-item cv-cascade-0" style={{
+                    marginBottom: '1.75rem',
+                  }}>
+                    <CompanyLogo company={content.company} />
+                  </div>
+                )}
+                {/* Company branding for case studies */}
+                {!isDeepResearch && content.company && brand && (
                   <div className="cv-cascade-item cv-cascade-0" style={{
                     display: 'flex',
                     alignItems: 'center',
