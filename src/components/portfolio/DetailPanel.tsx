@@ -86,7 +86,6 @@ export type DetailContent = EducationDetail | ExperienceDetail | ProjectDetail;
 interface DetailPanelProps {
   detail: DetailContent;
   onClose: () => void;
-  windowMode?: boolean;
 }
 
 const CloseButton = ({ onClose }: { onClose: () => void }) => (
@@ -110,7 +109,7 @@ const CloseButton = ({ onClose }: { onClose: () => void }) => (
       cursor: 'pointer',
       color: 'rgba(255, 255, 255, 0.7)',
       fontSize: '18px',
-      fontFamily: 'NeueMontreal-Medium, sans-serif',
+      fontFamily: 'NeueMontreal-Light, sans-serif',
       transition: 'all 0.2s ease'
     }}
     onMouseEnter={(e) => {
@@ -126,15 +125,14 @@ const CloseButton = ({ onClose }: { onClose: () => void }) => (
   </button>
 );
 
-const DetailPanel = ({ detail, onClose, windowMode }: DetailPanelProps) => {
+const DetailPanel = ({ detail, onClose }: DetailPanelProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const [livePanelHidden, setLivePanelHidden] = useState(false);
   const hasVideo = detail.type === 'project' && !!(detail as ProjectDetail).demoVideo;
   const hasLiveUrl = detail.type === 'project' && !!(detail as ProjectDetail).liveUrl;
 
-  // Escape key + body scroll lock (skip in windowMode)
+  // Escape key + body scroll lock
   useEffect(() => {
-    if (windowMode) return;
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -145,49 +143,12 @@ const DetailPanel = ({ detail, onClose, windowMode }: DetailPanelProps) => {
       document.removeEventListener('keydown', handleEsc);
       document.body.style.overflow = '';
     };
-  }, [onClose, windowMode]);
+  }, [onClose]);
 
   // Focus panel on mount
   useEffect(() => {
     panelRef.current?.focus();
   }, []);
-
-  // ── Window mode: render inline without overlay ──
-  if (windowMode) {
-    return (
-      <div
-        ref={panelRef}
-        style={{
-          overflowY: 'auto',
-          height: '100%',
-        }}
-        className="detail-panel-window"
-      >
-        <div style={{ padding: 'clamp(1.5rem, 3vw, 2.5rem)', maxWidth: '100ch', margin: '0 auto' }}>
-          {detail.type === 'project' && hasVideo && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <video
-                autoPlay loop muted playsInline
-                style={{ width: '100%', borderRadius: '12px', objectFit: 'contain', border: '0.5px solid rgba(255,255,255,0.1)' }}
-              >
-                <source src={(detail as ProjectDetail).demoVideo} type="video/quicktime" />
-                <source src={(detail as ProjectDetail).demoVideo} type="video/mp4" />
-              </video>
-            </div>
-          )}
-          {detail.type === 'education' && <EducationContent detail={detail} />}
-          {detail.type === 'experience' && <ExperienceContent detail={detail} />}
-          {detail.type === 'project' && <ProjectContent detail={detail} />}
-        </div>
-        <style>{`
-          @keyframes sectionFadeIn {
-            from { opacity: 0.1; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-        `}</style>
-      </div>
-    );
-  }
 
   // ── Video split layout (CreatorScope) ──
   if (hasVideo) {
@@ -636,7 +597,7 @@ const PitchDeckViewer = ({ deck, animDelay }: { deck: PitchDeck; animDelay: numb
               {deck.competition} {deck.year}
             </p>
             <p style={{
-              fontFamily: 'NeueMontreal-Medium, sans-serif',
+              fontFamily: 'NeueMontreal-Light, sans-serif',
               color: 'rgba(255, 255, 255, 0.5)',
               fontSize: '0.8rem',
               margin: 0,
@@ -648,7 +609,7 @@ const PitchDeckViewer = ({ deck, animDelay }: { deck: PitchDeck; animDelay: numb
 
         {/* Description */}
         <p style={{
-          fontFamily: 'NeueMontreal-Medium, sans-serif',
+          fontFamily: 'NeueMontreal-Light, sans-serif',
           color: 'rgba(255, 255, 255, 0.6)',
           fontSize: '0.85rem',
           lineHeight: 1.6,
@@ -754,7 +715,7 @@ const PitchDeckViewer = ({ deck, animDelay }: { deck: PitchDeck; animDelay: numb
 
 // ─── Education Detail ───────────────────────────────────────
 
-export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
+const EducationContent = ({ detail }: { detail: EducationDetail }) => {
   const totalCourses = detail.courses.length;
   // Time (s) when the last course finishes its animation
   const cascadeEnd = 0.3 + totalCourses * 0.055 + 0.5; // start delay + stagger + animation duration
@@ -777,11 +738,11 @@ export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
         }
         @keyframes courseTextLightUp {
           0% { color: rgba(255, 255, 255, 0.2); }
-          100% { color: rgba(255, 255, 255, 1); }
+          100% { color: rgba(255, 255, 255, 0.95); }
         }
         @keyframes courseSubTextLightUp {
           0% { color: rgba(255, 255, 255, 0.1); }
-          100% { color: rgba(255, 255, 255, 0.95); }
+          100% { color: rgba(255, 255, 255, 0.65); }
         }
         @keyframes sectionFadeIn {
           0% { opacity: 0.1; transform: translateY(8px); }
@@ -802,7 +763,7 @@ export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
             {detail.institution}
           </h2>
           {detail.gpa && (
-            <p style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', color: 'rgba(255,255,255,0.88)', margin: '0.25rem 0 0', fontSize: '0.95rem' }}>
+            <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', margin: '0.25rem 0 0', fontSize: '0.95rem' }}>
               GPA: {detail.gpa}
             </p>
           )}
@@ -829,15 +790,15 @@ export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
                   <span style={{
                     fontFamily: 'NeueMontreal-Medium, sans-serif',
                     color: 'rgba(255,255,255,0.2)',
-                    fontSize: '0.9rem',
+                    fontSize: '0.85rem',
                     animation: `courseTextLightUp 0.5s ease ${delay} forwards`,
                   }}>
                     {c.code}
                   </span>
                   <span style={{
-                    fontFamily: 'NeueMontreal-Medium, sans-serif',
+                    fontFamily: 'NeueMontreal-Light, sans-serif',
                     color: 'rgba(255,255,255,0.1)',
-                    fontSize: '0.85rem',
+                    fontSize: '0.8rem',
                     animation: `courseSubTextLightUp 0.5s ease ${delay} forwards`,
                   }}>
                     {c.name}
@@ -905,9 +866,9 @@ export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
           <h3 style={sectionTitleStyle}>Reflection</h3>
           {detail.reflection.split('\n\n').map((para, i) => (
             <p key={i} style={{
-              fontFamily: 'NeueMontreal-Medium, sans-serif',
-              color: 'rgba(255,255,255,0.92)',
-              fontSize: '0.95rem',
+              fontFamily: 'NeueMontreal-Light, sans-serif',
+              color: 'rgba(255,255,255,0.75)',
+              fontSize: '0.9rem',
               lineHeight: '1.7',
               margin: i === 0 ? 0 : '1rem 0 0',
               fontStyle: 'italic',
@@ -923,7 +884,7 @@ export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
 
 // ─── Experience Detail ──────────────────────────────────────
 
-export const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
+const ExperienceContent = ({ detail }: { detail: ExperienceDetail }) => {
   // If multi-role, render each role as a separate section
   if (detail.roles && detail.roles.length > 0) {
     return <MultiRoleExperienceContent detail={detail} />;
@@ -975,15 +936,15 @@ const MultiRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =>
         <div style={{ marginBottom: '2rem', transition: 'opacity 0.5s ease', opacity: allUnlocked ? 1 : 0.7 }}>
           <h3 style={{
             ...sectionTitleStyle,
-            color: allUnlocked ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.75)',
+            color: allUnlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
             transition: 'color 0.5s ease'
           }}>Reflection</h3>
           {allReflections.flatMap((r, ri) =>
             r.split('\n\n').map((para, pi) => (
               <p key={`${ri}-${pi}`} style={{
-                fontFamily: 'NeueMontreal-Medium, sans-serif',
-                color: allUnlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.75)',
-                fontSize: '0.95rem',
+                fontFamily: 'NeueMontreal-Light, sans-serif',
+                color: allUnlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)',
+                fontSize: '0.9rem',
                 lineHeight: '1.7',
                 margin: (ri === 0 && pi === 0) ? 0 : '1rem 0 0',
                 transition: 'color 0.5s ease'
@@ -1000,7 +961,7 @@ const MultiRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =>
         <div style={{ marginBottom: '1.5rem', transition: 'opacity 0.5s ease', opacity: allUnlocked ? 1 : 0.7 }}>
           <h3 style={{
             ...sectionTitleStyle,
-            color: allUnlocked ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.75)',
+            color: allUnlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
             transition: 'color 0.5s ease'
           }}>Skills Learned</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -1008,9 +969,9 @@ const MultiRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =>
               const tc = getTagColor(s);
               return (
                 <span key={i} style={{
-                  fontFamily: 'NeueMontreal-Medium, sans-serif',
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
                   fontSize: '0.8rem',
-                  color: allUnlocked ? tc.text : 'rgba(255, 255, 255, 0.85)',
+                  color: allUnlocked ? tc.text : 'rgba(255, 255, 255, 0.65)',
                   padding: '0.3rem 0.75rem',
                   borderRadius: '20px',
                   background: allUnlocked ? tc.bg : 'rgba(255, 255, 255, 0.08)',
@@ -1029,7 +990,7 @@ const MultiRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =>
         <div style={{ transition: 'opacity 0.5s ease', opacity: allUnlocked ? 1 : 0.7 }}>
           <h3 style={{
             ...sectionTitleStyle,
-            color: allUnlocked ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.75)',
+            color: allUnlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
             transition: 'color 0.5s ease'
           }}>Tech Stack</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -1037,9 +998,9 @@ const MultiRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =>
               const tc = getTagColor(t);
               return (
                 <span key={i} style={{
-                  fontFamily: 'NeueMontreal-Medium, sans-serif',
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
                   fontSize: '0.8rem',
-                  color: allUnlocked ? tc.text : 'rgba(255, 255, 255, 0.85)',
+                  color: allUnlocked ? tc.text : 'rgba(255, 255, 255, 0.65)',
                   padding: '0.3rem 0.75rem',
                   borderRadius: '20px',
                   background: allUnlocked ? tc.bg : 'rgba(255, 255, 255, 0.08)',
@@ -1100,7 +1061,7 @@ const RoleTimelineSection = ({ role, roleIndex, isLast, onUnlock }: {
           {role.role}
         </p>
         <p style={{
-          fontFamily: 'NeueMontreal-Medium, sans-serif',
+          fontFamily: 'NeueMontreal-Light, sans-serif',
           color: 'rgba(255,255,255,0.7)',
           fontSize: '0.85rem',
           margin: '0.15rem 0 0'
@@ -1174,19 +1135,19 @@ const RoleTimelineSection = ({ role, roleIndex, isLast, onUnlock }: {
                 }} />
                 <p style={{
                   fontFamily: 'NeueMontreal-Medium, sans-serif',
-                  color: isDirectHover ? 'rgb(255,255,255)' : (isActive ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.7)'),
-                  fontSize: '1rem',
+                  color: isDirectHover ? 'rgb(255,255,255)' : (isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)'),
+                  fontSize: '0.9rem',
                   margin: '0 0 0.25rem',
                   transition: 'color 0.3s ease'
                 }}>
                   {entry.month}
                 </p>
                 <p style={{
-                  fontFamily: 'NeueMontreal-Medium, sans-serif',
-                  color: isDirectHover ? 'rgba(255,255,255,0.95)' : (isActive ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.6)'),
-                  fontSize: '0.95rem',
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
+                  color: isDirectHover ? 'rgba(255,255,255,0.95)' : (isActive ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.35)'),
+                  fontSize: '0.85rem',
                   margin: 0,
-                  lineHeight: '1.6',
+                  lineHeight: '1.5',
                   transition: 'color 0.3s ease'
                 }}>
                   {entry.description}
@@ -1236,11 +1197,11 @@ const SingleRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =
           <h2 style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', fontSize: '1.5rem', color: 'white', margin: 0 }}>
             {detail.company}
           </h2>
-          <p style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', color: 'rgba(255,255,255,0.6)', margin: '0.25rem 0 0', fontSize: '0.95rem' }}>
+          <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', margin: '0.25rem 0 0', fontSize: '0.95rem' }}>
             {detail.role}
           </p>
           {(detail.date || detail.location) && (
-            <p style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', color: 'rgba(255,255,255,0.4)', margin: '0.15rem 0 0', fontSize: '0.85rem' }}>
+            <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.4)', margin: '0.15rem 0 0', fontSize: '0.85rem' }}>
               {[detail.date, detail.location].filter(Boolean).join(' · ')}
             </p>
           )}
@@ -1314,18 +1275,18 @@ const SingleRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =
                   <p style={{
                     fontFamily: 'NeueMontreal-Medium, sans-serif',
                     color: isDirectHover ? 'rgb(255,255,255)' : (isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)'),
-                    fontSize: '1rem',
+                    fontSize: '0.9rem',
                     margin: '0 0 0.25rem',
                     transition: 'color 0.3s ease'
                   }}>
                     {entry.month}
                   </p>
                   <p style={{
-                    fontFamily: 'NeueMontreal-Medium, sans-serif',
+                    fontFamily: 'NeueMontreal-Light, sans-serif',
                     color: isDirectHover ? 'rgba(255,255,255,0.95)' : (isActive ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.35)'),
-                    fontSize: '0.95rem',
+                    fontSize: '0.85rem',
                     margin: 0,
-                    lineHeight: '1.6',
+                    lineHeight: '1.5',
                     transition: 'color 0.3s ease'
                   }}>
                     {entry.description}
@@ -1342,14 +1303,14 @@ const SingleRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =
         <div style={{ marginBottom: '2rem', transition: 'opacity 0.5s ease', opacity: unlocked ? 1 : 0.7 }}>
           <h3 style={{
             ...sectionTitleStyle,
-            color: unlocked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)',
+            color: unlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
             transition: 'color 0.5s ease'
           }}>Reflection</h3>
           {detail.reflection.split('\n\n').map((para, i) => (
             <p key={i} style={{
-              fontFamily: 'NeueMontreal-Medium, sans-serif',
-              color: unlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.6)',
-              fontSize: '0.95rem',
+              fontFamily: 'NeueMontreal-Light, sans-serif',
+              color: unlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)',
+              fontSize: '0.9rem',
               lineHeight: '1.7',
               margin: i === 0 ? 0 : '1rem 0 0',
               transition: 'color 0.5s ease'
@@ -1373,7 +1334,7 @@ const SingleRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =
               const tc = getTagColor(s);
               return (
                 <span key={i} style={{
-                  fontFamily: 'NeueMontreal-Medium, sans-serif',
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
                   fontSize: '0.8rem',
                   color: unlocked ? tc.text : 'rgba(255, 255, 255, 0.65)',
                   padding: '0.3rem 0.75rem',
@@ -1400,7 +1361,7 @@ const SingleRoleExperienceContent = ({ detail }: { detail: ExperienceDetail }) =
               const tc = getTagColor(t);
               return (
                 <span key={i} style={{
-                  fontFamily: 'NeueMontreal-Medium, sans-serif',
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
                   fontSize: '0.8rem',
                   color: unlocked ? tc.text : 'rgba(255, 255, 255, 0.65)',
                   padding: '0.3rem 0.75rem',
@@ -1554,7 +1515,7 @@ const ProjectContent = ({ detail }: { detail: ProjectDetail }) => {
       {detail.architecture && (
         <div className="proj-scroll-item" style={{ marginBottom: '2rem' }}>
           <h3 style={sectionTitleStyle}>Architecture</h3>
-          <p style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: '1.7', margin: 0 }}>
+          <p style={{ fontFamily: 'NeueMontreal-Light, sans-serif', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: '1.7', margin: 0 }}>
             {detail.architecture}
           </p>
         </div>
@@ -1593,7 +1554,7 @@ const ProjectContent = ({ detail }: { detail: ProjectDetail }) => {
               const tc = getTagColor(t);
               return (
                 <span key={i} style={{
-                  fontFamily: 'NeueMontreal-Medium, sans-serif',
+                  fontFamily: 'NeueMontreal-Light, sans-serif',
                   fontSize: '0.8rem',
                   padding: '0.3rem 0.75rem',
                   borderRadius: '20px',
@@ -1644,11 +1605,11 @@ const ProjectContent = ({ detail }: { detail: ProjectDetail }) => {
 const sectionTitleStyle: React.CSSProperties = {
   fontFamily: 'NeueMontreal-Medium, sans-serif',
   fontSize: '1rem',
-  color: 'rgba(255, 255, 255, 1)',
+  color: 'rgba(255, 255, 255, 0.5)',
   textTransform: 'uppercase',
   letterSpacing: '0.08em',
   margin: '0 0 1rem',
-  fontWeight: 600
+  fontWeight: 500
 };
 
 const pillCardStyle: React.CSSProperties = {
@@ -1662,24 +1623,22 @@ const pillCardStyle: React.CSSProperties = {
 };
 
 const tagStyle: React.CSSProperties = {
-  fontFamily: 'NeueMontreal-Medium, sans-serif',
+  fontFamily: 'NeueMontreal-Light, sans-serif',
   fontSize: '0.8rem',
-  color: 'rgba(255, 255, 255, 0.9)',
+  color: 'rgba(255, 255, 255, 0.65)',
   padding: '0.3rem 0.75rem',
   borderRadius: '20px',
   background: 'rgba(255, 255, 255, 0.08)',
-  border: '0.5px solid rgba(255, 255, 255, 0.12)',
-  fontWeight: 500
+  border: '0.5px solid rgba(255, 255, 255, 0.12)'
 };
 
 const listStyle: React.CSSProperties = {
-  fontFamily: 'NeueMontreal-Medium, sans-serif',
-  color: 'rgba(255, 255, 255, 0.95)',
-  fontSize: '0.95rem',
+  fontFamily: 'NeueMontreal-Light, sans-serif',
+  color: 'rgba(255, 255, 255, 0.6)',
+  fontSize: '0.9rem',
   lineHeight: '1.7',
   margin: 0,
-  paddingLeft: '1rem',
-  fontWeight: 450
+  paddingLeft: '1rem'
 };
 
 const listItemStyle: React.CSSProperties = {

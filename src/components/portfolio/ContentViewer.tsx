@@ -17,7 +17,6 @@ export interface ContentViewData {
 interface ContentViewerProps {
   content: ContentViewData;
   onClose: () => void;
-  windowMode?: boolean;
 }
 
 // Company logo SVGs
@@ -96,19 +95,15 @@ const CompanyLogo = ({ company }: { company: string }) => {
   return null;
 };
 
-const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => {
+const ContentViewer = ({ content, onClose }: ContentViewerProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const markdownRef = useRef<HTMLDivElement>(null);
-  const hasAnimatedRef = useRef(false);
   const brand = content.company ? companyBrands[content.company] : null;
   const isDeepResearch = content.type === 'deep-research';
-  const shouldAnimate = !hasAnimatedRef.current;
-  if (!hasAnimatedRef.current) hasAnimatedRef.current = true;
 
 
-  // Escape key + body scroll lock (skip in windowMode — AppWindow handles this)
+  // Escape key + body scroll lock
   useEffect(() => {
-    if (windowMode) return;
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -118,7 +113,7 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
       document.removeEventListener('keydown', handleEsc);
       document.body.style.overflow = '';
     };
-  }, [onClose, windowMode]);
+  }, [onClose]);
 
   // Scroll to top on mount
   useEffect(() => {
@@ -136,6 +131,7 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
 
     const timer = setTimeout(() => {
       const elements = Array.from(container.querySelectorAll('p, h2, h3, blockquote, ul, ol, pre, table, hr, div.callout'));
+      elements.forEach(el => el.classList.add('cv-scroll-reveal'));
 
       const scrollRect = scrollRoot.getBoundingClientRect();
 
@@ -151,13 +147,12 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
         }
       });
 
-      // Already-visible items: mark as revealed immediately (no dim flash)
-      initiallyVisible.forEach(el => {
-        el.classList.add('cv-scroll-reveal', 'cv-scroll-revealed');
+      // Stagger-reveal items already in view
+      initiallyVisible.forEach((el, i) => {
+        staggerTimers.push(setTimeout(() => {
+          el.classList.add('cv-scroll-revealed');
+        }, i * 120));
       });
-
-      // Only below-fold items get the dim-then-reveal treatment
-      belowFold.forEach(el => el.classList.add('cv-scroll-reveal'));
 
       // IntersectionObserver for items below the fold
       if (belowFold.length > 0) {
@@ -183,81 +178,6 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
     };
   }, [content.slug]);
 
-  // In windowMode, render inline without backdrop/fixed overlay
-  if (windowMode) {
-    return (
-      <div
-        ref={panelRef}
-        style={{
-          overflowY: 'auto',
-          height: '100%',
-        }}
-        className={`content-viewer-panel${shouldAnimate ? ' cv-cascade-animate' : ''}`}
-      >
-        <div style={{ maxWidth: content.type === 'deep-research' ? '120ch' : '90ch', margin: '0 auto' }}>
-            <div className="cv-terminal-content" style={{ padding: 'clamp(1.5rem, 3vw, 2.5rem)' }}>
-              <header style={{ marginBottom: '2rem' }}>
-                {isDeepResearch && content.company && (
-                  <div className="cv-cascade-item cv-cascade-0" style={{ marginBottom: '1.75rem' }}>
-                    <CompanyLogo company={content.company} />
-                  </div>
-                )}
-                {!isDeepResearch && content.company && brand && (
-                  <div className="cv-cascade-item cv-cascade-0" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-                    <CompanyLogo company={content.company} />
-                    {content.company !== 'Uber' && (
-                      <span style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', fontSize: '1rem', color: brand.color, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
-                        {content.company}
-                      </span>
-                    )}
-                  </div>
-                )}
-                <h1 className="cv-cascade-item cv-cascade-1" style={{ fontFamily: 'NeueMontreal-Medium, sans-serif', fontSize: 'clamp(1.2rem, 3vw, 1.6rem)', color: 'white', margin: '0 0 0.75rem', fontWeight: 500, lineHeight: '1.3' }}>
-                  {content.title}
-                </h1>
-                <div className="cv-cascade-item cv-cascade-2" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'NeueMontreal-Light, sans-serif' }}>
-                    {new Date(content.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                  </span>
-                </div>
-                <div className="cv-cascade-item cv-cascade-3" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
-                  {content.tags.map((tag, i) => {
-                    const tc = getTagColor(tag);
-                    return (
-                      <span key={i} style={{ fontSize: '0.7rem', fontFamily: 'NeueMontreal-Light, sans-serif', color: tc.text, padding: '0.2rem 0.55rem', borderRadius: '12px', background: tc.bg, border: `0.5px solid ${tc.border}` }}>
-                        #{tag}
-                      </span>
-                    );
-                  })}
-                </div>
-                <p className="cv-cascade-item cv-cascade-4" style={{ fontFamily: 'NeueMontreal-Light, sans-serif', fontSize: '0.95rem', color: 'rgba(255, 255, 255, 0.85)', lineHeight: '1.7', margin: 0, paddingBottom: '1.25rem', borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                  {content.summary}
-                </p>
-              </header>
-              <div ref={markdownRef} className="cv-cascade-item cv-cascade-5">
-                <MarkdownRenderer content={content.markdown} />
-              </div>
-            </div>
-        </div>
-        <style>{`
-          @keyframes cvCascadeIn {
-            0% { opacity: 0.05; transform: translateY(8px); filter: brightness(0.3); }
-            100% { opacity: 1; transform: translateY(0); filter: brightness(1); }
-          }
-          .cv-cascade-animate .cv-cascade-item { opacity: 0.05; filter: brightness(0.3); animation: cvCascadeIn 0.6s ease forwards; }
-          .cv-cascade-animate .cv-cascade-0 { animation-delay: 0.15s; }
-          .cv-cascade-animate .cv-cascade-1 { animation-delay: 0.3s; }
-          .cv-cascade-animate .cv-cascade-2 { animation-delay: 0.45s; }
-          .cv-cascade-animate .cv-cascade-3 { animation-delay: 0.55s; }
-          .cv-cascade-animate .cv-cascade-4 { animation-delay: 0.65s; }
-          .cv-cascade-animate .cv-cascade-5 { animation-delay: 0.8s; }
-          .cv-scroll-reveal { opacity: 0.3; filter: brightness(0.5); transform: translateY(4px); transition: opacity 0.6s ease, filter 0.6s ease, transform 0.6s ease; }
-          .cv-scroll-revealed { opacity: 1 !important; filter: brightness(1) !important; transform: translateY(0) !important; }
-        `}</style>
-      </div>
-    );
-  }
-
   return (
     <>
       {/* Backdrop — blurred so WebGL silk shows through */}
@@ -282,9 +202,9 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
           top: 0, left: 0, right: 0, bottom: 0,
           overflowY: 'auto',
           zIndex: 301,
-          animation: shouldAnimate ? undefined : 'cvSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+          animation: 'cvSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
         }}
-        className={`content-viewer-panel${shouldAnimate ? ' cv-cascade-animate' : ''}`}
+        className="content-viewer-panel"
       >
         {/* Back button */}
         <div style={{
@@ -457,17 +377,17 @@ const ContentViewer = ({ content, onClose, windowMode }: ContentViewerProps) => 
           0% { opacity: 0.05; transform: translateY(8px); filter: brightness(0.3); }
           100% { opacity: 1; transform: translateY(0); filter: brightness(1); }
         }
-        .cv-cascade-animate .cv-cascade-item {
+        .cv-cascade-item {
           opacity: 0.05;
           filter: brightness(0.3);
           animation: cvCascadeIn 0.6s ease forwards;
         }
-        .cv-cascade-animate .cv-cascade-0 { animation-delay: 0.15s; }
-        .cv-cascade-animate .cv-cascade-1 { animation-delay: 0.3s; }
-        .cv-cascade-animate .cv-cascade-2 { animation-delay: 0.45s; }
-        .cv-cascade-animate .cv-cascade-3 { animation-delay: 0.55s; }
-        .cv-cascade-animate .cv-cascade-4 { animation-delay: 0.65s; }
-        .cv-cascade-animate .cv-cascade-5 { animation-delay: 0.8s; }
+        .cv-cascade-0 { animation-delay: 0.15s; }
+        .cv-cascade-1 { animation-delay: 0.3s; }
+        .cv-cascade-2 { animation-delay: 0.45s; }
+        .cv-cascade-3 { animation-delay: 0.55s; }
+        .cv-cascade-4 { animation-delay: 0.65s; }
+        .cv-cascade-5 { animation-delay: 0.8s; }
         .cv-scroll-reveal {
           opacity: 0.3;
           filter: brightness(0.5);

@@ -26,10 +26,9 @@ interface ExperienceCardProps {
   clickable?: boolean;
   link?: string | null;
   onDetailClick?: () => void;
-  darkMode?: boolean;
 }
 
-const ExperienceCard = ({ experience, clickable = false, link = null, onDetailClick, darkMode = false }: ExperienceCardProps) => {
+const ExperienceCard = ({ experience, clickable = false, link = null, onDetailClick }: ExperienceCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [litIndex, setLitIndex] = useState(-1);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -71,7 +70,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
 
   return (
     <div
-      className={darkMode ? 'dark-experience-card' : 'glass-experience-card'}
+      className="glass-experience-card"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
@@ -89,7 +88,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
     >
 
       {/* Company Icon(s) */}
-      <div style={{ display: 'flex', flexDirection: experience.logo2 ? 'column' : 'row', gap: '0.5rem', flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
         <div className="company-icon" style={{
           flexShrink: 0,
           width: `${experience.logoSize || 50}px`,
@@ -113,7 +112,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
             />
           ) : (
             <span style={{
-              color: darkMode ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.65)',
+              color: 'rgba(255, 255, 255, 0.6)',
               fontSize: '1.5rem',
               fontFamily: 'NeueMontreal-Light, sans-serif',
               fontWeight: '300'
@@ -161,11 +160,11 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
         {/* Company Name */}
         <h3 style={{
           fontSize: 'clamp(1rem, 2.5vw, 1.3rem)',
-          color: darkMode ? 'rgba(255, 255, 255, 0.95)' : '#1d1d1f',
-          fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Medium, sans-serif',
+          color: 'rgba(255, 255, 255, 0.95)',
+          fontFamily: 'NeueMontreal-Medium, sans-serif',
           fontStyle: 'normal',
           margin: 0,
-          fontWeight: '600',
+          fontWeight: '500',
           wordWrap: 'break-word',
           overflowWrap: 'break-word',
           wordBreak: 'break-word',
@@ -185,7 +184,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
               top: '8px',
               bottom: '8px',
               width: '2px',
-              background: darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'
+              background: 'rgba(255, 255, 255, 0.2)'
             }} />
             {/* Glow vertical line — grows as roles light up */}
             <div style={{
@@ -194,9 +193,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
               top: '8px',
               width: '4px',
               height: litIndex >= experience.roles.length - 1 ? 'calc(100% - 16px)' : litIndex >= 0 ? `${((litIndex + 1) / experience.roles.length) * 100}%` : '0%',
-              background: darkMode
-                ? 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.25) 100%)'
-                : 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.25) 100%)',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.5) 100%)',
               filter: 'blur(1.5px)',
               borderRadius: '2px',
               transition: 'height 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -215,23 +212,19 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
                     width: '10px',
                     height: '10px',
                     borderRadius: '50%',
-                    background: darkMode
-                      ? (isLit ? 'rgba(255, 255, 255, 0.7)' : (i === 0 ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.25)'))
-                      : (isLit ? 'rgba(0, 0, 0, 0.7)' : (i === 0 ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.25)')),
-                    border: `2px solid ${darkMode
-                      ? (isLit ? 'rgba(255, 255, 255, 0.5)' : (i === 0 ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.15)'))
-                      : (isLit ? 'rgba(0, 0, 0, 0.5)' : (i === 0 ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.15)'))}`,
-                    boxShadow: darkMode
-                      ? (isLit ? '0 0 8px rgba(255,255,255,0.2)' : (i === 0 ? '0 0 6px rgba(255,255,255,0.15)' : 'none'))
-                      : (isLit ? '0 0 8px rgba(0,0,0,0.2)' : (i === 0 ? '0 0 6px rgba(0,0,0,0.15)' : 'none')),
+                    background: isLit ? 'rgba(255, 255, 255, 0.95)' : (i === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.4)'),
+                    border: `2px solid ${isLit ? 'rgba(255, 255, 255, 0.7)' : (i === 0 ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.2)')}`,
+                    boxShadow: isLit
+                      ? '0 0 10px rgba(255,255,255,0.6), 0 0 20px rgba(255,255,255,0.2)'
+                      : (i === 0 ? '0 0 8px rgba(255,255,255,0.3)' : 'none'),
                     transition: 'all 0.35s ease'
                   }} />
                   <p style={{
                     fontSize: 'clamp(0.95rem, 2.3vw, 1.1rem)',
-                    color: darkMode ? 'rgba(255, 255, 255, 0.9)' : '#1d1d1f',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    fontFamily: 'NeueMontreal-Light, sans-serif',
                     margin: 0,
-                    fontWeight: '500',
+                    fontWeight: '300',
                     lineHeight: '1.4',
                     userSelect: 'none',
                     WebkitUserSelect: 'none'
@@ -240,10 +233,10 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
                   </p>
                   <p style={{
                     fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)',
-                    color: darkMode ? 'rgba(255, 255, 255, 0.7)' : '#86868b',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    fontFamily: 'NeueMontreal-Light, sans-serif',
                     margin: '0.1rem 0 0',
-                    fontWeight: '400',
+                    fontWeight: '300',
                     userSelect: 'none',
                     WebkitUserSelect: 'none'
                   }}>
@@ -252,10 +245,10 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
                   {r.description && (
                     <p style={{
                       fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
-                      color: darkMode ? 'rgba(255, 255, 255, 0.85)' : '#424245',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      fontFamily: 'NeueMontreal-Light, sans-serif',
                       margin: '0.4rem 0 0',
-                      fontWeight: '400',
+                      fontWeight: '300',
                       lineHeight: '1.5',
                       userSelect: 'none',
                       WebkitUserSelect: 'none'
@@ -272,10 +265,10 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
           <>
             <p style={{
               fontSize: 'clamp(0.95rem, 2.3vw, 1.15rem)',
-              color: darkMode ? 'rgba(255, 255, 255, 0.92)' : '#424245',
-              fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontFamily: 'NeueMontreal-Light, sans-serif',
               margin: 0,
-              fontWeight: '500',
+              fontWeight: '300',
               lineHeight: '1.4',
               wordWrap: 'break-word',
               overflowWrap: 'break-word',
@@ -286,27 +279,45 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
             }}>
               {experience.role}
             </p>
+            {experience.date && (
+              <p style={{
+                fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontFamily: 'NeueMontreal-Light, sans-serif',
+                margin: '0.15rem 0 0',
+                fontWeight: '300',
+                userSelect: 'none',
+                WebkitUserSelect: 'none'
+              }}>
+                {experience.date}
+              </p>
+            )}
+
+            {/* Location */}
             <p style={{
-              fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)',
-              color: darkMode ? 'rgba(255, 255, 255, 0.7)' : '#86868b',
-              fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
-              margin: '0.1rem 0 0',
-              fontWeight: '400',
+              fontSize: 'clamp(0.9rem, 2.2vw, 1rem)',
+              color: 'rgba(255, 255, 255, 0.6)',
+              fontFamily: 'NeueMontreal-Light, sans-serif',
+              margin: 0,
+              fontWeight: '300',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              wordBreak: 'break-word',
               userSelect: 'none',
               WebkitUserSelect: 'none'
             }}>
-              {[experience.date, experience.location].filter(Boolean).join(' · ')}
+              {experience.location}
             </p>
 
             {/* Description */}
             <p style={{
               fontSize: 'clamp(0.95rem, 2.3vw, 1.1rem)',
-              color: darkMode ? 'rgba(255, 255, 255, 0.88)' : '#424245',
-              fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontFamily: 'NeueMontreal-Light, sans-serif',
               lineHeight: '1.6',
               margin: 0,
               marginTop: '0.75rem',
-              fontWeight: '400',
+              fontWeight: '300',
               wordWrap: 'break-word',
               overflowWrap: 'break-word',
               wordBreak: 'break-word',
@@ -339,22 +350,18 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
 
         .glass-experience-card {
           position: relative;
-          background: rgba(255, 255, 255, 0.82);
-          border-radius: 12px;
-          border: 0.5px solid rgba(0, 0, 0, 0.06);
+          background: rgba(128, 128, 128, 0.12);
+          border-radius: 20px;
+          border: 0.5px solid rgba(255, 255, 255, 0.2);
           padding: 1.5rem;
           overflow: hidden;
           transition: all 0.3s ease;
           cursor: pointer;
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
         }
 
         .glass-experience-card:hover {
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
-          transform: translateY(-1px);
-          background: rgba(255, 255, 255, 0.9);
+          box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+          transform: translateZ(10px) scale(1.02);
         }
 
         .glass-experience-card h3,
@@ -363,8 +370,10 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
           transition: color 0.3s ease !important;
         }
 
-        .glass-experience-card:hover h3 {
-          color: rgba(0, 0, 0, 0.95) !important;
+        .glass-experience-card:hover h3,
+        .glass-experience-card:hover p,
+        .glass-experience-card:hover span {
+          color: rgb(255, 255, 255) !important;
         }
 
         .glass-experience-card::before {
@@ -374,7 +383,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
           left: 0;
           right: 0;
           height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.08), transparent);
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
         }
 
         .glass-experience-card::after {
@@ -384,59 +393,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
           left: 0;
           width: 1px;
           height: 100%;
-          background: linear-gradient(180deg, rgba(0, 0, 0, 0.06), transparent, rgba(0, 0, 0, 0.03));
-        }
-
-        /* Dark mode card variant */
-        .dark-experience-card {
-          position: relative;
-          background: rgba(255, 255, 255, 0.07);
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          padding: 1.25rem;
-          overflow: hidden;
-          transition: all 0.3s ease;
-          cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        .dark-experience-card:hover {
-          background: rgba(255, 255, 255, 0.11);
-          border-color: rgba(255, 255, 255, 0.14);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-        }
-
-        .dark-experience-card:hover h3 {
-          color: rgba(255, 255, 255, 1) !important;
-        }
-
-        .dark-experience-card h3,
-        .dark-experience-card p,
-        .dark-experience-card span {
-          transition: color 0.3s ease !important;
-        }
-
-        .dark-experience-card::before {
-          display: none;
-        }
-
-        .dark-experience-card * {
-          -webkit-user-select: none !important;
-          -moz-user-select: none !important;
-          -ms-user-select: none !important;
-          user-select: none !important;
-          -webkit-touch-callout: none !important;
-          -webkit-tap-highlight-color: transparent !important;
-          outline: none !important;
-        }
-
-        .dark-experience-card *::selection {
-          background: transparent !important;
-        }
-
-        .dark-experience-card h3, .dark-experience-card p {
-          pointer-events: none !important;
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent, rgba(255, 255, 255, 0.1));
         }
 
         .glass-experience-card * {
@@ -458,8 +415,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
         }
 
         @media (max-width: 768px) {
-          .glass-experience-card,
-          .dark-experience-card {
+          .glass-experience-card {
             flex-direction: column !important;
             align-items: flex-start !important;
             gap: 1rem !important;
@@ -485,8 +441,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
         }
 
         @media (max-width: 480px) {
-          .glass-experience-card,
-          .dark-experience-card {
+          .glass-experience-card {
             padding: 1rem 0.5rem !important;
             gap: 1rem !important;
             min-height: 200px !important;

@@ -1,7 +1,12 @@
 ---
 import '../../styles/global.css';
 import { AstroSeo } from '@astrolib/seo';
-const backgrounds = [{ src: '/background.png' }];
+import { getImage } from 'astro:assets';
+import hollywoodBackground from '../../assets/images/hollywood-background.png';
+
+const backgrounds = await Promise.all([
+  getImage({ src: hollywoodBackground, width: 3500 }),
+]);
 ---
 
 <!-- Core meta tags -->
@@ -80,7 +85,7 @@ const backgrounds = [{ src: '/background.png' }];
       rel='preload'
       href={bg.src}
       as='image'
-      type='image/png'
+      type='image/webp'
       fetchpriority='high'
     />
   ))

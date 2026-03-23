@@ -1,27 +1,6 @@
 import type { ContentViewData } from './ContentViewer';
 
 export const contentMap: Record<string, ContentViewData> = {
-  'preface': {
-    type: 'blog',
-    slug: 'preface',
-    title: 'Welcome to My Notes',
-    publishedAt: '2026-03-01',
-    tags: ['Personal'],
-    readingTime: 1,
-    summary: '',
-    markdown: `These are my personal notes and reflections on things I find interesting.
-
-I write about technology, finance, psychology, and career decisions. None of this is meant to be authoritative. These are just my own thoughts and explorations as I try to make sense of the world around me.
-
-Some of these notes are polished essays. Others are rougher ideas I wanted to get down before they disappeared. All of them reflect what I was thinking at the time I wrote them.
-
-## How to navigate
-
-Browse by topic using the folders on the left, or scroll through the list and click anything that catches your eye. There is no particular order you need to read them in.
-
-Thanks for stopping by.`
-  },
-
   'prestige-is-a-strong-drug': {
     type: 'blog',
     slug: 'prestige-is-a-strong-drug',
@@ -44,17 +23,15 @@ At first it feels electric. It feels like you are standing in the center of mome
 
 But after a while I started noticing something uncomfortable. Being inside a prestigious environment can trick you into believing you are moving forward simply because the environment itself looks impressive.
 
-## Borrowed Momentum
+## Prestige creates a form of borrowed momentum.
 
-Prestige creates a form of borrowed momentum. You begin to confuse the reputation of the institution with your own trajectory. The system is powerful, so you assume your personal progress must be powerful as well.
+You begin to confuse the reputation of the institution with your own trajectory. The system is powerful, so you assume your personal progress must be powerful as well.
 
 But prestige does not guarantee that you are actually building anything meaningful. It only guarantees that the outside world thinks you probably are.
 
 Eventually I realized something that most people in those environments quietly suspect but rarely say out loud.
 
-## A Place to Hide
-
-Prestige can become a place to hide.
+## Prestige can become a place to hide.
 
 You can spend years inside impressive institutions while avoiding the uncomfortable work of figuring out what you actually want to build with your life.
 
@@ -97,9 +74,9 @@ There are charts everywhere. Indicators. Strategies. Entire online communities c
 
 You start believing that if you study the charts long enough, if you learn the right strategy, you might unlock the code.
 
-## Seeing How the Game Works
+## But if you stay in the rabbit hole long enough, something interesting happens.
 
-But if you stay in the rabbit hole long enough, something interesting happens. You start seeing how the game actually works.
+You start seeing how the game actually works.
 
 The loudest voices are rarely the most profitable. The traders posting massive returns are often taking massive risks. The strategies that look exciting tend to burn out the fastest.
 
@@ -113,9 +90,9 @@ Speculation asks the question "What might move next?"
 
 Investing asks the question "What will still matter in ten years?"
 
-## Speculation vs. Investing
+## The deeper you go into trading culture, the clearer this difference becomes.
 
-The deeper you go into trading culture, the clearer this difference becomes. The meme coin trader chasing a 10x return in three days is playing a psychological game. The volatility itself is the product.
+The meme coin trader chasing a 10x return in three days is playing a psychological game. The volatility itself is the product.
 
 The investor slowly building a portfolio of durable assets is playing a different game entirely.
 
@@ -227,9 +204,9 @@ That observation leads people to a quick conclusion.
 
 Technically speaking, that criticism is not wrong. Many early AI startups are essentially building workflow tools on top of existing language models.
 
-## Why Wrappers Still Matter
+## But the conclusion that these companies have no value misses something important.
 
-But the conclusion that these companies have no value misses something important. Technology adoption rarely starts with deep infrastructure.
+Technology adoption rarely starts with deep infrastructure.
 
 It usually starts with interface.
 
