@@ -1,46 +1,67 @@
 ---
-export const prerender = false;
-import { getCollection } from 'astro:content';
-import { getImage } from 'astro:assets';
-import Layout from '../../layouts/Layout.astro';
-import ProjectsLayout from '../../layouts/_archive/ProjectsLayout';
-import { getRecentBlogPosts } from '../../utils/blog';
-import { getFixedBackgroundKey, getOptimizedBackgrounds } from '../../utils/backgrounds';
-
-// Fetch all projects from content collection
-const allProjects = await getCollection('projects');
-
-// Sort by year (most recent first)
-const sortedProjects = allProjects.sort((a, b) => b.data.year - a.data.year);
-
-// Format projects for the ProjectsLayout component
-const projects = sortedProjects.map((project) => ({
-  title: project.data.title,
-  slug: project.data.slug || project.id.replace('.md', ''),
-  year: project.data.year,
-  tech: project.data.tech,
-  summary: project.data.summary,
-  status: project.data.year === 2025 ? 'In Development' : 'Live',
-  repoUrl: project.data.repoUrl
-}));
-
-// Get optimized backgrounds
-const backgroundMap = await getOptimizedBackgrounds(getImage);
-
-// Fetch recent blog posts for navigation
-const recentPosts = await getRecentBlogPosts();
+import { AstroSeo } from '@astrolib/seo';
+import ProjectsPage from '../../components/portfolio/ProjectsPage';
 ---
 
-<Layout
-  title='Projects - Ronniel Gandhe'
-  description='Software projects by Ronniel Gandhe - systematic trading tools and scalable infrastructure'
-  canonical='https://ronnielgandhe.com/projects'
->
-  <ProjectsLayout
-    client:load
-    projects={projects}
-    initialBg={getFixedBackgroundKey()}
-    backgroundMap={backgroundMap}
-    recentPosts={recentPosts}
-  />
-</Layout>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="author" content="Ronniel Gandhe" />
+
+    <AstroSeo
+      title="Projects | Ronniel Gandhe"
+      description="Software Engineer. New York / Toronto."
+      canonical="https://ronnielgandhe.com/projects"
+      openGraph={{
+        url: 'https://ronnielgandhe.com/projects',
+        title: 'Projects | Ronniel Gandhe',
+        description: 'Software Engineer. New York / Toronto.',
+        site_name: 'Ronniel Gandhe',
+      }}
+    />
+
+    <link rel="icon" type="image/png" href="/icons/baseheadlogo.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/baseheadlogo.png" />
+    <meta name="theme-color" content="#242424" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <style is:global>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        background-color: #000000;
+        overflow-x: hidden;
+        max-width: 100vw;
+        min-height: 100vh;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        background: transparent;
+        overflow-x: hidden;
+        min-height: 100vh;
+        width: 100%;
+      }
+
+      ::-webkit-scrollbar {
+        width: 0px;
+        background: transparent;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <ProjectsPage client:only="react" />
+  </body>
+</html>
