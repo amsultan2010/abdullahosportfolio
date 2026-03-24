@@ -88,7 +88,7 @@ const ExperienceCard = ({ experience, clickable = false, link = null, onDetailCl
     >
 
       {/* Company Icon(s) */}
-      <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flexShrink: 0 }}>
         <div className="company-icon" style={{
           flexShrink: 0,
           width: `${experience.logoSize || 50}px`,

@@ -1,6 +1,6 @@
 ---
 import { AstroSeo } from '@astrolib/seo';
-import PortfolioApp from '../components/portfolio/PortfolioApp';
+import ProjectsPage from '../components/portfolio/ProjectsPage';
 ---
 
 <html lang="en">
@@ -11,12 +11,12 @@ import PortfolioApp from '../components/portfolio/PortfolioApp';
     <meta name="author" content="Ronniel Gandhe" />
 
     <AstroSeo
-      title="Ronniel Gandhe"
+      title="Projects | Ronniel Gandhe"
       description="Software Engineer. New York / Toronto."
-      canonical="https://ronnielgandhe.com"
+      canonical="https://ronnielgandhe.com/projects"
       openGraph={{
-        url: 'https://ronnielgandhe.com',
-        title: 'Ronniel Gandhe',
+        url: 'https://ronnielgandhe.com/projects',
+        title: 'Projects | Ronniel Gandhe',
         description: 'Software Engineer. New York / Toronto.',
         site_name: 'Ronniel Gandhe',
       }}
@@ -68,6 +68,6 @@ import PortfolioApp from '../components/portfolio/PortfolioApp';
     </style>
   </head>
   <body>
-    <PortfolioApp client:only="react" />
+    <ProjectsPage client:only="react" />
   </body>
 </html>

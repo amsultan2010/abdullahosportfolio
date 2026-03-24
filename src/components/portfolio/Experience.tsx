@@ -27,8 +27,8 @@ const Experience = ({ onCardClick }: ExperienceProps) => {
       description: "",
       logo: "/augmentor-dark.svg",
       roles: [
-        { role: "Software Engineer, Growth Team", date: "Jan 2026 – Current", location: "New York / Remote", description: "Building user acquisition and engagement features, running growth experiments, and driving platform adoption and retention metrics." },
-        { role: "Software Engineering Intern, Cloud Infrastructure", date: "Jan – Apr 2025", location: "Palo Alto, CA", description: "Built webhook integrations, designed event schemas for the ingestion pipeline, and reduced p95 ingestion latency by 35% through observability and optimization work." }
+        { role: "Software Engineer, Growth Team", date: "Jan 2026 – Current", location: "New York / Remote", description: "" },
+        { role: "Software Engineering Intern, Cloud Infrastructure", date: "Jan – Apr 2025", location: "Palo Alto, CA", description: "" }
       ],
       detail: {
         type: 'experience' as const,
@@ -76,7 +76,7 @@ const Experience = ({ onCardClick }: ExperienceProps) => {
       role: "Data Scientist Intern, Technology Operations",
       date: "Jan – Apr 2024",
       location: "Toronto, ON",
-      description: "Owned data contracts and CI/CD pipelines with GitHub Actions. Implemented feature flags, blue/green and canary rollouts. Created release/SLO dashboards for latency, error rate, and CTR impact.",
+      description: "",
       logo: "/cibc-dark.svg",
       logoSize: 65,
       detail: {

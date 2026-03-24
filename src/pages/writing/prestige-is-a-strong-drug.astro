@@ -1,6 +1,6 @@
 ---
 import { AstroSeo } from '@astrolib/seo';
-import PortfolioApp from '../components/portfolio/PortfolioApp';
+import WritingPostPage from '../../components/portfolio/WritingPostPage';
 ---
 
 <html lang="en">
@@ -11,13 +11,13 @@ import PortfolioApp from '../components/portfolio/PortfolioApp';
     <meta name="author" content="Ronniel Gandhe" />
 
     <AstroSeo
-      title="Ronniel Gandhe"
-      description="Software Engineer. New York / Toronto."
-      canonical="https://ronnielgandhe.com"
+      title="Prestige Is a Strong Drug | Ronniel Gandhe"
+      description="What dropping out of one of Canada's best programs taught me about borrowed momentum and real growth."
+      canonical="https://ronnielgandhe.com/writing/prestige-is-a-strong-drug"
       openGraph={{
-        url: 'https://ronnielgandhe.com',
-        title: 'Ronniel Gandhe',
-        description: 'Software Engineer. New York / Toronto.',
+        url: 'https://ronnielgandhe.com/writing/prestige-is-a-strong-drug',
+        title: 'Prestige Is a Strong Drug | Ronniel Gandhe',
+        description: "What dropping out of one of Canada's best programs taught me about borrowed momentum and real growth.",
         site_name: 'Ronniel Gandhe',
       }}
     />
@@ -68,6 +68,6 @@ import PortfolioApp from '../components/portfolio/PortfolioApp';
     </style>
   </head>
   <body>
-    <PortfolioApp client:only="react" />
+    <WritingPostPage client:only="react" slug="prestige-is-a-strong-drug" />
   </body>
 </html>

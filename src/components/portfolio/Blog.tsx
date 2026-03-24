@@ -31,30 +31,6 @@ const Blog = ({ onContentClick }: BlogProps) => {
       readingTime: 6,
       publishedAt: "2026-01-28"
     },
-    {
-      slug: "vc-investing-in-myself",
-      title: "Roleplaying as a VC Investing in Myself",
-      summary: "What happens when you evaluate your own life using the logic of venture capital.",
-      tags: ["Productivity", "Psychology", "Personal"],
-      readingTime: 5,
-      publishedAt: "2026-01-15"
-    },
-    {
-      slug: "most-ai-startups-api-calls",
-      title: "Most AI Startups Are Just Fancy API Calls",
-      summary: "And why that is actually working for now. The wrapper critique misses something important.",
-      tags: ["AI", "Startups", "Systems"],
-      readingTime: 5,
-      publishedAt: "2025-12-10"
-    },
-    {
-      slug: "explaining-ai-agents",
-      title: "Explaining AI Agents With One Simple Analogy",
-      summary: "Every time I try explaining AI agents to someone who is not technical, the conversation usually starts the same way.",
-      tags: ["AI", "Agents", "Learning"],
-      readingTime: 5,
-      publishedAt: "2025-11-22"
-    }
   ];
 
   // Chunk posts into rows of 3

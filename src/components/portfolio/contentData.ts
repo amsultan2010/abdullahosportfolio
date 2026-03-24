@@ -56,256 +56,113 @@ But real growth usually begins the moment that certainty disappears.`
     title: 'What Going Down the Trading Rabbit Hole Taught Me About Finance',
     publishedAt: '2026-01-28',
     tags: ['Finance', 'Markets', 'Learning'],
-    readingTime: 6,
-    summary: 'Anyone who gets interested in markets eventually falls into the same rabbit hole. Here is what I found at the bottom.',
-    markdown: `Anyone who gets interested in markets eventually falls into the same rabbit hole.
+    readingTime: 15,
+    summary: 'Anyone who gets interested in markets eventually falls into the same rabbit hole. Here I discuss my journey, what led me to get into the markets, and the lifelong lessons I took away from the whole process.',
+    markdown: `Anyone who gets interested in markets eventually falls into the same rabbit hole. Here I discuss my journey, what led me to even get into the markets, and the lifelong lessons that I somehow took away from the whole process.
 
-It starts innocently enough. You read about someone turning a small trading account into something huge. You watch a few videos about options strategies. You discover that there are entire communities dedicated to day trading futures, crypto, and derivatives.
+What do you think of when you think of the average day trader? If your answers were:
 
-Suddenly the market stops looking like a slow investment machine and starts looking like a place where fortunes are made overnight.
+- Some dude in his mom's basement that starts every conversation with the newest crypto he just discovered
+- The 40-year-old freshly divorced uncle that realized that corporate life was a myth and options are the way to freedom
+- A guy that dropped out of school because "escape the matrix bro"
+- Or a guy that convinces people that he dropped out of school and is rich off of trading but actually is rich off the story he sells others about trading
 
-That is when the rabbit hole opens.
+You might be on the nose. The trading space is filled with some of the most interesting people I ever had the pleasure of interacting with.
 
-You begin learning about day trading. Then leveraged futures. Then options. Then the truly strange corners of crypto where people are launching tokens that did not exist twelve hours ago and watching them reach millions in market cap before collapsing the next day.
+But this isn't where my story started. My story started in a typical off-campus rental apartment, a phone being pinged with Klarna NSF bounces from the infinite take-out being ordered, surrounded by empty take-out containers, with a few thousand dollars in overdrawn credit limits and a burnt-out mind from the trials and tribulations that is Waterloo Computer Science. I was effectively defeated.
 
-At first it feels like discovering a hidden universe.
+So, like most people do when life kicks them hard enough, I decided that I too would subscribe to the idea and lifestyle of making money appear from my laptop out of thin air. And hence, our trading journey begins.
 
-There are charts everywhere. Indicators. Strategies. Entire online communities convinced they have discovered the pattern hidden inside price movement.
+Listen, I always was (and still am) very much a finance bro. Studying business, and also running the investment club for most of my high school days, I was pretty well versed compared to the average person regarding stocks, bonds, interest rates, and crypto developments. My mother, who is a banker, always ingrained financial literacy into me from a young age. If only she could see the ups and downs of my credit score (it's fixed now, but we'll get to that part of the story later).
 
-You start believing that if you study the charts long enough, if you learn the right strategy, you might unlock the code.
+So managing portfolios, how to diversify, and all the other buzzword crap was not a foreign concept to this young junior trader in the making.
 
-## But if you stay in the rabbit hole long enough, something interesting happens.
+But here is something that most people won't tell you, which you should probably understand right now before you start: you are not turning your 1000-dollar Wealthsimple "portfolio" into a million dollars. Sorry to be the one that breaks the news. Capital makes capital. The whole idea of passive income only applies to portfolios valued at about 100k.
 
-You start seeing how the game actually works.
+So now that we have the understanding that our tiny amounts of dollars are not moving money markets, where do we go from here?
 
-The loudest voices are rarely the most profitable. The traders posting massive returns are often taking massive risks. The strategies that look exciting tend to burn out the fastest.
+As a former avid poker player and casino enthusiast (degenerate gambler), my mind instinctively went to: what's the next meme coin going 2000%, and how do we get the inside scoop?
 
-More importantly, you start noticing that speculation and investing are completely different activities.
+350 dollars worth of Telegram channels later, I realized there is quite literally no logical way to find a meme coin and be the one that profits off of it, unless you are the one pulling the rug.
 
-**Speculation** is built around speed and emotion. It rewards quick reactions, risk tolerance, and the ability to stomach volatility.
+## Meeting Bats
 
-**Investing** is built around patience.
+Defeated (for the second time now), and on my last few legs of my capital reserves, I went out to write one of my exams and ran into a group of friends I had not seen in a while. There I was introduced to a new member, a guy who they all just called "Bats."
 
-Speculation asks the question "What might move next?"
+I needed a ride home, and Bats decided to drive me back in his 2024 Mercedes C63 AMG. So, being the nosey person I am, I asked Bats what exactly he did to afford this lifestyle. Little did I know this conversation would prove to be one of the most profitable I would ever have in my life and accelerate me into the world of trading at a rate I never could have fathomed, sparking one of my best business and lifelong relationships.
 
-Investing asks the question "What will still matter in ten years?"
+I know this is my story, but I must pay homage to the man that made this life possible for me, so let's talk about Bats for a second. Bats dropped out of first-year pre-medicine because he disagreed with the fundamentals (blah, blah, blah). Anyways, he was trading small-cap stock indexes before he got into the futures game. His setup was simple, a trick almost, that retail traders across the world use alongside institutional investors to make money that day.
 
-## The deeper you go into trading culture, the clearer this difference becomes.
+It's called the **ORB (Opening Range Breakout)**.
 
-The meme coin trader chasing a 10x return in three days is playing a psychological game. The volatility itself is the product.
+The strategy was so simple you would assume the rest of the world must be idiots for not being rich yet. Or so I thought. I begged him to teach me his ways. I was sold at the AMG Mercedes, but this? This was a license to print money. I was ecstatic when he told me about this lifestyle. I was honestly confused why he wasn't foaming at the mouth as he put me on what seemed to be the world's most financially sound holy grail. He wasn't, which should've been a silent warning as to what exactly the rabbit hole does to a man that wanders in.
 
-The investor slowly building a portfolio of durable assets is playing a different game entirely.
+I asked him what he trades now, and he replied, "futures."
 
-Risk management. Diversification. Time.
+## The Futures Game
 
-One group is trying to win today.
+Studying finance, I knew that futures were a part of that intimidating portion of finance that consists of electronically traded derivatives. In simpler words, these were the things that Wall Street trades when they have a clear directional bias. They're speculative, based more on sentiment rather than truth. You'll face heavier swings on these assets because they prosper on fear and greed. They're traded on contracts, which basically means you can make money betting on it going up or down. Big tech sees a great earning season? The NQ composite is bullish. War across the world? Risk assets like gold start shooting up.
 
-The other group is trying to still be winning decades from now.
+Now, if you've seen the TJR or Brez videos of stacking prop firm accounts and earning six figures a year, you know what I'm talking about. If not, prop firms are the biggest bet against retail traders known to man. They profit off the statistic that 97% of traders fail. They also profit off the fact that 100% of traders are always looking for ways to boost their own purchasing power without leveraging their own. That's all you need to know about these firms.
 
-Once you see that distinction, the rabbit hole stops looking mysterious.
+The general idea goes like this: get a couple accounts with a few of these firms. Five accounts, 2000 dollars of buying power each. With asymmetric risk, you don't even need a greater than 50% win rate to make money over time. Let's say your expectancy is about 150 per account after all the math is done. Multiplied by five accounts, over a week you earn around 3 to 4k from your laptop sitting at home. Easy enough. Right?
 
-It starts looking predictable.`
+Again, getting to this level of trading, I was still confused as to how the majority of the world was poor. I think I was conceited enough that one of my ChatGPT searches at the time was: "How are people in India and Africa poor when they could learn how to trade and their situation almost instantly?"
+
+The ego was high. The blood was pumping. The secret sauce was revealed.
+
+## The Blowup
+
+I was making spreadsheets tracking my earning potential, figuring out how fast I could flip a few accounts into five-figure withdrawals. I was looking at cars and watches and adding them to my wishlist.
+
+The burnt-out, indebted, delusional day trader was now ready to jump into action. The rules were simple. You have a fixed amount to lose every day. You don't breach this number (steady PnL curves recover fixed losses, not 60% drawdowns). You take 1 to 2 trades a day, maximum (if you're taking more you either don't know what you're doing or you're forcing the market to give you something that isn't there). And you only trade the NY open at 9:30 (it's where the real money comes to play).
+
+I'll save you the trouble of reading through how this went and just let you know that **I broke almost every single rule in a week and blew 15 accounts almost instantly.** I went deeper into debt. I borrowed money from Bats to continue.
+
+Why? Because I didn't journal, and I thought I was smarter than the market. I took trades that weren't the ideal play but because I was bored. I sized up double to triple after taking a loss. I hate to lose, and every loss felt like the market was labeling me as stupid. I couldn't understand how a university dropout that never studied anything technical was better at this game than me. I convinced myself it was just gambling with a better UI. I lost sleep at night. I would blow four accounts and buy a fifth just so I could feel a win.
+
+I didn't track my stats, I didn't write my rules, I didn't play by the rules of the game that were made long before I ever stepped onto the field. Bats knew, but he told me I would figure it out eventually. It was a "core" trader experience. I stopped talking to him for a while. I was convinced he was just a better gambler than I was. I walked away from the retail day trading game and came to the conclusion that most people come to, which is that it's a scam.
+
+But I couldn't let it go. I couldn't let myself become the failing statistic. I couldn't exist in a world where money can be made from your laptop and I wasn't able to do it. My feed was full of new strategies. I was running quantitative models of retail discretionary strategies. I was up at 7:30 AM every day like clockwork, not to trade but to know what was happening in the world around me. Bloomberg playing all day, X notifications buzzing. One thing was true: like it or not, I was in a world that I put myself in and a world my mind would not let me leave until I was paid.
+
+## What Actually Works
+
+Here's the part you wanted to read. This is the part where I tell you how I went from the above to pulling consistent money out of the futures market.
+
+**You come up with a plan before you start playing.**
+
+Coming from an economic, math/CS, and business background, I considered myself God's living gift to the world of trading. Just combine knowledge of everything and I should start earning money, right?
+
+You can't go into the market, a systematic clearing house, on just vibes. If you trade supply and demand, trade that. You don't listen to Trump speak on tariffs and enter short. It would work, but you don't do it. It is not your model.
+
+Because the markets reward discipline and profitable edges over time. If you traded ORB for two weeks and were doing fine and then decided to switch into mean-reversion or a VWAP crossover strategy and blow up your equity curve, was switching your weapon the right idea?
+
+Stick to your script. It keeps your objectives clear and measurable. Your equity curve and your psychology will thank you long term.
+
+**You leave your ego at the door.**
+
+The market really doesn't break stupid people. It breaks the proclaimed, above-all, "I don't need a process, I just win" people (my kind of people).
+
+The stupid person follows the rule of losing their fixed amount for the day and walking away. The smart person is still trying to rationalize that the loss wasn't really their fault and why their new thesis is most definitely correct. The smart person loses.
+
+Your ego is the only thing in this game that is actively working against you. It's what will drive you to claw that loss back instantly. It's what will have you sizing up after a big win because it's house money. It'll have you trading the Asian session watching price move a few dollars an hour because you were too bored to wait for New York.
+
+I have come to the conclusion that the more stupid (less egotistical) you are in this game, the better. You need to operate like a robot executing a script. A predefined set of rules.
+
+**This shit isn't like every other prison movie, it's just prison.**
+
+Elite reference if you get it, but what I mean by that is that being a day trader isn't like The Wolf of Wall Street, and the people trying to convince you otherwise are making money off of you.
+
+The secret sauce is quite literally just waking up at the same time, executing the same thing every day, sizing up in good market conditions, playing defensive when they're bad, and just not shooting yourself in the foot.
+
+You stay in the market long enough to see your edge play out and get paid. The truth I learned is that 97% of people are too shortsighted and unfortunate victims of the human condition to ever see a dollar.
+
+Topstep, the top prop firm in the space, says for 100,000 of their traders, 12.4% get funded, and 3.5% of them get paid.
+
+## The First Payout
+
+I got my first payout nine long months after starting my journey in the same rental condo across campus, except this time the place was cleaner. As much as I look back on learning trading as one of the most psychologically grueling activities I participated in (you wake up to green and red buttons determining your monetary value for that day, where the only enemy is yourself), it took me out of a place that I didn't want to be in anymore. It taught me that discipline outweighs talent. It made me wake up early, ironically. It connected me to the world around me. I know about the wars overseas, the economic behavior of the market we're in, and the markets abroad.
+
+**The markets didn't change my life. They just forced me to change everything that was wrong with it.**`
   },
-
-  'vc-investing-in-myself': {
-    type: 'blog',
-    slug: 'vc-investing-in-myself',
-    title: 'Roleplaying as a VC Investing in Myself',
-    publishedAt: '2026-01-15',
-    tags: ['Productivity', 'Psychology', 'Personal'],
-    readingTime: 5,
-    summary: 'What happens when you evaluate your own life using the logic of venture capital.',
-    markdown: `One of the most surprisingly effective productivity tricks I ever tried came from a strange thought experiment.
-
-I started imagining that I was not living my life.
-
-Instead I was investing in it.
-
-More specifically, I imagined that I was a venture capitalist evaluating a startup called Me.
-
-At first this idea sounded ridiculous. But the moment you actually start applying the logic of venture investing to your own behavior, something interesting happens.
-
-## The Due Diligence
-
-If you were evaluating a startup as an investor, you would ask very simple questions.
-
-Is the founder disciplined?
-
-Do they execute consistently?
-
-Is the product improving every week?
-
-Are the fundamentals getting stronger over time?
-
-Now imagine asking those same questions about yourself.
-
-Are you showing up consistently?
-
-Are you building skills that compound over time?
-
-Are you allocating your time to things that actually create future value?
-
-## Capital Allocation
-
-Suddenly everyday habits start looking like investment decisions.
-
-Scrolling for two hours becomes a terrible capital allocation choice.
-
-Practicing a difficult skill becomes reinvesting profits back into the company.
-
-Sleeping properly becomes maintenance for the operating system.
-
-## The Trajectory Thesis
-
-The biggest shift comes when you realize that investors do not expect startups to have perfect days.
-
-They expect trajectory.
-
-A startup might struggle for weeks while building something important. That does not mean the investment is failing. It means the company is doing the work required to grow.
-
-Applying that mindset to your own life changes how you interpret effort.
-
-A bad day does not mean the investment is failing.
-
-It only matters whether the overall direction is improving.
-
-## The Final Question
-
-The real question becomes simple.
-
-**If someone invested ten million dollars into your future today, would they like the way you are running the company?**
-
-If the answer is no, you already know what needs to change.`
-  },
-
-  'most-ai-startups-api-calls': {
-    type: 'blog',
-    slug: 'most-ai-startups-api-calls',
-    title: 'Most AI Startups Are Just Fancy API Calls',
-    publishedAt: '2025-12-10',
-    tags: ['AI', 'Startups', 'Systems'],
-    readingTime: 5,
-    summary: 'And why that is actually working for now. The wrapper critique misses something important.',
-    markdown: `*And why that is actually working for now*
-
-Right now the AI startup ecosystem looks incredibly impressive from the outside.
-
-Every week there is a new product launch. New demos. New announcements about companies automating entire industries.
-
-If you spend enough time around these products, you eventually notice something interesting.
-
-A huge number of them are built on the same foundation.
-
-An API call to a large language model.
-
-That observation leads people to a quick conclusion.
-
-**These companies are just wrappers.**
-
-Technically speaking, that criticism is not wrong. Many early AI startups are essentially building workflow tools on top of existing language models.
-
-## But the conclusion that these companies have no value misses something important.
-
-Technology adoption rarely starts with deep infrastructure.
-
-It usually starts with interface.
-
-The earliest internet companies were often simple websites sitting on top of existing protocols. The early smartphone ecosystem was full of simple apps that used capabilities the operating system already provided.
-
-What mattered was not the underlying infrastructure.
-
-What mattered was translating new technology into something normal people could actually use.
-
-## The Wrapper as Bridge
-
-This is exactly what many AI startups are doing right now.
-
-The model itself is powerful but raw. It can answer questions, generate text, and reason through problems. But most people do not know how to integrate that power into their daily workflows.
-
-The wrapper becomes the bridge.
-
-A well designed AI product does not just call an API. It structures tasks, integrates data sources, and fits into existing workflows.
-
-That might look simple from a technical perspective, but from a user perspective it can be transformative.
-
-## What Comes Next
-
-Eventually the ecosystem will evolve. Infrastructure companies will emerge. Defensibility will become harder. The easy wrapper phase will fade.
-
-But in the early stages of a technological shift, wrappers often play an important role.
-
-They translate possibility into usability.
-
-Right now the AI ecosystem is still in that translation phase.`
-  },
-
-  'explaining-ai-agents': {
-    type: 'blog',
-    slug: 'explaining-ai-agents',
-    title: 'Explaining AI Agents With One Simple Analogy',
-    publishedAt: '2025-11-22',
-    tags: ['AI', 'Agents', 'Learning'],
-    readingTime: 5,
-    summary: 'Every time I try explaining AI agents to someone who is not technical, the conversation usually starts the same way.',
-    markdown: `Every time I try explaining AI agents to someone who is not technical, the conversation usually starts the same way.
-
-They imagine something futuristic. A digital assistant that thinks independently and solves problems like a human.
-
-Reality is a little less mysterious.
-
-## The Junior Employee Analogy
-
-The easiest way to understand AI agents is to imagine hiring a very enthusiastic junior employee.
-
-A large language model is essentially the brain. It can read instructions, understand context, and generate responses.
-
-But a brain by itself cannot do much.
-
-So the agent is given tools.
-
-Those tools might allow it to write code, search the internet, access databases, send messages, or interact with software.
-
-Now imagine giving a junior employee a set of instructions and access to a computer.
-
-They read the task. They attempt a solution. They make mistakes. They try again. Over time they get better at navigating the workflow.
-
-That process looks surprisingly similar to how AI agents operate.
-
-## How It Actually Works
-
-The model reads the task, decides which tool might help solve it, performs an action, evaluates the result, and continues working.
-
-The system is not magically intelligent. It is following structured reasoning steps.
-
-That is why agents are powerful for certain types of work.
-
-They can perform repetitive cognitive tasks that involve reading information, applying rules, and interacting with tools.
-
-## Where They Still Fail
-
-At the same time they still fail in ways that a human would not.
-
-Sometimes they misunderstand context. Sometimes they take inefficient paths to solve problems. Sometimes they confidently produce the wrong result.
-
-In other words they behave a lot like junior employees.
-
-And just like junior employees, their usefulness depends heavily on the environment they are placed in.
-
-Good tools, clear instructions, and structured workflows make them surprisingly effective.
-
-Without those things they struggle.
-
-## The Real Shift
-
-The interesting shift happening right now is not that machines suddenly became intelligent.
-
-The interesting shift is that software is beginning to act.
-
-Instead of waiting for humans to click buttons, it can now attempt tasks on its own.
-
-Not perfectly.
-
-But often enough to start changing how work gets done.`
-  },
-
 };
