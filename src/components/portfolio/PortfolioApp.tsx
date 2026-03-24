@@ -187,20 +187,28 @@ function Inner() {
           </BulletItem>
 
           {/* Current: CS @ Wilfrid Laurier, previously Waterloo + Laurier */}
-          <BulletItem diamond={t.diamond}>
+          <li className="rg-item rg-item-nested">
+            <div className="rg-diamond" style={{ background: t.diamond }} />
             <span style={{ color: t.text }}>
               CS{' '}
               <span className="rg-inline-link-group">
                 <SLink href="https://www.wlu.ca" icon="/laurier-seal.png">Wilfrid Laurier</SLink>
               </span>
-              , previously{' '}
-              <span className="rg-inline-link-group">
-                <SLink href="https://uwaterloo.ca" icon="/waterloo-logo.png">Waterloo</SLink>
-                {' + '}
-                <SLink href="https://www.wlu.ca" icon="/laurier-seal.png">Laurier</SLink>
-              </span>
             </span>
-          </BulletItem>
+            <ul className="rg-sublist">
+              <li className="rg-subitem">
+                <span className="rg-arrow" style={{ color: t.textMuted }}>↳</span>
+                <span style={{ color: t.text }}>
+                  previously{' '}
+                  <span className="rg-inline-link-group">
+                    <SLink href="https://uwaterloo.ca" icon="/waterloo-logo.png">Waterloo</SLink>
+                    {' + '}
+                    <SLink href="https://www.wlu.ca" icon="/laurier-seal.png">Laurier</SLink>
+                  </span>
+                </span>
+              </li>
+            </ul>
+          </li>
 
           {/* What I've been building */}
           <li className="rg-item rg-item-nested">
