@@ -256,7 +256,7 @@ function Inner() {
           boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
         }}>
           see what i've built{' '}
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline', verticalAlign: 'top', marginLeft: 4 }}><rect width="7" height="13" x="3" y="8" rx="1"/><rect width="7" height="13" x="14" y="3" rx="1"/><line x1="0" y1="11" x2="3" y2="11"/><line x1="0" y1="14" x2="3" y2="14"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline', verticalAlign: 'top', marginLeft: 4 }}><path d="M2 7v10"/><path d="M6 5v14"/><rect x="10" y="3" width="12" height="18" rx="2"/></svg>
         </a>
 
         {/* ── Signature (animated GIF, plays once, replay button) ── */}
