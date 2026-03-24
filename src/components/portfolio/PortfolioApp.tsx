@@ -408,7 +408,7 @@ function Inner() {
         .rg-slink {
           text-decoration: none;
           font-family: 'NeueMontreal-Medium', sans-serif;
-          font-weight: 500;
+          font-weight: 700;
           position: relative;
           transition: color 0.2s;
         }
