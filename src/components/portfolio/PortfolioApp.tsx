@@ -8,13 +8,13 @@ import { contentMap } from './contentData';
    Theme context — dark/light mode
    ══════════════════════════════════════════════════════════ */
 
-const ThemeCtx = createContext<{ dark: boolean; toggle: () => void }>({ dark: true, toggle: () => {} });
+const ThemeCtx = createContext<{ dark: boolean; toggle: () => void }>({ dark: false, toggle: () => {} });
 
 function getInitialTheme() {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('rg-theme') !== 'light';
+    return localStorage.getItem('rg-theme') === 'dark';
   }
-  return true;
+  return false;
 }
 
 function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -35,7 +35,7 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
 const BUILDING = [
   {
     label: 'LinkedIn Games Solver',
-    href: 'https://github.com/ronnielgandhe',
+    href: 'https://github.com/ronnielgandhe/linkedin-games-solver',
     desc: 'Chrome extension — 7+ users organically from one LinkedIn post',
   },
   {

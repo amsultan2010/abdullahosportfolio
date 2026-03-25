@@ -2,14 +2,14 @@ import { useState, createContext, useContext } from 'react';
 
 
 /* Theme context */
-const ThemeCtx = createContext<{ dark: boolean; toggle: () => void }>({ dark: true, toggle: () => {} });
+const ThemeCtx = createContext<{ dark: boolean; toggle: () => void }>({ dark: false, toggle: () => {} });
 export { ThemeCtx };
 
 function getInitialTheme() {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('rg-theme') !== 'light';
+    return localStorage.getItem('rg-theme') === 'dark';
   }
-  return true;
+  return false;
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

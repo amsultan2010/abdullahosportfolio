@@ -3,6 +3,13 @@ import PageShell, { useTheme, themeColors, SLink } from './PageShell';
 
 const PROJECTS = [
   {
+    title: 'LinkedIn Games Solver',
+    cover: '/linkdensolver.png',
+    repo: 'https://github.com/ronnielgandhe/linkedin-games-solver',
+    desc: 'Chrome extension that instantly solves all 5 LinkedIn games. Backtracking solvers, React fiber traversal, and Chrome Debugger Protocol for trusted input — no AI, no server.',
+    tech: ['JavaScript', 'Chrome Extension API', 'Chrome Debugger Protocol', 'Manifest V3'],
+  },
+  {
     title: 'QuantZoo',
     cover: '/trading.png',
     repo: 'https://github.com/ronnielgandhe/quantzoo',
