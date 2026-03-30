@@ -1,9 +1,20 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
 /* ═══════════════════════════════════════════════════════════
    BLACKBOOK — Ronniel's hidden personal dashboard
-   Password-gated, localStorage-backed, Apple-style clean UI
+   Password-gated, Supabase-synced, Apple-style clean UI
    ═══════════════════════════════════════════════════════════ */
+
+const SUPABASE_URL = 'https://czdvtqqanvmgptginlwa.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_cNeHCMWzmLHmEfor6SDG3A_RJhF1SCZ';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+async function hashPass(pw: string): Promise<string> {
+  const data = new TextEncoder().encode(pw);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 const PASS = 'rg'; // change this
 
@@ -136,7 +147,7 @@ function FingerprintIcon({ onClick }: { onClick: () => void }) {
 }
 
 // ── Password Gate ──
-function PasswordGate({ onUnlock, onClose }: { onUnlock: () => void; onClose: () => void }) {
+function PasswordGate({ onUnlock, onClose }: { onUnlock: (pw: string) => void; onClose: () => void }) {
   const [pw, setPw] = useState('');
   const [shake, setShake] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -145,7 +156,7 @@ function PasswordGate({ onUnlock, onClose }: { onUnlock: () => void; onClose: ()
 
   const submit = () => {
     if (pw === PASS) {
-      onUnlock();
+      onUnlock(pw);
     } else {
       setShake(true);
       setPw('');
@@ -261,16 +272,56 @@ function PillToggle({ active, label, onClick }: { active: boolean; label: string
   );
 }
 
+// ── Supabase sync helpers ──
+async function loadFromCloud(passHash: string) {
+  const { data } = await supabase
+    .from('blackbook')
+    .select('data')
+    .eq('pass_hash', passHash)
+    .single();
+  return data?.data as { logs?: DayLog[]; contacts?: Contact[]; projects?: Project[] } | null;
+}
+
+async function saveToCloud(passHash: string, payload: { logs: DayLog[]; contacts: Contact[]; projects: Project[] }) {
+  await supabase.from('blackbook').upsert({
+    pass_hash: passHash,
+    data: payload,
+    updated_at: new Date().toISOString(),
+  });
+}
+
 // ── Main Dashboard ──
-function Dashboard({ onClose }: { onClose: () => void }) {
+function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: string }) {
   const [tab, setTab] = useState<'log' | 'network' | 'projects'>('log');
   const [logs, setLogs] = useState<DayLog[]>(() => load('logs', []));
   const [contacts, setContacts] = useState<Contact[]>(() => load('contacts', DEFAULT_CONTACTS));
   const [projects, setProjects] = useState<Project[]>(() => load('projects', DEFAULT_PROJECTS));
+  const [synced, setSynced] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  useEffect(() => { save('logs', logs); }, [logs]);
-  useEffect(() => { save('contacts', contacts); }, [contacts]);
-  useEffect(() => { save('projects', projects); }, [projects]);
+  // Load from Supabase on mount — cloud wins over localStorage
+  useEffect(() => {
+    loadFromCloud(passHash).then(cloud => {
+      if (cloud) {
+        if (cloud.logs?.length) { setLogs(cloud.logs); save('logs', cloud.logs); }
+        if (cloud.contacts?.length) { setContacts(cloud.contacts); save('contacts', cloud.contacts); }
+        if (cloud.projects?.length) { setProjects(cloud.projects); save('projects', cloud.projects); }
+      }
+      setSynced(true);
+    });
+  }, [passHash]);
+
+  // Debounced cloud save
+  const syncToCloud = useCallback((l: DayLog[], c: Contact[], p: Project[]) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      saveToCloud(passHash, { logs: l, contacts: c, projects: p });
+    }, 1500);
+  }, [passHash]);
+
+  useEffect(() => { save('logs', logs); if (synced) syncToCloud(logs, contacts, projects); }, [logs]);
+  useEffect(() => { save('contacts', contacts); if (synced) syncToCloud(logs, contacts, projects); }, [contacts]);
+  useEffect(() => { save('projects', projects); if (synced) syncToCloud(logs, contacts, projects); }, [projects]);
 
   const today = new Date().toISOString().split('T')[0];
   const todayLog = logs.find(l => l.date === today);
@@ -569,6 +620,7 @@ function Field({ label, value, onChange, placeholder }: {
 // ── Main Export ──
 export default function Blackbook() {
   const [state, setState] = useState<'hidden' | 'password' | 'open'>('hidden');
+  const [passHash, setPassHash] = useState('');
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -578,13 +630,19 @@ export default function Blackbook() {
     return () => window.removeEventListener('keydown', handler);
   }, [state]);
 
+  const handleUnlock = async (pw: string) => {
+    const hash = await hashPass(pw);
+    setPassHash(hash);
+    setState('open');
+  };
+
   return (
     <>
       <FingerprintIcon onClick={() => setState('password')} />
       {state === 'password' && (
-        <PasswordGate onUnlock={() => setState('open')} onClose={() => setState('hidden')} />
+        <PasswordGate onUnlock={handleUnlock} onClose={() => setState('hidden')} />
       )}
-      {state === 'open' && <Dashboard onClose={() => setState('hidden')} />}
+      {state === 'open' && <Dashboard onClose={() => setState('hidden')} passHash={passHash} />}
     </>
   );
 }
