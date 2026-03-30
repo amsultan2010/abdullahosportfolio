@@ -492,6 +492,53 @@ function JournalTab({ journal, setJournal, t }: {
       <div style={{ borderLeft: `1px solid ${t.border}`, paddingLeft: 20 }}>
         <MiniCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate}
           journalDates={journalDates} t={t} />
+
+        {/* Upcoming meetings */}
+        <UpcomingMeetings journal={journal} onSelectDate={setSelectedDate} t={t} />
+      </div>
+    </div>
+  );
+}
+
+// ── Upcoming Meetings ──
+function UpcomingMeetings({ journal, onSelectDate, t }: {
+  journal: JournalEntry[]; onSelectDate: (d: string) => void; t: Theme;
+}) {
+  const today = new Date().toISOString().split('T')[0];
+  const upcoming = journal
+    .filter(e => e.date >= today && e.meetings.length > 0)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .flatMap(e => e.meetings.map(m => ({ ...m, date: e.date })))
+    .slice(0, 8);
+
+  if (upcoming.length === 0) return null;
+
+  return (
+    <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${t.border}` }}>
+      <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 8 }}>Upcoming</label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {upcoming.map(m => {
+          const isToday = m.date === today;
+          const dateLabel = isToday ? 'Today' : new Date(m.date + 'T12:00').toLocaleDateString('en', { month: 'short', day: 'numeric' });
+          return (
+            <button key={m.id + m.date} onClick={() => onSelectDate(m.date)} style={{
+              display: 'flex', flexDirection: 'column', gap: 2,
+              background: 'transparent', border: 'none', borderRadius: 6,
+              padding: '6px 8px', cursor: 'pointer', fontFamily: FONT,
+              textAlign: 'left', transition: 'background 0.15s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = t.accentSubtle; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <span style={{ fontSize: 11, color: isToday ? '#2d8a56' : t.textMuted, fontFamily: FONT_MEDIUM }}>{dateLabel}</span>
+                {m.time && <span style={{ fontSize: 11, color: t.textMuted }}>{m.time}</span>}
+              </div>
+              <span style={{ fontSize: 12, color: t.text }}>{m.title || 'Untitled meeting'}</span>
+              {m.person && <span style={{ fontSize: 11, color: t.textMuted }}>{m.person}</span>}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
