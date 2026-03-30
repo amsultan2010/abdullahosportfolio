@@ -704,9 +704,9 @@ function OutreachCard({ contact: c, onUpdate, onRemove, t }: {
             <button key={stage} onClick={() => onUpdate({ outreachStatus: stage })} style={{
               flex: 1, padding: '5px 4px', borderRadius: 6, fontSize: 10,
               fontFamily: FONT_MEDIUM, cursor: 'pointer', transition: 'all 0.15s',
-              background: isActive ? t.accentSubtle : 'transparent',
-              border: `1px solid ${isActive ? t.textMuted + '40' : t.border}`,
-              color: isActive ? t.textStrong : t.textMuted,
+              background: isActive ? 'rgba(48, 180, 98, 0.12)' : 'transparent',
+              border: `1px solid ${isActive ? 'rgba(48, 180, 98, 0.25)' : t.border}`,
+              color: isActive ? '#2d8a56' : t.textMuted,
               letterSpacing: 0.2,
             }}>{STAGE_LABELS[stage]}</button>
           );
