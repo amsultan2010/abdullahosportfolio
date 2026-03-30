@@ -3,6 +3,7 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import ContentViewer from './ContentViewer';
 import type { ContentViewData } from './ContentViewer';
 import { contentMap } from './contentData';
+import Blackbook from './Blackbook';
 
 /* ══════════════════════════════════════════════════════════
    Theme context — dark/light mode
@@ -287,6 +288,9 @@ function Inner() {
       {activeContent && (
         <ContentViewer content={activeContent} onClose={() => setActiveContent(null)} />
       )}
+
+      {/* Hidden dashboard */}
+      <Blackbook />
 
       <style>{`
         :root {
