@@ -230,7 +230,7 @@ function PasswordGate({ onUnlock, onClose }: { onUnlock: (pw: string) => void; o
         <input ref={inputRef} type="password" value={pw}
           onChange={e => setPw(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submit()}
-          placeholder="passphrase"
+          placeholder="type password"
           style={{
             background: t.inputBg, border: `1px solid ${t.border}`,
             borderRadius: 10, padding: '12px 20px', color: t.text,
