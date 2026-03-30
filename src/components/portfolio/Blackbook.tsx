@@ -169,11 +169,11 @@ function FingerprintIcon({ onClick }: { onClick: () => void }) {
     <button onClick={onClick} aria-label="Access" style={{
       position: 'fixed', bottom: 20, right: 20, zIndex: 9999,
       background: 'none', border: 'none', cursor: 'pointer',
-      opacity: visible ? 0.06 : 0, transition: 'opacity 1.5s ease',
+      opacity: visible ? 0.15 : 0, transition: 'opacity 1.5s ease',
       padding: 8, color: isDark ? '#78716c' : '#78716c',
     }}
-      onMouseEnter={e => { e.currentTarget.style.opacity = '0.2'; }}
-      onMouseLeave={e => { e.currentTarget.style.opacity = '0.06'; }}
+      onMouseEnter={e => { e.currentTarget.style.opacity = '0.35'; }}
+      onMouseLeave={e => { e.currentTarget.style.opacity = '0.15'; }}
     >
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4"/>
