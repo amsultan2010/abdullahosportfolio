@@ -891,7 +891,7 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 15, fontFamily: FONT_MEDIUM, color: t.textStrong }}>Blackbook</span>
+          <span style={{ fontSize: 15, fontFamily: FONT_MEDIUM, color: t.textStrong }}>Ronniel's Blackbook</span>
           <span style={{ color: t.textMuted, fontSize: 13 }}>
             {new Date().toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}
           </span>
