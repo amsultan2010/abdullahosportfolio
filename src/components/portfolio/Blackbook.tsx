@@ -151,9 +151,9 @@ async function saveToCloud(passHash: string, payload: BlackbookData) {
 
 // ── Company domain mapping for logos ──
 const COMPANY_DOMAINS: Record<string, string> = {
-  'linear': 'linear.app', 'alpaca': 'alpaca.markets', 'composer': 'composer.trade',
-  'ramp': 'ramp.com', 'vercel': 'vercel.com', 'mercury': 'mercury.com',
-  'kalshi': 'kalshi.com', 'entorr': 'entorr.com',
+  'linear': 'linear.app', 'offdeal': 'offdeal.com', 'alpaca': 'alpaca.markets',
+  'composer': 'composer.trade', 'ramp': 'ramp.com', 'vercel': 'vercel.com',
+  'mercury': 'mercury.com', 'kalshi': 'kalshi.com', 'entorr': 'entorr.com',
 };
 
 function getCompanyLogo(company: string) {
@@ -1010,6 +1010,23 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
           scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
           platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
           notes: '', createdAt: new Date().toISOString(),
+        }));
+        loadedContacts = [...loadedContacts, ...newContacts];
+      }
+
+      const hasOffdeal = loadedContacts.some(c => c.company === 'Offdeal');
+      if (!hasOffdeal) {
+        const today = new Date().toISOString().split('T')[0];
+        const offdealPeople = [
+          { name: 'Alston Lin', role: 'CTO & Co-founder' },
+          { name: 'Luis Ruiz Morel', role: 'Founding Engineer' },
+        ];
+        const newContacts: NetworkContact[] = offdealPeople.map((p, i) => ({
+          id: `offdeal-${Date.now()}-${i}`, name: p.name, company: 'Offdeal', role: p.role,
+          whyReachOut: '', companyInfo: '', foundVia: 'LinkedIn',
+          scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
+          platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
+          notes: 'Connection request sent with note', createdAt: new Date().toISOString(),
         }));
         loadedContacts = [...loadedContacts, ...newContacts];
       }
