@@ -134,28 +134,6 @@ function migrateIfNeeded() {
     localStorage.removeItem('bb-projects');
   } catch { /* silent */ }
 
-  // v2 migration: add Linear contacts
-  if (!localStorage.getItem('bb-linear-added')) {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const existing = load<NetworkContact[]>('contacts', []);
-      const linearPeople = [
-        { name: 'Lena Vu Sawyer', role: '' },
-        { name: 'Sabin Roman', role: '' },
-        { name: 'Tom Moor', role: '' },
-        { name: 'Mufeez Amjad', role: '' },
-      ];
-      const newContacts: NetworkContact[] = linearPeople.map((p, i) => ({
-        id: `linear-${Date.now()}-${i}`, name: p.name, company: 'Linear', role: p.role,
-        whyReachOut: '', companyInfo: 'Project management tool for software teams', foundVia: 'LinkedIn',
-        scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
-        platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
-        notes: '', createdAt: new Date().toISOString(),
-      }));
-      save('contacts', [...existing, ...newContacts]);
-      localStorage.setItem('bb-linear-added', '1');
-    } catch { /* silent */ }
-  }
 }
 
 // ── Supabase sync ──
@@ -187,15 +165,8 @@ function getLinkedInSearchUrl(company: string) {
   return `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(company + ' engineering')}&origin=GLOBAL_SEARCH_HEADER`;
 }
 
-// ── Default data ──
-const DEFAULT_CONTACTS: NetworkContact[] = [
-  { id: '1', name: '', company: 'Alpaca', role: '', whyReachOut: 'Fintech infra — API-first brokerage, aligns with trading background', companyInfo: 'Series B', foundVia: '', scoutingStatus: 'researching', outreachStatus: 'queued', platform: '', lastContactDate: '', nextAction: 'Find eng on LinkedIn', notes: '', createdAt: new Date().toISOString() },
-  { id: '2', name: '', company: 'Composer', role: '', whyReachOut: 'Automated investing — quant tools angle', companyInfo: 'Series A', foundVia: '', scoutingStatus: 'researching', outreachStatus: 'queued', platform: '', lastContactDate: '', nextAction: 'Find eng on LinkedIn', notes: '', createdAt: new Date().toISOString() },
-  { id: '3', name: '', company: 'Ramp', role: '', whyReachOut: 'Corporate cards + finance automation', companyInfo: 'Series D', foundVia: '', scoutingStatus: 'researching', outreachStatus: 'queued', platform: '', lastContactDate: '', nextAction: 'Find eng on LinkedIn', notes: '', createdAt: new Date().toISOString() },
-  { id: '4', name: '', company: 'Vercel', role: '', whyReachOut: 'Frontend infra — portfolio built on their stack', companyInfo: 'Series D', foundVia: '', scoutingStatus: 'researching', outreachStatus: 'queued', platform: '', lastContactDate: '', nextAction: 'Find eng on LinkedIn', notes: '', createdAt: new Date().toISOString() },
-  { id: '5', name: '', company: 'Mercury', role: '', whyReachOut: 'Startup banking — fintech + clean product', companyInfo: 'Series C', foundVia: '', scoutingStatus: 'researching', outreachStatus: 'queued', platform: '', lastContactDate: '', nextAction: 'Find eng on LinkedIn', notes: '', createdAt: new Date().toISOString() },
-  { id: '6', name: '', company: 'Kalshi', role: '', whyReachOut: 'Prediction markets — trading background relevant', companyInfo: 'Series B', foundVia: '', scoutingStatus: 'researching', outreachStatus: 'queued', platform: '', lastContactDate: '', nextAction: 'Find eng on LinkedIn', notes: '', createdAt: new Date().toISOString() },
-];
+// ── Default data (empty — contacts come from cloud or are added manually) ──
+const DEFAULT_CONTACTS: NetworkContact[] = [];
 
 // ── Company Logo component ──
 function CompanyLogo({ company, size = 28, t }: { company: string; size?: number; t: Theme }) {
@@ -1013,14 +984,38 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
   // Run migration once
   useEffect(() => { migrateIfNeeded(); }, []);
 
-  // Load from cloud on mount
+  // Load from cloud on mount, then inject Linear contacts if missing
   useEffect(() => {
     loadFromCloud(passHash).then(cloud => {
+      let loadedContacts = contacts;
       if (cloud) {
         if (cloud.journal?.length) { setJournal(cloud.journal); save('journal', cloud.journal); }
-        if (cloud.contacts?.length) { setContacts(cloud.contacts); save('contacts', cloud.contacts); }
+        if (cloud.contacts?.length) { loadedContacts = cloud.contacts; }
         if (cloud.ideas?.length) { setIdeas(cloud.ideas); save('ideas', cloud.ideas); }
       }
+
+      // Inject Linear contacts if not present
+      const hasLinear = loadedContacts.some(c => c.company === 'Linear');
+      if (!hasLinear) {
+        const today = new Date().toISOString().split('T')[0];
+        const linearPeople = [
+          { name: 'Lena Vu Sawyer' },
+          { name: 'Sabin Roman' },
+          { name: 'Tom Moor' },
+          { name: 'Mufeez Amjad' },
+        ];
+        const newContacts: NetworkContact[] = linearPeople.map((p, i) => ({
+          id: `linear-${Date.now()}-${i}`, name: p.name, company: 'Linear', role: '',
+          whyReachOut: '', companyInfo: 'Project management tool for software teams', foundVia: 'LinkedIn',
+          scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
+          platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
+          notes: '', createdAt: new Date().toISOString(),
+        }));
+        loadedContacts = [...loadedContacts, ...newContacts];
+      }
+
+      setContacts(loadedContacts);
+      save('contacts', loadedContacts);
       setSynced(true);
     });
   }, [passHash]);
