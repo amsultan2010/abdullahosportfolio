@@ -151,9 +151,9 @@ async function saveToCloud(passHash: string, payload: BlackbookData) {
 
 // ── Company domain mapping for logos ──
 const COMPANY_DOMAINS: Record<string, string> = {
-  'linear': 'linear.app', 'offdeal': 'offdeal.com', 'alpaca': 'alpaca.markets',
-  'composer': 'composer.trade', 'ramp': 'ramp.com', 'vercel': 'vercel.com',
-  'mercury': 'mercury.com', 'kalshi': 'kalshi.com', 'entorr': 'entorr.com',
+  'linear': 'linear.app', 'offdeal': 'offdeal.com', 'ostium': 'ostium.io',
+  'alpaca': 'alpaca.markets', 'composer': 'composer.trade', 'ramp': 'ramp.com',
+  'vercel': 'vercel.com', 'mercury': 'mercury.com', 'kalshi': 'kalshi.com', 'entorr': 'entorr.com',
 };
 
 function getCompanyLogo(company: string) {
@@ -1028,6 +1028,19 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
           platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
           notes: 'Connection request sent with note', createdAt: new Date().toISOString(),
         }));
+        loadedContacts = [...loadedContacts, ...newContacts];
+      }
+
+      const hasOstium = loadedContacts.some(c => c.company === 'Ostium');
+      if (!hasOstium) {
+        const today = new Date().toISOString().split('T')[0];
+        const newContacts: NetworkContact[] = [{
+          id: `ostium-${Date.now()}-0`, name: 'Shrey Paharia', company: 'Ostium', role: 'Senior Developer',
+          whyReachOut: '', companyInfo: '$38B+ volume, backed by General Catalyst & Jump', foundVia: 'LinkedIn',
+          scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
+          platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
+          notes: 'Connection request sent with note', createdAt: new Date().toISOString(),
+        }];
         loadedContacts = [...loadedContacts, ...newContacts];
       }
 
