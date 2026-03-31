@@ -133,6 +133,29 @@ function migrateIfNeeded() {
     localStorage.removeItem('bb-logs');
     localStorage.removeItem('bb-projects');
   } catch { /* silent */ }
+
+  // v2 migration: add Linear contacts
+  if (!localStorage.getItem('bb-linear-added')) {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const existing = load<NetworkContact[]>('contacts', []);
+      const linearPeople = [
+        { name: 'Lena Vu Sawyer', role: '' },
+        { name: 'Sabin Roman', role: '' },
+        { name: 'Tom Moor', role: '' },
+        { name: 'Mufeez Amjad', role: '' },
+      ];
+      const newContacts: NetworkContact[] = linearPeople.map((p, i) => ({
+        id: `linear-${Date.now()}-${i}`, name: p.name, company: 'Linear', role: p.role,
+        whyReachOut: '', companyInfo: 'Project management tool for software teams', foundVia: 'LinkedIn',
+        scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
+        platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
+        notes: '', createdAt: new Date().toISOString(),
+      }));
+      save('contacts', [...existing, ...newContacts]);
+      localStorage.setItem('bb-linear-added', '1');
+    } catch { /* silent */ }
+  }
 }
 
 // ── Supabase sync ──
@@ -148,6 +171,22 @@ async function saveToCloud(passHash: string, payload: BlackbookData) {
   });
 }
 
+// ── Company domain mapping for logos ──
+const COMPANY_DOMAINS: Record<string, string> = {
+  'linear': 'linear.app', 'alpaca': 'alpaca.markets', 'composer': 'composer.trade',
+  'ramp': 'ramp.com', 'vercel': 'vercel.com', 'mercury': 'mercury.com',
+  'kalshi': 'kalshi.com', 'entorr': 'entorr.com',
+};
+
+function getCompanyLogo(company: string) {
+  const domain = COMPANY_DOMAINS[company.toLowerCase()];
+  return domain ? `https://logo.clearbit.com/${domain}` : null;
+}
+
+function getLinkedInSearchUrl(company: string) {
+  return `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(company + ' engineering')}&origin=GLOBAL_SEARCH_HEADER`;
+}
+
 // ── Default data ──
 const DEFAULT_CONTACTS: NetworkContact[] = [
   { id: '1', name: '', company: 'Alpaca', role: '', whyReachOut: 'Fintech infra — API-first brokerage, aligns with trading background', companyInfo: 'Series B', foundVia: '', scoutingStatus: 'researching', outreachStatus: 'queued', platform: '', lastContactDate: '', nextAction: 'Find eng on LinkedIn', notes: '', createdAt: new Date().toISOString() },
@@ -157,6 +196,27 @@ const DEFAULT_CONTACTS: NetworkContact[] = [
   { id: '5', name: '', company: 'Mercury', role: '', whyReachOut: 'Startup banking — fintech + clean product', companyInfo: 'Series C', foundVia: '', scoutingStatus: 'researching', outreachStatus: 'queued', platform: '', lastContactDate: '', nextAction: 'Find eng on LinkedIn', notes: '', createdAt: new Date().toISOString() },
   { id: '6', name: '', company: 'Kalshi', role: '', whyReachOut: 'Prediction markets — trading background relevant', companyInfo: 'Series B', foundVia: '', scoutingStatus: 'researching', outreachStatus: 'queued', platform: '', lastContactDate: '', nextAction: 'Find eng on LinkedIn', notes: '', createdAt: new Date().toISOString() },
 ];
+
+// ── Company Logo component ──
+function CompanyLogo({ company, size = 28, t }: { company: string; size?: number; t: Theme }) {
+  const [failed, setFailed] = useState(false);
+  const logo = getCompanyLogo(company);
+  if (!logo || failed) {
+    return (
+      <div style={{
+        width: size, height: size, borderRadius: 6, background: t.accentSubtle,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: size * 0.45, fontFamily: FONT_MEDIUM, color: t.textMuted,
+        flexShrink: 0,
+      }}>{company.charAt(0).toUpperCase()}</div>
+    );
+  }
+  return (
+    <img src={logo} alt={company} width={size} height={size}
+      onError={() => setFailed(true)}
+      style={{ borderRadius: 6, flexShrink: 0, objectFit: 'contain' }} />
+  );
+}
 
 // ── Fingerprint SVG ──
 function FingerprintIcon({ onClick }: { onClick: () => void }) {
@@ -570,10 +630,18 @@ function PastEntry({ entry, onSelect, t }: { entry: JournalEntry; onSelect: () =
 function NetworkTab({ contacts, setContacts, t }: {
   contacts: NetworkContact[]; setContacts: (fn: (prev: NetworkContact[]) => NetworkContact[]) => void; t: Theme;
 }) {
-  const [view, setView] = useState<'scouting' | 'outreach'>('scouting');
+  const [view, setView] = useState<'contacts' | 'outreach'>('outreach');
 
-  const scoutingContacts = contacts.filter(c => c.outreachStatus === 'queued' && c.scoutingStatus !== 'archived');
+  const contactBookEntries = contacts.filter(c => c.outreachStatus === 'queued' && c.scoutingStatus !== 'archived');
   const outreachContacts = contacts.filter(c => c.outreachStatus !== 'queued');
+
+  // Group outreach by company
+  const outreachByCompany = outreachContacts.reduce<Record<string, NetworkContact[]>>((acc, c) => {
+    const key = c.company || 'Other';
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(c);
+    return acc;
+  }, {});
 
   const updateContact = (id: string, patch: Partial<NetworkContact>) => {
     setContacts(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
@@ -596,44 +664,40 @@ function NetworkTab({ contacts, setContacts, t }: {
   };
 
   // Pipeline counts
-  const counts = {
-    researching: contacts.filter(c => c.scoutingStatus === 'researching' && c.outreachStatus === 'queued').length,
-    ready: contacts.filter(c => c.scoutingStatus === 'ready' && c.outreachStatus === 'queued').length,
-    dmSent: contacts.filter(c => c.outreachStatus === 'dm-sent').length,
-    replied: contacts.filter(c => c.outreachStatus === 'replied').length,
-    callScheduled: contacts.filter(c => c.outreachStatus === 'call-scheduled').length,
-    connected: contacts.filter(c => ['call-done', 'connected'].includes(c.outreachStatus)).length,
-  };
+  const dmSent = contacts.filter(c => c.outreachStatus === 'dm-sent').length;
+  const replied = contacts.filter(c => c.outreachStatus === 'replied').length;
+  const calls = contacts.filter(c => ['call-scheduled', 'call-done'].includes(c.outreachStatus)).length;
+  const connected = contacts.filter(c => c.outreachStatus === 'connected').length;
 
   return (
     <div>
       {/* Pipeline summary */}
       <div style={{ fontSize: 12, color: t.textMuted, marginBottom: 16, fontFamily: FONT }}>
-        {counts.researching} researching &middot; {counts.ready} ready &middot; {counts.dmSent} DM sent &middot; {counts.replied} replied &middot; {counts.callScheduled} calls &middot; {counts.connected} connected
+        {contactBookEntries.length} contacts &middot; {dmSent} DM sent &middot; {replied} replied &middot; {calls} calls &middot; {connected} connected
       </div>
 
       {/* Sub-tabs */}
       <div style={{ display: 'flex', gap: 2, marginBottom: 20 }}>
-        {(['scouting', 'outreach'] as const).map(v => (
+        {(['contacts', 'outreach'] as const).map(v => (
           <button key={v} onClick={() => setView(v)} style={{
             background: view === v ? t.accentSubtle : 'transparent',
             border: 'none', color: view === v ? t.textStrong : t.textMuted,
             padding: '6px 14px', cursor: 'pointer', borderRadius: 6,
             fontSize: 13, fontFamily: FONT_MEDIUM, transition: 'all 0.15s',
-          }}>{v === 'scouting' ? `Scouting (${scoutingContacts.length})` : `Outreach (${outreachContacts.length})`}</button>
+          }}>{v === 'contacts' ? `Contact Book (${contactBookEntries.length})` : `Outreach (${outreachContacts.length})`}</button>
         ))}
       </div>
 
-      {/* Scouting view */}
-      {view === 'scouting' && (
+      {/* Contact Book view */}
+      {view === 'contacts' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {scoutingContacts.map(c => (
-            <ScoutingCard key={c.id} contact={c} onUpdate={p => updateContact(c.id, p)}
+          {contactBookEntries.map(c => (
+            <ContactBookCard key={c.id} contact={c} onUpdate={p => updateContact(c.id, p)}
               onRemove={() => removeContact(c.id)} onMoveToOutreach={() => moveToOutreach(c.id)} t={t} />
           ))}
-          {scoutingContacts.length === 0 && (
+          {contactBookEntries.length === 0 && (
             <p style={{ color: t.textMuted, fontSize: 13, textAlign: 'center', padding: 32 }}>
-              No contacts being scouted. Add someone to start.
+              No contacts yet. Add someone you know.
             </p>
           )}
           <button onClick={addContact} style={{
@@ -644,16 +708,16 @@ function NetworkTab({ contacts, setContacts, t }: {
         </div>
       )}
 
-      {/* Outreach view */}
+      {/* Outreach view — grouped by company */}
       {view === 'outreach' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {outreachContacts.map(c => (
-            <OutreachCard key={c.id} contact={c} onUpdate={p => updateContact(c.id, p)}
-              onRemove={() => removeContact(c.id)} t={t} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {Object.entries(outreachByCompany).map(([company, people]) => (
+            <CompanyOutreachCard key={company} company={company} contacts={people}
+              onUpdate={updateContact} onRemove={removeContact} t={t} />
           ))}
           {outreachContacts.length === 0 && (
             <p style={{ color: t.textMuted, fontSize: 13, textAlign: 'center', padding: 32 }}>
-              No active outreach yet. Move contacts from Scouting when ready.
+              No active outreach yet. Move contacts from Contact Book when ready.
             </p>
           )}
         </div>
@@ -662,18 +726,21 @@ function NetworkTab({ contacts, setContacts, t }: {
   );
 }
 
-// ── Scouting Card ──
-function ScoutingCard({ contact: c, onUpdate, onRemove, onMoveToOutreach, t }: {
+// ── Contact Book Card ──
+function ContactBookCard({ contact: c, onUpdate, onRemove, onMoveToOutreach, t }: {
   contact: NetworkContact; onUpdate: (p: Partial<NetworkContact>) => void;
   onRemove: () => void; onMoveToOutreach: () => void; t: Theme;
 }) {
   return (
     <div style={{ border: `1px solid ${t.border}`, borderRadius: 10, padding: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, flex: 1 }}>
-          <Field label="Name" value={c.name} onChange={v => onUpdate({ name: v })} placeholder="First Last" t={t} />
-          <Field label="Company" value={c.company} onChange={v => onUpdate({ company: v })} placeholder="Company" t={t} />
-          <Field label="Role" value={c.role} onChange={v => onUpdate({ role: v })} placeholder="SWE, PM..." t={t} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
+          <CompanyLogo company={c.company} t={t} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, flex: 1 }}>
+            <Field label="Name" value={c.name} onChange={v => onUpdate({ name: v })} placeholder="First Last" t={t} />
+            <Field label="Company" value={c.company} onChange={v => onUpdate({ company: v })} placeholder="Company" t={t} />
+            <Field label="Role" value={c.role} onChange={v => onUpdate({ role: v })} placeholder="SWE, PM..." t={t} />
+          </div>
         </div>
         <button onClick={onRemove} style={{
           background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
@@ -714,59 +781,105 @@ function ScoutingCard({ contact: c, onUpdate, onRemove, onMoveToOutreach, t }: {
   );
 }
 
-// ── Outreach Card ──
+// ── Company Outreach Card (grouped by company) ──
 const OUTREACH_STAGES: OutreachStatus[] = ['dm-sent', 'replied', 'call-scheduled', 'call-done', 'connected'];
 const STAGE_LABELS: Record<OutreachStatus, string> = {
   'queued': 'Queued', 'dm-sent': 'DM Sent', 'replied': 'Replied',
-  'call-scheduled': 'Call Scheduled', 'call-done': 'Call Done', 'connected': 'Connected',
+  'call-scheduled': 'Call Sched.', 'call-done': 'Call Done', 'connected': 'Connected',
 };
 
-function OutreachCard({ contact: c, onUpdate, onRemove, t }: {
-  contact: NetworkContact; onUpdate: (p: Partial<NetworkContact>) => void;
-  onRemove: () => void; t: Theme;
+function CompanyOutreachCard({ company, contacts, onUpdate, onRemove, t }: {
+  company: string; contacts: NetworkContact[];
+  onUpdate: (id: string, p: Partial<NetworkContact>) => void;
+  onRemove: (id: string) => void; t: Theme;
 }) {
-  const currentIdx = OUTREACH_STAGES.indexOf(c.outreachStatus);
+  // Furthest stage across all contacts in this company
+  const bestStageIdx = Math.max(...contacts.map(c => OUTREACH_STAGES.indexOf(c.outreachStatus)));
+
   return (
-    <div style={{ border: `1px solid ${t.border}`, borderRadius: 10, padding: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <div>
-          <span style={{ fontFamily: FONT_MEDIUM, color: t.textStrong, fontSize: 14 }}>
-            {c.name || c.company || 'Unnamed'}
-          </span>
-          {c.company && c.name && (
-            <span style={{ color: t.textMuted, fontSize: 13, marginLeft: 6 }}>{c.company}</span>
-          )}
-          {c.role && <span style={{ color: t.textMuted, fontSize: 12, marginLeft: 6 }}>({c.role})</span>}
+    <div style={{ border: `1px solid ${t.border}`, borderRadius: 10, overflow: 'hidden' }}>
+      {/* Company header */}
+      <div style={{
+        padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        borderBottom: `1px solid ${t.border}`, background: t.cardBg,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <CompanyLogo company={company} size={24} t={t} />
+          <span style={{ fontFamily: FONT_MEDIUM, color: t.textStrong, fontSize: 14 }}>{company}</span>
+          <span style={{ fontSize: 12, color: t.textMuted }}>{contacts.length} {contacts.length === 1 ? 'person' : 'people'}</span>
         </div>
-        <button onClick={onRemove} style={{
-          background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 16,
-        }}>&times;</button>
+        <a href={getLinkedInSearchUrl(company)} target="_blank" rel="noopener noreferrer" style={{
+          fontSize: 11, color: t.textMuted, textDecoration: 'none',
+          padding: '4px 10px', borderRadius: 6, border: `1px solid ${t.border}`,
+          fontFamily: FONT_MEDIUM, transition: 'all 0.15s',
+        }}
+          onMouseEnter={e => { e.currentTarget.style.color = t.textStrong; e.currentTarget.style.borderColor = t.textMuted; }}
+          onMouseLeave={e => { e.currentTarget.style.color = t.textMuted; e.currentTarget.style.borderColor = t.border; }}
+        >Find People &rarr;</a>
       </div>
 
-      {/* Pipeline stages */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 14 }}>
+      {/* Company-level progress bar */}
+      <div style={{ display: 'flex', gap: 0, padding: '0 16px', margin: '10px 0 4px' }}>
         {OUTREACH_STAGES.map((stage, i) => {
-          const isActive = i <= currentIdx;
+          const isActive = i <= bestStageIdx;
           return (
-            <button key={stage} onClick={() => onUpdate({ outreachStatus: stage })} style={{
-              flex: 1, padding: '5px 4px', borderRadius: 6, fontSize: 10,
-              fontFamily: FONT_MEDIUM, cursor: 'pointer', transition: 'all 0.15s',
-              background: isActive ? 'rgba(48, 180, 98, 0.12)' : 'transparent',
-              border: `1px solid ${isActive ? 'rgba(48, 180, 98, 0.25)' : t.border}`,
-              color: isActive ? '#2d8a56' : t.textMuted,
-              letterSpacing: 0.2,
-            }}>{STAGE_LABELS[stage]}</button>
+            <div key={stage} style={{
+              flex: 1, height: 3, borderRadius: i === 0 ? '2px 0 0 2px' : i === OUTREACH_STAGES.length - 1 ? '0 2px 2px 0' : 0,
+              background: isActive ? 'rgba(48, 180, 98, 0.35)' : t.accentSubtle,
+              transition: 'background 0.2s',
+            }} />
           );
         })}
       </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-        <Field label="Platform" value={c.platform} onChange={v => onUpdate({ platform: v })} placeholder="LinkedIn, Email..." t={t} />
-        <Field label="Last Contact" value={c.lastContactDate} onChange={v => onUpdate({ lastContactDate: v })} placeholder="Mar 30" t={t} />
-        <Field label="Next Action" value={c.nextAction} onChange={v => onUpdate({ nextAction: v })} placeholder="Follow up..." t={t} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 16px 8px', fontSize: 9, color: t.textMuted }}>
+        <span>DM Sent</span><span>Connected</span>
       </div>
-      <div style={{ marginTop: 8 }}>
-        <Field label="Notes" value={c.notes} onChange={v => onUpdate({ notes: v })} placeholder="..." t={t} />
+
+      {/* Individual contacts */}
+      <div style={{ padding: '0 16px 12px' }}>
+        {contacts.map(c => {
+          const currentIdx = OUTREACH_STAGES.indexOf(c.outreachStatus);
+          return (
+            <div key={c.id} style={{
+              padding: '10px 0', borderTop: `1px solid ${t.border}`,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontFamily: FONT_MEDIUM, color: t.textStrong, fontSize: 13 }}>
+                    {c.name || 'Unnamed'}
+                  </span>
+                  {c.role && <span style={{ fontSize: 12, color: t.textMuted }}>({c.role})</span>}
+                  {c.lastContactDate && <span style={{ fontSize: 11, color: t.textMuted }}>&middot; {c.lastContactDate}</span>}
+                </div>
+                <button onClick={() => onRemove(c.id)} style={{
+                  background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 14,
+                }}>&times;</button>
+              </div>
+
+              {/* Per-person pipeline */}
+              <div style={{ display: 'flex', gap: 3, marginBottom: 8 }}>
+                {OUTREACH_STAGES.map((stage, i) => {
+                  const isActive = i <= currentIdx;
+                  return (
+                    <button key={stage} onClick={() => onUpdate(c.id, { outreachStatus: stage })} style={{
+                      flex: 1, padding: '4px 2px', borderRadius: 5, fontSize: 9,
+                      fontFamily: FONT_MEDIUM, cursor: 'pointer', transition: 'all 0.15s',
+                      background: isActive ? 'rgba(48, 180, 98, 0.12)' : 'transparent',
+                      border: `1px solid ${isActive ? 'rgba(48, 180, 98, 0.25)' : t.border}`,
+                      color: isActive ? '#2d8a56' : t.textMuted,
+                    }}>{STAGE_LABELS[stage]}</button>
+                  );
+                })}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+                <Field value={c.platform} onChange={v => onUpdate(c.id, { platform: v })} placeholder="Platform..." t={t} />
+                <Field value={c.lastContactDate} onChange={v => onUpdate(c.id, { lastContactDate: v })} placeholder="Last contact..." t={t} />
+                <Field value={c.nextAction} onChange={v => onUpdate(c.id, { nextAction: v })} placeholder="Next action..." t={t} />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -895,7 +1008,7 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
   const [ideas, setIdeas] = useState<ProjectIdea[]>(() => load('ideas', []));
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [synced, setSynced] = useState(false);
-  const saveTimer = useRef<ReturnType<typeof setTimeout>>();
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Run migration once
   useEffect(() => { migrateIfNeeded(); }, []);
