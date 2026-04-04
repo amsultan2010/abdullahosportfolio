@@ -36,13 +36,13 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
 const BUILDING = [
   {
     label: 'LinkedIn Games Solver',
-    href: 'https://github.com/ronnielgandhe/linkedin-games-solver',
-    desc: 'Chrome extension — 7+ users organically from one LinkedIn post',
+    href: 'https://chromewebstore.google.com/detail/linkedin-game-solver/flogmalfkkooppdgcaamdnjaflbkpbim',
+    desc: 'Chrome extension that lets you cheat on LinkedIn games and come first every time',
   },
   {
     label: 'CreatorScope',
     href: 'https://github.com/ronnielgandhe/creatorscope',
-    desc: 'go-to-market automation for sourcing TikTok creators, multi-source discovery + scoring',
+    desc: 'Automates finding and scoring TikTok creators for brand deals — pulls from multiple sources so you don\'t have to dig manually',
   },
 ];
 
