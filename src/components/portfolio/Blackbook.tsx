@@ -1044,6 +1044,33 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
         loadedContacts = [...loadedContacts, ...newContacts];
       }
 
+      // Inject Vivek meeting on Apr 9 if not present
+      const loadedJournal: JournalEntry[] = cloud?.journal?.length ? cloud.journal : journal;
+      const apr9 = '2026-04-09';
+      const apr9Entry = loadedJournal.find(e => e.date === apr9);
+      const hasVivekMeeting = apr9Entry?.meetings?.some(m => m.person === 'Vivek');
+      if (!hasVivekMeeting) {
+        const vivekMeeting: Meeting = {
+          id: `vivek-${Date.now()}`, title: '30 min call', person: 'Vivek',
+          time: '7:00 PM', notes: '7:00 - 7:30pm ET',
+        };
+        if (apr9Entry) {
+          const updatedJournal = loadedJournal.map(e =>
+            e.date === apr9 ? { ...e, meetings: [...(e.meetings || []), vivekMeeting], updatedAt: new Date().toISOString() } : e
+          );
+          setJournal(updatedJournal);
+          save('journal', updatedJournal);
+        } else {
+          const newEntry: JournalEntry = {
+            id: apr9, date: apr9, body: '', tomorrow: '',
+            meetings: [vivekMeeting], updatedAt: new Date().toISOString(),
+          };
+          const updatedJournal = [...loadedJournal, newEntry];
+          setJournal(updatedJournal);
+          save('journal', updatedJournal);
+        }
+      }
+
       setContacts(loadedContacts);
       save('contacts', loadedContacts);
       setSynced(true);
