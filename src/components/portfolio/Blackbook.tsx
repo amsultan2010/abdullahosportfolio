@@ -81,6 +81,12 @@ interface BlackbookData {
   journal: JournalEntry[]; contacts: NetworkContact[]; ideas: ProjectIdea[];
 }
 
+// ── Date helper (local timezone, not UTC) ──
+function localToday(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 // ── Storage helpers ──
 function load<T>(key: string, fallback: T): T {
   try {
@@ -339,7 +345,7 @@ function MiniCalendar({ selectedDate, onSelectDate, journalDates, t }: {
   selectedDate: string; onSelectDate: (d: string) => void; journalDates: Set<string>; t: Theme;
 }) {
   const [viewDate, setViewDate] = useState(() => new Date(selectedDate + 'T12:00'));
-  const today = new Date().toISOString().split('T')[0];
+  const today = localToday();
 
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
@@ -413,7 +419,7 @@ function MeetingRow({ meeting, onChange, onRemove, t }: {
 function JournalTab({ journal, setJournal, t }: {
   journal: JournalEntry[]; setJournal: (fn: (prev: JournalEntry[]) => JournalEntry[]) => void; t: Theme;
 }) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = localToday();
   const [selectedDate, setSelectedDate] = useState(today);
 
   // Auto-create today's entry if it doesn't exist
@@ -535,7 +541,7 @@ function JournalTab({ journal, setJournal, t }: {
 function UpcomingMeetings({ journal, onSelectDate, t }: {
   journal: JournalEntry[]; onSelectDate: (d: string) => void; t: Theme;
 }) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = localToday();
   const upcoming = journal
     .filter(e => e.date >= today && e.meetings.length > 0)
     .sort((a, b) => a.date.localeCompare(b.date))
@@ -970,6 +976,84 @@ function IdeaCard({ idea, onUpdate, onRemove, t }: {
   );
 }
 
+// ── One-time data seeding (runs once per key, never re-injects) ──
+function runOneTimeSeed(
+  key: string,
+  contacts: NetworkContact[],
+  journal: JournalEntry[],
+): { contacts: NetworkContact[]; journal: JournalEntry[] } {
+  const flag = `bb-seeded-${key}`;
+  if (typeof window !== 'undefined' && localStorage.getItem(flag)) return { contacts, journal };
+
+  let c = contacts;
+  let j = journal;
+
+  if (key === 'linear') {
+    if (c.some(x => x.company === 'Linear')) { if (typeof window !== 'undefined') localStorage.setItem(flag, '1'); return { contacts: c, journal: j }; }
+    const today = localToday();
+    const people = [
+      { name: 'Lena Vu Sawyer' }, { name: 'Sabin Roman' },
+      { name: 'Tom Moor' }, { name: 'Mufeez Amjad' },
+    ];
+    c = [...c, ...people.map((p, i) => ({
+      id: `linear-${Date.now()}-${i}`, name: p.name, company: 'Linear', role: '',
+      whyReachOut: '', companyInfo: 'Project management tool for software teams', foundVia: 'LinkedIn',
+      scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
+      platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
+      notes: '', createdAt: new Date().toISOString(),
+    }))];
+  }
+
+  if (key === 'offdeal') {
+    if (c.some(x => x.company === 'Offdeal')) { if (typeof window !== 'undefined') localStorage.setItem(flag, '1'); return { contacts: c, journal: j }; }
+    const today = localToday();
+    const people = [
+      { name: 'Alston Lin', role: 'CTO & Co-founder' },
+      { name: 'Luis Ruiz Morel', role: 'Founding Engineer' },
+    ];
+    c = [...c, ...people.map((p, i) => ({
+      id: `offdeal-${Date.now()}-${i}`, name: p.name, company: 'Offdeal', role: p.role,
+      whyReachOut: '', companyInfo: '', foundVia: 'LinkedIn',
+      scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
+      platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
+      notes: 'Connection request sent with note', createdAt: new Date().toISOString(),
+    }))];
+  }
+
+  if (key === 'ostium') {
+    if (c.some(x => x.company === 'Ostium')) { if (typeof window !== 'undefined') localStorage.setItem(flag, '1'); return { contacts: c, journal: j }; }
+    const today = localToday();
+    c = [...c, {
+      id: `ostium-${Date.now()}-0`, name: 'Shrey Paharia', company: 'Ostium', role: 'Senior Developer',
+      whyReachOut: '', companyInfo: '$38B+ volume, backed by General Catalyst & Jump', foundVia: 'LinkedIn',
+      scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
+      platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
+      notes: 'Connection request sent with note', createdAt: new Date().toISOString(),
+    }];
+  }
+
+  if (key === 'vivek-apr9') {
+    const apr9 = '2026-04-09';
+    const existing = j.find(e => e.date === apr9);
+    if (existing?.meetings?.some(m => m.person === 'Vivek')) { if (typeof window !== 'undefined') localStorage.setItem(flag, '1'); return { contacts: c, journal: j }; }
+    const vivekMeeting: Meeting = {
+      id: `vivek-${Date.now()}`, title: '30 min call', person: 'Vivek',
+      time: '7:00 PM', notes: '7:00 - 7:30pm ET',
+    };
+    const entry = j.find(e => e.date === apr9);
+    if (entry) {
+      j = j.map(e => e.date === apr9
+        ? { ...e, meetings: [...(e.meetings || []), vivekMeeting], updatedAt: new Date().toISOString() }
+        : e);
+    } else {
+      j = [...j, { id: apr9, date: apr9, body: '', tomorrow: '', meetings: [vivekMeeting], updatedAt: new Date().toISOString() }];
+    }
+  }
+
+  if (typeof window !== 'undefined') localStorage.setItem(flag, '1');
+  return { contacts: c, journal: j };
+}
+
 // ── Main Dashboard ──
 function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: string }) {
   const t = useBlackbookTheme();
@@ -981,115 +1065,125 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
   const [synced, setSynced] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
+  // Refs that always hold the latest state — used by sync and beforeunload
+  const journalRef = useRef(journal);
+  const contactsRef = useRef(contacts);
+  const ideasRef = useRef(ideas);
+  useEffect(() => { journalRef.current = journal; }, [journal]);
+  useEffect(() => { contactsRef.current = contacts; }, [contacts]);
+  useEffect(() => { ideasRef.current = ideas; }, [ideas]);
+
   // Run migration once
   useEffect(() => { migrateIfNeeded(); }, []);
 
-  // Load from cloud on mount, then inject Linear contacts if missing
+  // Load from cloud on mount — cloud is the source of truth
   useEffect(() => {
     loadFromCloud(passHash).then(cloud => {
-      let loadedContacts = contacts;
-      if (cloud) {
-        if (cloud.journal?.length) { setJournal(cloud.journal); save('journal', cloud.journal); }
-        if (cloud.contacts?.length) { loadedContacts = cloud.contacts; }
-        if (cloud.ideas?.length) { setIdeas(cloud.ideas); save('ideas', cloud.ideas); }
+      // Cloud data wins. Fall back to localStorage only if cloud is empty/null.
+      let loadedJournal = cloud?.journal ?? load('journal', []);
+      let loadedContacts = cloud?.contacts ?? load('contacts', DEFAULT_CONTACTS);
+      let loadedIdeas = cloud?.ideas ?? load('ideas', []);
+
+      // One-time seeds — only inject if this device hasn't seeded yet
+      for (const key of ['linear', 'offdeal', 'ostium', 'vivek-apr9']) {
+        const result = runOneTimeSeed(key, loadedContacts, loadedJournal);
+        loadedContacts = result.contacts;
+        loadedJournal = result.journal;
       }
 
-      // Inject Linear contacts if not present
-      const hasLinear = loadedContacts.some(c => c.company === 'Linear');
-      if (!hasLinear) {
-        const today = new Date().toISOString().split('T')[0];
-        const linearPeople = [
-          { name: 'Lena Vu Sawyer' },
-          { name: 'Sabin Roman' },
-          { name: 'Tom Moor' },
-          { name: 'Mufeez Amjad' },
-        ];
-        const newContacts: NetworkContact[] = linearPeople.map((p, i) => ({
-          id: `linear-${Date.now()}-${i}`, name: p.name, company: 'Linear', role: '',
-          whyReachOut: '', companyInfo: 'Project management tool for software teams', foundVia: 'LinkedIn',
-          scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
-          platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
-          notes: '', createdAt: new Date().toISOString(),
-        }));
-        loadedContacts = [...loadedContacts, ...newContacts];
-      }
-
-      const hasOffdeal = loadedContacts.some(c => c.company === 'Offdeal');
-      if (!hasOffdeal) {
-        const today = new Date().toISOString().split('T')[0];
-        const offdealPeople = [
-          { name: 'Alston Lin', role: 'CTO & Co-founder' },
-          { name: 'Luis Ruiz Morel', role: 'Founding Engineer' },
-        ];
-        const newContacts: NetworkContact[] = offdealPeople.map((p, i) => ({
-          id: `offdeal-${Date.now()}-${i}`, name: p.name, company: 'Offdeal', role: p.role,
-          whyReachOut: '', companyInfo: '', foundVia: 'LinkedIn',
-          scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
-          platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
-          notes: 'Connection request sent with note', createdAt: new Date().toISOString(),
-        }));
-        loadedContacts = [...loadedContacts, ...newContacts];
-      }
-
-      const hasOstium = loadedContacts.some(c => c.company === 'Ostium');
-      if (!hasOstium) {
-        const today = new Date().toISOString().split('T')[0];
-        const newContacts: NetworkContact[] = [{
-          id: `ostium-${Date.now()}-0`, name: 'Shrey Paharia', company: 'Ostium', role: 'Senior Developer',
-          whyReachOut: '', companyInfo: '$38B+ volume, backed by General Catalyst & Jump', foundVia: 'LinkedIn',
-          scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
-          platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
-          notes: 'Connection request sent with note', createdAt: new Date().toISOString(),
-        }];
-        loadedContacts = [...loadedContacts, ...newContacts];
-      }
-
-      // Inject Vivek meeting on Apr 9 if not present
-      const loadedJournal: JournalEntry[] = cloud?.journal?.length ? cloud.journal : journal;
-      const apr9 = '2026-04-09';
-      const apr9Entry = loadedJournal.find(e => e.date === apr9);
-      const hasVivekMeeting = apr9Entry?.meetings?.some(m => m.person === 'Vivek');
-      if (!hasVivekMeeting) {
-        const vivekMeeting: Meeting = {
-          id: `vivek-${Date.now()}`, title: '30 min call', person: 'Vivek',
-          time: '7:00 PM', notes: '7:00 - 7:30pm ET',
-        };
-        if (apr9Entry) {
-          const updatedJournal = loadedJournal.map(e =>
-            e.date === apr9 ? { ...e, meetings: [...(e.meetings || []), vivekMeeting], updatedAt: new Date().toISOString() } : e
-          );
-          setJournal(updatedJournal);
-          save('journal', updatedJournal);
-        } else {
-          const newEntry: JournalEntry = {
-            id: apr9, date: apr9, body: '', tomorrow: '',
-            meetings: [vivekMeeting], updatedAt: new Date().toISOString(),
-          };
-          const updatedJournal = [...loadedJournal, newEntry];
-          setJournal(updatedJournal);
-          save('journal', updatedJournal);
+      // Deduplicate before applying — prevents dirty cloud/localStorage data from showing dupes
+      for (const entry of loadedJournal) {
+        if (entry.meetings?.length > 1) {
+          const seen = new Set<string>();
+          entry.meetings = entry.meetings.filter(m => {
+            const k = `${m.person}|${m.time}|${m.title}`;
+            if (seen.has(k)) return false;
+            seen.add(k);
+            return true;
+          });
         }
       }
+      {
+        const seen = new Set<string>();
+        loadedContacts = loadedContacts.filter(c => {
+          if (!c.name?.trim()) return false;
+          const k = `${c.name}|${c.company}`;
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        });
+      }
 
+      // Apply to state and cache locally
+      setJournal(loadedJournal);
       setContacts(loadedContacts);
+      setIdeas(loadedIdeas);
+      save('journal', loadedJournal);
       save('contacts', loadedContacts);
+      save('ideas', loadedIdeas);
+
+      // Sync back to cloud (seeds may have added data)
+      saveToCloud(passHash, { journal: loadedJournal, contacts: loadedContacts, ideas: loadedIdeas });
       setSynced(true);
+      setSaveStatus('saved');
     });
   }, [passHash]);
 
-  // Debounced cloud save
-  const syncToCloud = useCallback((j: JournalEntry[], c: NetworkContact[], i: ProjectIdea[]) => {
+  // Single unified sync — always writes all three together with latest refs
+  const syncToCloud = useCallback(() => {
+    const j = journalRef.current;
+    const c = contactsRef.current;
+    const i = ideasRef.current;
+    save('journal', j);
+    save('contacts', c);
+    save('ideas', i);
     setSaveStatus('saving');
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
       saveToCloud(passHash, { journal: j, contacts: c, ideas: i })
         .then(() => setSaveStatus('saved'));
-    }, 1500);
+    }, 800);
   }, [passHash]);
 
-  useEffect(() => { save('journal', journal); setSaveStatus('unsaved'); if (synced) syncToCloud(journal, contacts, ideas); }, [journal]);
-  useEffect(() => { save('contacts', contacts); setSaveStatus('unsaved'); if (synced) syncToCloud(journal, contacts, ideas); }, [contacts]);
-  useEffect(() => { save('ideas', ideas); setSaveStatus('unsaved'); if (synced) syncToCloud(journal, contacts, ideas); }, [ideas]);
+  // Flush to cloud immediately (no debounce) — used on beforeunload
+  const flushToCloud = useCallback(() => {
+    const payload = JSON.stringify({
+      journal: journalRef.current,
+      contacts: contactsRef.current,
+      ideas: ideasRef.current,
+    });
+    // navigator.sendBeacon doesn't work with Supabase auth, so use sync fetch
+    // Save to localStorage immediately (guaranteed)
+    save('journal', journalRef.current);
+    save('contacts', contactsRef.current);
+    save('ideas', ideasRef.current);
+    // Fire-and-forget cloud save via fetch with keepalive
+    fetch(`${SUPABASE_URL}/rest/v1/blackbook?pass_hash=eq.${passHash}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({ data: { journal: journalRef.current, contacts: contactsRef.current, ideas: ideasRef.current }, updated_at: new Date().toISOString() }),
+      keepalive: true,
+    }).catch(() => {});
+  }, [passHash]);
+
+  // Save to cloud on tab close / navigate away
+  useEffect(() => {
+    window.addEventListener('beforeunload', flushToCloud);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flushToCloud();
+    });
+    return () => {
+      window.removeEventListener('beforeunload', flushToCloud);
+    };
+  }, [flushToCloud]);
+
+  // Trigger sync when any data changes (single effect, reads from refs)
+  useEffect(() => { if (synced) syncToCloud(); }, [journal, contacts, ideas]);
 
   return (
     <div style={{
