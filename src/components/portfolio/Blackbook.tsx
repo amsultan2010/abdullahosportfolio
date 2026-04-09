@@ -79,6 +79,8 @@ interface ProjectIdea {
 
 interface BlackbookData {
   journal: JournalEntry[]; contacts: NetworkContact[]; ideas: ProjectIdea[];
+  // Per-section timestamps for field-level merge
+  journalUpdatedAt?: string; contactsUpdatedAt?: string; ideasUpdatedAt?: string;
 }
 
 // ── Date helper (local timezone, not UTC) ──
@@ -153,6 +155,71 @@ async function saveToCloud(passHash: string, payload: BlackbookData) {
   await supabase.from('blackbook').upsert({
     pass_hash: passHash, data: payload, updated_at: new Date().toISOString(),
   });
+}
+
+// Per-field merge: for each section, the one with the newer timestamp wins.
+// This means if you edit contacts on phone and journal on laptop, both are kept.
+function mergeCloudLocal(cloud: BlackbookData | null, local: BlackbookData): BlackbookData {
+  if (!cloud) return local;
+
+  const pick = <T,>(
+    cloudVal: T, cloudTs: string | undefined,
+    localVal: T, localTs: string | undefined,
+    fallback: T,
+  ): T => {
+    const cTime = cloudTs ? new Date(cloudTs).getTime() : 0;
+    const lTime = localTs ? new Date(localTs).getTime() : 0;
+    if (cTime >= lTime) return cloudVal ?? fallback;
+    return localVal ?? fallback;
+  };
+
+  return {
+    journal: pick(cloud.journal, cloud.journalUpdatedAt, local.journal, local.journalUpdatedAt, []),
+    contacts: pick(cloud.contacts, cloud.contactsUpdatedAt, local.contacts, local.contactsUpdatedAt, []),
+    ideas: pick(cloud.ideas, cloud.ideasUpdatedAt, local.ideas, local.ideasUpdatedAt, []),
+    journalUpdatedAt: [cloud.journalUpdatedAt, local.journalUpdatedAt].filter(Boolean).sort().pop(),
+    contactsUpdatedAt: [cloud.contactsUpdatedAt, local.contactsUpdatedAt].filter(Boolean).sort().pop(),
+    ideasUpdatedAt: [cloud.ideasUpdatedAt, local.ideasUpdatedAt].filter(Boolean).sort().pop(),
+  };
+}
+
+// ── Retry queue for failed saves ──
+class SaveQueue {
+  private pending: (() => Promise<void>) | null = null;
+  private retryCount = 0;
+  private retryTimer: ReturnType<typeof setTimeout> | undefined;
+  private maxRetries = 5;
+  onStatusChange?: (status: 'saving' | 'saved' | 'error' | 'retrying') => void;
+
+  enqueue(saveFn: () => Promise<void>) {
+    this.pending = saveFn;
+    this.retryCount = 0;
+    this.run();
+  }
+
+  private async run() {
+    if (!this.pending) return;
+    const fn = this.pending;
+    this.onStatusChange?.(this.retryCount > 0 ? 'retrying' : 'saving');
+    try {
+      await fn();
+      this.pending = null;
+      this.retryCount = 0;
+      this.onStatusChange?.('saved');
+    } catch {
+      if (this.retryCount < this.maxRetries) {
+        this.retryCount++;
+        const delay = Math.min(1000 * Math.pow(2, this.retryCount - 1), 15000);
+        this.onStatusChange?.('retrying');
+        this.retryTimer = setTimeout(() => this.run(), delay);
+      } else {
+        this.onStatusChange?.('error');
+      }
+    }
+  }
+
+  hasPending() { return this.pending !== null; }
+  cancel() { if (this.retryTimer) clearTimeout(this.retryTimer); }
 }
 
 // ── Company domain mapping for logos ──
@@ -328,14 +395,17 @@ function TextArea({ value, onChange, placeholder, t, minHeight = 120 }: {
 }
 
 // ── Save Indicator ──
-function SaveIndicator({ status, t }: { status: 'saved' | 'saving' | 'unsaved'; t: Theme }) {
+function SaveIndicator({ status, t }: { status: 'saved' | 'saving' | 'unsaved' | 'error' | 'retrying'; t: Theme }) {
+  const isError = status === 'error';
+  const isRetrying = status === 'retrying';
   return (
     <span style={{
-      fontSize: 11, color: status === 'saved' ? t.textMuted : t.text,
+      fontSize: 11,
+      color: isError ? '#ef4444' : isRetrying ? '#f59e0b' : status === 'saved' ? t.textMuted : t.text,
       fontFamily: FONT, opacity: status === 'unsaved' ? 0 : 0.7,
       transition: 'opacity 0.3s',
     }}>
-      {status === 'saving' ? 'Saving...' : status === 'saved' ? 'Saved' : ''}
+      {status === 'saving' ? 'Saving...' : status === 'saved' ? 'Saved' : isRetrying ? 'Retrying...' : isError ? 'Save failed' : ''}
     </span>
   );
 }
@@ -1061,9 +1131,13 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
   const [journal, setJournal] = useState<JournalEntry[]>(() => load('journal', []));
   const [contacts, setContacts] = useState<NetworkContact[]>(() => load('contacts', DEFAULT_CONTACTS));
   const [ideas, setIdeas] = useState<ProjectIdea[]>(() => load('ideas', []));
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | 'error' | 'retrying'>('saved');
   const [synced, setSynced] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const saveQueueRef = useRef(new SaveQueue());
+
+  // Per-section timestamps — tracks when each section was last edited locally
+  const sectionTs = useRef({ journal: '', contacts: '', ideas: '' });
 
   // Refs that always hold the latest state — used by sync and beforeunload
   const journalRef = useRef(journal);
@@ -1073,16 +1147,39 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
   useEffect(() => { contactsRef.current = contacts; }, [contacts]);
   useEffect(() => { ideasRef.current = ideas; }, [ideas]);
 
+  // Wire up save queue status
+  useEffect(() => {
+    saveQueueRef.current.onStatusChange = setSaveStatus;
+    return () => { saveQueueRef.current.cancel(); };
+  }, []);
+
   // Run migration once
   useEffect(() => { migrateIfNeeded(); }, []);
 
-  // Load from cloud on mount — cloud is the source of truth
+  // Load from cloud on mount — merge with localStorage using per-field timestamps
   useEffect(() => {
     loadFromCloud(passHash).then(cloud => {
-      // Cloud data wins. Fall back to localStorage only if cloud is empty/null.
-      let loadedJournal = cloud?.journal ?? load('journal', []);
-      let loadedContacts = cloud?.contacts ?? load('contacts', DEFAULT_CONTACTS);
-      let loadedIdeas = cloud?.ideas ?? load('ideas', []);
+      const localData: BlackbookData = {
+        journal: load('journal', []),
+        contacts: load('contacts', DEFAULT_CONTACTS),
+        ideas: load('ideas', []),
+        journalUpdatedAt: load('journalUpdatedAt', ''),
+        contactsUpdatedAt: load('contactsUpdatedAt', ''),
+        ideasUpdatedAt: load('ideasUpdatedAt', ''),
+      };
+
+      // Per-field merge: newest timestamp wins per section
+      const merged = mergeCloudLocal(cloud, localData);
+      let loadedJournal = merged.journal ?? [];
+      let loadedContacts = merged.contacts ?? [];
+      const loadedIdeas = merged.ideas ?? [];
+
+      // Track section timestamps
+      sectionTs.current = {
+        journal: merged.journalUpdatedAt || new Date().toISOString(),
+        contacts: merged.contactsUpdatedAt || new Date().toISOString(),
+        ideas: merged.ideasUpdatedAt || new Date().toISOString(),
+      };
 
       // One-time seeds — only inject if this device hasn't seeded yet
       for (const key of ['linear', 'offdeal', 'ostium', 'vivek-apr9']) {
@@ -1121,43 +1218,60 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
       save('journal', loadedJournal);
       save('contacts', loadedContacts);
       save('ideas', loadedIdeas);
+      save('journalUpdatedAt', sectionTs.current.journal);
+      save('contactsUpdatedAt', sectionTs.current.contacts);
+      save('ideasUpdatedAt', sectionTs.current.ideas);
 
-      // Sync back to cloud (seeds may have added data)
-      saveToCloud(passHash, { journal: loadedJournal, contacts: loadedContacts, ideas: loadedIdeas });
+      // Sync back to cloud (seeds/dedup may have cleaned data)
+      const payload: BlackbookData = {
+        journal: loadedJournal, contacts: loadedContacts, ideas: loadedIdeas,
+        ...sectionTs.current,
+        journalUpdatedAt: sectionTs.current.journal,
+        contactsUpdatedAt: sectionTs.current.contacts,
+        ideasUpdatedAt: sectionTs.current.ideas,
+      };
+      saveToCloud(passHash, payload);
       setSynced(true);
       setSaveStatus('saved');
     });
   }, [passHash]);
 
-  // Single unified sync — always writes all three together with latest refs
+  // Build the full payload from current refs + timestamps
+  const buildPayload = useCallback((): BlackbookData => ({
+    journal: journalRef.current,
+    contacts: contactsRef.current,
+    ideas: ideasRef.current,
+    journalUpdatedAt: sectionTs.current.journal,
+    contactsUpdatedAt: sectionTs.current.contacts,
+    ideasUpdatedAt: sectionTs.current.ideas,
+  }), []);
+
+  // Debounced sync with retry queue
   const syncToCloud = useCallback(() => {
-    const j = journalRef.current;
-    const c = contactsRef.current;
-    const i = ideasRef.current;
-    save('journal', j);
-    save('contacts', c);
-    save('ideas', i);
+    save('journal', journalRef.current);
+    save('contacts', contactsRef.current);
+    save('ideas', ideasRef.current);
+    save('journalUpdatedAt', sectionTs.current.journal);
+    save('contactsUpdatedAt', sectionTs.current.contacts);
+    save('ideasUpdatedAt', sectionTs.current.ideas);
     setSaveStatus('saving');
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      saveToCloud(passHash, { journal: j, contacts: c, ideas: i })
-        .then(() => setSaveStatus('saved'));
+      saveQueueRef.current.enqueue(() => saveToCloud(passHash, buildPayload()));
     }, 800);
-  }, [passHash]);
+  }, [passHash, buildPayload]);
 
-  // Flush to cloud immediately (no debounce) — used on beforeunload
+  // Flush to cloud immediately — used on beforeunload / visibilitychange
   const flushToCloud = useCallback(() => {
-    const payload = JSON.stringify({
-      journal: journalRef.current,
-      contacts: contactsRef.current,
-      ideas: ideasRef.current,
-    });
-    // navigator.sendBeacon doesn't work with Supabase auth, so use sync fetch
     // Save to localStorage immediately (guaranteed)
     save('journal', journalRef.current);
     save('contacts', contactsRef.current);
     save('ideas', ideasRef.current);
+    save('journalUpdatedAt', sectionTs.current.journal);
+    save('contactsUpdatedAt', sectionTs.current.contacts);
+    save('ideasUpdatedAt', sectionTs.current.ideas);
     // Fire-and-forget cloud save via fetch with keepalive
+    const payload = buildPayload();
     fetch(`${SUPABASE_URL}/rest/v1/blackbook?pass_hash=eq.${passHash}`, {
       method: 'PATCH',
       headers: {
@@ -1166,24 +1280,52 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
         'Authorization': `Bearer ${SUPABASE_ANON}`,
         'Prefer': 'return=minimal',
       },
-      body: JSON.stringify({ data: { journal: journalRef.current, contacts: contactsRef.current, ideas: ideasRef.current }, updated_at: new Date().toISOString() }),
+      body: JSON.stringify({ data: payload, updated_at: new Date().toISOString() }),
       keepalive: true,
     }).catch(() => {});
-  }, [passHash]);
+  }, [passHash, buildPayload]);
 
-  // Save to cloud on tab close / navigate away
+  // Warn user if they try to close with unsaved changes
+  const handleBeforeUnload = useCallback((e: BeforeUnloadEvent) => {
+    flushToCloud();
+    if (saveQueueRef.current.hasPending() || saveStatus === 'saving' || saveStatus === 'retrying') {
+      e.preventDefault();
+    }
+  }, [flushToCloud, saveStatus]);
+
+  // Save to cloud on tab close / navigate away / mobile Safari pagehide
   useEffect(() => {
-    window.addEventListener('beforeunload', flushToCloud);
-    document.addEventListener('visibilitychange', () => {
+    const handleVisibility = () => {
       if (document.visibilityState === 'hidden') flushToCloud();
-    });
-    return () => {
-      window.removeEventListener('beforeunload', flushToCloud);
     };
-  }, [flushToCloud]);
+    const handlePageHide = () => flushToCloud();
 
-  // Trigger sync when any data changes (single effect, reads from refs)
-  useEffect(() => { if (synced) syncToCloud(); }, [journal, contacts, ideas]);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('pagehide', handlePageHide); // mobile Safari
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('pagehide', handlePageHide);
+    };
+  }, [handleBeforeUnload, flushToCloud]);
+
+  // Trigger sync when any data changes — update per-section timestamps
+  useEffect(() => {
+    if (!synced) return;
+    sectionTs.current.journal = new Date().toISOString();
+    syncToCloud();
+  }, [journal]);
+  useEffect(() => {
+    if (!synced) return;
+    sectionTs.current.contacts = new Date().toISOString();
+    syncToCloud();
+  }, [contacts]);
+  useEffect(() => {
+    if (!synced) return;
+    sectionTs.current.ideas = new Date().toISOString();
+    syncToCloud();
+  }, [ideas]);
 
   return (
     <div style={{
