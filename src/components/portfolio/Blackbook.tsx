@@ -763,6 +763,37 @@ const CATEGORY_META: { key: ContactCategory; label: string; accent: string }[] =
   { key: 'awaiting-reply', label: 'Awaiting Reply', accent: '#6b7280' },
 ];
 
+// ── LinkedIn URL parser ──
+function parseLinkedInUrl(url: string): { name: string; linkedinUrl: string } | null {
+  try {
+    const u = new URL(url.trim());
+    if (!u.hostname.includes('linkedin.com')) return null;
+    const match = u.pathname.match(/\/in\/([^/]+)/);
+    if (!match) return null;
+    const slug = match[1];
+    // Split by hyphens, drop trailing ID-like segments (all digits, or long alphanumeric hashes)
+    const parts = slug.split('-').filter(p => !/^\d+$/.test(p) && !(p.length > 6 && /^[a-z0-9]+$/.test(p)));
+    if (parts.length === 0) return null;
+    const name = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
+    return { name, linkedinUrl: url.trim() };
+  } catch { return null; }
+}
+
+// Try to fetch company from LinkedIn page title via CORS proxy (best-effort)
+function tryFetchLinkedInCompany(url: string, onCompany: (company: string) => void) {
+  fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`)
+    .then(r => r.text())
+    .then(html => {
+      // LinkedIn title format: "Firstname Lastname - Title at Company | LinkedIn"
+      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+      if (!titleMatch) return;
+      const title = titleMatch[1];
+      const atMatch = title.match(/\bat\b\s+(.+?)\s*\|/i);
+      if (atMatch) onCompany(atMatch[1].trim());
+    })
+    .catch(() => {}); // Silent fail — name from URL is still valuable
+}
+
 function NetworkTab({ contacts, setContacts, t }: {
   contacts: NetworkContact[]; setContacts: (fn: (prev: NetworkContact[]) => NetworkContact[]) => void; t: Theme;
 }) {
@@ -770,6 +801,8 @@ function NetworkTab({ contacts, setContacts, t }: {
   const [filter, setFilter] = useState('');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [pasteUrl, setPasteUrl] = useState('');
+  const [pasteStatus, setPasteStatus] = useState<string | null>(null);
 
   const updateContact = (id: string, patch: Partial<NetworkContact>) => {
     setContacts(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
@@ -785,6 +818,35 @@ function NetworkTab({ contacts, setContacts, t }: {
       whatTheySaid: '', actionNeeded: '', notes: '', createdAt: new Date().toISOString(),
     }]);
     setExpandedCard(id);
+  };
+
+  const addFromLinkedIn = (url: string) => {
+    const parsed = parseLinkedInUrl(url);
+    if (!parsed) {
+      setPasteStatus('Not a valid LinkedIn profile URL');
+      setTimeout(() => setPasteStatus(null), 2500);
+      return;
+    }
+    // Check for duplicate
+    if (contacts.some(c => c.linkedinUrl === parsed.linkedinUrl)) {
+      setPasteStatus(`${parsed.name} already exists`);
+      setTimeout(() => setPasteStatus(null), 2500);
+      return;
+    }
+    const id = Date.now().toString();
+    setContacts(prev => [...prev, {
+      id, name: parsed.name, company: '', role: '', category: 'warm', urgency: 'later',
+      whatTheySaid: '', actionNeeded: '', linkedinUrl: parsed.linkedinUrl,
+      notes: '', createdAt: new Date().toISOString(),
+    }]);
+    setExpandedCard(id);
+    setPasteUrl('');
+    setPasteStatus(`Added ${parsed.name}`);
+    setTimeout(() => setPasteStatus(null), 2500);
+    // Try to fetch company in background
+    tryFetchLinkedInCompany(parsed.linkedinUrl, (company) => {
+      setContacts(prev => prev.map(c => c.id === id ? { ...c, company: c.company || company } : c));
+    });
   };
 
   const active = contacts.filter(c => c.category !== 'connected' && c.category !== 'archived');
@@ -816,6 +878,33 @@ function NetworkTab({ contacts, setContacts, t }: {
             fontSize: 14, fontFamily: FONT_MEDIUM, transition: 'all 0.15s',
           }}>{v === 'outreach' ? `Outreach (${active.length})` : `Contact Book (${connected.length})`}</button>
         ))}
+      </div>
+
+      {/* LinkedIn paste-to-add */}
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input value={pasteUrl} onChange={e => setPasteUrl(e.target.value)}
+            onPaste={e => {
+              const text = e.clipboardData.getData('text');
+              if (text.includes('linkedin.com/in/')) {
+                e.preventDefault();
+                addFromLinkedIn(text);
+              }
+            }}
+            onKeyDown={e => { if (e.key === 'Enter' && pasteUrl) addFromLinkedIn(pasteUrl); }}
+            placeholder="Paste a LinkedIn URL to add contact..."
+            style={{
+              flex: 1, background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+              padding: '8px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
+              outline: 'none', boxSizing: 'border-box',
+            }} />
+        </div>
+        {pasteStatus && (
+          <div style={{
+            fontSize: 12, fontFamily: FONT_MEDIUM, marginTop: 4, padding: '2px 0',
+            color: pasteStatus.startsWith('Added') ? '#2d8a56' : pasteStatus.includes('already') ? t.textMuted : '#ef4444',
+          }}>{pasteStatus}</div>
+        )}
       </div>
 
       {/* Filter */}
