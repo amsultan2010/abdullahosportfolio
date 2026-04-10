@@ -2104,7 +2104,7 @@ export default function Blackbook() {
       {state === 'password' && (
         <PasswordGate onUnlock={handleUnlock} onClose={() => setState('hidden')} />
       )}
-      {state === 'open' && <BlackbookDashboard onClose={() => setState('hidden')} onLogout={() => setState('password')} passHash={passHash} transparent />}
+      {state === 'open' && <BlackbookDashboard onClose={() => setState('hidden')} onLogout={() => setState('password')} passHash={passHash} />}
     </>
   );
 }
