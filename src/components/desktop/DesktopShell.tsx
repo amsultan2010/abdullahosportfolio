@@ -6195,7 +6195,7 @@ function Desktop() {
               projects: '#252526',
               blog: '#f9f9f8',
               calendar: '#ffffff',
-              photos: '#2d2d2d',
+              photos: '#1a1a1f',
               ...(isTerminalDashboard ? { terminal: 'rgba(0,0,0,0.4)' } : {}),
             };
             // Apps with dark content need light title bar text
