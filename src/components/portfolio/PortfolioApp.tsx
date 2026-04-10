@@ -1,9 +1,11 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, useCallback, useRef, createContext, useContext, lazy, Suspense } from 'react';
 
 import ContentViewer from './ContentViewer';
 import type { ContentViewData } from './ContentViewer';
 import { contentMap } from './contentData';
 import Blackbook from './Blackbook';
+
+const LazyDesktopShell = lazy(() => import('../desktop/DesktopShell'));
 
 /* ══════════════════════════════════════════════════════════
    Theme context — dark/light mode
@@ -35,20 +37,23 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 const BUILDING = [
   {
-    label: 'LinkedIn Games Solver',
-    href: 'https://chromewebstore.google.com/detail/linkedin-game-solver/flogmalfkkooppdgcaamdnjaflbkpbim',
-    desc: 'Chrome extension that lets you cheat on LinkedIn games and come first every time',
+    label: 'QuantZoo',
+    href: 'https://github.com/ronnielgandhe/quantzoo',
+    cover: '/trading.png',
+    desc: 'Python framework for systematic strategy research, backtesting, and real-time streaming.',
+    tech: ['Python', 'FastAPI', 'WebSocket'],
   },
   {
     label: 'CreatorScope',
     href: 'https://github.com/ronnielgandhe/creatorscope',
-    desc: 'Automates finding and scoring TikTok creators for brand deals — pulls from multiple sources so you don\'t have to dig manually',
+    cover: '/cover.png',
+    desc: 'Automates sourcing and scoring TikTok creators for brand deals. Multi-source discovery.',
+    tech: ['Python', 'FastAPI', 'SQLAlchemy'],
   },
 ];
 
 const PREVIOUSLY = [
-  { role: 'Growth Engineering', company: 'Augmentor Labs', icon: '/augmentor-dark.svg', href: 'https://augmentorlabs.com' },
-  { role: 'Software Engineering', company: 'Augmentor Labs', icon: '/augmentor-dark.svg', href: 'https://augmentorlabs.com' },
+  { role: 'Growth + Software Engineering', company: 'Augmentor Labs', icon: '/augmentor-dark.svg', href: 'https://augmentorlabs.com' },
   { role: 'Data Science', company: 'CIBC', icon: '/cibc-dark.svg', href: 'https://www.cibc.com' },
 ];
 
@@ -187,49 +192,64 @@ function Inner() {
             </span>
           </BulletItem>
 
-          {/* Current: CS @ Wilfrid Laurier, previously Waterloo + Laurier */}
-          <li className="rg-item rg-item-nested">
-            <div className="rg-diamond" style={{ background: t.diamond }} />
+          {/* Previously: Waterloo CS + Laurier BBA */}
+          <BulletItem diamond={t.diamond}>
             <span style={{ color: t.text }}>
-              CS{' '}
+              previously{' '}
               <span className="rg-inline-link-group">
-                <SLink href="https://www.wlu.ca" icon="/laurier-seal.png">Wilfrid Laurier</SLink>
+                <SLink href="https://uwaterloo.ca" icon="/waterloo-logo.png">Waterloo CS</SLink>
+                {' + '}
+                <SLink href="https://www.wlu.ca" icon="/laurier-seal.png">Laurier BBA</SLink>
               </span>
             </span>
-            <ul className="rg-sublist">
-              <li className="rg-subitem">
-                <span className="rg-arrow" style={{ color: t.textMuted }}>↳</span>
-                <span style={{ color: t.text }}>
-                  previously{' '}
-                  <span className="rg-inline-link-group">
-                    <SLink href="https://uwaterloo.ca" icon="/waterloo-logo.png">Waterloo</SLink>
-                    {' + '}
-                    <SLink href="https://www.wlu.ca" icon="/laurier-seal.png">Laurier</SLink>
-                  </span>
-                </span>
-              </li>
-            </ul>
-          </li>
+          </BulletItem>
 
           {/* What I've been building */}
-          <li className="rg-item rg-item-nested">
+          <li className="rg-item rg-item-nested" style={{ marginTop: 8 }}>
             <div className="rg-diamond" style={{ background: t.diamond }} />
             <span className="rg-section-label" style={{ color: t.text }}>what i've been building:</span>
-            <ul className="rg-sublist">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 4, width: '100%' }}>
               {BUILDING.map((b, i) => (
-                <li key={i} className="rg-subitem">
-                  <span className="rg-arrow" style={{ color: t.textMuted }}>↳</span>
-                  <span style={{ color: t.text }}>
-                    <SLink href={b.href}>{b.label}</SLink>
-                    {' — '}{b.desc}
-                  </span>
-                </li>
+                <a key={i} href={b.href} target="_blank" rel="noopener noreferrer" className="rg-build-card" style={{
+                  background: t.cardBg,
+                  borderColor: t.border,
+                }}>
+                  <div style={{
+                    aspectRatio: '16 / 10',
+                    overflow: 'hidden',
+                    borderRadius: '8px 8px 0 0',
+                    margin: '-16px -16px 12px -16px',
+                    width: 'calc(100% + 32px)',
+                  }}>
+                    <img src={b.cover} alt={b.label} className="rg-build-cover" style={{
+                      width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+                      transition: 'transform 0.4s ease',
+                    }} />
+                  </div>
+                  <span className="rg-build-label" style={{ color: t.textStrong }}>{b.label}</span>
+                  <span className="rg-build-desc" style={{ color: t.text }}>{b.desc}</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 8 }}>
+                    {b.tech.map((tag, j) => (
+                      <span key={j} style={{
+                        fontSize: 11, padding: '2px 8px', borderRadius: 99,
+                        background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                        color: t.textMuted,
+                      }}>{tag}</span>
+                    ))}
+                  </div>
+                </a>
               ))}
-            </ul>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6, width: '100%' }}>
+              <a href="/projects" style={{ fontSize: 13, color: t.textMuted, textDecoration: 'none', transition: 'color 0.2s' }}
+                onMouseEnter={e => (e.currentTarget.style.color = t.textStrong)}
+                onMouseLeave={e => (e.currentTarget.style.color = t.textMuted)}
+              >see more →</a>
+            </div>
           </li>
 
           {/* Previously */}
-          <li className="rg-item rg-item-nested">
+          <li className="rg-item rg-item-nested" style={{ marginTop: 8 }}>
             <div className="rg-diamond" style={{ background: t.diamond }} />
             <span className="rg-section-label" style={{ color: t.text }}>previously:</span>
             <ul className="rg-sublist">
@@ -249,16 +269,6 @@ function Inner() {
           </li>
         </ul>
 
-        {/* ── "see what i've built" + RonnielOS links ── */}
-        <a href="/projects" className="rg-projects-link" style={{
-          borderColor: dark ? '#57534e' : '#a8a29e',
-          color: t.text,
-          background: dark ? '#1c1917' : '#fafaf9',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-        }}>
-          see what i've built{' '}
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline', verticalAlign: 'top', marginLeft: 4 }}><path d="M2 7v10"/><path d="M6 5v14"/><rect x="10" y="3" width="12" height="18" rx="2"/></svg>
-        </a>
 
         {/* ── Signature (animated GIF, plays once, replay button) ── */}
         <SignatureReveal dark={dark} />
@@ -408,6 +418,33 @@ function Inner() {
 
         .rg-inline-link-group { margin-left: 6px; }
 
+        /* Build cards */
+        .rg-build-card {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          padding: 16px;
+          border-radius: 10px;
+          border: 1px solid;
+          text-decoration: none;
+          transition: transform 0.2s, box-shadow 0.2s;
+          overflow: hidden;
+        }
+        .rg-build-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        .rg-build-card:hover .rg-build-cover { transform: scale(1.05); }
+        .rg-build-label {
+          font-family: 'NeueMontreal-Medium', sans-serif;
+          font-weight: 600;
+          font-size: 14px;
+        }
+        .rg-build-desc {
+          font-size: 13px;
+          line-height: 1.5;
+        }
+
         /* Sweep-underline link */
         .rg-slink {
           text-decoration: none;
@@ -538,7 +575,7 @@ function Inner() {
 
         /* Signature with sweep reveal */
         .rg-signature-img {
-          width: 240px;
+          width: 180px;
           height: auto;
           -webkit-mask-image: linear-gradient(to right, black 0%, black 45%, transparent 50%);
           mask-image: linear-gradient(to right, black 0%, black 45%, transparent 50%);
@@ -654,10 +691,247 @@ function BulletItem({ diamond, children }: { diamond: string; children: React.Re
   );
 }
 
+/* ══════════════════════════════════════════════════════════
+   Site loader + Page curl / RonnielOS launcher
+   ══════════════════════════════════════════════════════════ */
+
+type AppPhase = 'loading' | 'site' | 'peeling' | 'desktop';
+
+function SiteLoader({ onDone }: { onDone: () => void }) {
+  const [progress, setProgress] = useState(0);
+  const [phase, setPhase] = useState<'loading' | 'fade' | 'done'>('loading');
+
+  useEffect(() => {
+    let p = 0;
+    const interval = setInterval(() => {
+      const speed = Math.max(0.6, 3.5 * (1 - p / 100));
+      p = Math.min(100, p + speed);
+      setProgress(p);
+      if (p >= 100) clearInterval(interval);
+    }, 25);
+
+    const t1 = setTimeout(() => setPhase('fade'), 2200);
+    const t2 = setTimeout(() => {
+      setPhase('done');
+      onDone();
+    }, 2800);
+
+    return () => { clearInterval(interval); clearTimeout(t1); clearTimeout(t2); };
+  }, [onDone]);
+
+  if (phase === 'done') return null;
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 10001, background: '#f5f5f4',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      opacity: phase === 'fade' ? 0 : 1,
+      transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+    }}>
+      <img src="/icons/rglogo.png" alt="RG" style={{
+        width: 56, height: 56, objectFit: 'contain',
+        filter: 'brightness(0.3)',
+        animation: 'siteLoad 0.6s ease-out',
+      }} />
+      <div style={{
+        marginTop: 24, width: 180, height: 3, borderRadius: 2,
+        background: 'rgba(0,0,0,0.08)', overflow: 'hidden',
+        animation: 'siteLoad 0.6s ease-out',
+      }}>
+        <div style={{
+          height: '100%', width: `${progress}%`,
+          background: '#57534e', borderRadius: 2,
+          transition: 'width 0.08s linear',
+        }} />
+      </div>
+      <style>{`
+        @keyframes siteLoad {
+          from { opacity: 0; transform: scale(0.92) translateY(8px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/** ryo.lu-style page peel — CSS clip-path + layered gradients + spring transition */
+
+function OSCloseButton({ onClose }: { onClose: () => void }) {
+  return (
+    <button
+      onClick={onClose}
+      className="os-close-btn"
+      aria-label="Close RonnielOS"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+      <style>{`
+        .os-close-btn {
+          position: fixed;
+          top: 12px;
+          right: 16px;
+          z-index: 10002;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: 0.5px solid rgba(0,0,0,0.08);
+          background: rgba(255,255,255,0.55);
+          color: rgba(0,0,0,0.5);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          backdrop-filter: blur(12px);
+          transition: all 0.2s;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .os-close-btn:hover {
+          background: rgba(255,255,255,0.75);
+          color: rgba(0,0,0,0.8);
+          transform: scale(1.1);
+        }
+      `}</style>
+    </button>
+  );
+}
+
 export default function PortfolioApp() {
+  const [phase, setPhase] = useState<AppPhase>('loading');
+  const [expanded, setExpanded] = useState(false);
+
+  const handleLoaded = useCallback(() => {
+    setPhase('site');
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setExpanded(false);
+    setPhase('site');
+  }, []);
+
+  // Toggle peek open/close
+  const togglePeek = useCallback(() => {
+    if (!expanded) {
+      setExpanded(true);
+      // After the clip-path transition finishes, switch to full desktop mode
+      setTimeout(() => setPhase('desktop'), 700);
+    }
+  }, [expanded]);
+
+  // Escape key to close
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && (expanded || phase === 'desktop')) {
+        setExpanded(false);
+        setPhase('site');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [expanded, phase]);
+
   return (
     <ThemeProvider>
-      <Inner />
+      {/* Portfolio page — the main content */}
+      {(phase === 'loading' || phase === 'site') && (
+        <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh', background: '#f5f5f4' }}>
+          <Inner />
+        </div>
+      )}
+
+      {/* ryo.lu peek container — fixed overlay with clip-path reveal */}
+      {(phase === 'site' || phase === 'desktop') && (
+        <div className={`peek-container ${expanded ? 'peek-expanded' : ''}`}>
+          {/* Desktop content — clipped to corner, expands on click */}
+          <div className="peek-desktop">
+            <Suspense fallback={<div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/backgroundappleuse.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />}>
+              <LazyDesktopShell skipBoot />
+            </Suspense>
+            {phase === 'desktop' && <OSCloseButton onClose={handleClose} />}
+          </div>
+
+          {/* Page curl — the paper fold visual */}
+          <div
+            className={`page-curl ${expanded ? 'curl-hidden' : ''}`}
+            onClick={togglePeek}
+            role="button"
+            aria-label="Open RonnielOS"
+          />
+        </div>
+      )}
+
+      {/* Loading overlay */}
+      {phase === 'loading' && (
+        <SiteLoader onDone={handleLoaded} />
+      )}
+
+      <style>{`
+        /* ═══ Peek Container ═══ */
+        .peek-container {
+          position: fixed;
+          top: 0;
+          right: 0;
+          width: 100vw;
+          height: 100vh;
+          pointer-events: none;
+          z-index: 999;
+          overflow: visible;
+        }
+
+        /* ═══ Desktop layer — clipped to corner ═══ */
+        .peek-desktop {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: auto;
+          clip-path: polygon(
+            calc(100% - 120px) 0px,
+            100% 0px,
+            100% 120px
+          );
+          transition: clip-path 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .peek-expanded .peek-desktop {
+          clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        }
+
+        /* ═══ Page curl — paper fold gradient ═══ */
+        .page-curl {
+          position: absolute;
+          top: -20px;
+          right: 0;
+          width: 120px;
+          height: 140px;
+          pointer-events: auto;
+          cursor: pointer;
+          transform-origin: right top;
+          z-index: 1001;
+          transform: rotate(0deg) scale(1);
+          opacity: 1;
+          background:
+            linear-gradient(45deg, rgba(0,0,0,0.15), rgba(0,0,0,0.22) 45%, transparent 45%),
+            linear-gradient(45deg, #fff, rgba(255,255,255,0.24) 47%, transparent 60%),
+            linear-gradient(45deg, rgba(240,240,240,0.7), rgba(240,240,240,0.52) 45%, transparent 45%);
+          box-shadow:
+            3px 3px 5px rgba(0,0,0,0.15),
+            inset -13px 24px 12px -12px rgba(0,0,0,0.4);
+          transition:
+            transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+            opacity 0.65s cubic-bezier(0.7, 0, 1, 0.5);
+        }
+        .page-curl:hover {
+          transform: scale(1.06);
+        }
+
+        /* Curl hidden when expanded */
+        .curl-hidden {
+          opacity: 0;
+          transform: scale(0.5);
+          pointer-events: none;
+        }
+      `}</style>
     </ThemeProvider>
   );
 }

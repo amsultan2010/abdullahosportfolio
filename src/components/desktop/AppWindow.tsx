@@ -7,9 +7,10 @@ interface AppWindowProps {
   children: React.ReactNode;
   darkMode?: boolean;
   titleBarBg?: string;
+  titleBarDark?: boolean;
 }
 
-export default function AppWindow({ windowState, children, darkMode, titleBarBg }: AppWindowProps) {
+export default function AppWindow({ windowState, children, darkMode, titleBarBg, titleBarDark }: AppWindowProps) {
   const { state, dispatch } = useDesktop();
   const dragRef = useRef<{ startX: number; startY: number; winX: number; winY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number; edge: string } | null>(null);
@@ -131,15 +132,15 @@ export default function AppWindow({ windowState, children, darkMode, titleBarBg 
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        background: darkMode ? 'rgba(30, 30, 35, 0.72)' : 'rgba(255, 255, 255, 0.32)',
-        backdropFilter: 'saturate(180%) blur(32px)',
-        WebkitBackdropFilter: 'saturate(180%) blur(32px)',
+        background: darkMode ? 'rgba(244, 244, 245, 0.72)' : 'rgba(255, 255, 255, 0.32)',
+        backdropFilter: 'saturate(200%) blur(40px)',
+        WebkitBackdropFilter: 'saturate(200%) blur(40px)',
         border: windowState.isFullscreen ? 'none' : darkMode
-          ? (isFocused ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.06)')
+          ? (isFocused ? '0.5px solid rgba(0, 0, 0, 0.15)' : '0.5px solid rgba(0, 0, 0, 0.08)')
           : (isFocused ? '1px solid rgba(0, 0, 0, 0.18)' : '1px solid rgba(0, 0, 0, 0.1)'),
         boxShadow: windowState.isFullscreen ? 'none' : isFocused
-          ? '0 24px 80px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.12)'
-          : '0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15)',
+          ? '0 24px 80px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.1), 0 0 0 0.5px rgba(0,0,0,0.06), inset 0 0.5px 0 rgba(255,255,255,0.6)'
+          : '0 8px 32px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06), inset 0 0.5px 0 rgba(255,255,255,0.4)',
         opacity: entering ? 0 : 1,
         transform: entering ? 'scale(0.92)' : 'scale(1)',
         transition: 'opacity 0.25s ease-out, transform 0.25s ease-out, box-shadow 0.2s ease, border-color 0.2s ease, border-radius 0.2s ease, left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease',
@@ -156,10 +157,10 @@ export default function AppWindow({ windowState, children, darkMode, titleBarBg 
           display: 'flex',
           alignItems: 'center',
           padding: '0 12px',
-          borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid rgba(0, 0, 0, 0.08)',
+          borderBottom: titleBarDark ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid rgba(0, 0, 0, 0.06)',
           cursor: windowState.isFullscreen ? 'default' : 'grab',
           userSelect: 'none',
-          background: titleBarBg || (darkMode ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.02)'),
+          background: titleBarBg || 'rgba(255, 255, 255, 0.3)',
         }}
       >
         {/* Traffic lights */}
@@ -172,7 +173,7 @@ export default function AppWindow({ windowState, children, darkMode, titleBarBg 
             color="#ff5f57"
             isFocused={isFocused}
             isHovered={trafficHover}
-            darkMode={darkMode}
+            darkMode={titleBarDark}
             symbol="×"
             onClick={(e) => { e.stopPropagation(); dispatch({ type: 'CLOSE_WINDOW', id: windowState.id }); }}
             label="Close window"
@@ -181,7 +182,7 @@ export default function AppWindow({ windowState, children, darkMode, titleBarBg 
             color="#febc2e"
             isFocused={isFocused}
             isHovered={trafficHover}
-            darkMode={darkMode}
+            darkMode={titleBarDark}
             symbol="−"
             onClick={(e) => { e.stopPropagation(); dispatch({ type: 'MINIMIZE_WINDOW', id: windowState.id }); }}
             label="Minimize window"
@@ -190,7 +191,7 @@ export default function AppWindow({ windowState, children, darkMode, titleBarBg 
             color="#28c840"
             isFocused={isFocused}
             isHovered={trafficHover}
-            darkMode={darkMode}
+            darkMode={titleBarDark}
             symbol="⤢"
             onClick={(e) => { e.stopPropagation(); dispatch({ type: 'TOGGLE_FULLSCREEN', id: windowState.id }); }}
             label="Fullscreen"
@@ -203,9 +204,9 @@ export default function AppWindow({ windowState, children, darkMode, titleBarBg 
           textAlign: 'center',
           fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
           fontSize: '13px',
-          color: darkMode
+          color: titleBarDark
             ? (isFocused ? 'rgba(255, 255, 255, 0.7)' : 'rgba(255, 255, 255, 0.3)')
-            : (isFocused ? 'rgba(0, 0, 0, 0.65)' : 'rgba(0, 0, 0, 0.3)'),
+            : (isFocused ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.3)'),
           letterSpacing: '0.02em',
           transition: 'color 0.15s ease',
           overflow: 'hidden',
@@ -224,7 +225,7 @@ export default function AppWindow({ windowState, children, darkMode, titleBarBg 
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
-        background: darkMode ? 'transparent' : 'rgba(255, 255, 255, 0.06)',
+        background: 'transparent',
       }}>
         {children}
       </div>

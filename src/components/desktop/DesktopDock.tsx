@@ -126,11 +126,11 @@ export default function DesktopDock() {
           gap: '4px',
           padding: '6px 12px',
           borderRadius: '18px',
-          background: 'rgba(30, 35, 50, 0.55)',
-          backdropFilter: 'saturate(150%) blur(28px)',
-          WebkitBackdropFilter: 'saturate(150%) blur(28px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 0.5px rgba(255,255,255,0.05) inset',
+          background: 'rgba(255, 255, 255, 0.5)',
+          backdropFilter: 'saturate(200%) blur(32px)',
+          WebkitBackdropFilter: 'saturate(200%) blur(32px)',
+          border: '0.5px solid rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12), inset 0 0.5px 0 rgba(255,255,255,0.6)',
         }}
       >
         {allItems.map((item, i) => {
@@ -139,7 +139,7 @@ export default function DesktopDock() {
               <div key="divider" style={{
                 width: '1px',
                 height: '44px',
-                background: 'rgba(255,255,255,0.15)',
+                background: 'rgba(0,0,0,0.1)',
                 margin: '0 4px',
                 alignSelf: 'center',
               }} />
@@ -190,18 +190,18 @@ function DockButton({ item, scale, isOpen, onClick }: {
           bottom: `${size + 16 + Math.abs(translateY)}px`,
           padding: '4px 12px',
           borderRadius: '4px',
-          background: 'rgba(40, 40, 40, 0.95)',
+          background: 'rgba(244, 244, 244, 0.92)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          border: '0.5px solid rgba(255,255,255,0.08)',
-          color: 'rgba(255,255,255,0.95)',
+          border: '0.5px solid rgba(0,0,0,0.08)',
+          color: 'rgba(0,0,0,0.85)',
           fontSize: '13px',
           fontWeight: 500,
           fontFamily: "'SF Pro Text', -apple-system, sans-serif",
           whiteSpace: 'nowrap',
           pointerEvents: 'none',
           zIndex: 10,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.35)',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
           lineHeight: '18px',
           letterSpacing: '-0.01em',
         }}>
@@ -216,7 +216,7 @@ function DockButton({ item, scale, isOpen, onClick }: {
             height: 0,
             borderLeft: '6px solid transparent',
             borderRight: '6px solid transparent',
-            borderTop: '6px solid rgba(40, 40, 40, 0.95)',
+            borderTop: '6px solid rgba(244, 244, 244, 0.92)',
           }} />
         </div>
       )}
@@ -258,9 +258,9 @@ function DockButton({ item, scale, isOpen, onClick }: {
           width: '4px',
           height: '4px',
           borderRadius: '50%',
-          background: 'rgba(255, 255, 255, 0.85)',
+          background: 'rgba(0, 0, 0, 0.5)',
           marginTop: `${2 + translateY}px`,
-          boxShadow: '0 0 4px rgba(255,255,255,0.4)',
+          boxShadow: '0 0 4px rgba(0,0,0,0.15)',
         }} />
       )}
     </div>

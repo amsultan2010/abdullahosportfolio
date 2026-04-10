@@ -254,8 +254,8 @@ const DesktopContext = createContext<{
   dispatch: Dispatch<DesktopAction>;
 } | null>(null);
 
-export function DesktopProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(desktopReducer, initialState);
+export function DesktopProvider({ children, skipBoot }: { children: ReactNode; skipBoot?: boolean }) {
+  const [state, dispatch] = useReducer(desktopReducer, { ...initialState, bootComplete: !!skipBoot });
   return (
     <DesktopContext.Provider value={{ state, dispatch }}>
       {children}

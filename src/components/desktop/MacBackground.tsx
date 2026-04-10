@@ -10,7 +10,7 @@ export default function MacBackground() {
           height: '100%',
           zIndex: 0,
           pointerEvents: 'none',
-          backgroundImage: `url(/background.png)`,
+          backgroundImage: `url(/backgroundappleuse.png)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
@@ -26,7 +26,7 @@ export default function MacBackground() {
           height: '100%',
           zIndex: 0,
           pointerEvents: 'none',
-          background: 'rgba(0, 0, 0, 0.35)',
+          background: 'rgba(0, 0, 0, 0.1)',
         }}
       />
     </>
