@@ -74,7 +74,7 @@ interface NetworkContact {
   // New fields
   category: ContactCategory; urgency: Urgency;
   whatTheySaid: string; actionNeeded: string; followUpDate?: string;
-  linkedinUrl?: string;
+  linkedinUrl?: string; tags?: string[];
   notes: string; createdAt: string;
   // Legacy fields (optional, for backward compat)
   whyReachOut?: string; companyInfo?: string; foundVia?: string;
@@ -852,7 +852,9 @@ function NetworkTab({ contacts, setContacts, t }: {
   const active = contacts.filter(c => c.category !== 'connected' && c.category !== 'archived');
   const connected = contacts.filter(c => c.category === 'connected');
   const filtered = filter
-    ? active.filter(c => `${c.name} ${c.company}`.toLowerCase().includes(filter.toLowerCase()))
+    ? filter.startsWith('tag:')
+      ? active.filter(c => (c.tags || []).includes(filter.slice(4)))
+      : active.filter(c => `${c.name} ${c.company}`.toLowerCase().includes(filter.toLowerCase()))
     : active;
 
   const counts = {
@@ -863,7 +865,9 @@ function NetworkTab({ contacts, setContacts, t }: {
   };
 
   const filteredConnected = filter
-    ? connected.filter(c => `${c.name} ${c.company}`.toLowerCase().includes(filter.toLowerCase()))
+    ? filter.startsWith('tag:')
+      ? connected.filter(c => (c.tags || []).includes(filter.slice(4)))
+      : connected.filter(c => `${c.name} ${c.company}`.toLowerCase().includes(filter.toLowerCase()))
     : connected;
 
   return (
@@ -915,10 +919,53 @@ function NetworkTab({ contacts, setContacts, t }: {
           outline: 'none', width: '100%', boxSizing: 'border-box', marginBottom: 16,
         }} />
 
+      {/* Tag filter */}
+      {(() => {
+        const allTags = [...new Set(contacts.flatMap(c => c.tags || []))];
+        if (allTags.length === 0) return null;
+        return (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 14 }}>
+            {allTags.map(tag => (
+              <button key={tag} onClick={() => setFilter(filter === `tag:${tag}` ? '' : `tag:${tag}`)} style={{
+                background: filter === `tag:${tag}` ? `${TAG_COLORS[tag] || t.textMuted}22` : 'transparent',
+                border: `1px solid ${filter === `tag:${tag}` ? (TAG_COLORS[tag] || t.textMuted) : t.border}`,
+                color: TAG_COLORS[tag] || t.textMuted,
+                padding: '3px 8px', borderRadius: 5, cursor: 'pointer', fontFamily: FONT_MEDIUM, fontSize: 11,
+                transition: 'all 0.15s',
+              }}>{tag}</button>
+            ))}
+          </div>
+        );
+      })()}
+
       {/* Outreach view */}
       {view === 'outreach' && (
         <>
-          {/* Summary */}
+          {/* Action feed — what needs attention NOW */}
+          {(() => {
+            const urgent = active.filter(c => c.category === 'call-booked' || c.category === 'reply-needed');
+            if (urgent.length === 0) return null;
+            return (
+              <div style={{
+                background: t.cardBg, border: `1px solid ${t.border}`, borderRadius: 10,
+                padding: '12px 14px', marginBottom: 16,
+              }}>
+                <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Needs attention now
+                </label>
+                {urgent.map(c => (
+                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: URGENCY_COLORS[c.urgency], flexShrink: 0 }} />
+                    <span style={{ fontFamily: FONT_MEDIUM, fontSize: 14, color: t.textStrong }}>{c.name}</span>
+                    {c.company && <span style={{ fontSize: 13, color: t.textMuted }}>{c.company}</span>}
+                    <span style={{ fontSize: 13, color: t.text, marginLeft: 'auto', textAlign: 'right', maxWidth: '50%' }}>{c.actionNeeded}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
+          {/* Summary counts */}
           <div style={{ fontSize: 14, color: t.textMuted, marginBottom: 14, fontFamily: FONT, display: 'flex', gap: 14 }}>
             {CATEGORY_META.map(cm => (
               <span key={cm.key}><span style={{ color: cm.accent, fontFamily: FONT_MEDIUM }}>{counts[cm.key as keyof typeof counts] || 0}</span> {cm.label.split(' ')[0].toLowerCase()}</span>
@@ -984,112 +1031,193 @@ function NetworkTab({ contacts, setContacts, t }: {
   );
 }
 
-// ── Contact Card ──
+// ── Tag System ──
+const TAG_SUGGESTIONS = ['intent:refer', 'intent:hire', 'intro:pending', 'intro:done'];
+const TAG_COLORS: Record<string, string> = {
+  'intent:refer': '#2d8a56', 'intent:hire': '#2563eb', 'intro:pending': '#f59e0b', 'intro:done': '#6b7280',
+};
+
+function TagPill({ tag, onRemove, t }: { tag: string; onRemove?: () => void; t: Theme }) {
+  const color = TAG_COLORS[tag] || t.textMuted;
+  return (
+    <span style={{
+      fontSize: 11, fontFamily: FONT_MEDIUM, padding: '2px 7px', borderRadius: 4,
+      background: `${color}18`, color, display: 'inline-flex', alignItems: 'center', gap: 4,
+    }}>
+      {tag}
+      {onRemove && <button onClick={e => { e.stopPropagation(); onRemove(); }} style={{
+        background: 'none', border: 'none', color, cursor: 'pointer', fontSize: 12, padding: 0, lineHeight: 1,
+      }}>&times;</button>}
+    </span>
+  );
+}
+
+// ── Contact Card (redesigned) ──
 function ContactCard({ contact: c, expanded, onToggle, onUpdate, onRemove, t }: {
   contact: NetworkContact; expanded: boolean;
   onToggle: () => void; onUpdate: (p: Partial<NetworkContact>) => void;
   onRemove: () => void; t: Theme;
 }) {
+  const [newTag, setNewTag] = useState('');
+  const tags = c.tags || [];
+  const addTag = (tag: string) => {
+    const t = tag.trim().toLowerCase();
+    if (t && !tags.includes(t)) onUpdate({ tags: [...tags, t] });
+    setNewTag('');
+  };
+  const removeTag = (tag: string) => onUpdate({ tags: tags.filter(t => t !== tag) });
+
+  const urgColor = URGENCY_COLORS[c.urgency];
+
   return (
-    <div style={{ border: `1px solid ${t.border}`, borderRadius: 8, overflow: 'hidden' }}>
-      {/* Collapsed row */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '10px 12px',
-      }}>
-        <button onClick={onToggle} style={{
-          background: 'transparent', border: 'none', cursor: 'pointer', flex: 1,
-          display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: 0,
-        }}>
-          <div style={{
-            width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-            background: URGENCY_COLORS[c.urgency],
-          }} />
-          {c.company ? <CompanyLogo company={c.company} size={22} t={t} /> : (
+    <div style={{
+      border: `1px solid ${t.border}`, borderRadius: 10, overflow: 'hidden',
+      display: 'flex', cursor: 'pointer',
+    }} onClick={onToggle}>
+      {/* Left urgency bar */}
+      <div style={{ width: 4, flexShrink: 0, background: urgColor }} />
+
+      <div style={{ flex: 1, padding: '12px 14px' }}>
+        {/* Header: logo + name + linkedin */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+          {c.company ? <CompanyLogo company={c.company} size={28} t={t} /> : (
             <div style={{
-              width: 22, height: 22, borderRadius: 6, background: t.accentSubtle,
+              width: 28, height: 28, borderRadius: 7, background: t.accentSubtle,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontFamily: FONT_MEDIUM, color: t.textMuted, flexShrink: 0,
+              fontSize: 13, fontFamily: FONT_MEDIUM, color: t.textMuted, flexShrink: 0,
             }}>{(c.name || '?')[0].toUpperCase()}</div>
           )}
-          <span style={{ fontFamily: FONT_MEDIUM, color: t.textStrong, fontSize: 14 }}>{c.name || 'New contact'}</span>
-          {c.company && <span style={{ fontSize: 14, color: t.textMuted }}>{c.company}</span>}
-          <span style={{ fontSize: 13, color: t.textMuted, marginLeft: 'auto', maxWidth: '40%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {c.actionNeeded}
-          </span>
-        </button>
-        {c.linkedinUrl && (
-          <a href={c.linkedinUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{
-            color: t.textMuted, flexShrink: 0, display: 'flex', alignItems: 'center',
-            opacity: 0.6, transition: 'opacity 0.15s',
-          }}
-            onMouseEnter={e => { e.currentTarget.style.opacity = '1'; }}
-            onMouseLeave={e => { e.currentTarget.style.opacity = '0.6'; }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-          </a>
-        )}
-      </div>
-
-      {/* Expanded edit */}
-      {expanded && (
-        <div style={{ padding: '0 12px 12px', borderTop: `1px solid ${t.border}` }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 10 }}>
-            <Field label="Name" value={c.name} onChange={v => onUpdate({ name: v })} placeholder="First Last" t={t} />
-            <Field label="Company" value={c.company} onChange={v => onUpdate({ company: v })} placeholder="Company" t={t} />
-            <Field label="Role" value={c.role} onChange={v => onUpdate({ role: v })} placeholder="Role" t={t} />
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>What they said</label>
-            <TextArea value={c.whatTheySaid} onChange={v => onUpdate({ whatTheySaid: v })} placeholder="Context from their last message..." t={t} minHeight={40} />
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <Field label="Action needed" value={c.actionNeeded} onChange={v => onUpdate({ actionNeeded: v })} placeholder="What to do next..." t={t} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 8 }}>
-            <div>
-              <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Category</label>
-              <select value={c.category} onChange={e => onUpdate({ category: e.target.value as ContactCategory })} style={{
-                background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-                padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 14, outline: 'none', width: '100%',
-              }}>
-                <option value="call-booked">Call Booked</option>
-                <option value="reply-needed">Need to Reply</option>
-                <option value="warm">Warm</option>
-                <option value="awaiting-reply">Awaiting Reply</option>
-                <option value="connected">Connected</option>
-                <option value="archived">Archived</option>
-              </select>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontFamily: FONT_MEDIUM, color: t.textStrong, fontSize: 16 }}>{c.name || 'New contact'}</span>
+              {c.linkedinUrl && (
+                <a href={c.linkedinUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{
+                  color: t.textMuted, display: 'flex', opacity: 0.5, transition: 'opacity 0.15s',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.opacity = '1'; }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                </a>
+              )}
             </div>
-            <div>
-              <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Urgency</label>
-              <select value={c.urgency} onChange={e => onUpdate({ urgency: e.target.value as Urgency })} style={{
-                background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-                padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 14, outline: 'none', width: '100%',
-              }}>
-                <option value="now">Now</option>
-                <option value="soon">Soon</option>
-                <option value="later">Later</option>
-                <option value="waiting">Waiting</option>
-              </select>
-            </div>
-            <Field label="Follow-up" value={c.followUpDate || ''} onChange={v => onUpdate({ followUpDate: v })} placeholder="mid-May..." t={t} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
-            <Field label="LinkedIn URL" value={c.linkedinUrl || ''} onChange={v => onUpdate({ linkedinUrl: v })} placeholder="https://linkedin.com/in/..." t={t} />
-            <div />
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <TextArea value={c.notes} onChange={v => onUpdate({ notes: v })} placeholder="Notes..." t={t} minHeight={40} />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-            <button onClick={onRemove} style={{
-              background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer',
-              fontFamily: FONT, fontSize: 14, opacity: 0.7,
-            }}>Delete contact</button>
+            {(c.company || c.role) && (
+              <div style={{ fontSize: 13, color: t.textMuted, marginTop: 1 }}>
+                {[c.company, c.role].filter(Boolean).join(' · ')}
+              </div>
+            )}
           </div>
         </div>
-      )}
+
+        {/* Quote: what they said */}
+        {c.whatTheySaid && (
+          <div style={{
+            fontSize: 13, color: t.text, fontStyle: 'italic', marginTop: 8,
+            borderLeft: `2px solid ${t.border}`, paddingLeft: 10, lineHeight: 1.5,
+          }}>
+            "{c.whatTheySaid}"
+          </div>
+        )}
+
+        {/* Action needed */}
+        {c.actionNeeded && (
+          <div style={{ fontSize: 13, color: t.textStrong, fontFamily: FONT_MEDIUM, marginTop: 8 }}>
+            <span style={{ color: urgColor, marginRight: 4 }}>&rarr;</span> {c.actionNeeded}
+          </div>
+        )}
+
+        {/* Tags */}
+        {tags.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 8 }}>
+            {tags.map(tag => <TagPill key={tag} tag={tag} t={t} />)}
+          </div>
+        )}
+
+        {/* Expanded edit */}
+        {expanded && (
+          <div style={{ marginTop: 12, borderTop: `1px solid ${t.border}`, paddingTop: 12 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+              <Field label="Name" value={c.name} onChange={v => onUpdate({ name: v })} placeholder="First Last" t={t} />
+              <Field label="Company" value={c.company} onChange={v => onUpdate({ company: v })} placeholder="Company" t={t} />
+              <Field label="Role" value={c.role} onChange={v => onUpdate({ role: v })} placeholder="Role" t={t} />
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <label style={{ fontSize: 13, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>What they said</label>
+              <TextArea value={c.whatTheySaid} onChange={v => onUpdate({ whatTheySaid: v })} placeholder="Context from their last message..." t={t} minHeight={40} />
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <Field label="Action needed" value={c.actionNeeded} onChange={v => onUpdate({ actionNeeded: v })} placeholder="What to do next..." t={t} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 8 }}>
+              <div>
+                <label style={{ fontSize: 13, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Category</label>
+                <select value={c.category} onChange={e => onUpdate({ category: e.target.value as ContactCategory })} style={{
+                  background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+                  padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 14, outline: 'none', width: '100%',
+                }}>
+                  <option value="call-booked">Call Booked</option>
+                  <option value="reply-needed">Need to Reply</option>
+                  <option value="warm">Warm</option>
+                  <option value="awaiting-reply">Awaiting Reply</option>
+                  <option value="connected">Connected</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 13, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Urgency</label>
+                <select value={c.urgency} onChange={e => onUpdate({ urgency: e.target.value as Urgency })} style={{
+                  background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+                  padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 14, outline: 'none', width: '100%',
+                }}>
+                  <option value="now">Now</option>
+                  <option value="soon">Soon</option>
+                  <option value="later">Later</option>
+                  <option value="waiting">Waiting</option>
+                </select>
+              </div>
+              <Field label="Follow-up" value={c.followUpDate || ''} onChange={v => onUpdate({ followUpDate: v })} placeholder="mid-May..." t={t} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+              <Field label="LinkedIn URL" value={c.linkedinUrl || ''} onChange={v => onUpdate({ linkedinUrl: v })} placeholder="https://linkedin.com/in/..." t={t} />
+              <div />
+            </div>
+            {/* Tags editor */}
+            <div style={{ marginTop: 8 }}>
+              <label style={{ fontSize: 13, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Tags</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
+                {tags.map(tag => <TagPill key={tag} tag={tag} onRemove={() => removeTag(tag)} t={t} />)}
+              </div>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input value={newTag} onChange={e => setNewTag(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { addTag(newTag); e.preventDefault(); } }}
+                  placeholder="Add tag..." style={{
+                    background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+                    padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 12, outline: 'none', width: 100,
+                  }} />
+                {TAG_SUGGESTIONS.filter(s => !tags.includes(s)).map(s => (
+                  <button key={s} onClick={() => addTag(s)} style={{
+                    background: 'none', border: `1px solid ${t.border}`, color: t.textMuted,
+                    padding: '3px 7px', borderRadius: 4, cursor: 'pointer', fontFamily: FONT, fontSize: 11,
+                    transition: 'all 0.15s',
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = t.textMuted; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; }}
+                  >+ {s}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <TextArea value={c.notes} onChange={v => onUpdate({ notes: v })} placeholder="Notes..." t={t} minHeight={40} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+              <button onClick={e => { e.stopPropagation(); onRemove(); }} style={{
+                background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer',
+                fontFamily: FONT, fontSize: 13, opacity: 0.7,
+              }}>Delete contact</button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
