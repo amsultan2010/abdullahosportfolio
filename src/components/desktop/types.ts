@@ -68,5 +68,5 @@ export const WINDOW_DEFAULTS: Record<WindowId, { title: string; width: number; h
   detail:          { title: 'Detail',                       width: 650, height: 600, x: 200, y: 80 },
   content:         { title: 'Reader',                       width: 900, height: 700, x: 150, y: 40 },
   'wifi-settings': { title: 'Wi-Fi — System Settings',     width: 580, height: 640, x: 200, y: 60 },
-  stocks:          { title: 'Stocks',                       width: 480, height: 860, x: 920, y: 32 },
+  stocks:          { title: 'Stocks',                       width: 480, height: 860, x: 800, y: 32 },
 };
