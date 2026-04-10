@@ -94,11 +94,11 @@ export default function DesktopMenuBar() {
     <div ref={barRef} style={{
       position: 'fixed', top: 0, left: 0, right: 0, height: '28px', zIndex: 10010,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px',
-      background: 'rgba(0, 0, 0, 0.85)',
-      backdropFilter: 'saturate(200%) blur(28px)', WebkitBackdropFilter: 'saturate(200%) blur(28px)',
-      borderBottom: '0.5px solid rgba(255,255,255,0.08)',
+      background: '#000000',
+      backdropFilter: 'none', WebkitBackdropFilter: 'none',
+      borderBottom: 'none',
       fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif",
-      fontSize: '13px', color: 'rgba(255,255,255,0.85)', userSelect: 'none',
+      fontSize: '14px', color: '#FFFFFF', userSelect: 'none',
     }}>
       {/* ── Left: Logo + Menus ── */}
       <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
@@ -206,13 +206,13 @@ export default function DesktopMenuBar() {
             onMouseDown={(e) => { e.stopPropagation(); toggle('notif'); }}
             style={{
               fontSize: '12.5px',
-              color: 'rgba(255,255,255,0.85)',
-              fontWeight: 450,
+              color: '#FFFFFF',
+              fontWeight: 500,
               marginLeft: '6px',
               padding: '2px 8px',
               borderRadius: '4px',
               cursor: 'default',
-              background: activeMenu === 'notif' ? 'rgba(255,255,255,0.15)' : 'transparent',
+              background: activeMenu === 'notif' ? 'rgba(255,255,255,0.2)' : 'transparent',
             }}
           >
             {date}&ensp;{time}
@@ -585,9 +585,9 @@ function WifiIconDark() {
 function BatteryIcon() {
   return (
     <svg width="22" height="12" viewBox="0 0 22 12" fill="none">
-      <rect x="0.5" y="1" width="18" height="10" rx="2" stroke="rgba(255,255,255,0.75)" strokeWidth="1" fill="none" />
-      <rect x="19" y="3.5" width="2" height="5" rx="0.75" fill="rgba(255,255,255,0.4)" />
-      <rect x="2" y="2.5" width="14" height="7" rx="1" fill="rgba(255,255,255,0.7)" />
+      <rect x="0.5" y="1" width="18" height="10" rx="2" stroke="#FFFFFF" strokeWidth="1" fill="none" />
+      <rect x="19" y="3.5" width="2" height="5" rx="0.75" fill="#FFFFFF" />
+      <rect x="2" y="2.5" width="14" height="7" rx="1" fill="#FFFFFF" />
     </svg>
   );
 }
@@ -595,9 +595,9 @@ function BatteryIcon() {
 function WifiIcon() {
   return (
     <svg width="18" height="14" viewBox="0 0 16 12" fill="none">
-      <path d="M8 10.5a1 1 0 100-2 1 1 0 000 2z" fill="rgba(255,255,255,0.85)" />
-      <path d="M5.17 7.17a4 4 0 015.66 0" stroke="rgba(255,255,255,0.75)" strokeWidth="1.3" strokeLinecap="round" fill="none" />
-      <path d="M2.93 4.93a7 7 0 0110.14 0" stroke="rgba(255,255,255,0.6)" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+      <path d="M8 10.5a1 1 0 100-2 1 1 0 000 2z" fill="#FFFFFF" />
+      <path d="M5.17 7.17a4 4 0 015.66 0" stroke="#FFFFFF" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+      <path d="M2.93 4.93a7 7 0 0110.14 0" stroke="#FFFFFF" strokeWidth="1.3" strokeLinecap="round" fill="none" />
     </svg>
   );
 }
@@ -605,9 +605,9 @@ function WifiIcon() {
 function SpeakerIcon() {
   return (
     <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
-      <path d="M2 5h2l4-3v10l-4-3H2a1 1 0 01-1-1V6a1 1 0 011-1z" fill="rgba(255,255,255,0.75)" />
-      <path d="M11 4.5a3.5 3.5 0 010 5" stroke="rgba(255,255,255,0.6)" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-      <path d="M13 2.5a6.5 6.5 0 010 9" stroke="rgba(255,255,255,0.4)" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+      <path d="M2 5h2l4-3v10l-4-3H2a1 1 0 01-1-1V6a1 1 0 011-1z" fill="#FFFFFF" />
+      <path d="M11 4.5a3.5 3.5 0 010 5" stroke="#FFFFFF" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+      <path d="M13 2.5a6.5 6.5 0 010 9" stroke="#FFFFFF" strokeWidth="1.1" strokeLinecap="round" fill="none" />
     </svg>
   );
 }
