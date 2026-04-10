@@ -6195,10 +6195,11 @@ function Desktop() {
               projects: '#252526',
               blog: '#f9f9f8',
               calendar: '#ffffff',
+              photos: '#2d2d2d',
               ...(isTerminalDashboard ? { terminal: 'rgba(0,0,0,0.4)' } : {}),
             };
             // Apps with dark content need light title bar text
-            const darkTitleBars = ['projects', 'terminal'];
+            const darkTitleBars = ['projects', 'terminal', 'photos'];
             const titleBarBg = titleBarBgMap[win.id];
             const titleBarDark = darkTitleBars.includes(win.id);
             const hoverProps = {
