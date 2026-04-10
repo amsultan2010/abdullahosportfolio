@@ -1319,6 +1319,10 @@ const DEV_PLAYLIST_TRACKS = [
 ];
 
 function NowPlaying() {
+  const titleRef = useRef<HTMLDivElement>(null);
+  const artistRef = useRef<HTMLSpanElement>(null);
+  const [titleOverflow, setTitleOverflow] = useState(false);
+  const [artistOverflow, setArtistOverflow] = useState(false);
   const [track, setTrack] = useState<{ isPlaying: boolean; title: string; artist: string; album: string; albumArt: string; progressMs: number; durationMs: number; isPlaylistFallback?: boolean } | null>(null);
   const [progress, setProgress] = useState(0);
   const [fallback] = useState(() => {
@@ -1362,36 +1366,73 @@ function NowPlaying() {
     return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
   };
 
+  // Check overflow
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (titleRef.current) {
+        const el = titleRef.current;
+        setTitleOverflow(el.scrollWidth > el.clientWidth);
+        if (el.scrollWidth > el.clientWidth) {
+          el.style.setProperty('--np-scroll', `${-(el.scrollWidth - el.clientWidth)}px`);
+        }
+      }
+      if (artistRef.current) {
+        const el = artistRef.current;
+        setArtistOverflow(el.scrollWidth > el.clientWidth);
+        if (el.scrollWidth > el.clientWidth) {
+          el.style.setProperty('--np-scroll', `${-(el.scrollWidth - el.clientWidth)}px`);
+        }
+      }
+    };
+    checkOverflow();
+    const t = setTimeout(checkOverflow, 500);
+    return () => clearTimeout(t);
+  }, [active.title, active.artist]);
+
   const isPlaylistFallback = active.isPlaylistFallback;
   const pct = active.durationMs > 0 ? (progress / active.durationMs) * 100 : 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: 1 }}>
-        {active.albumArt ? (
-          <img src={active.albumArt} alt="" style={{ width: 52, height: 52, borderRadius: 8, flexShrink: 0 }} />
-        ) : (
-          <a href={DEV_PLAYLIST_URL} target="_blank" rel="noopener noreferrer" style={{ width: 52, height: 52, borderRadius: 8, flexShrink: 0, background: 'rgba(29, 185, 84, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-          </a>
-        )}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '16px', fontWeight: 700, color: '#1d1d1f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
-            {active.title}
+    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+      {active.albumArt ? (
+        <img src={active.albumArt} alt="" style={{ width: 42, height: 42, borderRadius: 6, flexShrink: 0 }} />
+      ) : (
+        <a href={DEV_PLAYLIST_URL} target="_blank" rel="noopener noreferrer" style={{ width: 42, height: 42, borderRadius: 6, flexShrink: 0, background: 'rgba(29, 185, 84, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        </a>
+      )}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: '15px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+          {active.title}
+        </div>
+        <div style={{ fontSize: '13px', fontWeight: 400, color: 'rgba(255,255,255,0.55)', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+          {active.artist}
+        </div>
+        <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ flex: 1, height: 2, background: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden' }}>
+            <div style={{ width: `${pct}%`, height: '100%', background: 'rgba(255,255,255,0.5)', borderRadius: 1, transition: 'width 1s linear' }} />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: 'rgba(0,0,0,0.75)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif", flex: 1, minWidth: 0 }}>
-              {active.artist}
-            </span>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(0,0,0,0.6)', fontFamily: "'SF Pro Text', -apple-system, sans-serif", flexShrink: 0 }}>
-              {fmtTime(progress)} / {fmtTime(active.durationMs)}
-            </span>
-          </div>
-          <div style={{ marginTop: '6px', height: 3, background: 'rgba(0,0,0,0.12)', borderRadius: 2, overflow: 'hidden' }}>
-            <div style={{ width: `${pct}%`, height: '100%', background: '#fff', borderRadius: 1, transition: 'width 1s linear' }} />
-          </div>
+          <span style={{ fontSize: '10px', fontWeight: 500, color: 'rgba(255,255,255,0.7)', fontFamily: "'SF Pro Text', -apple-system, sans-serif", flexShrink: 0 }}>
+            {fmtTime(progress)}
+          </span>
         </div>
       </div>
+      <style>{`
+        .np-title-scroll { position: relative; overflow: hidden; }
+        .np-title-inner {
+          display: inline-block;
+          white-space: nowrap;
+        }
+        .np-title-scroll.np-overflow .np-title-inner {
+          animation: npMarquee 6s ease-in-out infinite;
+        }
+        .np-title-scroll:hover .np-title-inner { animation-play-state: paused; }
+        @keyframes npMarquee {
+          0%, 20% { transform: translateX(0); }
+          50%, 70% { transform: translateX(var(--np-scroll, -50px)); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -5832,22 +5873,28 @@ function TerminalContent() {
           </div>
         )}
 
-        {/* Contact links — bottom right */}
+        {/* Bottom row — now playing left, links right */}
         {!isFullscreen && (
-          <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '15px', fontWeight: 400, alignSelf: 'flex-end', textAlign: 'right' }}>
-            {[
-              { href: 'https://www.linkedin.com/in/ronniel-gandhe/', text: 'linkedin.com/in/ronniel-gandhe' },
-              { href: 'https://github.com/ronnielgandhe', text: 'github.com/ronnielgandhe' },
-              { href: 'mailto:ronnielgandhe@gmail.com', text: 'ronnielgandhe@gmail.com' },
-            ].map(link => (
-              <a key={link.href} href={link.href} target="_blank" rel="noopener"
-                style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none', transition: 'all 0.15s', fontWeight: 400 }}
-                onClick={e => e.stopPropagation()}
-                onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.fontWeight = '700'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.85)'; e.currentTarget.style.fontWeight = '400'; }}
-              >{link.text}</a>
-            ))}
-            <span style={{ color: 'rgba(255,255,255,0.7)' }}>Waterloo, ON</span>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
+            {/* Now Playing — bottom left */}
+            <div style={{ width: '50%', minWidth: 0 }}>
+              <NowPlaying />
+            </div>
+            {/* Links — bottom right */}
+            <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '17px', fontWeight: 500, textAlign: 'right', flexShrink: 0, color: 'rgba(255,255,255,0.85)' }}>
+              {[
+                { href: 'https://www.linkedin.com/in/ronniel-gandhe/', text: 'linkedin' },
+                { href: 'https://github.com/ronnielgandhe', text: 'github' },
+                { href: 'mailto:ronnielgandhe@gmail.com', text: 'email' },
+              ].map(link => (
+                <a key={link.href} href={link.href} target="_blank" rel="noopener"
+                  style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none', transition: 'all 0.15s', fontWeight: 500 }}
+                  onClick={e => e.stopPropagation()}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.fontWeight = '700'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.85)'; e.currentTarget.style.fontWeight = '500'; }}
+                >{link.text}</a>
+              ))}
+            </div>
           </div>
         )}
       </div>

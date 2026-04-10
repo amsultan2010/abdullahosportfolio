@@ -769,7 +769,7 @@ function OSCloseButton({ onClose }: { onClose: () => void }) {
       <style>{`
         .os-close-btn {
           position: fixed;
-          top: 12px;
+          top: 36px;
           right: 16px;
           z-index: 10002;
           width: 32px;

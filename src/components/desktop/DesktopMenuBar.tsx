@@ -112,7 +112,7 @@ export default function DesktopMenuBar() {
               background: activeMenu === 'apple' ? 'rgba(0,0,0,0.08)' : 'transparent',
             }}
           >
-            <img src="/icons/rglogo.png" alt="RG" style={{ height: '16px', opacity: 0.85 }} />
+            <img src="/icons/rglogo.png" alt="RG" style={{ height: '20px', opacity: 1, filter: 'brightness(0) saturate(0)' }} />
           </div>
           {activeMenu === 'apple' && (
             <div style={{ ...panelStyle, left: 0, minWidth: '240px' }}>
