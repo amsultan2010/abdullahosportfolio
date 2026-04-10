@@ -825,8 +825,9 @@ function tryFetchLinkedInCompany(url: string, onCompany: (company: string) => vo
     .catch(() => {}); // Silent fail — name from URL is still valuable
 }
 
-function NetworkTab({ contacts, setContacts, t }: {
-  contacts: NetworkContact[]; setContacts: (fn: (prev: NetworkContact[]) => NetworkContact[]) => void; t: Theme;
+function NetworkTab({ contacts, setContacts, journal, t }: {
+  contacts: NetworkContact[]; setContacts: (fn: (prev: NetworkContact[]) => NetworkContact[]) => void;
+  journal?: JournalEntry[]; t: Theme;
 }) {
   const [view, setView] = useState<'outreach' | 'contacts'>('outreach');
   const [filter, setFilter] = useState('');
@@ -965,6 +966,47 @@ function NetworkTab({ contacts, setContacts, t }: {
                 transition: 'all 0.15s',
               }}>{tag}</button>
             ))}
+          </div>
+        );
+      })()}
+
+      {/* Upcoming meetings with contacts */}
+      {journal && (() => {
+        const today = localToday();
+        const upcoming = journal
+          .filter(e => e.date >= today && e.meetings.length > 0)
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .flatMap(e => e.meetings.map(m => ({ ...m, date: e.date })))
+          .filter(m => m.contactId || contacts.some(c => c.name === m.person))
+          .slice(0, 6);
+        if (upcoming.length === 0) return null;
+        return (
+          <div style={{
+            background: t.cardBg, border: `1px solid ${t.border}`, borderRadius: 10,
+            padding: '12px 14px', marginBottom: 16,
+          }}>
+            <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Upcoming meetings
+            </label>
+            {upcoming.map(m => {
+              const isToday = m.date === today;
+              const dateLabel = isToday ? 'Today' : new Date(m.date + 'T12:00').toLocaleDateString('en', { month: 'short', day: 'numeric' });
+              const contact = m.contactId ? contacts.find(c => c.id === m.contactId) : contacts.find(c => c.name === m.person);
+              return (
+                <div key={m.id + m.date} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0' }}>
+                  <span style={{ fontSize: 13, color: isToday ? '#2d8a56' : t.textMuted, fontFamily: FONT_MEDIUM, minWidth: 50 }}>{dateLabel}</span>
+                  {m.time && <span style={{ fontSize: 13, color: t.textMuted }}>{m.time}</span>}
+                  <span style={{ fontSize: 14, color: t.textStrong, fontFamily: FONT_MEDIUM }}>{m.title || 'Meeting'}</span>
+                  <span style={{ fontSize: 13, color: t.textMuted }}>w/ {m.person}</span>
+                  {contact?.company && <span style={{ fontSize: 12, color: t.textMuted, opacity: 0.7 }}>({contact.company})</span>}
+                  {m.link && (
+                    <a href={m.link} target="_blank" rel="noopener noreferrer" style={{
+                      fontSize: 11, fontFamily: FONT_MEDIUM, color: '#2d8a56', textDecoration: 'none', marginLeft: 'auto',
+                    }}>Join</a>
+                  )}
+                </div>
+              );
+            })}
           </div>
         );
       })()}
@@ -2036,7 +2078,7 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
       {/* Content */}
       <div style={{ padding: 24, maxWidth: 940, margin: '0 auto' }}>
         {tab === 'journal' && <JournalTab journal={journal} setJournal={setJournal} contacts={contacts} t={t} />}
-        {tab === 'network' && <NetworkTab contacts={contacts} setContacts={setContacts} t={t} />}
+        {tab === 'network' && <NetworkTab contacts={contacts} setContacts={setContacts} journal={journal} t={t} />}
         {tab === 'tasks' && <TasksTab tasks={tasks} setTasks={setTasks} t={t} />}
         {tab === 'goals' && <GoalsTab goals={goals} setGoals={setGoals} t={t} />}
         {tab === 'ideas' && <IdeasTab ideas={ideas} setIdeas={setIdeas} t={t} />}
