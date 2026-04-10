@@ -625,13 +625,14 @@ function JournalTab({ journal, setJournal, contacts, t }: {
         meetings: [], updatedAt: new Date().toISOString(),
       }]);
     }
-    // Hard-remove old entries that have no user content (only seeded meetings)
+    // Hard-remove old entries that have no user content
     setJournal(prev => prev.filter(e => {
       if (e.date === today) return true;
       const hasBody = (e.body?.trim() || '').length >= 3;
       const hasAgenda = e.agenda && e.agenda.length > 0;
       const hasDeliverables = e.deliverables && e.deliverables.length > 0;
-      return hasBody || hasAgenda || hasDeliverables;
+      const hasMeetings = e.meetings && e.meetings.length > 0;
+      return hasBody || hasAgenda || hasDeliverables || hasMeetings;
     }));
   }, []);
 
@@ -640,7 +641,8 @@ function JournalTab({ journal, setJournal, contacts, t }: {
     const hasBody = (e.body?.trim() || '').length >= 3;
     const hasAgenda = e.agenda && e.agenda.length > 0;
     const hasDeliverables = e.deliverables && e.deliverables.length > 0;
-    return hasBody || hasAgenda || hasDeliverables;
+    const hasMeetings = e.meetings && e.meetings.length > 0;
+    return hasBody || hasAgenda || hasDeliverables || hasMeetings;
   }).map(e => e.date));
 
   const updateEntry = (patch: Partial<JournalEntry>) => {
@@ -654,6 +656,23 @@ function JournalTab({ journal, setJournal, contacts, t }: {
         meetings: [], updatedAt: new Date().toISOString(), ...patch,
       }]);
     }
+  };
+
+  const addMeeting = () => {
+    const meetings = [...(entry?.meetings || []), {
+      id: Date.now().toString(), title: '', person: '', time: '', notes: '',
+    }];
+    updateEntry({ meetings });
+  };
+
+  const updateMeeting = (meetingId: string, patch: Partial<Meeting>) => {
+    const meetings = (entry?.meetings || []).map(m => m.id === meetingId ? { ...m, ...patch } : m);
+    updateEntry({ meetings });
+  };
+
+  const removeMeeting = (meetingId: string) => {
+    const meetings = (entry?.meetings || []).filter(m => m.id !== meetingId);
+    updateEntry({ meetings });
   };
 
   // Past entries (excluding selected date), newest first
@@ -690,6 +709,27 @@ function JournalTab({ journal, setJournal, contacts, t }: {
               outline: 'none', boxSizing: 'border-box', resize: 'vertical', lineHeight: 1.5,
             }}
           />
+        </div>
+
+        {/* Meetings */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM }}>Meetings</label>
+            <button onClick={addMeeting} style={{
+              background: 'none', border: 'none', color: t.textMuted,
+              cursor: 'pointer', fontFamily: FONT, fontSize: 14,
+            }}>+ add</button>
+          </div>
+          {(entry?.meetings || []).length === 0 && (
+            <p style={{ color: t.textMuted, fontSize: 14, opacity: 0.6 }}>No meetings scheduled</p>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {(entry?.meetings || []).map(m => (
+              <MeetingRow key={m.id} meeting={m}
+                onChange={patch => updateMeeting(m.id, patch)}
+                onRemove={() => removeMeeting(m.id)} contacts={contacts} t={t} />
+            ))}
+          </div>
         </div>
 
         {/* Tomorrow's Agenda */}
