@@ -5765,10 +5765,18 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
         overflowX: 'hidden',
         position: 'relative' as const,
       }}>
-        {/* Clock — at top on mobile, centered */}
+        {/* Clock + Name + Title grouped at top on mobile */}
         {!isFullscreen && isMobileTerminal && (
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4px' }}>
-            <ChronographWatch />
+          <div style={{ textAlign: 'center', marginTop: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4px' }}>
+              <ChronographWatch />
+            </div>
+            <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '24px', color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '2px' }}>
+              Ronniel Gandhe
+            </div>
+            <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '12px', color: 'rgba(255,255,255,0.9)', fontWeight: 700, marginBottom: '12px' }}>
+              Software Engineer
+            </div>
           </div>
         )}
 
@@ -5789,16 +5797,16 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
                   {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                 </div>
               </div>
-            ) : (
+            ) : !isMobileTerminal ? (
               <>
-                <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: isMobileTerminal ? '24px' : '36px', color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '2px' }}>
+                <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '36px', color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '2px' }}>
                   Ronniel Gandhe
                 </div>
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: isMobileTerminal ? '12px' : '15px', color: 'rgba(255,255,255,0.9)', fontWeight: 700, marginBottom: isMobileTerminal ? '12px' : '14px' }}>
+                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '15px', color: 'rgba(255,255,255,0.9)', fontWeight: 700, marginBottom: '14px' }}>
                   Software Engineer
                 </div>
               </>
-            )}
+            ) : null}
             {isFullscreen ? (() => {
               const sHead: React.CSSProperties = { color: 'rgba(255,255,255,0.9)', fontSize: isSmallScreen ? '10px' : '11.5px', fontWeight: 700, letterSpacing: '0.12em', marginBottom: isSmallScreen ? '5px' : '8px', fontFamily: "'SF Mono', monospace" };
               const sPara: React.CSSProperties = { color: 'rgba(255,255,255,0.75)', fontSize: isSmallScreen ? '12px' : '14.5px', lineHeight: isSmallScreen ? 1.5 : 1.65, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 };
