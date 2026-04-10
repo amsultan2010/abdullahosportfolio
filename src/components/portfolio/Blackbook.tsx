@@ -1962,9 +1962,7 @@ export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }:
       {/* Header + Tabs — dark bar */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 10,
-        background: transparent ? t.bg : t.bg,
-        backdropFilter: transparent ? 'blur(40px)' : undefined,
-        WebkitBackdropFilter: transparent ? 'blur(40px)' : undefined,
+        background: transparent ? 'transparent' : t.bg,
         borderBottom: transparent ? '0.5px solid rgba(255,255,255,0.06)' : `1px solid ${t.border}`,
       }}>
         <div style={{
