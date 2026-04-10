@@ -6014,7 +6014,7 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
 
 function Desktop() {
   const { state, dispatch } = useDesktop();
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
   const [bbAuthState, setBbAuthState] = useState(false);
   const [hoveredWindowId, setHoveredWindowId] = useState<string | null>('terminal');
   const terminalOrigRef = useRef<{ width: number; height: number } | null>(null);
