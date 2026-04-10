@@ -623,10 +623,25 @@ function JournalTab({ journal, setJournal, contacts, t }: {
         meetings: [], updatedAt: new Date().toISOString(),
       }]);
     }
+    // Clean up old entries that only have meetings (no user content) — legacy data
+    setJournal(prev => prev.map(e => {
+      if (e.date === today) return e; // Don't touch today
+      const hasContent = e.body?.trim() || (e.agenda && e.agenda.length > 0) || (e.deliverables && e.deliverables.length > 0);
+      if (!hasContent && e.meetings.length > 0) {
+        // Strip body so it doesn't trigger dots
+        return { ...e, body: '' };
+      }
+      return e;
+    }));
   }, []);
 
   const entry = journal.find(e => e.date === selectedDate);
-  const journalDates = new Set(journal.filter(e => e.body?.trim() || (e.agenda && e.agenda.length > 0) || (e.deliverables && e.deliverables.length > 0)).map(e => e.date));
+  const journalDates = new Set(journal.filter(e => {
+    const hasBody = (e.body?.trim() || '').length >= 3;
+    const hasAgenda = e.agenda && e.agenda.length > 0;
+    const hasDeliverables = e.deliverables && e.deliverables.length > 0;
+    return hasBody || hasAgenda || hasDeliverables;
+  }).map(e => e.date));
 
   const updateEntry = (patch: Partial<JournalEntry>) => {
     if (entry) {
