@@ -41,13 +41,13 @@ function useBlackbookTheme(): Theme {
   }, []);
 
   return dark ? {
-    bg: '#000000', text: '#a3a3a3', textStrong: '#d6d3d1', textMuted: '#78716c',
-    border: 'rgba(255,255,255,0.08)', cardBg: '#171717',
-    inputBg: 'rgba(255,255,255,0.04)', accentSubtle: 'rgba(255,255,255,0.12)',
+    bg: '#000000', text: '#b5b5b5', textStrong: '#e8e5e3', textMuted: '#8a8380',
+    border: 'rgba(255,255,255,0.1)', cardBg: '#171717',
+    inputBg: 'rgba(255,255,255,0.06)', accentSubtle: 'rgba(255,255,255,0.12)',
   } : {
-    bg: '#f5f5f4', text: '#57534e', textStrong: '#44403c', textMuted: '#78716c',
-    border: 'rgba(0,0,0,0.08)', cardBg: '#f5f5f5',
-    inputBg: 'rgba(0,0,0,0.03)', accentSubtle: 'rgba(0,0,0,0.06)',
+    bg: '#f5f5f4', text: '#44403c', textStrong: '#1c1917', textMuted: '#6b6560',
+    border: 'rgba(0,0,0,0.1)', cardBg: '#f5f5f5',
+    inputBg: 'rgba(0,0,0,0.04)', accentSubtle: 'rgba(0,0,0,0.06)',
   };
 }
 
@@ -74,6 +74,7 @@ interface NetworkContact {
   // New fields
   category: ContactCategory; urgency: Urgency;
   whatTheySaid: string; actionNeeded: string; followUpDate?: string;
+  linkedinUrl?: string;
   notes: string; createdAt: string;
   // Legacy fields (optional, for backward compat)
   whyReachOut?: string; companyInfo?: string; foundVia?: string;
@@ -398,7 +399,7 @@ function PasswordGate({ onUnlock, onClose }: { onUnlock: (pw: string) => void; o
             width: 240, textAlign: 'center', letterSpacing: 2,
           }}
         />
-        <span style={{ color: t.textMuted, fontSize: 12, fontWeight: 500, opacity: 0.6 }}>press enter</span>
+        <span style={{ color: t.textMuted, fontSize: 14, fontWeight: 500, opacity: 0.6 }}>press enter</span>
       </div>
       <style>{`
         @keyframes bb-shake {
@@ -419,10 +420,10 @@ function Field({ label, value, onChange, placeholder, t }: {
 }) {
   return (
     <div>
-      {label && <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 4 }}>{label}</label>}
+      {label && <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 4 }}>{label}</label>}
       <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{
         background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-        padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 13,
+        padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
         width: '100%', outline: 'none', transition: 'border-color 0.2s',
         boxSizing: 'border-box',
       }}
@@ -456,7 +457,7 @@ function SaveIndicator({ status, t }: { status: 'saved' | 'saving' | 'unsaved' |
   const isRetrying = status === 'retrying';
   return (
     <span style={{
-      fontSize: 11,
+      fontSize: 14,
       color: isError ? '#ef4444' : isRetrying ? '#f59e0b' : status === 'saved' ? t.textMuted : t.text,
       fontFamily: FONT, opacity: status === 'unsaved' ? 0 : 0.7,
       transition: 'opacity 0.3s',
@@ -490,12 +491,12 @@ function MiniCalendar({ selectedDate, onSelectDate, journalDates, t }: {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <button onClick={prev} style={{ background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontFamily: FONT, fontSize: 16, padding: '2px 8px' }}>&lsaquo;</button>
-        <span style={{ fontSize: 13, color: t.textStrong, fontFamily: FONT_MEDIUM }}>{monthName}</span>
+        <span style={{ fontSize: 14, color: t.textStrong, fontFamily: FONT_MEDIUM }}>{monthName}</span>
         <button onClick={next} style={{ background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontFamily: FONT, fontSize: 16, padding: '2px 8px' }}>&rsaquo;</button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, textAlign: 'center' }}>
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-          <span key={i} style={{ fontSize: 10, color: t.textMuted, padding: '4px 0', fontFamily: FONT }}>{d}</span>
+          <span key={i} style={{ fontSize: 14, color: t.textMuted, padding: '4px 0', fontFamily: FONT }}>{d}</span>
         ))}
         {days.map((day, i) => {
           if (day === null) return <span key={i} />;
@@ -508,7 +509,7 @@ function MiniCalendar({ selectedDate, onSelectDate, journalDates, t }: {
               background: isSelected ? t.accentSubtle : 'transparent',
               border: isToday ? `1px solid ${t.textMuted}` : '1px solid transparent',
               borderRadius: 6, padding: '4px 0', cursor: 'pointer',
-              color: isSelected ? t.textStrong : t.text, fontFamily: FONT, fontSize: 12,
+              color: isSelected ? t.textStrong : t.text, fontFamily: FONT, fontSize: 14,
               position: 'relative', transition: 'all 0.15s',
             }}>
               {day}
@@ -606,30 +607,30 @@ function JournalTab({ journal, setJournal, t }: {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
           <span style={{ fontSize: 15, color: t.textStrong, fontFamily: FONT_MEDIUM }}>{dayLabel}</span>
-          {selectedDate === today && <span style={{ fontSize: 12, color: t.textMuted, marginLeft: 8 }}>today</span>}
+          {selectedDate === today && <span style={{ fontSize: 14, color: t.textMuted, marginLeft: 8 }}>today</span>}
         </div>
 
         <div>
-          <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 6 }}>What did you do?</label>
+          <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 6 }}>What did you do?</label>
           <TextArea value={entry?.body || ''} onChange={v => updateEntry({ body: v })} placeholder="Write about your day..." t={t} />
         </div>
 
         <div>
-          <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 6 }}>Plan for tomorrow</label>
+          <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 6 }}>Plan for tomorrow</label>
           <TextArea value={entry?.tomorrow || ''} onChange={v => updateEntry({ tomorrow: v })} placeholder="What's the plan?" t={t} minHeight={80} />
         </div>
 
         {/* Meetings */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM }}>Meetings</label>
+            <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM }}>Meetings</label>
             <button onClick={addMeeting} style={{
               background: 'none', border: 'none', color: t.textMuted,
-              cursor: 'pointer', fontFamily: FONT, fontSize: 12,
+              cursor: 'pointer', fontFamily: FONT, fontSize: 14,
             }}>+ add</button>
           </div>
           {(entry?.meetings || []).length === 0 && (
-            <p style={{ color: t.textMuted, fontSize: 12, opacity: 0.6 }}>No meetings scheduled</p>
+            <p style={{ color: t.textMuted, fontSize: 14, opacity: 0.6 }}>No meetings scheduled</p>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {(entry?.meetings || []).map(m => (
@@ -643,7 +644,7 @@ function JournalTab({ journal, setJournal, t }: {
         {/* Past entries */}
         {pastEntries.length > 0 && (
           <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: 16, marginTop: 8 }}>
-            <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, marginBottom: 8, display: 'block' }}>Previous entries</label>
+            <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, marginBottom: 8, display: 'block' }}>Previous entries</label>
             {pastEntries.map(e => (
               <PastEntry key={e.date} entry={e} onSelect={() => setSelectedDate(e.date)} t={t} />
             ))}
@@ -678,7 +679,7 @@ function UpcomingMeetings({ journal, onSelectDate, t }: {
 
   return (
     <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${t.border}` }}>
-      <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 8 }}>Upcoming</label>
+      <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 8 }}>Upcoming</label>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {upcoming.map(m => {
           const isToday = m.date === today;
@@ -694,11 +695,11 @@ function UpcomingMeetings({ journal, onSelectDate, t }: {
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
             >
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: isToday ? '#2d8a56' : t.textMuted, fontFamily: FONT_MEDIUM }}>{dateLabel}</span>
-                {m.time && <span style={{ fontSize: 11, color: t.textMuted }}>{m.time}</span>}
+                <span style={{ fontSize: 14, color: isToday ? '#2d8a56' : t.textMuted, fontFamily: FONT_MEDIUM }}>{dateLabel}</span>
+                {m.time && <span style={{ fontSize: 14, color: t.textMuted }}>{m.time}</span>}
               </div>
-              <span style={{ fontSize: 12, color: t.text }}>{m.title || 'Untitled meeting'}</span>
-              {m.person && <span style={{ fontSize: 11, color: t.textMuted }}>{m.person}</span>}
+              <span style={{ fontSize: 14, color: t.text }}>{m.title || 'Untitled meeting'}</span>
+              {m.person && <span style={{ fontSize: 14, color: t.textMuted }}>{m.person}</span>}
             </button>
           );
         })}
@@ -721,8 +722,8 @@ function PastEntry({ entry, onSelect, t }: { entry: JournalEntry; onSelect: () =
       onMouseEnter={e => { e.currentTarget.style.background = t.accentSubtle; }}
       onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
     >
-      <span style={{ fontSize: 12, color: t.textMuted }}>{dateLabel}</span>
-      <span style={{ fontSize: 13, color: t.text, display: 'block', marginTop: 2 }}>
+      <span style={{ fontSize: 14, color: t.textMuted }}>{dateLabel}</span>
+      <span style={{ fontSize: 14, color: t.text, display: 'block', marginTop: 2 }}>
         {firstLine || 'Empty entry'}{firstLine.length >= 80 ? '...' : ''}
       </span>
     </button>
@@ -743,10 +744,10 @@ const CATEGORY_META: { key: ContactCategory; label: string; accent: string }[] =
 function NetworkTab({ contacts, setContacts, t }: {
   contacts: NetworkContact[]; setContacts: (fn: (prev: NetworkContact[]) => NetworkContact[]) => void; t: Theme;
 }) {
+  const [view, setView] = useState<'outreach' | 'contacts'>('outreach');
   const [filter, setFilter] = useState('');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
-  const [showConnected, setShowConnected] = useState(false);
 
   const updateContact = (id: string, patch: Partial<NetworkContact>) => {
     setContacts(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
@@ -777,12 +778,21 @@ function NetworkTab({ contacts, setContacts, t }: {
     'awaiting-reply': filtered.filter(c => c.category === 'awaiting-reply').length,
   };
 
+  const filteredConnected = filter
+    ? connected.filter(c => `${c.name} ${c.company}`.toLowerCase().includes(filter.toLowerCase()))
+    : connected;
+
   return (
     <div>
-      {/* Summary */}
-      <div style={{ fontSize: 12, color: t.textMuted, marginBottom: 12, fontFamily: FONT, display: 'flex', gap: 12 }}>
-        {CATEGORY_META.map(cm => (
-          <span key={cm.key}><span style={{ color: cm.accent, fontFamily: FONT_MEDIUM }}>{counts[cm.key as keyof typeof counts] || 0}</span> {cm.label.split(' ')[0].toLowerCase()}</span>
+      {/* Sub-tabs */}
+      <div style={{ display: 'flex', gap: 2, marginBottom: 16 }}>
+        {(['outreach', 'contacts'] as const).map(v => (
+          <button key={v} onClick={() => setView(v)} style={{
+            background: view === v ? t.accentSubtle : 'transparent',
+            border: 'none', color: view === v ? t.textStrong : t.textMuted,
+            padding: '6px 14px', cursor: 'pointer', borderRadius: 6,
+            fontSize: 14, fontFamily: FONT_MEDIUM, transition: 'all 0.15s',
+          }}>{v === 'outreach' ? `Outreach (${active.length})` : `Contact Book (${connected.length})`}</button>
         ))}
       </div>
 
@@ -790,66 +800,75 @@ function NetworkTab({ contacts, setContacts, t }: {
       <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Filter by name or company..."
         style={{
           background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-          padding: '7px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 13,
+          padding: '8px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
           outline: 'none', width: '100%', boxSizing: 'border-box', marginBottom: 16,
         }} />
 
-      {/* Category sections */}
-      {CATEGORY_META.map(cm => {
-        const sectionContacts = filtered.filter(c => c.category === cm.key);
-        if (sectionContacts.length === 0) return null;
-        const isCollapsed = collapsed[cm.key];
-        return (
-          <div key={cm.key} style={{ marginBottom: 16 }}>
-            <button onClick={() => setCollapsed(p => ({ ...p, [cm.key]: !p[cm.key] }))} style={{
-              background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0',
-              display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
-            }}>
-              <div style={{ width: 3, height: 14, borderRadius: 2, background: cm.accent }} />
-              <span style={{ fontFamily: FONT_MEDIUM, fontSize: 12, color: t.textStrong, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                {cm.label}
-              </span>
-              <span style={{ fontSize: 11, color: t.textMuted }}>({sectionContacts.length})</span>
-              <span style={{ fontSize: 10, color: t.textMuted, marginLeft: 'auto' }}>{isCollapsed ? '+' : '-'}</span>
-            </button>
-            {!isCollapsed && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
-                {sectionContacts.map(c => (
-                  <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
-                    onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
-                    onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
-                ))}
-              </div>
-            )}
+      {/* Outreach view */}
+      {view === 'outreach' && (
+        <>
+          {/* Summary */}
+          <div style={{ fontSize: 14, color: t.textMuted, marginBottom: 14, fontFamily: FONT, display: 'flex', gap: 14 }}>
+            {CATEGORY_META.map(cm => (
+              <span key={cm.key}><span style={{ color: cm.accent, fontFamily: FONT_MEDIUM }}>{counts[cm.key as keyof typeof counts] || 0}</span> {cm.label.split(' ')[0].toLowerCase()}</span>
+            ))}
           </div>
-        );
-      })}
+
+          {/* Category sections */}
+          {CATEGORY_META.map(cm => {
+            const sectionContacts = filtered.filter(c => c.category === cm.key);
+            if (sectionContacts.length === 0) return null;
+            const isCollapsed = collapsed[cm.key];
+            return (
+              <div key={cm.key} style={{ marginBottom: 16 }}>
+                <button onClick={() => setCollapsed(p => ({ ...p, [cm.key]: !p[cm.key] }))} style={{
+                  background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0',
+                  display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
+                }}>
+                  <div style={{ width: 3, height: 14, borderRadius: 2, background: cm.accent }} />
+                  <span style={{ fontFamily: FONT_MEDIUM, fontSize: 14, color: t.textStrong, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    {cm.label}
+                  </span>
+                  <span style={{ fontSize: 14, color: t.textMuted }}>({sectionContacts.length})</span>
+                  <span style={{ fontSize: 14, color: t.textMuted, marginLeft: 'auto' }}>{isCollapsed ? '+' : '-'}</span>
+                </button>
+                {!isCollapsed && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+                    {sectionContacts.map(c => (
+                      <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
+                        onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
+                        onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      {/* Contact Book view */}
+      {view === 'contacts' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {filteredConnected.length === 0 && (
+            <p style={{ color: t.textMuted, fontSize: 14, textAlign: 'center', padding: 32 }}>
+              No contacts in your book yet. Move people here when they're fully connected.
+            </p>
+          )}
+          {filteredConnected.map(c => (
+            <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
+              onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
+              onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
+          ))}
+        </div>
+      )}
 
       {/* Add contact */}
       <button onClick={addContact} style={{
         background: 'transparent', border: `1px dashed ${t.border}`,
         color: t.textMuted, padding: '10px', borderRadius: 10, width: '100%',
-        cursor: 'pointer', fontFamily: FONT, fontSize: 13, marginBottom: 16,
+        cursor: 'pointer', fontFamily: FONT, fontSize: 14, marginTop: 16,
       }}>+ Add Contact</button>
-
-      {/* Connected toggle */}
-      {connected.length > 0 && (
-        <div>
-          <button onClick={() => setShowConnected(!showConnected)} style={{
-            background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
-            fontFamily: FONT, fontSize: 12, padding: '4px 0',
-          }}>{showConnected ? 'Hide' : 'Show'} connected ({connected.length})</button>
-          {showConnected && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
-              {connected.map(c => (
-                <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
-                  onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
-                  onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -863,21 +882,43 @@ function ContactCard({ contact: c, expanded, onToggle, onUpdate, onRemove, t }: 
   return (
     <div style={{ border: `1px solid ${t.border}`, borderRadius: 8, overflow: 'hidden' }}>
       {/* Collapsed row */}
-      <button onClick={onToggle} style={{
-        background: 'transparent', border: 'none', cursor: 'pointer', width: '100%',
-        padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '10px 12px',
       }}>
-        <div style={{
-          width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-          background: URGENCY_COLORS[c.urgency],
-        }} />
-        {c.company && <CompanyLogo company={c.company} size={20} t={t} />}
-        <span style={{ fontFamily: FONT_MEDIUM, color: t.textStrong, fontSize: 13 }}>{c.name || 'New contact'}</span>
-        {c.company && <span style={{ fontSize: 12, color: t.textMuted }}>{c.company}</span>}
-        <span style={{ fontSize: 11, color: t.textMuted, marginLeft: 'auto', maxWidth: '40%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {c.actionNeeded}
-        </span>
-      </button>
+        <button onClick={onToggle} style={{
+          background: 'transparent', border: 'none', cursor: 'pointer', flex: 1,
+          display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: 0,
+        }}>
+          <div style={{
+            width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+            background: URGENCY_COLORS[c.urgency],
+          }} />
+          {c.company ? <CompanyLogo company={c.company} size={22} t={t} /> : (
+            <div style={{
+              width: 22, height: 22, borderRadius: 6, background: t.accentSubtle,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, fontFamily: FONT_MEDIUM, color: t.textMuted, flexShrink: 0,
+            }}>{(c.name || '?')[0].toUpperCase()}</div>
+          )}
+          <span style={{ fontFamily: FONT_MEDIUM, color: t.textStrong, fontSize: 14 }}>{c.name || 'New contact'}</span>
+          {c.company && <span style={{ fontSize: 14, color: t.textMuted }}>{c.company}</span>}
+          <span style={{ fontSize: 13, color: t.textMuted, marginLeft: 'auto', maxWidth: '40%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {c.actionNeeded}
+          </span>
+        </button>
+        {c.linkedinUrl && (
+          <a href={c.linkedinUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{
+            color: t.textMuted, flexShrink: 0, display: 'flex', alignItems: 'center',
+            opacity: 0.6, transition: 'opacity 0.15s',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.opacity = '1'; }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = '0.6'; }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </a>
+        )}
+      </div>
 
       {/* Expanded edit */}
       {expanded && (
@@ -888,7 +929,7 @@ function ContactCard({ contact: c, expanded, onToggle, onUpdate, onRemove, t }: 
             <Field label="Role" value={c.role} onChange={v => onUpdate({ role: v })} placeholder="Role" t={t} />
           </div>
           <div style={{ marginTop: 8 }}>
-            <label style={{ fontSize: 11, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>What they said</label>
+            <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>What they said</label>
             <TextArea value={c.whatTheySaid} onChange={v => onUpdate({ whatTheySaid: v })} placeholder="Context from their last message..." t={t} minHeight={40} />
           </div>
           <div style={{ marginTop: 8 }}>
@@ -896,10 +937,10 @@ function ContactCard({ contact: c, expanded, onToggle, onUpdate, onRemove, t }: 
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 8 }}>
             <div>
-              <label style={{ fontSize: 11, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Category</label>
+              <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Category</label>
               <select value={c.category} onChange={e => onUpdate({ category: e.target.value as ContactCategory })} style={{
                 background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-                padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 12, outline: 'none', width: '100%',
+                padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 14, outline: 'none', width: '100%',
               }}>
                 <option value="call-booked">Call Booked</option>
                 <option value="reply-needed">Need to Reply</option>
@@ -910,10 +951,10 @@ function ContactCard({ contact: c, expanded, onToggle, onUpdate, onRemove, t }: 
               </select>
             </div>
             <div>
-              <label style={{ fontSize: 11, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Urgency</label>
+              <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Urgency</label>
               <select value={c.urgency} onChange={e => onUpdate({ urgency: e.target.value as Urgency })} style={{
                 background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-                padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 12, outline: 'none', width: '100%',
+                padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 14, outline: 'none', width: '100%',
               }}>
                 <option value="now">Now</option>
                 <option value="soon">Soon</option>
@@ -923,13 +964,17 @@ function ContactCard({ contact: c, expanded, onToggle, onUpdate, onRemove, t }: 
             </div>
             <Field label="Follow-up" value={c.followUpDate || ''} onChange={v => onUpdate({ followUpDate: v })} placeholder="mid-May..." t={t} />
           </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+            <Field label="LinkedIn URL" value={c.linkedinUrl || ''} onChange={v => onUpdate({ linkedinUrl: v })} placeholder="https://linkedin.com/in/..." t={t} />
+            <div />
+          </div>
           <div style={{ marginTop: 8 }}>
             <TextArea value={c.notes} onChange={v => onUpdate({ notes: v })} placeholder="Notes..." t={t} minHeight={40} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
             <button onClick={onRemove} style={{
               background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer',
-              fontFamily: FONT, fontSize: 11, opacity: 0.7,
+              fontFamily: FONT, fontSize: 14, opacity: 0.7,
             }}>Delete contact</button>
           </div>
         </div>
@@ -984,11 +1029,11 @@ function TasksTab({ tasks, setTasks, t }: {
           placeholder="What needs to get done?"
           style={{
             flex: 1, background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-            padding: '10px 14px', borderRadius: 8, fontFamily: FONT, fontSize: 13, outline: 'none',
+            padding: '10px 14px', borderRadius: 8, fontFamily: FONT, fontSize: 14, outline: 'none',
           }} />
         <select value={newPriority} onChange={e => setNewPriority(e.target.value as TaskPriority)} style={{
           background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-          padding: '8px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 12, outline: 'none',
+          padding: '8px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 14, outline: 'none',
         }}>
           <option value="high">High</option>
           <option value="medium">Med</option>
@@ -998,7 +1043,7 @@ function TasksTab({ tasks, setTasks, t }: {
 
       {/* Active tasks */}
       {active.length === 0 && (
-        <p style={{ color: t.textMuted, fontSize: 13, textAlign: 'center', padding: 32 }}>No tasks. Add one above.</p>
+        <p style={{ color: t.textMuted, fontSize: 14, textAlign: 'center', padding: 32 }}>No tasks. Add one above.</p>
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {active.map(task => (
@@ -1012,7 +1057,7 @@ function TasksTab({ tasks, setTasks, t }: {
         <div style={{ marginTop: 20 }}>
           <button onClick={() => setShowDone(!showDone)} style={{
             background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
-            fontFamily: FONT, fontSize: 12, padding: '4px 0',
+            fontFamily: FONT, fontSize: 14, padding: '4px 0',
           }}>{showDone ? 'Hide' : 'Show'} completed ({done.length})</button>
           {showDone && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8, opacity: 0.6 }}>
@@ -1051,7 +1096,7 @@ function TaskRow({ task, today, onUpdate, onRemove, t }: {
         border: `1.5px solid ${isDone ? 'rgba(48, 180, 98, 0.5)' : t.border}`,
         background: isDone ? 'rgba(48, 180, 98, 0.15)' : 'transparent',
         cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#2d8a56', fontSize: 11,
+        color: '#2d8a56', fontSize: 14,
       }}>{isDone ? '✓' : ''}</button>
 
       {/* Title */}
@@ -1060,11 +1105,11 @@ function TaskRow({ task, today, onUpdate, onRemove, t }: {
           onBlur={() => setEditing(false)} onKeyDown={e => e.key === 'Enter' && setEditing(false)}
           autoFocus style={{
             flex: 1, background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-            padding: '4px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 13, outline: 'none',
+            padding: '4px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 14, outline: 'none',
           }} />
       ) : (
         <span onClick={() => setEditing(true)} style={{
-          flex: 1, fontFamily: FONT, fontSize: 13, cursor: 'text',
+          flex: 1, fontFamily: FONT, fontSize: 14, cursor: 'text',
           color: isDone ? t.textMuted : t.text,
           textDecoration: isDone ? 'line-through' : 'none',
         }}>{task.title}</span>
@@ -1072,13 +1117,13 @@ function TaskRow({ task, today, onUpdate, onRemove, t }: {
 
       {/* Priority pill */}
       <span style={{
-        fontSize: 10, fontFamily: FONT_MEDIUM, padding: '2px 6px', borderRadius: 4,
+        fontSize: 14, fontFamily: FONT_MEDIUM, padding: '2px 6px', borderRadius: 4,
         background: pc.bg, color: pc.text,
       }}>{task.priority}</span>
 
       {/* Due date */}
       {task.dueDate && (
-        <span style={{ fontSize: 11, color: isOverdue ? '#ef4444' : t.textMuted, fontFamily: FONT }}>
+        <span style={{ fontSize: 14, color: isOverdue ? '#ef4444' : t.textMuted, fontFamily: FONT }}>
           {new Date(task.dueDate + 'T12:00').toLocaleDateString('en', { month: 'short', day: 'numeric' })}
         </span>
       )}
@@ -1121,7 +1166,7 @@ function GoalsTab({ goals, setGoals, t }: {
       </div>
       {other.length > 0 && (
         <div style={{ marginTop: 20, opacity: 0.6 }}>
-          <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, marginBottom: 8, display: 'block' }}>Paused / Completed</label>
+          <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, marginBottom: 8, display: 'block' }}>Paused / Completed</label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {other.map(g => <GoalCard key={g.id} goal={g} onUpdate={p => updateGoal(g.id, p)} onRemove={() => removeGoal(g.id)} t={t} />)}
           </div>
@@ -1130,7 +1175,7 @@ function GoalsTab({ goals, setGoals, t }: {
       <button onClick={addGoal} style={{
         background: 'transparent', border: `1px dashed ${t.border}`,
         color: t.textMuted, padding: '12px', borderRadius: 10, width: '100%',
-        cursor: 'pointer', fontFamily: FONT, fontSize: 13, marginTop: 16,
+        cursor: 'pointer', fontFamily: FONT, fontSize: 14, marginTop: 16,
       }}>+ Add Goal</button>
     </div>
   );
@@ -1180,7 +1225,7 @@ function GoalCard({ goal: g, onUpdate, onRemove, t }: {
           }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           <span style={{
-            fontSize: 10, fontFamily: FONT_MEDIUM, padding: '2px 8px', borderRadius: 4,
+            fontSize: 14, fontFamily: FONT_MEDIUM, padding: '2px 8px', borderRadius: 4,
             background: `${statusColors[g.status]}22`, color: statusColors[g.status],
           }}>{g.status}</span>
           <button onClick={onRemove} style={{
@@ -1194,7 +1239,7 @@ function GoalCard({ goal: g, onUpdate, onRemove, t }: {
         <div style={{ flex: 1, height: 3, borderRadius: 2, background: t.accentSubtle, overflow: 'hidden' }}>
           <div style={{ width: `${g.progress}%`, height: '100%', background: 'rgba(48, 180, 98, 0.5)', borderRadius: 2, transition: 'width 0.3s' }} />
         </div>
-        <span style={{ fontSize: 11, color: t.textMuted, fontFamily: FONT_MEDIUM, minWidth: 32 }}>{g.progress}%</span>
+        <span style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, minWidth: 32 }}>{g.progress}%</span>
       </div>
 
       {/* Description */}
@@ -1202,7 +1247,7 @@ function GoalCard({ goal: g, onUpdate, onRemove, t }: {
 
       {/* Milestones */}
       <div style={{ marginTop: 10 }}>
-        <label style={{ fontSize: 11, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 4 }}>Milestones</label>
+        <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 4 }}>Milestones</label>
         {(g.milestones || []).map((m, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
             <button onClick={() => toggleMilestone(i)} style={{
@@ -1210,14 +1255,14 @@ function GoalCard({ goal: g, onUpdate, onRemove, t }: {
               border: `1.5px solid ${g.completedMilestones?.[i] ? 'rgba(48, 180, 98, 0.5)' : t.border}`,
               background: g.completedMilestones?.[i] ? 'rgba(48, 180, 98, 0.15)' : 'transparent',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#2d8a56', fontSize: 9,
+              color: '#2d8a56', fontSize: 14,
             }}>{g.completedMilestones?.[i] ? '✓' : ''}</button>
             <span style={{
-              fontSize: 12, color: g.completedMilestones?.[i] ? t.textMuted : t.text,
+              fontSize: 14, color: g.completedMilestones?.[i] ? t.textMuted : t.text,
               fontFamily: FONT, textDecoration: g.completedMilestones?.[i] ? 'line-through' : 'none', flex: 1,
             }}>{m}</span>
             <button onClick={() => removeMilestone(i)} style={{
-              background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 12, opacity: 0.5,
+              background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 14, opacity: 0.5,
             }}>&times;</button>
           </div>
         ))}
@@ -1226,7 +1271,7 @@ function GoalCard({ goal: g, onUpdate, onRemove, t }: {
             onKeyDown={e => e.key === 'Enter' && addMilestone()}
             placeholder="Add milestone..." style={{
               flex: 1, background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-              padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 12, outline: 'none',
+              padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 14, outline: 'none',
             }} />
         </div>
       </div>
@@ -1235,7 +1280,7 @@ function GoalCard({ goal: g, onUpdate, onRemove, t }: {
       <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
         <select value={g.status} onChange={e => onUpdate({ status: e.target.value as GoalStatus })} style={{
           background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-          padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 12, outline: 'none',
+          padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 14, outline: 'none',
         }}>
           <option value="active">Active</option>
           <option value="paused">Paused</option>
@@ -1294,7 +1339,7 @@ function IdeasTab({ ideas, setIdeas, t }: {
             onRemove={() => removeIdea(idea.id)} t={t} />
         ))}
         {ideas.length === 0 && (
-          <p style={{ color: t.textMuted, fontSize: 13, textAlign: 'center', padding: 32 }}>
+          <p style={{ color: t.textMuted, fontSize: 14, textAlign: 'center', padding: 32 }}>
             No ideas yet. Type one above and press Enter.
           </p>
         )}
@@ -1321,16 +1366,16 @@ function IdeaCard({ idea, onUpdate, onRemove, t }: {
             padding: 0,
           }} />
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
-            <span style={{ fontSize: 11, color: t.textMuted }}>{dateLabel}</span>
+            <span style={{ fontSize: 14, color: t.textMuted }}>{dateLabel}</span>
             {idea.tags.length > 0 && idea.tags.map((tag, i) => (
               <span key={i} style={{
-                fontSize: 11, padding: '1px 6px', borderRadius: 4,
+                fontSize: 14, padding: '1px 6px', borderRadius: 4,
                 background: t.accentSubtle, color: t.textMuted,
               }}>{tag}</span>
             ))}
             <button onClick={() => setExpanded(!expanded)} style={{
               background: 'none', border: 'none', color: t.textMuted,
-              cursor: 'pointer', fontSize: 11, fontFamily: FONT,
+              cursor: 'pointer', fontSize: 14, fontFamily: FONT,
             }}>{expanded ? 'collapse' : 'expand'}</button>
           </div>
         </div>
@@ -1349,7 +1394,7 @@ function IdeaCard({ idea, onUpdate, onRemove, t }: {
               placeholder="Tags (comma separated)"
               style={{
                 background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-                padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 12,
+                padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 14,
                 width: '100%', outline: 'none', boxSizing: 'border-box',
               }}
             />
@@ -1703,7 +1748,7 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
     <div style={{
       position: 'fixed', inset: 0, zIndex: 10001,
       background: t.bg, color: t.text, fontFamily: FONT,
-      fontSize: 14, overflow: 'auto',
+      fontSize: 15, overflow: 'auto',
     }}>
       {/* Header */}
       <div style={{
@@ -1711,7 +1756,7 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 15, fontFamily: FONT_MEDIUM, color: t.textStrong }}>Ronniel's Blackbook</span>
+          <span style={{ fontSize: 16, fontFamily: FONT_MEDIUM, color: t.textStrong }}>Ronniel's Blackbook</span>
           <span style={{ color: t.textMuted, fontSize: 13 }}>
             {new Date().toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}
           </span>
@@ -1721,7 +1766,7 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
           <button onClick={onClose} style={{
             background: t.accentSubtle, border: 'none',
             color: t.textMuted, cursor: 'pointer', padding: '5px 12px', borderRadius: 6,
-            fontSize: 12, fontFamily: FONT_MEDIUM,
+            fontSize: 14, fontFamily: FONT_MEDIUM,
           }}>Done</button>
         </div>
       </div>
@@ -1737,7 +1782,7 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
             borderBottom: tab === tb ? `2px solid ${t.textStrong}` : '2px solid transparent',
             color: tab === tb ? t.textStrong : t.textMuted,
             padding: '10px 16px', cursor: 'pointer',
-            fontSize: 13, fontFamily: FONT_MEDIUM, transition: 'all 0.15s',
+            fontSize: 14, fontFamily: FONT_MEDIUM, transition: 'all 0.15s',
           }}>{tb.charAt(0).toUpperCase() + tb.slice(1)}</button>
         ))}
       </div>
