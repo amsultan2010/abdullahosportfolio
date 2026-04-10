@@ -5768,7 +5768,7 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
         {/* Clock + Name + Title grouped at top on mobile */}
         {!isFullscreen && isMobileTerminal && (
           <div style={{ textAlign: 'center', marginTop: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
               <ChronographWatch />
             </div>
             <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '24px', color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '2px' }}>
