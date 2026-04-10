@@ -11,16 +11,12 @@ interface DockItem {
   href?: string;
 }
 
-const DESKTOP_BASE_SIZE = 50;
-const DESKTOP_MAX_SIZE = 72;
-const MOBILE_BASE_SIZE = 36;
-const MOBILE_MAX_SIZE = 44;
+const BASE_SIZE = 50;
+const MAX_SIZE = 72;
 const MAGNIFY_RANGE = 150; // px range of magnification
 
 export default function DesktopDock() {
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-  const BASE_SIZE = isMobile ? MOBILE_BASE_SIZE : DESKTOP_BASE_SIZE;
-  const MAX_SIZE = isMobile ? MOBILE_MAX_SIZE : DESKTOP_MAX_SIZE;
   const { state, dispatch } = useDesktop();
   const [mouseX, setMouseX] = useState<number | null>(null);
   const dockRef = useRef<HTMLDivElement>(null);
@@ -116,7 +112,8 @@ export default function DesktopDock() {
       position: 'fixed',
       bottom: '6px',
       left: '50%',
-      transform: 'translateX(-50%)',
+      transform: isMobile ? 'translateX(-50%) scale(0.72)' : 'translateX(-50%)',
+      transformOrigin: 'bottom center',
       zIndex: 9998,
       display: 'flex',
       alignItems: 'flex-end',
@@ -157,7 +154,6 @@ export default function DesktopDock() {
               key={item.id}
               item={item}
               scale={scale}
-              baseSize={BASE_SIZE}
               isOpen={!('isExternal' in item && item.isExternal) && isOpen(item.id)}
               onClick={() => handleClick(item)}
             />
@@ -168,16 +164,15 @@ export default function DesktopDock() {
   );
 }
 
-function DockButton({ item, scale, baseSize, isOpen, onClick }: {
+function DockButton({ item, scale, isOpen, onClick }: {
   item: DockItem;
   scale: number;
-  baseSize: number;
   isOpen: boolean;
   onClick: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
-  const size = baseSize * scale;
-  const translateY = -(size - baseSize) / 2;
+  const size = BASE_SIZE * scale;
+  const translateY = -(size - BASE_SIZE) / 2;
 
   return (
     <div
