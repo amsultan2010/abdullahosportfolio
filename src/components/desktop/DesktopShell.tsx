@@ -2750,7 +2750,7 @@ function BloombergTopBar({ stocks, gameMode, onToggleGame }: { stocks: StockData
 
   return (
     <div style={{
-      height: '32px', minHeight: '32px', background: '#0a0c12', borderBottom: '1px solid rgba(255,255,255,0.06)',
+      height: '32px', minHeight: '32px', background: 'rgba(255,255,255,0.12)', borderBottom: '0.5px solid rgba(255,255,255,0.1)',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px',
       fontFamily: "'SF Mono', monospace", fontSize: '10px',
     }}>
@@ -3053,7 +3053,7 @@ function BloombergBottomBar() {
 
   return (
     <div style={{
-      height: '32px', minHeight: '32px', background: '#0a0c12', borderTop: '1px solid rgba(255,255,255,0.08)',
+      height: '32px', minHeight: '32px', background: 'rgba(255,255,255,0.12)', borderTop: '0.5px solid rgba(255,255,255,0.1)',
       display: 'flex', alignItems: 'center', padding: '0 12px', gap: '16px',
       fontFamily: "'SF Mono', monospace", fontSize: '10px',
     }}>
@@ -4162,11 +4162,11 @@ function BloombergTerminalView({ drillDown, setDrillDown }: {
   const hasDrillDown = drillDown !== null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#0a0c12', fontFamily: "'SF Mono', monospace" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: "'SF Mono', monospace" }}>
       <BloombergTopBar stocks={stocks} gameMode={gameMode} onToggleGame={() => {}} />
       <div style={{ flex: 1, overflow: 'hidden', display: hasDrillDown ? 'block' : 'grid', gridTemplateColumns: hasDrillDown ? undefined : '50% 50%' }}>
         {hasDrillDown ? (
-          <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', background: '#1c1c1e' }}>
+          <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto' }}>
             {drillDown.type === 'stock' ? (
               <StockDetailView symbol={drillDown.symbol} name={drillDown.name} onBack={() => setDrillDown(null)} onSectorClick={(name) => setDrillDown({ type: 'sector', name })} />
             ) : (
@@ -4232,17 +4232,10 @@ function StocksApp() {
   }
 
   return (
-    <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', fontFamily: "'SF Mono', monospace" }}>
-      {/* My Watchlist title */}
-      <div style={{ padding: '14px 14px 0' }}>
-        <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '-0.01em' }}>
-          My Watchlist
-        </div>
-      </div>
-
-      <div>
-        {drillDown ? (
-          drillDown.type === 'stock' ? (
+    <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', fontFamily: "'SF Mono', monospace", padding: '10px' }}>
+      {drillDown ? (
+        <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', overflow: 'hidden' }}>
+          {drillDown.type === 'stock' ? (
             <StockDetailView
               symbol={drillDown.symbol}
               name={drillDown.name}
@@ -4255,32 +4248,44 @@ function StocksApp() {
               onBack={() => setDrillDown(null)}
               onStockClick={(symbol, name) => setDrillDown({ type: 'stock', symbol, name })}
             />
-          )
-        ) : (
-          <>
-            {/* LIVE + Date header */}
-            <div style={{ padding: '12px 14px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          )}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {/* Header card */}
+          <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: '12px', padding: '14px 14px 10px', border: '0.5px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)' }}>
+            <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '-0.01em', marginBottom: '8px' }}>
+              My Watchlist
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80', animation: 'livePulse 2s ease-in-out infinite' }} />
-                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '0.02em' }}>LIVE</span>
+                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>LIVE</span>
               </div>
-              <div style={{ color: '#fff', fontSize: '12px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', fontWeight: 500, fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+                {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
               </div>
             </div>
-            {/* 2x2 Stock Grid */}
+          </div>
+
+          {/* Stock Grid card */}
+          <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', overflow: 'hidden' }}>
             <StockGrid onStockClick={(symbol, name) => setDrillDown({ type: 'stock', symbol, name })} />
-            <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 14px' }} />
-            {/* Sector Sparklines */}
+          </div>
+
+          {/* Sector Sparklines card */}
+          <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', overflow: 'hidden' }}>
             <SectorSparklines onSectorClick={(name) => setDrillDown({ type: 'sector', name })} />
-            {/* News Tape */}
+          </div>
+
+          {/* News + Calendar card */}
+          <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', overflow: 'hidden' }}>
             <ScrollingNewsTape />
-            <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 14px' }} />
-            {/* Economic Calendar */}
+            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.1)', margin: '0 10px' }} />
             <EconomicCalendar />
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
       <style>{`@keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 .bloomberg-scroll::-webkit-scrollbar { display: none; }
 .bloomberg-scroll { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
