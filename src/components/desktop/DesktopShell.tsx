@@ -6016,7 +6016,7 @@ function Desktop() {
   const { state, dispatch } = useDesktop();
   const [isMobile, setIsMobile] = useState(false);
   const [bbAuthState, setBbAuthState] = useState(false);
-  const [hoveredWindowId, setHoveredWindowId] = useState<string | null>(null);
+  const [hoveredWindowId, setHoveredWindowId] = useState<string | null>('terminal');
   const terminalOrigRef = useRef<{ width: number; height: number } | null>(null);
 
   // Expose bbAuth setter so TerminalContent can notify us
