@@ -6187,7 +6187,7 @@ function Desktop() {
               ...(isTerminalFullscreen ? { terminal: 'rgba(0,0,0,0.4)' } : {}),
             };
             // Apps with dark content need light title bar text
-            const darkTitleBars = ['projects', 'terminal'];
+            const darkTitleBars = isTerminalFullscreen ? ['projects', 'terminal'] : ['projects'];
             const titleBarBg = titleBarBgMap[win.id];
             const titleBarDark = darkTitleBars.includes(win.id);
             if (win.id === 'detail' && state.activeDetail) {
