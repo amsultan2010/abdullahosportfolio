@@ -37,7 +37,7 @@ function WindowContent({ id }: { id: WindowId }) {
 
   switch (id) {
     case 'terminal':
-      return <TerminalContent />;
+      return <TerminalContent onAuthChange={(window as any).__setBbAuth} />;
     case 'education':
       return <Education onCardClick={handleCardClick} windowMode />;
     case 'experience':
@@ -5287,10 +5287,11 @@ function ChronographWatch() {
   );
 }
 
-function TerminalContent() {
+function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void } = {}) {
   const { state, dispatch } = useDesktop();
   const isFullscreen = state.windows.terminal?.isFullscreen ?? false;
-  const [bbAuth, setBbAuth] = useState(false);
+  const [bbAuth, _setBbAuth] = useState(false);
+  const setBbAuth = (v: boolean) => { _setBbAuth(v); onAuthChange?.(v); };
   const [bbPassHash, setBbPassHash] = useState('');
   const [bbPassInput, setBbPassInput] = useState('');
   const [bbShake, setBbShake] = useState(false);
@@ -6014,7 +6015,14 @@ function TerminalContent() {
 function Desktop() {
   const { state, dispatch } = useDesktop();
   const [isMobile, setIsMobile] = useState(false);
+  const [bbAuthState, setBbAuthState] = useState(false);
   const terminalOrigRef = useRef<{ width: number; height: number } | null>(null);
+
+  // Expose bbAuth setter so TerminalContent can notify us
+  useEffect(() => {
+    (window as any).__setBbAuth = setBbAuthState;
+    return () => { delete (window as any).__setBbAuth; };
+  }, []);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
@@ -6180,14 +6188,14 @@ function Desktop() {
           {/* Windows */}
           {openWindows.map(win => {
             // Title bar bg matches each app's content color
-            const isTerminalFullscreen = win.id === 'terminal' && win.isFullscreen;
+            const isTerminalDashboard = win.id === 'terminal' && win.isFullscreen && bbAuthState;
             const titleBarBgMap: Record<string, string> = {
               projects: '#252526',
               blog: '#f9f9f8',
-              ...(isTerminalFullscreen ? { terminal: 'rgba(0,0,0,0.4)' } : {}),
+              ...(isTerminalDashboard ? { terminal: 'rgba(0,0,0,0.4)' } : {}),
             };
             // Apps with dark content need light title bar text
-            const darkTitleBars = isTerminalFullscreen ? ['projects', 'terminal'] : ['projects'];
+            const darkTitleBars = isTerminalDashboard ? ['projects', 'terminal'] : ['projects'];
             const titleBarBg = titleBarBgMap[win.id];
             const titleBarDark = darkTitleBars.includes(win.id);
             if (win.id === 'detail' && state.activeDetail) {
