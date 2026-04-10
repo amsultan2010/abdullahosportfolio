@@ -31,6 +31,7 @@ export default function DesktopMenuBar() {
   const { state, dispatch } = useDesktop();
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [spotify, setSpotify] = useState<SpotifyData | null>(null);
   const [location, setLocation] = useState<LocationData | null>(null);
@@ -98,7 +99,7 @@ export default function DesktopMenuBar() {
       backdropFilter: 'none', WebkitBackdropFilter: 'none',
       borderBottom: 'none',
       fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif",
-      fontSize: '14px', color: '#FFFFFF', userSelect: 'none',
+      fontSize: isMobile ? '12px' : '14px', color: '#FFFFFF', userSelect: 'none',
     }}>
       {/* ── Left: Logo + Menus ── */}
       <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
@@ -138,7 +139,7 @@ export default function DesktopMenuBar() {
           )}
         </div>
 
-        <div style={{ ...barItem, fontWeight: 600, padding: '0 14px 0 0' }}>Ronniel Gandhe</div>
+        {!isMobile && <div style={{ ...barItem, fontWeight: 600, padding: '0 14px 0 0' }}>Ronniel Gandhe</div>}
 
         <div
           onMouseDown={() => {
@@ -176,17 +177,19 @@ export default function DesktopMenuBar() {
           style={{ ...barItem, padding: '0 10px' }}
         >Resume</div>
 
-        <BarDropdown label="Window" id="window" active={activeMenu} toggle={toggle} hover={hover}>
-          <DropItem label="Minimize" shortcut="⌘M" disabled={!hasFocused}
-            onClick={() => { if (state.focusedWindowId) dispatch({ type: 'MINIMIZE_WINDOW', id: state.focusedWindowId }); close(); }} />
-          <DropItem label="Zoom" disabled={!hasFocused}
-            onClick={() => { if (state.focusedWindowId) dispatch({ type: 'TOGGLE_FULLSCREEN', id: state.focusedWindowId }); close(); }} />
-          <DropDivider />
-          <DropItem label="Close Window" shortcut="⌘W" disabled={!hasFocused}
-            onClick={() => { if (state.focusedWindowId) dispatch({ type: 'CLOSE_WINDOW', id: state.focusedWindowId }); close(); }} />
-          <DropDivider />
-          <DropItem label="Bring All to Front" onClick={close} />
-        </BarDropdown>
+        {!isMobile && (
+          <BarDropdown label="Window" id="window" active={activeMenu} toggle={toggle} hover={hover}>
+            <DropItem label="Minimize" shortcut="⌘M" disabled={!hasFocused}
+              onClick={() => { if (state.focusedWindowId) dispatch({ type: 'MINIMIZE_WINDOW', id: state.focusedWindowId }); close(); }} />
+            <DropItem label="Zoom" disabled={!hasFocused}
+              onClick={() => { if (state.focusedWindowId) dispatch({ type: 'TOGGLE_FULLSCREEN', id: state.focusedWindowId }); close(); }} />
+            <DropDivider />
+            <DropItem label="Close Window" shortcut="⌘W" disabled={!hasFocused}
+              onClick={() => { if (state.focusedWindowId) dispatch({ type: 'CLOSE_WINDOW', id: state.focusedWindowId }); close(); }} />
+            <DropDivider />
+            <DropItem label="Bring All to Front" onClick={close} />
+          </BarDropdown>
+        )}
       </div>
 
       {/* ── Right: System Tray ── */}
@@ -215,7 +218,7 @@ export default function DesktopMenuBar() {
               background: activeMenu === 'notif' ? 'rgba(255,255,255,0.2)' : 'transparent',
             }}
           >
-            {date}&ensp;{time}
+            {isMobile ? time : <>{date}&ensp;{time}</>}
           </span>
           {activeMenu === 'notif' && (
             <div style={{ ...panelStyle, right: 0, background: 'rgba(244, 244, 244, 0.85)', color: 'rgba(0,0,0,0.85)' }}>
