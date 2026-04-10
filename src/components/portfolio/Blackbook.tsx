@@ -61,15 +61,40 @@ interface JournalEntry {
   meetings: Meeting[]; updatedAt: string;
 }
 
+// Legacy types (kept for migration)
 type ScoutingStatus = 'researching' | 'ready' | 'archived';
 type OutreachStatus = 'queued' | 'dm-sent' | 'replied' | 'call-scheduled' | 'call-done' | 'connected';
 
+// New contact system
+type ContactCategory = 'call-booked' | 'reply-needed' | 'warm' | 'awaiting-reply' | 'connected' | 'archived';
+type Urgency = 'now' | 'soon' | 'later' | 'waiting';
+
 interface NetworkContact {
   id: string; name: string; company: string; role: string;
-  whyReachOut: string; companyInfo: string; foundVia: string;
-  scoutingStatus: ScoutingStatus; outreachStatus: OutreachStatus;
-  platform: string; lastContactDate: string; nextAction: string;
+  // New fields
+  category: ContactCategory; urgency: Urgency;
+  whatTheySaid: string; actionNeeded: string; followUpDate?: string;
   notes: string; createdAt: string;
+  // Legacy fields (optional, for backward compat)
+  whyReachOut?: string; companyInfo?: string; foundVia?: string;
+  scoutingStatus?: ScoutingStatus; outreachStatus?: OutreachStatus;
+  platform?: string; lastContactDate?: string; nextAction?: string;
+}
+
+type TaskPriority = 'high' | 'medium' | 'low';
+type TaskStatus = 'todo' | 'in-progress' | 'done';
+
+interface Task {
+  id: string; title: string; status: TaskStatus; priority: TaskPriority;
+  dueDate?: string; notes?: string; createdAt: string; updatedAt: string;
+}
+
+type GoalStatus = 'active' | 'completed' | 'paused';
+
+interface Goal {
+  id: string; title: string; description: string; status: GoalStatus;
+  progress: number; milestones: string[]; completedMilestones: boolean[];
+  createdAt: string; updatedAt: string;
 }
 
 interface ProjectIdea {
@@ -79,8 +104,9 @@ interface ProjectIdea {
 
 interface BlackbookData {
   journal: JournalEntry[]; contacts: NetworkContact[]; ideas: ProjectIdea[];
-  // Per-section timestamps for field-level merge
+  tasks: Task[]; goals: Goal[];
   journalUpdatedAt?: string; contactsUpdatedAt?: string; ideasUpdatedAt?: string;
+  tasksUpdatedAt?: string; goalsUpdatedAt?: string;
 }
 
 // ── Date helper (local timezone, not UTC) ──
@@ -114,15 +140,13 @@ function migrateIfNeeded() {
       }));
       save('journal', journal);
     }
-    // Migrate contacts
+    // Migrate contacts (v1 format)
     const oldContacts = load<any[]>('contacts', []);
     if (oldContacts.length > 0) {
       const contacts: NetworkContact[] = oldContacts.map(c => ({
         id: c.id, name: c.name || '', company: c.company || '', role: c.role || '',
-        whyReachOut: '', companyInfo: c.stage || '', foundVia: '',
-        scoutingStatus: 'researching' as ScoutingStatus,
-        outreachStatus: (c.status === 'cold' ? 'queued' : c.status === 'dmd' ? 'dm-sent' : 'queued') as OutreachStatus,
-        platform: '', lastContactDate: c.lastContact || '', nextAction: c.nextAction || '',
+        category: 'warm' as ContactCategory, urgency: 'later' as Urgency,
+        whatTheySaid: c.notes || '', actionNeeded: c.nextAction || '',
         notes: c.notes || '', createdAt: new Date().toISOString(),
       }));
       save('contacts', contacts);
@@ -141,7 +165,33 @@ function migrateIfNeeded() {
     localStorage.removeItem('bb-logs');
     localStorage.removeItem('bb-projects');
   } catch { /* silent */ }
+}
 
+// ── V3 contact migration: old outreach/scouting → new category/urgency ──
+function migrateContactsV3() {
+  if (localStorage.getItem('bb-migrated-v3-contacts')) return;
+  const contacts = load<any[]>('contacts', []);
+  if (contacts.length === 0) { localStorage.setItem('bb-migrated-v3-contacts', '1'); return; }
+
+  const migrated = contacts.map((c: any) => {
+    if (c.category) return c; // Already v3
+    let category: ContactCategory = 'warm';
+    let urgency: Urgency = 'later';
+    const os = c.outreachStatus as string;
+    if (os === 'dm-sent') { category = 'awaiting-reply'; urgency = 'waiting'; }
+    else if (os === 'replied') { category = 'reply-needed'; urgency = 'soon'; }
+    else if (os === 'call-scheduled') { category = 'call-booked'; urgency = 'now'; }
+    else if (os === 'call-done') { category = 'warm'; urgency = 'soon'; }
+    else if (os === 'connected') { category = 'connected'; urgency = 'later'; }
+    if (c.scoutingStatus === 'archived') category = 'archived';
+    return {
+      ...c, category, urgency,
+      whatTheySaid: c.whatTheySaid || c.notes || '',
+      actionNeeded: c.actionNeeded || c.nextAction || '',
+    };
+  });
+  save('contacts', migrated);
+  localStorage.setItem('bb-migrated-v3-contacts', '1');
 }
 
 // ── Supabase sync ──
@@ -177,9 +227,13 @@ function mergeCloudLocal(cloud: BlackbookData | null, local: BlackbookData): Bla
     journal: pick(cloud.journal, cloud.journalUpdatedAt, local.journal, local.journalUpdatedAt, []),
     contacts: pick(cloud.contacts, cloud.contactsUpdatedAt, local.contacts, local.contactsUpdatedAt, []),
     ideas: pick(cloud.ideas, cloud.ideasUpdatedAt, local.ideas, local.ideasUpdatedAt, []),
+    tasks: pick(cloud.tasks, cloud.tasksUpdatedAt, local.tasks, local.tasksUpdatedAt, []),
+    goals: pick(cloud.goals, cloud.goalsUpdatedAt, local.goals, local.goalsUpdatedAt, []),
     journalUpdatedAt: [cloud.journalUpdatedAt, local.journalUpdatedAt].filter(Boolean).sort().pop(),
     contactsUpdatedAt: [cloud.contactsUpdatedAt, local.contactsUpdatedAt].filter(Boolean).sort().pop(),
     ideasUpdatedAt: [cloud.ideasUpdatedAt, local.ideasUpdatedAt].filter(Boolean).sort().pop(),
+    tasksUpdatedAt: [cloud.tasksUpdatedAt, local.tasksUpdatedAt].filter(Boolean).sort().pop(),
+    goalsUpdatedAt: [cloud.goalsUpdatedAt, local.goalsUpdatedAt].filter(Boolean).sort().pop(),
   };
 }
 
@@ -227,6 +281,8 @@ const COMPANY_DOMAINS: Record<string, string> = {
   'linear': 'linear.app', 'offdeal': 'offdeal.com', 'ostium': 'ostium.io',
   'alpaca': 'alpaca.markets', 'composer': 'composer.trade', 'ramp': 'ramp.com',
   'vercel': 'vercel.com', 'mercury': 'mercury.com', 'kalshi': 'kalshi.com', 'entorr': 'entorr.com',
+  'rippling': 'rippling.com', 'boardy.ai': 'boardy.ai', 'fable': 'fable.app',
+  'maxima': 'maxima.com', 'builder': 'builder.io', 'gentube': 'gentube.app',
 };
 
 function getCompanyLogo(company: string) {
@@ -673,99 +729,124 @@ function PastEntry({ entry, onSelect, t }: { entry: JournalEntry; onSelect: () =
   );
 }
 
-// ── Network Tab ──
+// ── Network Tab (category-based, person-first) ──
+const URGENCY_COLORS: Record<Urgency, string> = {
+  now: '#ef4444', soon: '#f59e0b', later: '#3b82f6', waiting: '#6b7280',
+};
+const CATEGORY_META: { key: ContactCategory; label: string; accent: string }[] = [
+  { key: 'call-booked', label: 'Calls Booked', accent: '#ef4444' },
+  { key: 'reply-needed', label: 'Need to Reply', accent: '#f59e0b' },
+  { key: 'warm', label: 'Warm — Check In Later', accent: '#3b82f6' },
+  { key: 'awaiting-reply', label: 'Awaiting Reply', accent: '#6b7280' },
+];
+
 function NetworkTab({ contacts, setContacts, t }: {
   contacts: NetworkContact[]; setContacts: (fn: (prev: NetworkContact[]) => NetworkContact[]) => void; t: Theme;
 }) {
-  const [view, setView] = useState<'contacts' | 'outreach'>('outreach');
-
-  const contactBookEntries = contacts.filter(c => c.outreachStatus === 'queued' && c.scoutingStatus !== 'archived');
-  const outreachContacts = contacts.filter(c => c.outreachStatus !== 'queued');
-
-  // Group outreach by company
-  const outreachByCompany = outreachContacts.reduce<Record<string, NetworkContact[]>>((acc, c) => {
-    const key = c.company || 'Other';
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(c);
-    return acc;
-  }, {});
+  const [filter, setFilter] = useState('');
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [showConnected, setShowConnected] = useState(false);
 
   const updateContact = (id: string, patch: Partial<NetworkContact>) => {
     setContacts(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
   };
   const removeContact = (id: string) => {
     setContacts(prev => prev.filter(c => c.id !== id));
+    if (expandedCard === id) setExpandedCard(null);
   };
   const addContact = () => {
+    const id = Date.now().toString();
     setContacts(prev => [...prev, {
-      id: Date.now().toString(), name: '', company: '', role: '',
-      whyReachOut: '', companyInfo: '', foundVia: '',
-      scoutingStatus: 'researching', outreachStatus: 'queued',
-      platform: '', lastContactDate: '', nextAction: '', notes: '',
-      createdAt: new Date().toISOString(),
+      id, name: '', company: '', role: '', category: 'warm', urgency: 'later',
+      whatTheySaid: '', actionNeeded: '', notes: '', createdAt: new Date().toISOString(),
     }]);
-  };
-  const moveToOutreach = (id: string) => {
-    updateContact(id, { outreachStatus: 'dm-sent', scoutingStatus: 'ready' });
-    setView('outreach');
+    setExpandedCard(id);
   };
 
-  // Pipeline counts
-  const dmSent = contacts.filter(c => c.outreachStatus === 'dm-sent').length;
-  const replied = contacts.filter(c => c.outreachStatus === 'replied').length;
-  const calls = contacts.filter(c => ['call-scheduled', 'call-done'].includes(c.outreachStatus)).length;
-  const connected = contacts.filter(c => c.outreachStatus === 'connected').length;
+  const active = contacts.filter(c => c.category !== 'connected' && c.category !== 'archived');
+  const connected = contacts.filter(c => c.category === 'connected');
+  const filtered = filter
+    ? active.filter(c => `${c.name} ${c.company}`.toLowerCase().includes(filter.toLowerCase()))
+    : active;
+
+  const counts = {
+    'call-booked': filtered.filter(c => c.category === 'call-booked').length,
+    'reply-needed': filtered.filter(c => c.category === 'reply-needed').length,
+    'warm': filtered.filter(c => c.category === 'warm').length,
+    'awaiting-reply': filtered.filter(c => c.category === 'awaiting-reply').length,
+  };
 
   return (
     <div>
-      {/* Pipeline summary */}
-      <div style={{ fontSize: 12, color: t.textMuted, marginBottom: 16, fontFamily: FONT }}>
-        {contactBookEntries.length} contacts &middot; {dmSent} DM sent &middot; {replied} replied &middot; {calls} calls &middot; {connected} connected
-      </div>
-
-      {/* Sub-tabs */}
-      <div style={{ display: 'flex', gap: 2, marginBottom: 20 }}>
-        {(['contacts', 'outreach'] as const).map(v => (
-          <button key={v} onClick={() => setView(v)} style={{
-            background: view === v ? t.accentSubtle : 'transparent',
-            border: 'none', color: view === v ? t.textStrong : t.textMuted,
-            padding: '6px 14px', cursor: 'pointer', borderRadius: 6,
-            fontSize: 13, fontFamily: FONT_MEDIUM, transition: 'all 0.15s',
-          }}>{v === 'contacts' ? `Contact Book (${contactBookEntries.length})` : `Outreach (${outreachContacts.length})`}</button>
+      {/* Summary */}
+      <div style={{ fontSize: 12, color: t.textMuted, marginBottom: 12, fontFamily: FONT, display: 'flex', gap: 12 }}>
+        {CATEGORY_META.map(cm => (
+          <span key={cm.key}><span style={{ color: cm.accent, fontFamily: FONT_MEDIUM }}>{counts[cm.key as keyof typeof counts] || 0}</span> {cm.label.split(' ')[0].toLowerCase()}</span>
         ))}
       </div>
 
-      {/* Contact Book view */}
-      {view === 'contacts' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {contactBookEntries.map(c => (
-            <ContactBookCard key={c.id} contact={c} onUpdate={p => updateContact(c.id, p)}
-              onRemove={() => removeContact(c.id)} onMoveToOutreach={() => moveToOutreach(c.id)} t={t} />
-          ))}
-          {contactBookEntries.length === 0 && (
-            <p style={{ color: t.textMuted, fontSize: 13, textAlign: 'center', padding: 32 }}>
-              No contacts yet. Add someone you know.
-            </p>
-          )}
-          <button onClick={addContact} style={{
-            background: 'transparent', border: `1px dashed ${t.border}`,
-            color: t.textMuted, padding: '12px', borderRadius: 10,
-            cursor: 'pointer', fontFamily: FONT, fontSize: 13,
-          }}>+ Add Contact</button>
-        </div>
-      )}
+      {/* Filter */}
+      <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Filter by name or company..."
+        style={{
+          background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+          padding: '7px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 13,
+          outline: 'none', width: '100%', boxSizing: 'border-box', marginBottom: 16,
+        }} />
 
-      {/* Outreach view — grouped by company */}
-      {view === 'outreach' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {Object.entries(outreachByCompany).map(([company, people]) => (
-            <CompanyOutreachCard key={company} company={company} contacts={people}
-              onUpdate={updateContact} onRemove={removeContact} t={t} />
-          ))}
-          {outreachContacts.length === 0 && (
-            <p style={{ color: t.textMuted, fontSize: 13, textAlign: 'center', padding: 32 }}>
-              No active outreach yet. Move contacts from Contact Book when ready.
-            </p>
+      {/* Category sections */}
+      {CATEGORY_META.map(cm => {
+        const sectionContacts = filtered.filter(c => c.category === cm.key);
+        if (sectionContacts.length === 0) return null;
+        const isCollapsed = collapsed[cm.key];
+        return (
+          <div key={cm.key} style={{ marginBottom: 16 }}>
+            <button onClick={() => setCollapsed(p => ({ ...p, [cm.key]: !p[cm.key] }))} style={{
+              background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0',
+              display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
+            }}>
+              <div style={{ width: 3, height: 14, borderRadius: 2, background: cm.accent }} />
+              <span style={{ fontFamily: FONT_MEDIUM, fontSize: 12, color: t.textStrong, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {cm.label}
+              </span>
+              <span style={{ fontSize: 11, color: t.textMuted }}>({sectionContacts.length})</span>
+              <span style={{ fontSize: 10, color: t.textMuted, marginLeft: 'auto' }}>{isCollapsed ? '+' : '-'}</span>
+            </button>
+            {!isCollapsed && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+                {sectionContacts.map(c => (
+                  <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
+                    onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
+                    onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Add contact */}
+      <button onClick={addContact} style={{
+        background: 'transparent', border: `1px dashed ${t.border}`,
+        color: t.textMuted, padding: '10px', borderRadius: 10, width: '100%',
+        cursor: 'pointer', fontFamily: FONT, fontSize: 13, marginBottom: 16,
+      }}>+ Add Contact</button>
+
+      {/* Connected toggle */}
+      {connected.length > 0 && (
+        <div>
+          <button onClick={() => setShowConnected(!showConnected)} style={{
+            background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
+            fontFamily: FONT, fontSize: 12, padding: '4px 0',
+          }}>{showConnected ? 'Hide' : 'Show'} connected ({connected.length})</button>
+          {showConnected && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+              {connected.map(c => (
+                <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
+                  onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
+                  onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
+              ))}
+            </div>
           )}
         </div>
       )}
@@ -773,160 +854,393 @@ function NetworkTab({ contacts, setContacts, t }: {
   );
 }
 
-// ── Contact Book Card ──
-function ContactBookCard({ contact: c, onUpdate, onRemove, onMoveToOutreach, t }: {
-  contact: NetworkContact; onUpdate: (p: Partial<NetworkContact>) => void;
-  onRemove: () => void; onMoveToOutreach: () => void; t: Theme;
+// ── Contact Card ──
+function ContactCard({ contact: c, expanded, onToggle, onUpdate, onRemove, t }: {
+  contact: NetworkContact; expanded: boolean;
+  onToggle: () => void; onUpdate: (p: Partial<NetworkContact>) => void;
+  onRemove: () => void; t: Theme;
 }) {
   return (
-    <div style={{ border: `1px solid ${t.border}`, borderRadius: 10, padding: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
-          <CompanyLogo company={c.company} t={t} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, flex: 1 }}>
+    <div style={{ border: `1px solid ${t.border}`, borderRadius: 8, overflow: 'hidden' }}>
+      {/* Collapsed row */}
+      <button onClick={onToggle} style={{
+        background: 'transparent', border: 'none', cursor: 'pointer', width: '100%',
+        padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
+      }}>
+        <div style={{
+          width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+          background: URGENCY_COLORS[c.urgency],
+        }} />
+        {c.company && <CompanyLogo company={c.company} size={20} t={t} />}
+        <span style={{ fontFamily: FONT_MEDIUM, color: t.textStrong, fontSize: 13 }}>{c.name || 'New contact'}</span>
+        {c.company && <span style={{ fontSize: 12, color: t.textMuted }}>{c.company}</span>}
+        <span style={{ fontSize: 11, color: t.textMuted, marginLeft: 'auto', maxWidth: '40%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {c.actionNeeded}
+        </span>
+      </button>
+
+      {/* Expanded edit */}
+      {expanded && (
+        <div style={{ padding: '0 12px 12px', borderTop: `1px solid ${t.border}` }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 10 }}>
             <Field label="Name" value={c.name} onChange={v => onUpdate({ name: v })} placeholder="First Last" t={t} />
             <Field label="Company" value={c.company} onChange={v => onUpdate({ company: v })} placeholder="Company" t={t} />
-            <Field label="Role" value={c.role} onChange={v => onUpdate({ role: v })} placeholder="SWE, PM..." t={t} />
+            <Field label="Role" value={c.role} onChange={v => onUpdate({ role: v })} placeholder="Role" t={t} />
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <label style={{ fontSize: 11, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>What they said</label>
+            <TextArea value={c.whatTheySaid} onChange={v => onUpdate({ whatTheySaid: v })} placeholder="Context from their last message..." t={t} minHeight={40} />
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <Field label="Action needed" value={c.actionNeeded} onChange={v => onUpdate({ actionNeeded: v })} placeholder="What to do next..." t={t} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 8 }}>
+            <div>
+              <label style={{ fontSize: 11, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Category</label>
+              <select value={c.category} onChange={e => onUpdate({ category: e.target.value as ContactCategory })} style={{
+                background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+                padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 12, outline: 'none', width: '100%',
+              }}>
+                <option value="call-booked">Call Booked</option>
+                <option value="reply-needed">Need to Reply</option>
+                <option value="warm">Warm</option>
+                <option value="awaiting-reply">Awaiting Reply</option>
+                <option value="connected">Connected</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Urgency</label>
+              <select value={c.urgency} onChange={e => onUpdate({ urgency: e.target.value as Urgency })} style={{
+                background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+                padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 12, outline: 'none', width: '100%',
+              }}>
+                <option value="now">Now</option>
+                <option value="soon">Soon</option>
+                <option value="later">Later</option>
+                <option value="waiting">Waiting</option>
+              </select>
+            </div>
+            <Field label="Follow-up" value={c.followUpDate || ''} onChange={v => onUpdate({ followUpDate: v })} placeholder="mid-May..." t={t} />
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <TextArea value={c.notes} onChange={v => onUpdate({ notes: v })} placeholder="Notes..." t={t} minHeight={40} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+            <button onClick={onRemove} style={{
+              background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer',
+              fontFamily: FONT, fontSize: 11, opacity: 0.7,
+            }}>Delete contact</button>
           </div>
         </div>
-        <button onClick={onRemove} style={{
-          background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
-          fontSize: 16, padding: '0 4px', marginLeft: 8,
-        }}>&times;</button>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-        <div>
-          <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 4 }}>Why reach out?</label>
-          <TextArea value={c.whyReachOut} onChange={v => onUpdate({ whyReachOut: v })} placeholder="Why this person matters..." t={t} minHeight={60} />
-        </div>
-        <div>
-          <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 4 }}>Company info</label>
-          <TextArea value={c.companyInfo} onChange={v => onUpdate({ companyInfo: v })} placeholder="Stage, what they do..." t={t} minHeight={60} />
-        </div>
-      </div>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <Field value={c.foundVia} onChange={v => onUpdate({ foundVia: v })} placeholder="Found via..." t={t} />
-          <select value={c.scoutingStatus} onChange={e => onUpdate({ scoutingStatus: e.target.value as ScoutingStatus })} style={{
-            background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-            padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 13, outline: 'none',
-          }}>
-            <option value="researching">Researching</option>
-            <option value="ready">Ready</option>
-            <option value="archived">Archived</option>
-          </select>
-        </div>
-        {c.scoutingStatus === 'ready' && (
-          <button onClick={onMoveToOutreach} style={{
-            background: t.accentSubtle, border: `1px solid ${t.border}`,
-            color: t.textStrong, padding: '6px 14px', borderRadius: 8,
-            cursor: 'pointer', fontFamily: FONT_MEDIUM, fontSize: 12,
-          }}>Move to Outreach &rarr;</button>
-        )}
-      </div>
+      )}
     </div>
   );
 }
 
-// ── Company Outreach Card (grouped by company) ──
-const OUTREACH_STAGES: OutreachStatus[] = ['dm-sent', 'replied', 'call-scheduled', 'call-done', 'connected'];
-const STAGE_LABELS: Record<OutreachStatus, string> = {
-  'queued': 'Queued', 'dm-sent': 'DM Sent', 'replied': 'Replied',
-  'call-scheduled': 'Call Sched.', 'call-done': 'Call Done', 'connected': 'Connected',
+// ── Tasks Tab ──
+const PRIORITY_COLORS: Record<TaskPriority, { bg: string; text: string }> = {
+  high: { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444' },
+  medium: { bg: 'rgba(245, 158, 11, 0.15)', text: '#f59e0b' },
+  low: { bg: 'rgba(107, 114, 128, 0.15)', text: '#6b7280' },
 };
 
-function CompanyOutreachCard({ company, contacts, onUpdate, onRemove, t }: {
-  company: string; contacts: NetworkContact[];
-  onUpdate: (id: string, p: Partial<NetworkContact>) => void;
-  onRemove: (id: string) => void; t: Theme;
+function TasksTab({ tasks, setTasks, t }: {
+  tasks: Task[]; setTasks: (fn: (prev: Task[]) => Task[]) => void; t: Theme;
 }) {
-  // Furthest stage across all contacts in this company
-  const bestStageIdx = Math.max(...contacts.map(c => OUTREACH_STAGES.indexOf(c.outreachStatus)));
+  const [newTitle, setNewTitle] = useState('');
+  const [newPriority, setNewPriority] = useState<TaskPriority>('medium');
+
+  const addTask = () => {
+    if (!newTitle.trim()) return;
+    const now = new Date().toISOString();
+    setTasks(prev => [{ id: Date.now().toString(), title: newTitle.trim(), status: 'todo', priority: newPriority, createdAt: now, updatedAt: now }, ...prev]);
+    setNewTitle('');
+  };
+
+  const updateTask = (id: string, patch: Partial<Task>) => {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...patch, updatedAt: new Date().toISOString() } : t));
+  };
+
+  const today = localToday();
+  const active = tasks.filter(t => t.status !== 'done')
+    .sort((a, b) => {
+      const pOrder = { high: 0, medium: 1, low: 2 };
+      if (pOrder[a.priority] !== pOrder[b.priority]) return pOrder[a.priority] - pOrder[b.priority];
+      if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+      if (a.dueDate) return -1;
+      if (b.dueDate) return 1;
+      return 0;
+    });
+  const done = tasks.filter(t => t.status === 'done').slice(0, 20);
+  const [showDone, setShowDone] = useState(false);
 
   return (
-    <div style={{ border: `1px solid ${t.border}`, borderRadius: 10, overflow: 'hidden' }}>
-      {/* Company header */}
-      <div style={{
-        padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        borderBottom: `1px solid ${t.border}`, background: t.cardBg,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <CompanyLogo company={company} size={24} t={t} />
-          <span style={{ fontFamily: FONT_MEDIUM, color: t.textStrong, fontSize: 14 }}>{company}</span>
-          <span style={{ fontSize: 12, color: t.textMuted }}>{contacts.length} {contacts.length === 1 ? 'person' : 'people'}</span>
-        </div>
-        <a href={getLinkedInSearchUrl(company)} target="_blank" rel="noopener noreferrer" style={{
-          fontSize: 11, color: t.textMuted, textDecoration: 'none',
-          padding: '4px 10px', borderRadius: 6, border: `1px solid ${t.border}`,
-          fontFamily: FONT_MEDIUM, transition: 'all 0.15s',
-        }}
-          onMouseEnter={e => { e.currentTarget.style.color = t.textStrong; e.currentTarget.style.borderColor = t.textMuted; }}
-          onMouseLeave={e => { e.currentTarget.style.color = t.textMuted; e.currentTarget.style.borderColor = t.border; }}
-        >Find People &rarr;</a>
+    <div>
+      {/* Quick add */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        <input value={newTitle} onChange={e => setNewTitle(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && addTask()}
+          placeholder="What needs to get done?"
+          style={{
+            flex: 1, background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+            padding: '10px 14px', borderRadius: 8, fontFamily: FONT, fontSize: 13, outline: 'none',
+          }} />
+        <select value={newPriority} onChange={e => setNewPriority(e.target.value as TaskPriority)} style={{
+          background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+          padding: '8px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 12, outline: 'none',
+        }}>
+          <option value="high">High</option>
+          <option value="medium">Med</option>
+          <option value="low">Low</option>
+        </select>
       </div>
 
-      {/* Company-level progress bar */}
-      <div style={{ display: 'flex', gap: 0, padding: '0 16px', margin: '10px 0 4px' }}>
-        {OUTREACH_STAGES.map((stage, i) => {
-          const isActive = i <= bestStageIdx;
-          return (
-            <div key={stage} style={{
-              flex: 1, height: 3, borderRadius: i === 0 ? '2px 0 0 2px' : i === OUTREACH_STAGES.length - 1 ? '0 2px 2px 0' : 0,
-              background: isActive ? 'rgba(48, 180, 98, 0.35)' : t.accentSubtle,
-              transition: 'background 0.2s',
-            }} />
-          );
-        })}
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 16px 8px', fontSize: 9, color: t.textMuted }}>
-        <span>DM Sent</span><span>Connected</span>
+      {/* Active tasks */}
+      {active.length === 0 && (
+        <p style={{ color: t.textMuted, fontSize: 13, textAlign: 'center', padding: 32 }}>No tasks. Add one above.</p>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {active.map(task => (
+          <TaskRow key={task.id} task={task} today={today} onUpdate={p => updateTask(task.id, p)}
+            onRemove={() => setTasks(prev => prev.filter(t => t.id !== task.id))} t={t} />
+        ))}
       </div>
 
-      {/* Individual contacts */}
-      <div style={{ padding: '0 16px 12px' }}>
-        {contacts.map(c => {
-          const currentIdx = OUTREACH_STAGES.indexOf(c.outreachStatus);
-          return (
-            <div key={c.id} style={{
-              padding: '10px 0', borderTop: `1px solid ${t.border}`,
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontFamily: FONT_MEDIUM, color: t.textStrong, fontSize: 13 }}>
-                    {c.name || 'Unnamed'}
-                  </span>
-                  {c.role && <span style={{ fontSize: 12, color: t.textMuted }}>({c.role})</span>}
-                  {c.lastContactDate && <span style={{ fontSize: 11, color: t.textMuted }}>&middot; {c.lastContactDate}</span>}
-                </div>
-                <button onClick={() => onRemove(c.id)} style={{
-                  background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 14,
-                }}>&times;</button>
-              </div>
-
-              {/* Per-person pipeline */}
-              <div style={{ display: 'flex', gap: 3, marginBottom: 8 }}>
-                {OUTREACH_STAGES.map((stage, i) => {
-                  const isActive = i <= currentIdx;
-                  return (
-                    <button key={stage} onClick={() => onUpdate(c.id, { outreachStatus: stage })} style={{
-                      flex: 1, padding: '4px 2px', borderRadius: 5, fontSize: 9,
-                      fontFamily: FONT_MEDIUM, cursor: 'pointer', transition: 'all 0.15s',
-                      background: isActive ? 'rgba(48, 180, 98, 0.12)' : 'transparent',
-                      border: `1px solid ${isActive ? 'rgba(48, 180, 98, 0.25)' : t.border}`,
-                      color: isActive ? '#2d8a56' : t.textMuted,
-                    }}>{STAGE_LABELS[stage]}</button>
-                  );
-                })}
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
-                <Field value={c.platform} onChange={v => onUpdate(c.id, { platform: v })} placeholder="Platform..." t={t} />
-                <Field value={c.lastContactDate} onChange={v => onUpdate(c.id, { lastContactDate: v })} placeholder="Last contact..." t={t} />
-                <Field value={c.nextAction} onChange={v => onUpdate(c.id, { nextAction: v })} placeholder="Next action..." t={t} />
-              </div>
+      {/* Done tasks */}
+      {done.length > 0 && (
+        <div style={{ marginTop: 20 }}>
+          <button onClick={() => setShowDone(!showDone)} style={{
+            background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
+            fontFamily: FONT, fontSize: 12, padding: '4px 0',
+          }}>{showDone ? 'Hide' : 'Show'} completed ({done.length})</button>
+          {showDone && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8, opacity: 0.6 }}>
+              {done.map(task => (
+                <TaskRow key={task.id} task={task} today={today} onUpdate={p => updateTask(task.id, p)}
+                  onRemove={() => setTasks(prev => prev.filter(t => t.id !== task.id))} t={t} />
+              ))}
             </div>
-          );
-        })}
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TaskRow({ task, today, onUpdate, onRemove, t }: {
+  task: Task; today: string; onUpdate: (p: Partial<Task>) => void;
+  onRemove: () => void; t: Theme;
+}) {
+  const isDone = task.status === 'done';
+  const isOverdue = task.dueDate && task.dueDate < today && !isDone;
+  const pc = PRIORITY_COLORS[task.priority];
+  const [editing, setEditing] = useState(false);
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
+      borderRadius: 8, transition: 'background 0.15s',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.background = t.accentSubtle; }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+    >
+      {/* Checkbox */}
+      <button onClick={() => onUpdate({ status: isDone ? 'todo' : 'done' })} style={{
+        width: 18, height: 18, borderRadius: 4, flexShrink: 0,
+        border: `1.5px solid ${isDone ? 'rgba(48, 180, 98, 0.5)' : t.border}`,
+        background: isDone ? 'rgba(48, 180, 98, 0.15)' : 'transparent',
+        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#2d8a56', fontSize: 11,
+      }}>{isDone ? '✓' : ''}</button>
+
+      {/* Title */}
+      {editing ? (
+        <input value={task.title} onChange={e => onUpdate({ title: e.target.value })}
+          onBlur={() => setEditing(false)} onKeyDown={e => e.key === 'Enter' && setEditing(false)}
+          autoFocus style={{
+            flex: 1, background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+            padding: '4px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 13, outline: 'none',
+          }} />
+      ) : (
+        <span onClick={() => setEditing(true)} style={{
+          flex: 1, fontFamily: FONT, fontSize: 13, cursor: 'text',
+          color: isDone ? t.textMuted : t.text,
+          textDecoration: isDone ? 'line-through' : 'none',
+        }}>{task.title}</span>
+      )}
+
+      {/* Priority pill */}
+      <span style={{
+        fontSize: 10, fontFamily: FONT_MEDIUM, padding: '2px 6px', borderRadius: 4,
+        background: pc.bg, color: pc.text,
+      }}>{task.priority}</span>
+
+      {/* Due date */}
+      {task.dueDate && (
+        <span style={{ fontSize: 11, color: isOverdue ? '#ef4444' : t.textMuted, fontFamily: FONT }}>
+          {new Date(task.dueDate + 'T12:00').toLocaleDateString('en', { month: 'short', day: 'numeric' })}
+        </span>
+      )}
+
+      {/* Delete */}
+      <button onClick={onRemove} style={{
+        background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
+        fontSize: 14, opacity: 0.5, padding: '0 2px',
+      }}>&times;</button>
+    </div>
+  );
+}
+
+// ── Goals Tab ──
+function GoalsTab({ goals, setGoals, t }: {
+  goals: Goal[]; setGoals: (fn: (prev: Goal[]) => Goal[]) => void; t: Theme;
+}) {
+  const addGoal = () => {
+    const now = new Date().toISOString();
+    setGoals(prev => [...prev, {
+      id: Date.now().toString(), title: '', description: '', status: 'active',
+      progress: 0, milestones: [], completedMilestones: [],
+      createdAt: now, updatedAt: now,
+    }]);
+  };
+  const updateGoal = (id: string, patch: Partial<Goal>) => {
+    setGoals(prev => prev.map(g => g.id === id ? { ...g, ...patch, updatedAt: new Date().toISOString() } : g));
+  };
+  const removeGoal = (id: string) => {
+    setGoals(prev => prev.filter(g => g.id !== id));
+  };
+
+  const active = goals.filter(g => g.status === 'active');
+  const other = goals.filter(g => g.status !== 'active');
+
+  return (
+    <div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {active.map(g => <GoalCard key={g.id} goal={g} onUpdate={p => updateGoal(g.id, p)} onRemove={() => removeGoal(g.id)} t={t} />)}
+      </div>
+      {other.length > 0 && (
+        <div style={{ marginTop: 20, opacity: 0.6 }}>
+          <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, marginBottom: 8, display: 'block' }}>Paused / Completed</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {other.map(g => <GoalCard key={g.id} goal={g} onUpdate={p => updateGoal(g.id, p)} onRemove={() => removeGoal(g.id)} t={t} />)}
+          </div>
+        </div>
+      )}
+      <button onClick={addGoal} style={{
+        background: 'transparent', border: `1px dashed ${t.border}`,
+        color: t.textMuted, padding: '12px', borderRadius: 10, width: '100%',
+        cursor: 'pointer', fontFamily: FONT, fontSize: 13, marginTop: 16,
+      }}>+ Add Goal</button>
+    </div>
+  );
+}
+
+function GoalCard({ goal: g, onUpdate, onRemove, t }: {
+  goal: Goal; onUpdate: (p: Partial<Goal>) => void; onRemove: () => void; t: Theme;
+}) {
+  const [newMilestone, setNewMilestone] = useState('');
+  const statusColors = { active: '#2d8a56', paused: '#f59e0b', completed: '#2d8a56' };
+
+  const addMilestone = () => {
+    if (!newMilestone.trim()) return;
+    onUpdate({
+      milestones: [...(g.milestones || []), newMilestone.trim()],
+      completedMilestones: [...(g.completedMilestones || []), false],
+    });
+    setNewMilestone('');
+  };
+
+  const toggleMilestone = (i: number) => {
+    const completed = [...(g.completedMilestones || [])];
+    completed[i] = !completed[i];
+    const doneCount = completed.filter(Boolean).length;
+    const total = g.milestones?.length || 1;
+    onUpdate({ completedMilestones: completed, progress: Math.round((doneCount / total) * 100) });
+  };
+
+  const removeMilestone = (i: number) => {
+    const milestones = [...(g.milestones || [])];
+    const completed = [...(g.completedMilestones || [])];
+    milestones.splice(i, 1);
+    completed.splice(i, 1);
+    const doneCount = completed.filter(Boolean).length;
+    const total = milestones.length || 1;
+    onUpdate({ milestones, completedMilestones: completed, progress: Math.round((doneCount / total) * 100) });
+  };
+
+  return (
+    <div style={{ border: `1px solid ${t.border}`, borderRadius: 10, padding: 16 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 8 }}>
+        <input value={g.title} onChange={e => onUpdate({ title: e.target.value })} placeholder="Goal title..."
+          style={{
+            background: 'transparent', border: 'none', color: t.textStrong,
+            fontFamily: FONT_MEDIUM, fontSize: 14, outline: 'none', flex: 1, padding: 0,
+          }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <span style={{
+            fontSize: 10, fontFamily: FONT_MEDIUM, padding: '2px 8px', borderRadius: 4,
+            background: `${statusColors[g.status]}22`, color: statusColors[g.status],
+          }}>{g.status}</span>
+          <button onClick={onRemove} style={{
+            background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 14,
+          }}>&times;</button>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <div style={{ flex: 1, height: 3, borderRadius: 2, background: t.accentSubtle, overflow: 'hidden' }}>
+          <div style={{ width: `${g.progress}%`, height: '100%', background: 'rgba(48, 180, 98, 0.5)', borderRadius: 2, transition: 'width 0.3s' }} />
+        </div>
+        <span style={{ fontSize: 11, color: t.textMuted, fontFamily: FONT_MEDIUM, minWidth: 32 }}>{g.progress}%</span>
+      </div>
+
+      {/* Description */}
+      <TextArea value={g.description} onChange={v => onUpdate({ description: v })} placeholder="What does this goal look like when done?" t={t} minHeight={40} />
+
+      {/* Milestones */}
+      <div style={{ marginTop: 10 }}>
+        <label style={{ fontSize: 11, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 4 }}>Milestones</label>
+        {(g.milestones || []).map((m, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
+            <button onClick={() => toggleMilestone(i)} style={{
+              width: 14, height: 14, borderRadius: 3, flexShrink: 0,
+              border: `1.5px solid ${g.completedMilestones?.[i] ? 'rgba(48, 180, 98, 0.5)' : t.border}`,
+              background: g.completedMilestones?.[i] ? 'rgba(48, 180, 98, 0.15)' : 'transparent',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#2d8a56', fontSize: 9,
+            }}>{g.completedMilestones?.[i] ? '✓' : ''}</button>
+            <span style={{
+              fontSize: 12, color: g.completedMilestones?.[i] ? t.textMuted : t.text,
+              fontFamily: FONT, textDecoration: g.completedMilestones?.[i] ? 'line-through' : 'none', flex: 1,
+            }}>{m}</span>
+            <button onClick={() => removeMilestone(i)} style={{
+              background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 12, opacity: 0.5,
+            }}>&times;</button>
+          </div>
+        ))}
+        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+          <input value={newMilestone} onChange={e => setNewMilestone(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addMilestone()}
+            placeholder="Add milestone..." style={{
+              flex: 1, background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+              padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 12, outline: 'none',
+            }} />
+        </div>
+      </div>
+
+      {/* Status */}
+      <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+        <select value={g.status} onChange={e => onUpdate({ status: e.target.value as GoalStatus })} style={{
+          background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+          padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 12, outline: 'none',
+        }}>
+          <option value="active">Active</option>
+          <option value="paused">Paused</option>
+          <option value="completed">Completed</option>
+        </select>
       </div>
     </div>
   );
@@ -1127,25 +1441,31 @@ function runOneTimeSeed(
 // ── Main Dashboard ──
 function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: string }) {
   const t = useBlackbookTheme();
-  const [tab, setTab] = useState<'journal' | 'network' | 'ideas'>('journal');
+  const [tab, setTab] = useState<'journal' | 'network' | 'tasks' | 'goals' | 'ideas'>('journal');
   const [journal, setJournal] = useState<JournalEntry[]>(() => load('journal', []));
   const [contacts, setContacts] = useState<NetworkContact[]>(() => load('contacts', DEFAULT_CONTACTS));
   const [ideas, setIdeas] = useState<ProjectIdea[]>(() => load('ideas', []));
+  const [tasks, setTasks] = useState<Task[]>(() => load('tasks', []));
+  const [goals, setGoals] = useState<Goal[]>(() => load('goals', []));
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | 'error' | 'retrying'>('saved');
   const [synced, setSynced] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const saveQueueRef = useRef(new SaveQueue());
 
   // Per-section timestamps — tracks when each section was last edited locally
-  const sectionTs = useRef({ journal: '', contacts: '', ideas: '' });
+  const sectionTs = useRef({ journal: '', contacts: '', ideas: '', tasks: '', goals: '' });
 
   // Refs that always hold the latest state — used by sync and beforeunload
   const journalRef = useRef(journal);
   const contactsRef = useRef(contacts);
   const ideasRef = useRef(ideas);
+  const tasksRef = useRef(tasks);
+  const goalsRef = useRef(goals);
   useEffect(() => { journalRef.current = journal; }, [journal]);
   useEffect(() => { contactsRef.current = contacts; }, [contacts]);
   useEffect(() => { ideasRef.current = ideas; }, [ideas]);
+  useEffect(() => { tasksRef.current = tasks; }, [tasks]);
+  useEffect(() => { goalsRef.current = goals; }, [goals]);
 
   // Wire up save queue status
   useEffect(() => {
@@ -1154,7 +1474,7 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
   }, []);
 
   // Run migration once
-  useEffect(() => { migrateIfNeeded(); }, []);
+  useEffect(() => { migrateIfNeeded(); migrateContactsV3(); }, []);
 
   // Load from cloud on mount — merge with localStorage using per-field timestamps
   useEffect(() => {
@@ -1163,9 +1483,13 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
         journal: load('journal', []),
         contacts: load('contacts', DEFAULT_CONTACTS),
         ideas: load('ideas', []),
+        tasks: load('tasks', []),
+        goals: load('goals', []),
         journalUpdatedAt: load('journalUpdatedAt', ''),
         contactsUpdatedAt: load('contactsUpdatedAt', ''),
         ideasUpdatedAt: load('ideasUpdatedAt', ''),
+        tasksUpdatedAt: load('tasksUpdatedAt', ''),
+        goalsUpdatedAt: load('goalsUpdatedAt', ''),
       };
 
       // Per-field merge: newest timestamp wins per section
@@ -1173,12 +1497,17 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
       let loadedJournal = merged.journal ?? [];
       let loadedContacts = merged.contacts ?? [];
       const loadedIdeas = merged.ideas ?? [];
+      const loadedTasks = merged.tasks ?? [];
+      const loadedGoals = merged.goals ?? [];
 
       // Track section timestamps
+      const now = new Date().toISOString();
       sectionTs.current = {
-        journal: merged.journalUpdatedAt || new Date().toISOString(),
-        contacts: merged.contactsUpdatedAt || new Date().toISOString(),
-        ideas: merged.ideasUpdatedAt || new Date().toISOString(),
+        journal: merged.journalUpdatedAt || now,
+        contacts: merged.contactsUpdatedAt || now,
+        ideas: merged.ideasUpdatedAt || now,
+        tasks: merged.tasksUpdatedAt || now,
+        goals: merged.goalsUpdatedAt || now,
       };
 
       // One-time seeds — only inject if this device hasn't seeded yet
@@ -1211,24 +1540,45 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
         });
       }
 
+      // Migrate contacts to v3 format if needed
+      loadedContacts = loadedContacts.map((c: any) => {
+        if (c.category) return c;
+        let category: ContactCategory = 'warm';
+        let urgency: Urgency = 'later';
+        const os = c.outreachStatus as string;
+        if (os === 'dm-sent') { category = 'awaiting-reply'; urgency = 'waiting'; }
+        else if (os === 'replied') { category = 'reply-needed'; urgency = 'soon'; }
+        else if (os === 'call-scheduled') { category = 'call-booked'; urgency = 'now'; }
+        else if (os === 'connected') { category = 'connected'; urgency = 'later'; }
+        return { ...c, category, urgency, whatTheySaid: c.whatTheySaid || c.notes || '', actionNeeded: c.actionNeeded || c.nextAction || '' };
+      });
+
       // Apply to state and cache locally
       setJournal(loadedJournal);
       setContacts(loadedContacts);
       setIdeas(loadedIdeas);
+      setTasks(loadedTasks);
+      setGoals(loadedGoals);
       save('journal', loadedJournal);
       save('contacts', loadedContacts);
       save('ideas', loadedIdeas);
+      save('tasks', loadedTasks);
+      save('goals', loadedGoals);
       save('journalUpdatedAt', sectionTs.current.journal);
       save('contactsUpdatedAt', sectionTs.current.contacts);
       save('ideasUpdatedAt', sectionTs.current.ideas);
+      save('tasksUpdatedAt', sectionTs.current.tasks);
+      save('goalsUpdatedAt', sectionTs.current.goals);
 
       // Sync back to cloud (seeds/dedup may have cleaned data)
       const payload: BlackbookData = {
         journal: loadedJournal, contacts: loadedContacts, ideas: loadedIdeas,
-        ...sectionTs.current,
+        tasks: loadedTasks, goals: loadedGoals,
         journalUpdatedAt: sectionTs.current.journal,
         contactsUpdatedAt: sectionTs.current.contacts,
         ideasUpdatedAt: sectionTs.current.ideas,
+        tasksUpdatedAt: sectionTs.current.tasks,
+        goalsUpdatedAt: sectionTs.current.goals,
       };
       saveToCloud(passHash, payload);
       setSynced(true);
@@ -1241,9 +1591,13 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
     journal: journalRef.current,
     contacts: contactsRef.current,
     ideas: ideasRef.current,
+    tasks: tasksRef.current,
+    goals: goalsRef.current,
     journalUpdatedAt: sectionTs.current.journal,
     contactsUpdatedAt: sectionTs.current.contacts,
     ideasUpdatedAt: sectionTs.current.ideas,
+    tasksUpdatedAt: sectionTs.current.tasks,
+    goalsUpdatedAt: sectionTs.current.goals,
   }), []);
 
   // Debounced sync with retry queue
@@ -1251,9 +1605,13 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
     save('journal', journalRef.current);
     save('contacts', contactsRef.current);
     save('ideas', ideasRef.current);
+    save('tasks', tasksRef.current);
+    save('goals', goalsRef.current);
     save('journalUpdatedAt', sectionTs.current.journal);
     save('contactsUpdatedAt', sectionTs.current.contacts);
     save('ideasUpdatedAt', sectionTs.current.ideas);
+    save('tasksUpdatedAt', sectionTs.current.tasks);
+    save('goalsUpdatedAt', sectionTs.current.goals);
     setSaveStatus('saving');
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
@@ -1267,9 +1625,13 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
     save('journal', journalRef.current);
     save('contacts', contactsRef.current);
     save('ideas', ideasRef.current);
+    save('tasks', tasksRef.current);
+    save('goals', goalsRef.current);
     save('journalUpdatedAt', sectionTs.current.journal);
     save('contactsUpdatedAt', sectionTs.current.contacts);
     save('ideasUpdatedAt', sectionTs.current.ideas);
+    save('tasksUpdatedAt', sectionTs.current.tasks);
+    save('goalsUpdatedAt', sectionTs.current.goals);
     // Fire-and-forget cloud save via fetch with keepalive
     const payload = buildPayload();
     fetch(`${SUPABASE_URL}/rest/v1/blackbook?pass_hash=eq.${passHash}`, {
@@ -1326,6 +1688,16 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
     sectionTs.current.ideas = new Date().toISOString();
     syncToCloud();
   }, [ideas]);
+  useEffect(() => {
+    if (!synced) return;
+    sectionTs.current.tasks = new Date().toISOString();
+    syncToCloud();
+  }, [tasks]);
+  useEffect(() => {
+    if (!synced) return;
+    sectionTs.current.goals = new Date().toISOString();
+    syncToCloud();
+  }, [goals]);
 
   return (
     <div style={{
@@ -1359,7 +1731,7 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
         display: 'flex', gap: 0, padding: '0 24px',
         borderBottom: `1px solid ${t.border}`,
       }}>
-        {(['journal', 'network', 'ideas'] as const).map(tb => (
+        {(['journal', 'network', 'tasks', 'goals', 'ideas'] as const).map(tb => (
           <button key={tb} onClick={() => setTab(tb)} style={{
             background: 'transparent', border: 'none',
             borderBottom: tab === tb ? `2px solid ${t.textStrong}` : '2px solid transparent',
@@ -1374,6 +1746,8 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
       <div style={{ padding: 24, maxWidth: 940, margin: '0 auto' }}>
         {tab === 'journal' && <JournalTab journal={journal} setJournal={setJournal} t={t} />}
         {tab === 'network' && <NetworkTab contacts={contacts} setContacts={setContacts} t={t} />}
+        {tab === 'tasks' && <TasksTab tasks={tasks} setTasks={setTasks} t={t} />}
+        {tab === 'goals' && <GoalsTab goals={goals} setGoals={setGoals} t={t} />}
         {tab === 'ideas' && <IdeasTab ideas={ideas} setIdeas={setIdeas} t={t} />}
       </div>
     </div>
