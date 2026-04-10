@@ -5307,6 +5307,7 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
   const inputRef = React.useRef<HTMLInputElement>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const isSmallScreen = typeof window !== 'undefined' && window.innerHeight < 850;
+  const isMobileTerminal = typeof window !== 'undefined' && window.innerWidth <= 768;
 
   // Stagger-in elements (text is static, only rotating words animate)
   useEffect(() => {
@@ -5758,15 +5759,22 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
         width: '100%',
         flex: 1,
         display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        padding: isFullscreen ? (isSmallScreen ? '20px 28px 36px 28px' : '28px 48px 50px 48px') : '20px 24px 16px 24px',
+        padding: isFullscreen ? (isSmallScreen ? '20px 28px 36px 28px' : '28px 48px 50px 48px') : (isMobileTerminal ? '12px 16px 10px 16px' : '20px 24px 16px 24px'),
         minWidth: 0, flexShrink: 0,
         overflowY: isFullscreen ? 'auto' : 'hidden',
         overflowX: 'hidden',
         position: 'relative' as const,
       }}>
+        {/* Clock — at top on mobile, centered */}
+        {!isFullscreen && isMobileTerminal && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4px' }}>
+            <ChronographWatch />
+          </div>
+        )}
+
         {/* Hero text */}
         <div>
-          <div style={{ fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: isFullscreen ? '15.5px' : '14px', lineHeight: 1.6, color: isFullscreen ? '#1d1d1f' : '#3a3a3c' }}>
+          <div style={{ fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: isFullscreen ? '15.5px' : '14px', lineHeight: 1.6, color: isFullscreen ? '#1d1d1f' : '#3a3a3c', textAlign: isMobileTerminal && !isFullscreen ? 'center' : undefined }}>
             {isFullscreen ? (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
@@ -5783,10 +5791,10 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
               </div>
             ) : (
               <>
-                <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '36px', color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
+                <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: isMobileTerminal ? '24px' : '36px', color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '2px' }}>
                   Ronniel Gandhe
                 </div>
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '15px', color: 'rgba(255,255,255,0.9)', fontWeight: 700, marginBottom: '14px' }}>
+                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: isMobileTerminal ? '12px' : '15px', color: 'rgba(255,255,255,0.9)', fontWeight: 700, marginBottom: isMobileTerminal ? '12px' : '14px' }}>
                   Software Engineer
                 </div>
               </>
@@ -5888,22 +5896,27 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
               );
             })() : (
               <>
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', lineHeight: 1.7, fontWeight: 500 }}>
-                  Using {showRotating && <RotatingWords />}
-                </div>
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', lineHeight: 1.7, fontWeight: 500 }}>
-                  to create elegant and scalable
-                </div>
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', lineHeight: 1.7, fontWeight: 500 }}>
-                  solutions to real world problems.
+                <div style={{ display: 'flex', flexDirection: 'column', gap: isMobileTerminal ? '6px' : '8px' }}>
+                  <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: isMobileTerminal ? '13px' : '17px', fontWeight: 500 }}>
+                    Using
+                  </div>
+                  <div style={{ height: isMobileTerminal ? '28px' : '32px' }}>
+                    {showRotating && <RotatingWords />}
+                  </div>
+                  <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: isMobileTerminal ? '13px' : '17px', fontWeight: 500 }}>
+                    to create elegant and scalable
+                  </div>
+                  <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: isMobileTerminal ? '13px' : '17px', fontWeight: 500 }}>
+                    solutions to real world problems.
+                  </div>
                 </div>
               </>
             )}
           </div>
         </div>
 
-        {/* Clock — centered in remaining space */}
-        {!isFullscreen && (
+        {/* Clock — centered in remaining space (desktop only, mobile has it at top) */}
+        {!isFullscreen && !isMobileTerminal && (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
             <ChronographWatch />
           </div>
@@ -5917,7 +5930,7 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
               <NowPlaying />
             </div>
             {/* Links — bottom right */}
-            <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '17px', fontWeight: 500, textAlign: 'right', flexShrink: 0, color: 'rgba(255,255,255,0.85)' }}>
+            <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", display: 'flex', flexDirection: 'column', gap: '4px', fontSize: isMobileTerminal ? '15px' : '17px', fontWeight: 500, textAlign: 'right', flexShrink: 0, color: 'rgba(255,255,255,0.85)' }}>
               {[
                 { href: 'https://www.linkedin.com/in/ronniel-gandhe/', text: 'linkedin' },
                 { href: 'https://github.com/ronnielgandhe', text: 'github' },
