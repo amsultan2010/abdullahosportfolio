@@ -7,8 +7,8 @@ function createWindow(id: WindowId, zIndex: number, titleOverride?: string): Win
   const screenW = typeof window !== 'undefined' ? window.innerWidth : 1440;
   const screenH = typeof window !== 'undefined' ? window.innerHeight : 900;
   const isMobile = screenW <= 768;
-  // On mobile, auto-fullscreen all windows
-  if (isMobile) {
+  // On mobile, auto-fullscreen non-terminal windows (terminal stays windowed to show hero)
+  if (isMobile && id !== 'terminal') {
     return {
       id,
       title: titleOverride || defaults.title,

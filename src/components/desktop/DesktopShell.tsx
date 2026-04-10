@@ -6032,12 +6032,12 @@ function Desktop() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Open terminal on boot complete (desktop only — mobile shows hero)
+  // Open terminal on boot complete
   useEffect(() => {
-    if (state.bootComplete && !isMobile && Object.keys(state.windows).length === 0) {
+    if (state.bootComplete && Object.keys(state.windows).length === 0) {
       dispatch({ type: 'OPEN_WINDOW', id: 'terminal' });
     }
-  }, [state.bootComplete, isMobile]);
+  }, [state.bootComplete]);
 
   // Desktop click — deselect all windows
   const handleDesktopClick = useCallback((e: React.MouseEvent) => {
@@ -6155,12 +6155,12 @@ function Desktop() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [state.focusedWindowId, dispatch]);
 
-  // On mobile, any window that opens should be fullscreen
+  // On mobile, fullscreen non-terminal windows (terminal stays windowed to show hero)
   useEffect(() => {
     if (!isMobile) return;
     const wins = Object.values(state.windows);
     for (const w of wins) {
-      if (w.isOpen && !w.isFullscreen && !w.isMinimized) {
+      if (w.id !== 'terminal' && w.isOpen && !w.isFullscreen && !w.isMinimized) {
         dispatch({ type: 'TOGGLE_FULLSCREEN', id: w.id });
       }
     }
@@ -6185,9 +6185,6 @@ function Desktop() {
       {state.bootComplete && (
         <>
           <DesktopMenuBar />
-
-          {/* Mobile Hero — shown when no windows open on mobile */}
-          {isMobile && openWindows.length === 0 && <MobileHero />}
 
           {/* Windows */}
           {openWindows.map(win => {
