@@ -942,6 +942,13 @@ export default function PortfolioApp() {
           pointer-events: none;
           transition: opacity 0.05s linear !important;
         }
+
+        /* ═══ Mobile — hide peel entirely ═══ */
+        @media (max-width: 768px) {
+          .peek-container {
+            display: none !important;
+          }
+        }
       `}</style>
     </ThemeProvider>
   );
