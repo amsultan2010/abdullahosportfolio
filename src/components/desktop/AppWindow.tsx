@@ -8,9 +8,11 @@ interface AppWindowProps {
   darkMode?: boolean;
   titleBarBg?: string;
   titleBarDark?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
-export default function AppWindow({ windowState, children, darkMode, titleBarBg, titleBarDark }: AppWindowProps) {
+export default function AppWindow({ windowState, children, darkMode, titleBarBg, titleBarDark, onMouseEnter, onMouseLeave }: AppWindowProps) {
   const { state, dispatch } = useDesktop();
   const dragRef = useRef<{ startX: number; startY: number; winX: number; winY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number; edge: string } | null>(null);
@@ -121,6 +123,8 @@ export default function AppWindow({ windowState, children, darkMode, titleBarBg,
     <div
       ref={windowRef}
       onMouseDown={handleFocus}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       style={{
         position: 'absolute',
         left: windowState.position.x,

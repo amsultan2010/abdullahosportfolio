@@ -6016,6 +6016,7 @@ function Desktop() {
   const { state, dispatch } = useDesktop();
   const [isMobile, setIsMobile] = useState(false);
   const [bbAuthState, setBbAuthState] = useState(false);
+  const [hoveredWindowId, setHoveredWindowId] = useState<string | null>(null);
   const terminalOrigRef = useRef<{ width: number; height: number } | null>(null);
 
   // Expose bbAuth setter so TerminalContent can notify us
@@ -6178,7 +6179,7 @@ function Desktop() {
         cursor: 'default',
       }}
     >
-      <Background overlayOpacity={['stocks', 'education', 'experience', 'terminal'].includes(state.focusedWindowId as string) ? 0.35 : 0.1} />
+      <Background overlayOpacity={['stocks', 'education', 'experience', 'terminal'].includes(hoveredWindowId as string) ? 0.35 : 0.05} />
       <BootScreen key={state.bootComplete ? 'booted' : 'booting'} />
 
       {state.bootComplete && (
@@ -6199,9 +6200,13 @@ function Desktop() {
             const darkTitleBars = ['projects', 'terminal'];
             const titleBarBg = titleBarBgMap[win.id];
             const titleBarDark = darkTitleBars.includes(win.id);
+            const hoverProps = {
+              onMouseEnter: () => setHoveredWindowId(win.id),
+              onMouseLeave: () => setHoveredWindowId(null),
+            };
             if (win.id === 'detail' && state.activeDetail) {
               return (
-                <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark}>
+                <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark} {...hoverProps}>
                   <DetailPanel
                     detail={state.activeDetail}
                     onClose={() => dispatch({ type: 'CLOSE_DETAIL' })}
@@ -6212,7 +6217,7 @@ function Desktop() {
             }
             if (win.id === 'content' && state.activeContent) {
               return (
-                <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark}>
+                <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark} {...hoverProps}>
                   <ContentViewer
                     content={state.activeContent}
                     onClose={() => dispatch({ type: 'CLOSE_CONTENT' })}
@@ -6222,7 +6227,7 @@ function Desktop() {
               );
             }
             return (
-              <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark}>
+              <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark} {...hoverProps}>
                 <WindowContent id={win.id} />
               </AppWindow>
             );
