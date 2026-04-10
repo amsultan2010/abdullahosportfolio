@@ -1011,55 +1011,106 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
         );
       })()}
 
-      {/* Outreach view */}
-      {view === 'outreach' && (
-        <>
-          {/* Summary counts */}
-          <div style={{ fontSize: 14, color: t.textMuted, marginBottom: 14, fontFamily: FONT, display: 'flex', gap: 14 }}>
-            {CATEGORY_META.map(cm => (
-              <span key={cm.key}><span style={{ color: cm.accent, fontFamily: FONT_MEDIUM }}>{counts[cm.key as keyof typeof counts] || 0}</span> {cm.label.split(' ')[0].toLowerCase()}</span>
-            ))}
+      {/* Pipeline stats */}
+      {view === 'outreach' && (() => {
+        const companies = [...new Set(filtered.map(c => c.company).filter(Boolean))];
+        const hot = filtered.filter(c => c.urgency === 'now' || c.urgency === 'soon').length;
+        const withCompany = filtered.filter(c => c.company).length;
+        return (
+          <div style={{ fontSize: 14, color: t.textMuted, marginBottom: 16, fontFamily: FONT, display: 'flex', gap: 16 }}>
+            <span><span style={{ color: t.textStrong, fontFamily: FONT_MEDIUM }}>{companies.length}</span> companies</span>
+            <span><span style={{ color: '#ef4444', fontFamily: FONT_MEDIUM }}>{hot}</span> hot</span>
+            <span><span style={{ color: t.textStrong, fontFamily: FONT_MEDIUM }}>{withCompany}</span> contacts</span>
           </div>
+        );
+      })()}
 
-          {/* Category sections */}
-          {CATEGORY_META.map(cm => {
-            const sectionContacts = filtered.filter(c => c.category === cm.key);
-            if (sectionContacts.length === 0) return null;
-            const isCollapsed = collapsed[cm.key];
-            return (
-              <div key={cm.key} style={{ marginBottom: 16 }}>
-                <button onClick={() => setCollapsed(p => ({ ...p, [cm.key]: !p[cm.key] }))} style={{
-                  background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0',
-                  display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
-                }}>
-                  <div style={{ width: 3, height: 14, borderRadius: 2, background: cm.accent }} />
-                  <span style={{ fontFamily: FONT_MEDIUM, fontSize: 14, color: t.textStrong, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    {cm.label}
-                  </span>
-                  <span style={{ fontSize: 14, color: t.textMuted }}>({sectionContacts.length})</span>
-                  <span style={{ fontSize: 14, color: t.textMuted, marginLeft: 'auto' }}>{isCollapsed ? '+' : '-'}</span>
-                </button>
-                {!isCollapsed && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
-                    {sectionContacts.map(c => (
-                      <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
-                        onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
-                        onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
-                    ))}
+      {/* Main view — company-centric */}
+      {view === 'outreach' && (() => {
+        // Group by company, then separate out connectors (no company or non-target)
+        const byCompany = filtered.reduce<Record<string, NetworkContact[]>>((acc, c) => {
+          const key = c.company?.trim() || '';
+          if (!acc[key]) acc[key] = [];
+          acc[key].push(c);
+          return acc;
+        }, {});
+
+        const companyGroups = Object.entries(byCompany)
+          .filter(([k]) => k !== '' && k !== 'Personal')
+          .sort((a, b) => {
+            // Sort by hottest contact in each company
+            const tempOrder = (u: string) => u === 'now' ? 0 : u === 'soon' ? 1 : u === 'later' ? 2 : 3;
+            const aHot = Math.min(...a[1].map(c => tempOrder(c.urgency)));
+            const bHot = Math.min(...b[1].map(c => tempOrder(c.urgency)));
+            return aHot - bHot;
+          });
+
+        const noCompany = [...(byCompany[''] || []), ...(byCompany['Personal'] || [])];
+
+        return (
+          <>
+            {/* Target Companies */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {companyGroups.map(([company, people]) => {
+                const isCollapsedCo = collapsed[company];
+                const hotCount = people.filter(c => c.urgency === 'now' || c.urgency === 'soon').length;
+                return (
+                  <div key={company} style={{ border: `1px solid ${t.border}`, borderRadius: 10, overflow: 'hidden' }}>
+                    {/* Company header */}
+                    <button onClick={() => setCollapsed(p => ({ ...p, [company]: !p[company] }))} style={{
+                      width: '100%', background: t.cardBg, border: 'none', cursor: 'pointer',
+                      padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
+                    }}>
+                      <CompanyLogo company={company} size={24} t={t} />
+                      <span style={{ fontFamily: FONT_MEDIUM, fontSize: 15, color: t.textStrong }}>{company}</span>
+                      <span style={{ fontSize: 13, color: t.textMuted }}>{people.length} {people.length === 1 ? 'person' : 'people'}</span>
+                      {hotCount > 0 && <span style={{ fontSize: 11, fontFamily: FONT_MEDIUM, color: '#ef4444', background: '#ef444412', padding: '1px 6px', borderRadius: 4 }}>{hotCount} hot</span>}
+                      <span style={{ fontSize: 14, color: t.textMuted, marginLeft: 'auto' }}>{isCollapsedCo ? '+' : '-'}</span>
+                    </button>
+                    {/* People at this company */}
+                    {!isCollapsedCo && (
+                      <div style={{ padding: '0 4px 4px' }}>
+                        {people.map(c => (
+                          <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
+                            onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
+                            onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </>
-      )}
+                );
+              })}
+            </div>
 
-      {/* Contact Book view */}
+            {/* Connectors & General Network (no company) */}
+            {noCompany.length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                  <div style={{ width: 3, height: 14, borderRadius: 2, background: t.textMuted }} />
+                  <span style={{ fontFamily: FONT_MEDIUM, fontSize: 14, color: t.textStrong, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    General Network
+                  </span>
+                  <span style={{ fontSize: 14, color: t.textMuted }}>({noCompany.length})</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {noCompany.map(c => (
+                    <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
+                      onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
+                      onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        );
+      })()}
+
+      {/* Archived view */}
       {view === 'contacts' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {filteredConnected.length === 0 && (
             <p style={{ color: t.textMuted, fontSize: 14, textAlign: 'center', padding: 32 }}>
-              No contacts in your book yet. Move people here when they're fully connected.
+              No archived contacts.
             </p>
           )}
           {filteredConnected.map(c => (
