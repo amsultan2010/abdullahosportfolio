@@ -57,8 +57,11 @@ interface Meeting {
   contactId?: string;
 }
 
+interface Deliverable { text: string; done: boolean; }
 interface JournalEntry {
   id: string; date: string; body: string; tomorrow: string;
+  deliverables?: Deliverable[];
+  agenda?: string[];
   meetings: Meeting[]; updatedAt: string;
 }
 
@@ -638,31 +641,10 @@ function JournalTab({ journal, setJournal, contacts, t }: {
     }
   };
 
-  const addMeeting = () => {
-    const meetings = [...(entry?.meetings || []), {
-      id: Date.now().toString(), title: '', person: '', time: '', notes: '',
-    }];
-    updateEntry({ meetings });
-  };
-
-  const updateMeeting = (meetingId: string, patch: Partial<Meeting>) => {
-    const meetings = (entry?.meetings || []).map(m => m.id === meetingId ? { ...m, ...patch } : m);
-    updateEntry({ meetings });
-  };
-
-  const removeMeeting = (meetingId: string) => {
-    const meetings = (entry?.meetings || []).filter(m => m.id !== meetingId);
-    updateEntry({ meetings });
-  };
-
   // Past entries (excluding selected date), newest first
   const pastEntries = journal
     .filter(e => e.date !== selectedDate && e.body.trim())
     .sort((a, b) => b.date.localeCompare(a.date));
-
-  const dayLabel = new Date(selectedDate + 'T12:00').toLocaleDateString('en', {
-    weekday: 'long', month: 'long', day: 'numeric',
-  });
 
   return (
     <div>
@@ -677,57 +659,87 @@ function JournalTab({ journal, setJournal, contacts, t }: {
         </div>
       </div>
 
-      {/* Day section — one dark pane for header + meetings + journal */}
+      {/* Day section */}
       <div style={{ background: t.cardBg, borderRadius: 12, border: `0.5px solid ${t.border}`, padding: 16 }}>
-        {/* Day header */}
-        <div style={{ marginBottom: 16 }}>
-          <span style={{ fontSize: 16, color: t.textStrong, fontFamily: FONT_MEDIUM }}>{dayLabel}</span>
-          {selectedDate === today && <span style={{ fontSize: 14, color: t.textMuted, marginLeft: 8 }}>today</span>}
-        </div>
-
-        {/* Meetings */}
+        {/* Deliverables Today — checklist */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM }}>Meetings</label>
-            <button onClick={addMeeting} style={{
-              background: 'none', border: 'none', color: t.textMuted,
-              cursor: 'pointer', fontFamily: FONT, fontSize: 14,
-            }}>+ add</button>
-          </div>
-          {(entry?.meetings || []).length === 0 && (
-            <p style={{ color: t.textMuted, fontSize: 14, opacity: 0.6 }}>No meetings scheduled</p>
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {(entry?.meetings || []).map(m => (
-              <MeetingRow key={m.id} meeting={m}
-                onChange={patch => updateMeeting(m.id, patch)}
-                onRemove={() => removeMeeting(m.id)} contacts={contacts} t={t} />
+          <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 8 }}>Deliverables Today</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {(entry?.deliverables || []).map((d, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+                <button onClick={() => {
+                  const dels = [...(entry?.deliverables || [])];
+                  dels[i] = { ...dels[i], done: !dels[i].done };
+                  updateEntry({ deliverables: dels });
+                }} style={{
+                  width: 18, height: 18, borderRadius: 4, flexShrink: 0, cursor: 'pointer',
+                  border: `1.5px solid ${d.done ? 'rgba(48,180,98,0.5)' : t.border}`,
+                  background: d.done ? 'rgba(48,180,98,0.15)' : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                }}>
+                  {d.done && <span style={{ color: '#2d8a56', fontSize: 12 }}>✓</span>}
+                </button>
+                <span style={{
+                  fontSize: 14, fontFamily: FONT, color: d.done ? t.textMuted : t.text,
+                  textDecoration: d.done ? 'line-through' : 'none', flex: 1,
+                }}>{d.text}</span>
+                <button onClick={() => {
+                  const dels = [...(entry?.deliverables || [])];
+                  dels.splice(i, 1);
+                  updateEntry({ deliverables: dels });
+                }} style={{ background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 12, padding: '0 4px' }}>×</button>
+              </div>
             ))}
           </div>
+          <input
+            placeholder="Add deliverable..."
+            onKeyDown={e => {
+              if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
+                const text = (e.target as HTMLInputElement).value.trim();
+                updateEntry({ deliverables: [...(entry?.deliverables || []), { text, done: false }] });
+                (e.target as HTMLInputElement).value = '';
+              }
+            }}
+            style={{
+              width: '100%', background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+              padding: '8px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
+              outline: 'none', boxSizing: 'border-box', marginTop: 8,
+            }}
+          />
         </div>
 
-      {/* Journal writing */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {/* Tomorrow's Agenda */}
         <div>
-          <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 6 }}>What did you do?</label>
-          <TextArea value={entry?.body || ''} onChange={v => updateEntry({ body: v })} placeholder="Write about your day..." t={t} />
-        </div>
-
-        <div>
-          <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 6 }}>Plan for tomorrow</label>
-          <TextArea value={entry?.tomorrow || ''} onChange={v => updateEntry({ tomorrow: v })} placeholder="What's the plan?" t={t} minHeight={80} />
-        </div>
-
-        {/* Past entries */}
-        {pastEntries.length > 0 && (
-          <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: 16, marginTop: 8 }}>
-            <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, marginBottom: 8, display: 'block' }}>Previous entries</label>
-            {pastEntries.map(e => (
-              <PastEntry key={e.date} entry={e} onSelect={() => setSelectedDate(e.date)} t={t} />
+          <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 8 }}>Tomorrow's Agenda</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {(entry?.agenda || []).map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+                <span style={{ color: t.textMuted, fontSize: 10 }}>•</span>
+                <span style={{ fontSize: 14, fontFamily: FONT, color: t.text, flex: 1 }}>{item}</span>
+                <button onClick={() => {
+                  const items = [...(entry?.agenda || [])];
+                  items.splice(i, 1);
+                  updateEntry({ agenda: items });
+                }} style={{ background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 12, padding: '0 4px' }}>×</button>
+              </div>
             ))}
           </div>
-        )}
-      </div>
+          <input
+            placeholder="Add agenda item..."
+            onKeyDown={e => {
+              if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
+                const text = (e.target as HTMLInputElement).value.trim();
+                updateEntry({ agenda: [...(entry?.agenda || []), text] });
+                (e.target as HTMLInputElement).value = '';
+              }
+            }}
+            style={{
+              width: '100%', background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+              padding: '8px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
+              outline: 'none', boxSizing: 'border-box', marginTop: 8,
+            }}
+          />
+        </div>
       </div>
     </div>
   );
@@ -739,18 +751,29 @@ function UpcomingMeetings({ journal, onSelectDate, t }: {
 }) {
   const today = localToday();
   const upcoming = journal
-    .filter(e => e.date >= today && e.meetings.length > 0)
+    .filter(e => e.date >= today && (e.meetings.length > 0 || (e.agenda && e.agenda.length > 0)))
     .sort((a, b) => a.date.localeCompare(b.date))
-    .flatMap(e => e.meetings.map(m => ({ ...m, date: e.date })))
-    .slice(0, 8);
+    .flatMap(e => [
+      ...e.meetings.map(m => ({ type: 'meeting' as const, ...m, date: e.date })),
+      ...(e.agenda || []).map((a, i) => ({ type: 'agenda' as const, id: `agenda-${e.date}-${i}`, title: a, person: '', time: '', notes: '', date: e.date })),
+    ])
+    .slice(0, 10);
 
-  if (upcoming.length === 0) return null;
+  // Also pull agenda from yesterday that applies to today
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+  const yesterdayEntry = journal.find(e => e.date === yesterdayStr);
+  const carryOver = (yesterdayEntry?.agenda || []).map((a, i) => ({ type: 'agenda' as const, id: `carry-${i}`, title: a, person: '', time: '', notes: '', date: today }));
+  const allUpcoming = [...carryOver, ...upcoming];
+
+  if (allUpcoming.length === 0) return null;
 
   return (
     <div>
       <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 8 }}>Upcoming</label>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {upcoming.map(m => {
+        {allUpcoming.map(m => {
           const isToday = m.date === today;
           const dateLabel = isToday ? 'Today' : new Date(m.date + 'T12:00').toLocaleDateString('en', { month: 'short', day: 'numeric' });
           return (
@@ -765,12 +788,13 @@ function UpcomingMeetings({ journal, onSelectDate, t }: {
             >
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                 <span style={{ fontSize: 14, color: isToday ? '#2d8a56' : t.textMuted, fontFamily: FONT_MEDIUM }}>{dateLabel}</span>
-                {m.time && <span style={{ fontSize: 14, color: t.textMuted }}>{m.time}</span>}
+                {m.type === 'meeting' && m.time && <span style={{ fontSize: 14, color: t.textMuted }}>{m.time}</span>}
+                {m.type === 'agenda' && <span style={{ fontSize: 11, color: t.textMuted, fontFamily: FONT_MEDIUM }}>agenda</span>}
               </div>
-              <span style={{ fontSize: 14, fontWeight: 600, color: t.textStrong }}>{m.title || 'Untitled meeting'}</span>
-              {m.person && <span style={{ fontSize: 14, fontWeight: 500, color: t.text }}>{m.person}</span>}
-              {m.link && (
-                <a href={m.link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{
+              <span style={{ fontSize: 14, fontWeight: 600, color: t.textStrong }}>{m.title || (m.type === 'meeting' ? 'Untitled meeting' : 'Untitled')}</span>
+              {m.type === 'meeting' && m.person && <span style={{ fontSize: 14, fontWeight: 500, color: t.text }}>{m.person}</span>}
+              {m.type === 'meeting' && (m as any).link && (
+                <a href={(m as any).link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{
                   fontSize: 11, fontFamily: FONT_MEDIUM, color: '#2d8a56', textDecoration: 'none',
                   marginTop: 2,
                 }}>Join meeting</a>
@@ -863,6 +887,7 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [pasteUrl, setPasteUrl] = useState('');
   const [pasteStatus, setPasteStatus] = useState<string | null>(null);
+  const [justAdded, setJustAdded] = useState<string | null>(null);
 
   const updateContact = (id: string, patch: Partial<NetworkContact>) => {
     setContacts(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
@@ -878,6 +903,10 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
       whatTheySaid: '', actionNeeded: '', notes: '', createdAt: new Date().toISOString(),
     }]);
     setExpandedCard(id);
+    setJustAdded(id);
+    setTimeout(() => {
+      document.getElementById(`contact-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   };
 
   const addFromLinkedIn = (url: string) => {
@@ -900,8 +929,12 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
       notes: '', createdAt: new Date().toISOString(),
     }]);
     setExpandedCard(id);
+    setJustAdded(id);
     setPasteUrl('');
     setPasteStatus(`Added ${parsed.name}`);
+    setTimeout(() => {
+      document.getElementById(`contact-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
     setTimeout(() => setPasteStatus(null), 2500);
     // Try to fetch company in background
     tryFetchLinkedInCompany(parsed.linkedinUrl, (company) => {
@@ -932,7 +965,11 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
 
   // Sort: green first, yellow middle, red last
   const lightOrder = (c: NetworkContact) => { const l = getLight(c.urgency); return l === 'green' ? 0 : l === 'yellow' ? 1 : 2; };
-  const sorted = [...filtered].sort((a, b) => lightOrder(a) - lightOrder(b));
+  const sorted = [...filtered].sort((a, b) => {
+    if (a.id === justAdded) return -1;
+    if (b.id === justAdded) return 1;
+    return lightOrder(a) - lightOrder(b);
+  });
   const greenCount = sorted.filter(c => getLight(c.urgency) === 'green').length;
   const yellowCount = sorted.filter(c => getLight(c.urgency) === 'yellow').length;
   const redCount = sorted.filter(c => getLight(c.urgency) === 'red').length;
@@ -949,9 +986,15 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
       {/* Contact list — flat, sorted by light */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {sorted.map(c => (
-          <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
-            onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
-            onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
+          <div key={c.id} id={`contact-${c.id}`}>
+            <ContactCard contact={c} expanded={expandedCard === c.id}
+              onToggle={() => {
+                const collapsing = expandedCard === c.id;
+                setExpandedCard(collapsing ? null : c.id);
+                if (collapsing && c.id === justAdded) setJustAdded(null);
+              }}
+              onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
+          </div>
         ))}
       </div>
 
@@ -1664,15 +1707,15 @@ function runOneTimeSeed(
 }
 
 // ── Main Dashboard ──
-export function BlackbookDashboard({ onClose, passHash, transparent }: { onClose: () => void; passHash: string; transparent?: boolean }) {
+export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }: { onClose: () => void; onLogout?: () => void; passHash: string; transparent?: boolean }) {
   const baseTheme = useBlackbookTheme();
   // When transparent, override backgrounds to be see-through
   // Apple Control Center style: dark overlay bg, light frosted cards, dark text
   const t = transparent ? {
     ...baseTheme,
     bg: 'rgba(0,0,0,0.35)',
-    cardBg: 'rgba(255,255,255,0.6)',
-    inputBg: 'rgba(255,255,255,0.5)',
+    cardBg: 'rgba(255,255,255,0.7)',
+    inputBg: 'rgba(255,255,255,0.55)',
     border: 'rgba(0,0,0,0.12)',
     text: '#1c1917',
     textStrong: '#0c0a09',
@@ -1946,12 +1989,16 @@ export function BlackbookDashboard({ onClose, passHash, transparent }: { onClose
       zIndex: transparent ? undefined : 10001,
       background: t.bg, color: t.text, fontFamily: FONT,
       fontSize: 15, overflow: 'auto',
+      backdropFilter: transparent ? 'blur(40px)' : undefined,
+      WebkitBackdropFilter: transparent ? 'blur(40px)' : undefined,
     }}>
       {/* Header + Tabs — dark bar */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 10,
-        background: transparent ? 'transparent' : t.bg,
-        borderBottom: transparent ? 'none' : `1px solid ${t.border}`,
+        background: transparent ? 'rgba(0,0,0,0.25)' : t.bg,
+        backdropFilter: transparent ? 'blur(30px)' : undefined,
+        WebkitBackdropFilter: transparent ? 'blur(30px)' : undefined,
+        borderBottom: transparent ? '0.5px solid rgba(255,255,255,0.1)' : `1px solid ${t.border}`,
       }}>
         <div style={{
           padding: '14px 24px',
@@ -1963,8 +2010,13 @@ export function BlackbookDashboard({ onClose, passHash, transparent }: { onClose
               {new Date().toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <SaveIndicator status={saveStatus} t={t} />
+            {onLogout && <button onClick={onLogout} style={{
+              background: transparent ? 'rgba(255,255,255,0.12)' : t.accentSubtle, border: 'none',
+              color: transparent ? 'rgba(255,255,255,0.8)' : t.textMuted, cursor: 'pointer', padding: '5px 12px', borderRadius: 6,
+              fontSize: 14, fontFamily: FONT_MEDIUM,
+            }}>🔒 Lock</button>}
             <button onClick={onClose} style={{
               background: transparent ? 'rgba(255,255,255,0.12)' : t.accentSubtle, border: 'none',
               color: transparent ? 'rgba(255,255,255,0.8)' : t.textMuted, cursor: 'pointer', padding: '5px 12px', borderRadius: 6,
@@ -2032,7 +2084,7 @@ export default function Blackbook() {
       {state === 'password' && (
         <PasswordGate onUnlock={handleUnlock} onClose={() => setState('hidden')} />
       )}
-      {state === 'open' && <BlackbookDashboard onClose={() => setState('hidden')} passHash={passHash} />}
+      {state === 'open' && <BlackbookDashboard onClose={() => setState('hidden')} onLogout={() => setState('password')} passHash={passHash} transparent />}
     </>
   );
 }
