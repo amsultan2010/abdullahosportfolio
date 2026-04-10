@@ -157,10 +157,10 @@ export default function AppWindow({ windowState, children, darkMode, titleBarBg,
           display: 'flex',
           alignItems: 'center',
           padding: '0 12px',
-          borderBottom: titleBarDark ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid rgba(0, 0, 0, 0.06)',
+          borderBottom: titleBarDark ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid rgba(0, 0, 0, 0.04)',
           cursor: windowState.isFullscreen ? 'default' : 'grab',
           userSelect: 'none',
-          background: titleBarBg || 'rgba(255, 255, 255, 0.3)',
+          background: titleBarBg || 'transparent',
         }}
       >
         {/* Traffic lights */}

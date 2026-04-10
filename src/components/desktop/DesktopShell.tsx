@@ -578,84 +578,69 @@ function QuickStartTiles({ runCommand }: { runCommand: (cmd: string, source?: 'u
 // ── Animated Explore — Apple-style typing animation ──
 function AnimatedExplore({ runCommand }: { runCommand: (cmd: string, source?: 'ui' | 'typed') => void }) {
   const commands = [
-    { label: 'experience', short: 'exp', color: '#c084fc', cmd: 'experience' },
-    { label: 'education', short: 'edu', color: '#60a5fa', cmd: 'education' },
-    { label: 'my thoughts', short: 'thoughts', color: '#fbbf24', cmd: 'mythoughts' },
-    { label: 'projects', short: 'code', color: '#4ade80', cmd: 'projects' },
-    { label: 'calendar', short: 'meet', color: '#22d3ee', cmd: 'calendar' },
+    { short: 'exp', cmd: 'experience' },
+    { short: 'edu', cmd: 'education' },
+    { short: 'thoughts', cmd: 'mythoughts' },
+    { short: 'code', cmd: 'projects' },
+    { short: 'meet', cmd: 'calendar' },
   ];
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [typed, setTyped] = useState('');
-  const [phase, setPhase] = useState<'typing' | 'hold' | 'erasing'>('typing');
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [typed, setTyped] = useState('');
+  const targetWord = hoveredIdx !== null ? commands[hoveredIdx].short : '';
 
+  // Type out the hovered word, erase when unhovered
   useEffect(() => {
-    const current = commands[activeIdx];
-    let timer: ReturnType<typeof setTimeout>;
-
-    if (phase === 'typing') {
-      if (typed.length < current.short.length) {
-        timer = setTimeout(() => setTyped(current.short.slice(0, typed.length + 1)), 80 + Math.random() * 60);
-      } else {
-        timer = setTimeout(() => setPhase('hold'), 1800);
+    if (hoveredIdx !== null) {
+      const word = commands[hoveredIdx].short;
+      if (typed.length < word.length) {
+        const t = setTimeout(() => setTyped(word.slice(0, typed.length + 1)), 50);
+        return () => clearTimeout(t);
       }
-    } else if (phase === 'hold') {
-      timer = setTimeout(() => setPhase('erasing'), 0);
-    } else if (phase === 'erasing') {
+    } else {
       if (typed.length > 0) {
-        timer = setTimeout(() => setTyped(typed.slice(0, -1)), 40);
-      } else {
-        setActiveIdx((activeIdx + 1) % commands.length);
-        setPhase('typing');
+        const t = setTimeout(() => setTyped(typed.slice(0, -1)), 30);
+        return () => clearTimeout(t);
       }
     }
-    return () => clearTimeout(timer);
-  }, [typed, phase, activeIdx]);
-
-  const current = commands[activeIdx];
-  const focusIdx = hoveredIdx !== null ? hoveredIdx : activeIdx;
-  const focusColor = commands[focusIdx].color;
+  }, [typed, hoveredIdx]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-      {/* Typing area — always one line */}
-      <div style={{ display: 'flex', alignItems: 'baseline', whiteSpace: 'nowrap', fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-        <span style={{ fontSize: '26px', fontWeight: 700, color: focusColor, letterSpacing: '-0.5px', transition: 'color 0.3s' }}>
-          {hoveredIdx !== null ? commands[hoveredIdx].short : typed}
-        </span>
-        {hoveredIdx === null && (
-          <span style={{
-            display: 'inline-block', width: '2px', height: '26px', background: focusColor,
-            marginLeft: '1px', animation: 'blink 1s step-end infinite', verticalAlign: 'text-bottom',
-            opacity: 0.8, transition: 'background 0.3s',
-          }} />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', width: '100%' }}>
+      {/* Typed text — shows on hover */}
+      <div style={{ minHeight: '28px', display: 'flex', alignItems: 'baseline', fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+        {typed && (
+          <span style={{ fontSize: '22px', fontWeight: 700, color: '#1d1d1f', letterSpacing: '-0.5px' }}>
+            {typed}
+          </span>
         )}
+        <span style={{
+          display: 'inline-block', width: '2px', height: '22px',
+          background: '#1d1d1f', marginLeft: '2px',
+          animation: 'blink 1s step-end infinite', verticalAlign: 'text-bottom',
+          opacity: typed ? 0.8 : 0.3,
+        }} />
       </div>
 
-      {/* Command pills — hover to focus */}
+      {/* Command pills — hover to type, click to open */}
       <div
-        style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap', justifyContent: 'center' }}
+        style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}
         onMouseLeave={() => setHoveredIdx(null)}
       >
         {commands.map((item, i) => {
-          const isActive = i === activeIdx && hoveredIdx === null;
           const isHovered = i === hoveredIdx;
-          const isFocused = isActive || isHovered;
-          const isDimmed = hoveredIdx !== null && !isHovered;
           return (
             <div
               key={item.cmd}
               onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
-              onMouseEnter={() => setHoveredIdx(i)}
+              onMouseEnter={() => { setHoveredIdx(i); setTyped(''); }}
               style={{
                 padding: '5px 14px', borderRadius: '16px', cursor: 'pointer',
-                fontSize: '12px', fontWeight: 600, fontFamily: "'SF Pro Text', -apple-system, sans-serif",
-                color: isFocused ? '#fff' : isDimmed ? 'rgba(0,0,0,0.2)' : item.color,
-                background: isFocused ? item.color : 'transparent',
-                border: `1.5px solid ${isFocused ? item.color : isDimmed ? 'rgba(0,0,0,0.04)' : 'rgba(0,0,0,0.08)'}`,
-                transition: 'all 0.35s cubic-bezier(.16,1,.3,1)',
-                transform: isFocused ? 'scale(1.1)' : isDimmed ? 'scale(0.95)' : 'scale(1)',
-                opacity: isDimmed ? 0.5 : 1,
+                fontSize: '13px', fontWeight: isHovered ? 700 : 500,
+                fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+                color: isHovered ? '#1d1d1f' : 'rgba(0,0,0,0.4)',
+                background: isHovered ? 'rgba(0,0,0,0.06)' : 'transparent',
+                border: `1px solid ${isHovered ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.08)'}`,
+                transition: 'all 0.2s ease',
               }}
             >
               {item.short}
@@ -1384,26 +1369,26 @@ function NowPlaying() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: 1 }}>
         {active.albumArt ? (
-          <img src={active.albumArt} alt="" style={{ width: 42, height: 42, borderRadius: 6, flexShrink: 0 }} />
+          <img src={active.albumArt} alt="" style={{ width: 52, height: 52, borderRadius: 8, flexShrink: 0 }} />
         ) : (
-          <a href={DEV_PLAYLIST_URL} target="_blank" rel="noopener noreferrer" style={{ width: 42, height: 42, borderRadius: 6, flexShrink: 0, background: 'rgba(29, 185, 84, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
+          <a href={DEV_PLAYLIST_URL} target="_blank" rel="noopener noreferrer" style={{ width: 52, height: 52, borderRadius: 8, flexShrink: 0, background: 'rgba(29, 185, 84, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
           </a>
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: '#1d1d1f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+          <div style={{ fontSize: '16px', fontWeight: 700, color: '#1d1d1f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
             {active.title}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(0,0,0,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif", flex: 1, minWidth: 0 }}>
+            <span style={{ fontSize: '14px', fontWeight: 500, color: 'rgba(0,0,0,0.75)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif", flex: 1, minWidth: 0 }}>
               {active.artist}
             </span>
-            <span style={{ fontSize: '10px', fontWeight: 500, color: 'rgba(0,0,0,0.35)', fontFamily: "'SF Pro Text', -apple-system, sans-serif", flexShrink: 0 }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(0,0,0,0.6)', fontFamily: "'SF Pro Text', -apple-system, sans-serif", flexShrink: 0 }}>
               {fmtTime(progress)} / {fmtTime(active.durationMs)}
             </span>
           </div>
-          <div style={{ marginTop: '4px', height: 2, background: 'rgba(0,0,0,0.08)', borderRadius: 1, overflow: 'hidden' }}>
-            <div style={{ width: `${pct}%`, height: '100%', background: '#1DB954', borderRadius: 1, transition: 'width 1s linear' }} />
+          <div style={{ marginTop: '6px', height: 3, background: 'rgba(0,0,0,0.12)', borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{ width: `${pct}%`, height: '100%', background: '#fff', borderRadius: 1, transition: 'width 1s linear' }} />
           </div>
         </div>
       </div>
@@ -5703,10 +5688,10 @@ function TerminalContent() {
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden', position: 'relative' as const }}>
       {/* Left — hero + portfolio (main focus) */}
       <div style={{
-        width: isFullscreen ? '100%' : undefined,
-        flex: isFullscreen ? 'none' : 1,
+        width: '100%',
+        flex: 1,
         display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        padding: isFullscreen ? (isSmallScreen ? '20px 28px 36px 28px' : '28px 48px 50px 48px') : '20px 16px 12px 24px', borderRight: isFullscreen ? 'none' : '1px solid rgba(0,0,0,0.04)',
+        padding: isFullscreen ? (isSmallScreen ? '20px 28px 36px 28px' : '28px 48px 50px 48px') : '20px 24px 16px 24px',
         minWidth: 0, flexShrink: 0,
         overflowY: isFullscreen ? 'auto' : 'hidden',
         overflowX: 'hidden',
@@ -5850,58 +5835,30 @@ function TerminalContent() {
           </div>
         </div>
 
-        {/* Chronograph watch — fills the blank space */}
+        {/* Clock — centered in remaining space */}
         {!isFullscreen && (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
             <ChronographWatch />
           </div>
         )}
 
-        {/* Contact links — minimal, bold */}
-        <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '14px', fontWeight: 600, marginTop: '8px' }}>
-          <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#1d1d1f', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>💼 linkedin.com/in/ronniel-gandhe</a>
-          <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#1d1d1f', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 github.com/ronnielgandhe</a>
-          <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#1d1d1f', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ ronnielgandhe@gmail.com</a>
-          <span style={{ color: '#1d1d1f' }}>📍 Waterloo, ON</span>
-        </div>
-      </div>
-
-      {/* Right column — seamless */}
-      <div ref={scrollRef} onClick={() => inputRef.current?.focus()} style={{
-        flex: isFullscreen ? 'none' : 1,
-        width: isFullscreen ? 0 : undefined,
-        flexShrink: 0,
-        display: isFullscreen ? 'none' : 'flex', flexDirection: 'column',
-        cursor: 'text', fontFamily: "'SF Pro Text', -apple-system, sans-serif", overflow: 'hidden',
-        padding: '12px 16px 10px 8px',
-        gap: '6px',
-      }}>
-        {isFullscreen ? null : (
-          <>
-            {/* Stock ticker — seamless, clickable */}
-            <div
-              style={{ padding: '8px 0', cursor: 'pointer', borderRadius: 8, transition: 'background 0.15s' }}
-              onClick={(e) => { e.stopPropagation(); openWindow('stocks'); }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.03)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-            >
-              <CyclingStock />
-            </div>
-
-            <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)', margin: '4px 0' }} />
-
-            {/* Animated typing explore — fills space */}
-            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <AnimatedExplore runCommand={runCommand} />
-            </div>
-
-            <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)', margin: '4px 0' }} />
-
-            {/* Now Playing — seamless */}
-            <div style={{ padding: '4px 0' }}>
-              <NowPlaying />
-            </div>
-          </>
+        {/* Contact links — bottom right */}
+        {!isFullscreen && (
+          <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '15px', fontWeight: 400, alignSelf: 'flex-end', textAlign: 'right' }}>
+            {[
+              { href: 'https://www.linkedin.com/in/ronniel-gandhe/', text: 'linkedin.com/in/ronniel-gandhe' },
+              { href: 'https://github.com/ronnielgandhe', text: 'github.com/ronnielgandhe' },
+              { href: 'mailto:ronnielgandhe@gmail.com', text: 'ronnielgandhe@gmail.com' },
+            ].map(link => (
+              <a key={link.href} href={link.href} target="_blank" rel="noopener"
+                style={{ color: '#1d1d1f', textDecoration: 'none', transition: 'font-weight 0.15s' }}
+                onClick={e => e.stopPropagation()}
+                onMouseEnter={e => (e.currentTarget.style.fontWeight = '700')}
+                onMouseLeave={e => (e.currentTarget.style.fontWeight = '400')}
+              >{link.text}</a>
+            ))}
+            <span style={{ color: 'rgba(0,0,0,0.5)' }}>Waterloo, ON</span>
+          </div>
         )}
       </div>
 

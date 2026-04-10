@@ -32,7 +32,7 @@ export default function DesktopDock() {
   const externalItems: DockItem[] = [
     { id: 'github', label: 'GitHub', icon: <AppIcon gradient="linear-gradient(135deg, #2d2d2d 0%, #434343 100%)" iconEl={<BsGithub size={24} color="white" />} />, isExternal: true, href: 'https://github.com/ronnielgandhe' },
     { id: 'email' as any, label: 'Email Me', icon: <DockImage src="/usethismailicon.png" alt="Mail" cropScale={1.2} /> },
-    { id: 'spotify', label: 'Dev Playlist', icon: <DockImage src="/spotify.png" alt="Spotify" />, isExternal: true, href: 'https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8' },
+    { id: 'spotify', label: 'Dev Playlist', icon: <DockImage src="/spotify_logo_icon_189218.png" alt="Spotify" cropScale={1.45} />, isExternal: true, href: 'https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8' },
   ];
 
   const allItems = [...windowItems, { id: 'divider' as any, label: '', icon: null }, ...externalItems];
