@@ -53,7 +53,7 @@ function useBlackbookTheme(): Theme {
 
 // ── Types ──
 interface Meeting {
-  id: string; title: string; person: string; time: string; notes: string;
+  id: string; title: string; person: string; time: string; notes: string; link?: string;
 }
 
 interface JournalEntry {
@@ -530,14 +530,26 @@ function MeetingRow({ meeting, onChange, onRemove, t }: {
   meeting: Meeting; onChange: (patch: Partial<Meeting>) => void; onRemove: () => void; t: Theme;
 }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr auto', gap: 8, alignItems: 'start' }}>
-      <Field value={meeting.time} onChange={v => onChange({ time: v })} placeholder="2:00 PM" t={t} />
-      <Field value={meeting.title} onChange={v => onChange({ title: v })} placeholder="Meeting title" t={t} />
-      <Field value={meeting.person} onChange={v => onChange({ person: v })} placeholder="With..." t={t} />
-      <button onClick={onRemove} style={{
-        background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
-        fontSize: 14, padding: '6px 4px', marginTop: 1,
-      }}>&times;</button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr auto', gap: 8, alignItems: 'start' }}>
+        <Field value={meeting.time} onChange={v => onChange({ time: v })} placeholder="2:00 PM" t={t} />
+        <Field value={meeting.title} onChange={v => onChange({ title: v })} placeholder="Meeting title" t={t} />
+        <Field value={meeting.person} onChange={v => onChange({ person: v })} placeholder="With..." t={t} />
+        <button onClick={onRemove} style={{
+          background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
+          fontSize: 14, padding: '6px 4px', marginTop: 1,
+        }}>&times;</button>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Field value={meeting.link || ''} onChange={v => onChange({ link: v })} placeholder="Meeting link (Zoom, Google Meet...)" t={t} />
+        {meeting.link && (
+          <a href={meeting.link} target="_blank" rel="noopener noreferrer" style={{
+            fontSize: 12, fontFamily: FONT_MEDIUM, color: '#2d8a56', textDecoration: 'none',
+            padding: '5px 10px', borderRadius: 6, background: 'rgba(48, 180, 98, 0.1)',
+            border: '1px solid rgba(48, 180, 98, 0.2)', whiteSpace: 'nowrap', flexShrink: 0,
+          }}>Join</a>
+        )}
+      </div>
     </div>
   );
 }
@@ -700,6 +712,12 @@ function UpcomingMeetings({ journal, onSelectDate, t }: {
               </div>
               <span style={{ fontSize: 14, color: t.text }}>{m.title || 'Untitled meeting'}</span>
               {m.person && <span style={{ fontSize: 14, color: t.textMuted }}>{m.person}</span>}
+              {m.link && (
+                <a href={m.link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{
+                  fontSize: 11, fontFamily: FONT_MEDIUM, color: '#2d8a56', textDecoration: 'none',
+                  marginTop: 2,
+                }}>Join meeting</a>
+              )}
             </button>
           );
         })}
