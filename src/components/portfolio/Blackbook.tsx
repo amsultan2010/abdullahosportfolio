@@ -626,7 +626,7 @@ function JournalTab({ journal, setJournal, contacts, t }: {
   }, []);
 
   const entry = journal.find(e => e.date === selectedDate);
-  const journalDates = new Set(journal.map(e => e.date));
+  const journalDates = new Set(journal.filter(e => e.body?.trim() || (e.agenda && e.agenda.length > 0) || (e.deliverables && e.deliverables.length > 0)).map(e => e.date));
 
   const updateEntry = (patch: Partial<JournalEntry>) => {
     if (entry) {
@@ -661,49 +661,18 @@ function JournalTab({ journal, setJournal, contacts, t }: {
 
       {/* Day section */}
       <div style={{ background: t.cardBg, borderRadius: 12, border: `0.5px solid ${t.border}`, padding: 16 }}>
-        {/* Deliverables Today — checklist */}
+        {/* Summary / Notes */}
         <div style={{ marginBottom: 20 }}>
-          <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 8 }}>Deliverables Today</label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {(entry?.deliverables || []).map((d, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
-                <button onClick={() => {
-                  const dels = [...(entry?.deliverables || [])];
-                  dels[i] = { ...dels[i], done: !dels[i].done };
-                  updateEntry({ deliverables: dels });
-                }} style={{
-                  width: 18, height: 18, borderRadius: 4, flexShrink: 0, cursor: 'pointer',
-                  border: `1.5px solid ${d.done ? 'rgba(48,180,98,0.5)' : t.border}`,
-                  background: d.done ? 'rgba(48,180,98,0.15)' : 'transparent',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                }}>
-                  {d.done && <span style={{ color: '#2d8a56', fontSize: 12 }}>✓</span>}
-                </button>
-                <span style={{
-                  fontSize: 14, fontFamily: FONT, color: d.done ? t.textMuted : t.text,
-                  textDecoration: d.done ? 'line-through' : 'none', flex: 1,
-                }}>{d.text}</span>
-                <button onClick={() => {
-                  const dels = [...(entry?.deliverables || [])];
-                  dels.splice(i, 1);
-                  updateEntry({ deliverables: dels });
-                }} style={{ background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 12, padding: '0 4px' }}>×</button>
-              </div>
-            ))}
-          </div>
-          <input
-            placeholder="Add deliverable..."
-            onKeyDown={e => {
-              if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
-                const text = (e.target as HTMLInputElement).value.trim();
-                updateEntry({ deliverables: [...(entry?.deliverables || []), { text, done: false }] });
-                (e.target as HTMLInputElement).value = '';
-              }
-            }}
+          <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 8 }}>Summary</label>
+          <textarea
+            value={entry?.body || ''}
+            onChange={e => updateEntry({ body: e.target.value })}
+            placeholder="What did you do today? Jot down notes, wins, blockers..."
+            rows={4}
             style={{
               width: '100%', background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-              padding: '8px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
-              outline: 'none', boxSizing: 'border-box', marginTop: 8,
+              padding: '10px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
+              outline: 'none', boxSizing: 'border-box', resize: 'vertical', lineHeight: 1.5,
             }}
           />
         </div>
@@ -750,22 +719,28 @@ function UpcomingMeetings({ journal, onSelectDate, t }: {
   journal: JournalEntry[]; onSelectDate: (d: string) => void; t: Theme;
 }) {
   const today = localToday();
+  // Helper: get next day from a YYYY-MM-DD string
+  const nextDay = (dateStr: string) => {
+    const d = new Date(dateStr + 'T12:00');
+    d.setDate(d.getDate() + 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
   const upcoming = journal
-    .filter(e => e.date >= today && (e.meetings.length > 0 || (e.agenda && e.agenda.length > 0)))
+    .filter(e => e.date >= today || (e.agenda && e.agenda.length > 0))
     .sort((a, b) => a.date.localeCompare(b.date))
     .flatMap(e => [
-      ...e.meetings.map(m => ({ type: 'meeting' as const, ...m, date: e.date })),
-      ...(e.agenda || []).map((a, i) => ({ type: 'agenda' as const, id: `agenda-${e.date}-${i}`, title: a, person: '', time: '', notes: '', date: e.date })),
+      // Meetings show on their own date
+      ...(e.date >= today ? e.meetings.map(m => ({ type: 'meeting' as const, ...m, date: e.date })) : []),
+      // Agenda items are "for tomorrow" so shift date forward by 1 day
+      ...(e.agenda || [])
+        .map((a, i) => ({ type: 'agenda' as const, id: `agenda-${e.date}-${i}`, title: a, person: '', time: '', notes: '', date: nextDay(e.date) }))
+        .filter(a => a.date >= today),
     ])
+    .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 10);
 
-  // Also pull agenda from yesterday that applies to today
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-  const yesterdayEntry = journal.find(e => e.date === yesterdayStr);
-  const carryOver = (yesterdayEntry?.agenda || []).map((a, i) => ({ type: 'agenda' as const, id: `carry-${i}`, title: a, person: '', time: '', notes: '', date: today }));
-  const allUpcoming = [...carryOver, ...upcoming];
+  const allUpcoming = upcoming;
 
   if (allUpcoming.length === 0) return null;
 
@@ -1457,14 +1432,6 @@ function GoalCard({ goal: g, onUpdate, onRemove, t }: {
         </div>
       </div>
 
-      {/* Progress bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <div style={{ flex: 1, height: 3, borderRadius: 2, background: t.accentSubtle, overflow: 'hidden' }}>
-          <div style={{ width: `${g.progress}%`, height: '100%', background: 'rgba(48, 180, 98, 0.5)', borderRadius: 2, transition: 'width 0.3s' }} />
-        </div>
-        <span style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, minWidth: 32 }}>{g.progress}%</span>
-      </div>
-
       {/* Description */}
       <TextArea value={g.description} onChange={v => onUpdate({ description: v })} placeholder="What does this goal look like when done?" t={t} minHeight={40} />
 
@@ -1995,10 +1962,10 @@ export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }:
       {/* Header + Tabs — dark bar */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 10,
-        background: transparent ? 'rgba(0,0,0,0.25)' : t.bg,
-        backdropFilter: transparent ? 'blur(30px)' : undefined,
-        WebkitBackdropFilter: transparent ? 'blur(30px)' : undefined,
-        borderBottom: transparent ? '0.5px solid rgba(255,255,255,0.1)' : `1px solid ${t.border}`,
+        background: transparent ? t.bg : t.bg,
+        backdropFilter: transparent ? 'blur(40px)' : undefined,
+        WebkitBackdropFilter: transparent ? 'blur(40px)' : undefined,
+        borderBottom: transparent ? '0.5px solid rgba(255,255,255,0.06)' : `1px solid ${t.border}`,
       }}>
         <div style={{
           padding: '14px 24px',
