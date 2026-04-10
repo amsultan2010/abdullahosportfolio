@@ -1,4 +1,4 @@
-export default function MacBackground() {
+export default function MacBackground({ overlayOpacity = 0.1 }: { overlayOpacity?: number } = {}) {
   return (
     <>
       <div
@@ -26,7 +26,8 @@ export default function MacBackground() {
           height: '100%',
           zIndex: 0,
           pointerEvents: 'none',
-          background: 'rgba(0, 0, 0, 0.1)',
+          background: `rgba(0, 0, 0, ${overlayOpacity})`,
+          transition: 'background 0.4s ease',
         }}
       />
     </>

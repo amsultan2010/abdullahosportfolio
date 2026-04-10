@@ -317,12 +317,12 @@ function RotatingWords() {
 
   return (
     <span style={{ position: 'relative', display: 'inline' }}>
-      <span style={{ color: '#1d1d1f', fontWeight: 800, fontSize: '22px', fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+      <span style={{ color: 'rgba(255,255,255,0.95)', fontWeight: 800, fontSize: '22px', fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
         {displayText}
       </span>
       <span style={{
         display: 'inline-block', width: '2.5px', height: '24px',
-        background: '#1d1d1f', marginLeft: '2px',
+        background: 'rgba(255,255,255,0.8)', marginLeft: '2px',
         animation: 'blink 1s step-end infinite',
         verticalAlign: 'text-bottom',
       }} />
@@ -879,8 +879,8 @@ function useStockData() {
   return stocks;
 }
 
-function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false, instanceId = 0, onCurrentStock }: {
-  stocks?: StockData[]; startOffset?: number; compact?: boolean; instanceId?: number; onCurrentStock?: (stock: StockData) => void;
+function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false, instanceId = 0, onCurrentStock, textColor = '#1d1d1f' }: {
+  stocks?: StockData[]; startOffset?: number; compact?: boolean; instanceId?: number; onCurrentStock?: (stock: StockData) => void; textColor?: string;
 } = {}) {
   const ownStocks = useStockData();
   const stocks = externalStocks && externalStocks.length > 0 ? externalStocks : ownStocks;
@@ -1019,12 +1019,12 @@ function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false
   return (
     <div>
       <div style={{ fontFamily: "'SF Mono', monospace", minHeight: compact ? '14px' : '18px', marginBottom: '2px' }}>
-        <span style={{ color: '#1d1d1f', fontWeight: 700, fontSize: compact ? '11px' : '13px' }}>
+        <span style={{ color: textColor, fontWeight: 700, fontSize: compact ? '11px' : '13px' }}>
           {scrambledText}
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: compact ? '6px' : '8px' }}>
-        <span style={{ fontSize: compact ? '18px' : '26px', fontWeight: 700, color: '#1d1d1f', fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.5px' }}>
+        <span style={{ fontSize: compact ? '18px' : '26px', fontWeight: 700, color: textColor, fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.5px' }}>
           {scrambledPrice}
         </span>
         <span style={{ color, fontSize: compact ? '11px' : '13px', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
@@ -1090,7 +1090,7 @@ function StockGrid({ onStockClick }: { onStockClick?: (symbol: string, name: str
             background: hovered === i ? 'rgba(255,255,255,0.04)' : 'transparent',
             transition: 'background 0.15s',
           }}>
-          <CyclingStock stocks={stocks} startOffset={i} compact instanceId={i} onCurrentStock={(s) => handleCurrentStock(i, s)} />
+          <CyclingStock stocks={stocks} startOffset={i} compact instanceId={i} onCurrentStock={(s) => handleCurrentStock(i, s)} textColor="#fff" />
         </div>
       ))}
     </div>
@@ -2738,41 +2738,37 @@ const LEADERBOARD_FUNDS = [
   { name: 'Point72', annualReturn: 16 },
 ];
 
-function BloombergTopBar({ stocks, gameMode, onToggleGame }: { stocks: StockData[]; gameMode: boolean; onToggleGame: () => void }) {
-  const [time, setTime] = useState(new Date());
-  useEffect(() => {
-    const t = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const tickerSymbols = ['SPY', 'QQQ', 'DIA', 'BTC'];
-  const tickerStocks = tickerSymbols.map(sym => stocks.find(s => s.symbol === sym)).filter(Boolean) as StockData[];
+function BloombergTopBar({ stocks }: { stocks: StockData[]; gameMode: boolean; onToggleGame: () => void }) {
+  // Build a doubled list for seamless loop
+  const tickerItems = stocks.length > 0 ? [...stocks, ...stocks] : [];
 
   return (
     <div style={{
-      height: '32px', minHeight: '32px', background: 'rgba(255,255,255,0.12)', borderBottom: '0.5px solid rgba(255,255,255,0.1)',
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px',
+      height: '28px', minHeight: '28px', borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+      overflow: 'hidden', position: 'relative',
       fontFamily: "'SF Mono', monospace", fontSize: '10px',
     }}>
-      <span style={{ color: '#ff6b35', fontWeight: 700, letterSpacing: '0.15em', fontSize: '11px' }}>BLOOMBERG</span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
-        {tickerStocks.map((s, i) => (
-          <React.Fragment key={s.symbol}>
-            {i > 0 && <span style={{ color: 'rgba(255,255,255,0.2)', margin: '0 8px' }}>{'\u2502'}</span>}
-            <span style={{ color: 'rgba(255,255,255,0.8)' }}>{s.symbol}</span>
-            <span style={{ color: 'rgba(255,255,255,0.95)', margin: '0 4px' }}>{s.price < 1000 ? s.price.toFixed(2) : s.price.toFixed(0)}</span>
-            <span style={{ color: s.pct >= 0 ? '#4ade80' : '#f87171' }}>
-              {s.pct >= 0 ? '\u25B2' : '\u25BC'}{Math.abs(s.pct).toFixed(2)}%
+      <div className="ticker-scroll" style={{
+        display: 'flex', alignItems: 'center', height: '100%',
+        whiteSpace: 'nowrap', gap: '24px',
+        animation: `tickerRoll ${stocks.length * 3}s linear infinite`,
+      }}>
+        {tickerItems.map((s, i) => (
+          <span key={`${s.symbol}-${i}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+            <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>{s.symbol}</span>
+            <span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>{s.price < 1000 ? s.price.toFixed(2) : s.price.toFixed(0)}</span>
+            <span style={{ color: s.pct >= 0 ? '#4ade80' : '#f87171', fontWeight: 600 }}>
+              {s.pct >= 0 ? '▲' : '▼'}{Math.abs(s.pct).toFixed(2)}%
             </span>
-          </React.Fragment>
+          </span>
         ))}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        {/* Game button hidden for now */}
-        <span style={{ color: 'rgba(255,255,255,0.7)' }}>
-          {time.toLocaleTimeString('en-US', { hour12: false })}
-        </span>
-      </div>
+      <style>{`
+        @keyframes tickerRoll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -2804,7 +2800,7 @@ function BloombergStockGrid6({ stocks, onStockClick }: { stocks: StockData[]; on
             background: hovered === i ? 'rgba(255,255,255,0.04)' : 'transparent',
             transition: 'background 0.15s',
           }}>
-          <CyclingStock stocks={stocks} startOffset={i * 4} compact instanceId={100 + i} onCurrentStock={(s) => handleCurrentStock(i, s)} />
+          <CyclingStock stocks={stocks} startOffset={i * 4} compact instanceId={100 + i} onCurrentStock={(s) => handleCurrentStock(i, s)} textColor="#fff" />
         </div>
       ))}
     </div>
@@ -3053,7 +3049,7 @@ function BloombergBottomBar() {
 
   return (
     <div style={{
-      height: '32px', minHeight: '32px', background: 'rgba(255,255,255,0.12)', borderTop: '0.5px solid rgba(255,255,255,0.1)',
+      height: '32px', minHeight: '32px', background: 'rgba(0,0,0,0.4)', borderTop: '0.5px solid rgba(255,255,255,0.08)',
       display: 'flex', alignItems: 'center', padding: '0 12px', gap: '16px',
       fontFamily: "'SF Mono', monospace", fontSize: '10px',
     }}>
@@ -4162,7 +4158,7 @@ function BloombergTerminalView({ drillDown, setDrillDown }: {
   const hasDrillDown = drillDown !== null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: "'SF Mono', monospace" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: "'SF Mono', monospace", background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}>
       <BloombergTopBar stocks={stocks} gameMode={gameMode} onToggleGame={() => {}} />
       <div style={{ flex: 1, overflow: 'hidden', display: hasDrillDown ? 'block' : 'grid', gridTemplateColumns: hasDrillDown ? undefined : '50% 50%' }}>
         {hasDrillDown ? (
@@ -4234,7 +4230,7 @@ function StocksApp() {
   return (
     <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', fontFamily: "'SF Mono', monospace", padding: '10px' }}>
       {drillDown ? (
-        <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', overflow: 'hidden' }}>
+        <div style={{ background: 'rgba(0,0,0,0.35)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', overflow: 'hidden' }}>
           {drillDown.type === 'stock' ? (
             <StockDetailView
               symbol={drillDown.symbol}
@@ -4253,33 +4249,33 @@ function StocksApp() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {/* Header card */}
-          <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: '12px', padding: '14px 14px 10px', border: '0.5px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)' }}>
-            <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '-0.01em', marginBottom: '8px' }}>
-              My Watchlist
-            </div>
+          <div style={{ background: 'rgba(0,0,0,0.35)', borderRadius: '12px', padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80', animation: 'livePulse 2s ease-in-out infinite' }} />
-                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>LIVE</span>
+              <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '-0.01em' }}>
+                My Watchlist
               </div>
-              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', fontWeight: 500, fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
-                {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#4ade80', animation: 'livePulse 2s ease-in-out infinite' }} />
+                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.05em' }}>LIVE</span>
               </div>
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: 500, fontFamily: "'SF Pro Text', -apple-system, sans-serif", marginTop: '2px' }}>
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
             </div>
           </div>
 
           {/* Stock Grid card */}
-          <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', overflow: 'hidden' }}>
+          <div style={{ background: 'rgba(0,0,0,0.35)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', overflow: 'hidden' }}>
             <StockGrid onStockClick={(symbol, name) => setDrillDown({ type: 'stock', symbol, name })} />
           </div>
 
           {/* Sector Sparklines card */}
-          <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', overflow: 'hidden' }}>
+          <div style={{ background: 'rgba(0,0,0,0.35)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', overflow: 'hidden' }}>
             <SectorSparklines onSectorClick={(name) => setDrillDown({ type: 'sector', name })} />
           </div>
 
           {/* News + Calendar card */}
-          <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', overflow: 'hidden' }}>
+          <div style={{ background: 'rgba(0,0,0,0.35)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', overflow: 'hidden' }}>
             <ScrollingNewsTape />
             <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.1)', margin: '0 10px' }} />
             <EconomicCalendar />
@@ -5216,46 +5212,35 @@ function ChronographWatch() {
   return (
     <svg width="200" height="200" viewBox="0 0 200 200" fill="none">
       {/* Outer rings */}
-      <circle cx={C} cy={C} r="94" stroke="rgba(0,0,0,0.6)" strokeWidth="2" fill="none" />
-      <circle cx={C} cy={C} r="90" stroke="rgba(0,0,0,0.3)" strokeWidth="1" fill="none" />
-      {/* Brand name */}
-      <text x={C} y="48" textAnchor="middle" fill="rgba(0,0,0,0.85)" fontSize="8" fontFamily="'SF Pro Display', -apple-system, sans-serif" fontWeight="800" letterSpacing="4">GANDHE</text>
-      {/* Hour markers */}
+      <circle cx={C} cy={C} r="94" stroke="rgba(255,255,255,0.6)" strokeWidth="2" fill="none" />
+      <circle cx={C} cy={C} r="90" stroke="rgba(255,255,255,0.3)" strokeWidth="1" fill="none" />
+      <text x={C} y="48" textAnchor="middle" fill="rgba(255,255,255,0.85)" fontSize="8" fontFamily="'SF Pro Display', -apple-system, sans-serif" fontWeight="800" letterSpacing="4">GANDHE</text>
       {Array.from({ length: 12 }).map((_, i) => {
         const a = toRad(i * 30 - 90);
         const r1 = i % 3 === 0 ? 72 : 78;
         const r2 = 86;
-        return <line key={i} x1={C + r1 * Math.cos(a)} y1={C + r1 * Math.sin(a)} x2={C + r2 * Math.cos(a)} y2={C + r2 * Math.sin(a)} stroke="rgba(0,0,0,0.85)" strokeWidth={i % 3 === 0 ? 3.5 : 1.5} strokeLinecap="round" />;
+        return <line key={i} x1={C + r1 * Math.cos(a)} y1={C + r1 * Math.sin(a)} x2={C + r2 * Math.cos(a)} y2={C + r2 * Math.sin(a)} stroke="rgba(255,255,255,0.9)" strokeWidth={i % 3 === 0 ? 3.5 : 1.5} strokeLinecap="round" />;
       })}
-      {/* Minute ticks */}
       {Array.from({ length: 60 }).map((_, i) => {
         if (i % 5 === 0) return null;
         const a = toRad(i * 6 - 90);
-        return <line key={`t${i}`} x1={C + 83 * Math.cos(a)} y1={C + 83 * Math.sin(a)} x2={C + 86 * Math.cos(a)} y2={C + 86 * Math.sin(a)} stroke="rgba(0,0,0,0.35)" strokeWidth="1" />;
+        return <line key={`t${i}`} x1={C + 83 * Math.cos(a)} y1={C + 83 * Math.sin(a)} x2={C + 86 * Math.cos(a)} y2={C + 86 * Math.sin(a)} stroke="rgba(255,255,255,0.35)" strokeWidth="1" />;
       })}
-      {/* Sub-dial top — 30min */}
-      <circle cx={C} cy={68} r="15" stroke="rgba(0,0,0,0.4)" strokeWidth="1.2" fill="none" />
-      <line x1={C} y1={68} x2={C + 11 * Math.cos(toRad(m * 12 - 90))} y2={68 + 11 * Math.sin(toRad(m * 12 - 90))} stroke="rgba(0,0,0,0.8)" strokeWidth="1.5" strokeLinecap="round" />
-      {/* Sub-dial left — running seconds */}
-      <circle cx={68} cy={C} r="15" stroke="rgba(0,0,0,0.4)" strokeWidth="1.2" fill="none" />
-      <line x1={68} y1={C} x2={68 + 11 * Math.cos(toRad(sAngle))} y2={C + 11 * Math.sin(toRad(sAngle))} stroke="rgba(0,0,0,0.85)" strokeWidth="1.5" strokeLinecap="round" />
-      {/* Sub-dial right — 12hr */}
-      <circle cx={132} cy={C} r="15" stroke="rgba(0,0,0,0.4)" strokeWidth="1.2" fill="none" />
-      <line x1={132} y1={C} x2={132 + 11 * Math.cos(toRad(hAngle))} y2={C + 11 * Math.sin(toRad(hAngle))} stroke="rgba(0,0,0,0.8)" strokeWidth="1.5" strokeLinecap="round" />
-      {/* Hour hand */}
-      <line x1={C} y1={C} x2={C + 46 * Math.cos(toRad(hAngle))} y2={C + 46 * Math.sin(toRad(hAngle))} stroke="#1d1d1f" strokeWidth="4.5" strokeLinecap="round" />
-      {/* Minute hand */}
-      <line x1={C} y1={C} x2={C + 64 * Math.cos(toRad(mAngle))} y2={C + 64 * Math.sin(toRad(mAngle))} stroke="#1d1d1f" strokeWidth="3" strokeLinecap="round" />
-      {/* Second hand */}
-      <line x1={C - 14 * Math.cos(toRad(sAngle))} y1={C - 14 * Math.sin(toRad(sAngle))} x2={C + 78 * Math.cos(toRad(sAngle))} y2={C + 78 * Math.sin(toRad(sAngle))} stroke="rgba(0,0,0,0.7)" strokeWidth="1.2" strokeLinecap="round" />
-      {/* Center */}
-      <circle cx={C} cy={C} r="5" fill="rgba(0,0,0,0.7)" />
-      <circle cx={C} cy={C} r="2.5" fill="#1d1d1f" />
-      {/* Crown */}
-      <rect x="192" y="96" width="7" height="8" rx="1.5" fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth="1.2" />
+      <circle cx={C} cy={68} r="15" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" />
+      <line x1={C} y1={68} x2={C + 11 * Math.cos(toRad(m * 12 - 90))} y2={68 + 11 * Math.sin(toRad(m * 12 - 90))} stroke="rgba(255,255,255,0.8)" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx={68} cy={C} r="15" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" />
+      <line x1={68} y1={C} x2={68 + 11 * Math.cos(toRad(sAngle))} y2={C + 11 * Math.sin(toRad(sAngle))} stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx={132} cy={C} r="15" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" />
+      <line x1={132} y1={C} x2={132 + 11 * Math.cos(toRad(hAngle))} y2={C + 11 * Math.sin(toRad(hAngle))} stroke="rgba(255,255,255,0.8)" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1={C} y1={C} x2={C + 46 * Math.cos(toRad(hAngle))} y2={C + 46 * Math.sin(toRad(hAngle))} stroke="rgba(255,255,255,0.95)" strokeWidth="4.5" strokeLinecap="round" />
+      <line x1={C} y1={C} x2={C + 64 * Math.cos(toRad(mAngle))} y2={C + 64 * Math.sin(toRad(mAngle))} stroke="rgba(255,255,255,0.9)" strokeWidth="3" strokeLinecap="round" />
+      <line x1={C - 14 * Math.cos(toRad(sAngle))} y1={C - 14 * Math.sin(toRad(sAngle))} x2={C + 78 * Math.cos(toRad(sAngle))} y2={C + 78 * Math.sin(toRad(sAngle))} stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round" />
+      <circle cx={C} cy={C} r="5" fill="rgba(255,255,255,0.7)" />
+      <circle cx={C} cy={C} r="2.5" fill="rgba(255,255,255,0.95)" />
+      <rect x="192" y="96" width="7" height="8" rx="1.5" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" />
       {/* Pushers */}
-      <rect x="190" y="70" width="8" height="4" rx="1" fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="1" />
-      <rect x="190" y="126" width="8" height="4" rx="1" fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="1" />
+      <rect x="190" y="70" width="8" height="4" rx="1" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+      <rect x="190" y="126" width="8" height="4" rx="1" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
     </svg>
   );
 }
@@ -5429,8 +5414,8 @@ function TerminalContent() {
       case 'prompt': return '#4ade80';
       case 'error': return '#f87171';
       case 'system': return '#22d3ee';
-      case 'human': return 'rgba(0,0,0,0.5)';
-      default: return 'rgba(0,0,0,0.65)';
+      case 'human': return 'rgba(255,255,255,0.55)';
+      default: return 'rgba(255,255,255,0.75)';
     }
   };
 
@@ -5485,7 +5470,7 @@ function TerminalContent() {
             transition: 'opacity 3s ease-out, transform 3s ease-out, filter 3s ease-out',
           }}>
             {line.type === 'prompt' ? (
-              <><span style={{ color: '#4ade80', fontWeight: 700 }}>{prompt}</span><span style={{ color: '#1d1d1f', fontWeight: 500 }}>{line.command}</span></>
+              <><span style={{ color: '#4ade80', fontWeight: 700 }}>{prompt}</span><span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{line.command}</span></>
             ) : line.text.includes('\x1b[cmd]') ? renderColoredLine(line.text) : line.text}
           </div>
         );
@@ -5495,7 +5480,7 @@ function TerminalContent() {
           <span style={{ color: '#4ade80', fontWeight: 700, whiteSpace: 'pre', fontFamily: "'SF Mono', monospace", fontSize: compact ? '12.5px' : '13px' }}>{prompt}</span>
           <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown}
             spellCheck={false} autoComplete="off"
-            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontFamily: "'SF Mono', monospace", fontSize: compact ? '12.5px' : '13px', color: '#1d1d1f', padding: 0, margin: 0, caretColor: '#4ade80' }} />
+            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontFamily: "'SF Mono', monospace", fontSize: compact ? '12.5px' : '13px', color: 'rgba(255,255,255,0.9)', padding: 0, margin: 0, caretColor: '#4ade80' }} />
         </div>
       )}
       {!introDone && <span style={{ display: 'inline-block', width: '8px', height: '14px', background: '#4ade80', animation: 'blink 1s step-end infinite' }} />}
@@ -5708,31 +5693,31 @@ function TerminalContent() {
             {isFullscreen ? (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
-                  <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: isSmallScreen ? '32px' : '42px', color: '#1d1d1f', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
+                  <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: isSmallScreen ? '32px' : '42px', color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
                     Ronniel Gandhe
                   </div>
                   <div style={{ fontSize: isSmallScreen ? '12px' : '14px', marginBottom: isSmallScreen ? '8px' : '12px', fontFamily: "'SF Pro Text', -apple-system, sans-serif", letterSpacing: '0.3px' }}>
                     <RollingTitles />
                   </div>
                 </div>
-                <div style={{ color: '#1d1d1f', fontSize: '11px', fontWeight: 700, fontFamily: "'SF Pro Display', -apple-system, sans-serif", textAlign: 'right', paddingTop: '8px', flexShrink: 0, marginLeft: '16px' }}>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', fontWeight: 700, fontFamily: "'SF Pro Display', -apple-system, sans-serif", textAlign: 'right', paddingTop: '8px', flexShrink: 0, marginLeft: '16px' }}>
                   {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                 </div>
               </div>
             ) : (
               <>
-                <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '36px', color: '#1d1d1f', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
+                <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '36px', color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
                   Ronniel Gandhe
                 </div>
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '15px', color: 'rgba(0,0,0,0.5)', fontWeight: 500, marginBottom: '14px' }}>
+                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '15px', color: 'rgba(255,255,255,0.9)', fontWeight: 700, marginBottom: '14px' }}>
                   Software Engineer
                 </div>
               </>
             )}
             {isFullscreen ? (() => {
-              const sHead: React.CSSProperties = { color: '#1d1d1f', fontSize: isSmallScreen ? '10px' : '11.5px', fontWeight: 700, letterSpacing: '0.12em', marginBottom: isSmallScreen ? '5px' : '8px', fontFamily: "'SF Mono', monospace" };
-              const sPara: React.CSSProperties = { color: 'rgba(0,0,0,0.85)', fontSize: isSmallScreen ? '12px' : '14.5px', lineHeight: isSmallScreen ? 1.5 : 1.65, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 };
-              const sRule: React.CSSProperties = { width: '40px', height: '1px', background: 'rgba(0,0,0,0.1)', margin: isSmallScreen ? '6px 0' : '10px 0' };
+              const sHead: React.CSSProperties = { color: 'rgba(255,255,255,0.9)', fontSize: isSmallScreen ? '10px' : '11.5px', fontWeight: 700, letterSpacing: '0.12em', marginBottom: isSmallScreen ? '5px' : '8px', fontFamily: "'SF Mono', monospace" };
+              const sPara: React.CSSProperties = { color: 'rgba(255,255,255,0.75)', fontSize: isSmallScreen ? '12px' : '14.5px', lineHeight: isSmallScreen ? 1.5 : 1.65, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 };
+              const sRule: React.CSSProperties = { width: '40px', height: '1px', background: 'rgba(255,255,255,0.12)', margin: isSmallScreen ? '6px 0' : '10px 0' };
               return (
               <div style={{ marginTop: '2px', display: 'flex', gap: isSmallScreen ? '24px' : '40px' }}>
                 {/* ── Left Column ── */}
@@ -5826,13 +5811,13 @@ function TerminalContent() {
               );
             })() : (
               <>
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(0,0,0,0.5)', fontSize: '15px', lineHeight: 1.7, fontWeight: 400 }}>
+                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.8)', fontSize: '15px', lineHeight: 1.7, fontWeight: 600 }}>
                   Using {showRotating && <RotatingWords />}
                 </div>
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(0,0,0,0.5)', fontSize: '15px', lineHeight: 1.7, fontWeight: 400 }}>
+                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.8)', fontSize: '15px', lineHeight: 1.7, fontWeight: 600 }}>
                   to create elegant and scalable
                 </div>
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(0,0,0,0.5)', fontSize: '15px', lineHeight: 1.7, fontWeight: 400 }}>
+                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.8)', fontSize: '15px', lineHeight: 1.7, fontWeight: 600 }}>
                   solutions to real world problems.
                 </div>
               </>
@@ -5856,13 +5841,13 @@ function TerminalContent() {
               { href: 'mailto:ronnielgandhe@gmail.com', text: 'ronnielgandhe@gmail.com' },
             ].map(link => (
               <a key={link.href} href={link.href} target="_blank" rel="noopener"
-                style={{ color: '#1d1d1f', textDecoration: 'none', transition: 'font-weight 0.15s' }}
+                style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none', transition: 'all 0.15s', fontWeight: 400 }}
                 onClick={e => e.stopPropagation()}
-                onMouseEnter={e => (e.currentTarget.style.fontWeight = '700')}
-                onMouseLeave={e => (e.currentTarget.style.fontWeight = '400')}
+                onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.fontWeight = '700'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.85)'; e.currentTarget.style.fontWeight = '400'; }}
               >{link.text}</a>
             ))}
-            <span style={{ color: 'rgba(0,0,0,0.5)' }}>Waterloo, ON</span>
+            <span style={{ color: 'rgba(255,255,255,0.7)' }}>Waterloo, ON</span>
           </div>
         )}
       </div>
@@ -6103,7 +6088,7 @@ function Desktop() {
         cursor: 'default',
       }}
     >
-      <Background />
+      <Background overlayOpacity={['stocks', 'education', 'experience'].includes(state.focusedWindowId as string) ? 0.35 : 0.1} />
       <BootScreen key={state.bootComplete ? 'booted' : 'booting'} />
 
       {state.bootComplete && (
@@ -6115,9 +6100,10 @@ function Desktop() {
             // Title bar bg matches each app's content color
             const titleBarBgMap: Record<string, string> = {
               projects: '#252526',
+              blog: '#f9f9f8',
             };
             // Apps with dark content need light title bar text
-            const darkTitleBars = ['projects'];
+            const darkTitleBars = ['projects', 'terminal'];
             const titleBarBg = titleBarBgMap[win.id];
             const titleBarDark = darkTitleBars.includes(win.id);
             if (win.id === 'detail' && state.activeDetail) {
