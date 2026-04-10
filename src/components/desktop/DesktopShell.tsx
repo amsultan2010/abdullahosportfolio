@@ -6179,7 +6179,7 @@ function Desktop() {
         cursor: 'default',
       }}
     >
-      <Background overlayOpacity={['stocks', 'education', 'experience', 'terminal'].includes(hoveredWindowId as string) ? 0.35 : 0.05} />
+      <Background overlayOpacity={['stocks', 'education', 'experience', 'terminal'].includes(state.focusedWindowId as string) ? 0.35 : 0.1} />
       <BootScreen key={state.bootComplete ? 'booted' : 'booting'} />
 
       {state.bootComplete && (
