@@ -4232,7 +4232,7 @@ function StocksApp() {
   }
 
   return (
-    <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', fontFamily: "'SF Mono', monospace", background: '#1c1c1e' }}>
+    <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', fontFamily: "'SF Mono', monospace" }}>
       {/* My Watchlist title */}
       <div style={{ padding: '14px 14px 0' }}>
         <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '-0.01em' }}>
@@ -6109,11 +6109,10 @@ function Desktop() {
           {openWindows.map(win => {
             // Title bar bg matches each app's content color
             const titleBarBgMap: Record<string, string> = {
-              stocks: '#1c1c1e',
               projects: '#252526',
             };
             // Apps with dark content need light title bar text
-            const darkTitleBars = ['stocks', 'projects'];
+            const darkTitleBars = ['projects'];
             const titleBarBg = titleBarBgMap[win.id];
             const titleBarDark = darkTitleBars.includes(win.id);
             if (win.id === 'detail' && state.activeDetail) {
@@ -6185,7 +6184,7 @@ function MobileStocks() {
   const [drillDown, setDrillDown] = useState<{ type: 'stock'; symbol: string; name: string } | { type: 'sector'; name: string } | null>(null);
 
   return (
-    <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', fontFamily: "'SF Mono', monospace", background: '#1c1c1e' }}>
+    <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', fontFamily: "'SF Mono', monospace" }}>
       <div style={{ padding: '14px 14px 0' }}>
         <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '-0.01em' }}>
           My Watchlist
