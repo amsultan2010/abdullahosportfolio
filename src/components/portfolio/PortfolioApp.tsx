@@ -878,7 +878,7 @@ export default function PortfolioApp() {
           overflow: visible;
         }
 
-        /* ═══ Desktop layer — clipped to corner ═══ */
+        /* ═══ Desktop layer — clipped to corner triangle ═══ */
         .peek-desktop {
           position: absolute;
           top: 0;
@@ -887,49 +887,60 @@ export default function PortfolioApp() {
           height: 100%;
           pointer-events: auto;
           clip-path: polygon(
-            calc(100% - 120px) 0px,
-            100% 0px,
-            100% 120px
+            calc(100% - 200px) 0%,
+            100% 0%,
+            100% 200px,
+            calc(100% - 200px) 0%
           );
           transition: clip-path 0.65s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .peek-expanded .peek-desktop {
-          clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        /* Hover: peel back a bit more to tease the desktop */
+        .peek-container:hover .peek-desktop {
+          clip-path: polygon(
+            calc(100% - 300px) 0%,
+            100% 0%,
+            100% 300px,
+            calc(100% - 300px) 0%
+          );
+        }
+        /* Expanded: full viewport */
+        .peek-expanded .peek-desktop,
+        .peek-expanded:hover .peek-desktop {
+          clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
         }
 
-        /* ═══ Page curl — paper fold gradient ═══ */
+        /* ═══ Page curl — fold line shadow on the diagonal edge ═══ */
         .page-curl {
           position: absolute;
-          top: -20px;
+          top: 0;
           right: 0;
-          width: 120px;
-          height: 140px;
+          width: 200px;
+          height: 200px;
           pointer-events: auto;
           cursor: pointer;
-          transform-origin: right top;
           z-index: 1001;
-          transform: rotate(0deg) scale(1);
           opacity: 1;
+          /* Fold line: shadow + highlight along the diagonal */
           background:
-            linear-gradient(45deg, rgba(0,0,0,0.15), rgba(0,0,0,0.22) 45%, transparent 45%),
-            linear-gradient(45deg, #fff, rgba(255,255,255,0.24) 47%, transparent 60%),
-            linear-gradient(45deg, rgba(240,240,240,0.7), rgba(240,240,240,0.52) 45%, transparent 45%);
-          box-shadow:
-            3px 3px 5px rgba(0,0,0,0.15),
-            inset -13px 24px 12px -12px rgba(0,0,0,0.4);
+            linear-gradient(225deg, transparent 48%, rgba(0,0,0,0.06) 49%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.04) 52%, transparent 54%),
+            linear-gradient(225deg, transparent 46%, rgba(255,255,255,0.6) 48%, rgba(240,240,240,0.9) 50%, rgba(220,220,220,0.7) 60%, transparent 62%);
           transition:
-            transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+            width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+            height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
             opacity 0.65s cubic-bezier(0.7, 0, 1, 0.5);
         }
-        .page-curl:hover {
-          transform: scale(1.06);
+        /* Hover: curl grows to match the expanded peek */
+        .peek-container:hover .page-curl {
+          width: 300px;
+          height: 300px;
         }
 
-        /* Curl hidden when expanded */
-        .curl-hidden {
-          opacity: 0;
-          transform: scale(0.5);
+        /* Curl hidden instantly when expanded */
+        .curl-hidden,
+        .peek-expanded .page-curl {
+          opacity: 0 !important;
           pointer-events: none;
+          transition: opacity 0.05s linear !important;
         }
       `}</style>
     </ThemeProvider>
