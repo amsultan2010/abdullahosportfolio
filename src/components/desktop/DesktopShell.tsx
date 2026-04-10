@@ -8,6 +8,7 @@ import DesktopDock from './DesktopDock';
 import DesktopMenuBar from './DesktopMenuBar';
 import GitHubHeatmap from './GitHubHeatmap';
 import type { WindowId } from './types';
+import { BlackbookDashboard, PasswordGate, hashPass, PASS } from '../portfolio/Blackbook';
 
 // Section content — uses desktop-portfolio (master copies, untouched)
 import Education from '../desktop-portfolio/Education';
@@ -1412,7 +1413,7 @@ function NowPlaying() {
           <div style={{ flex: 1, height: 2, background: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden' }}>
             <div style={{ width: `${pct}%`, height: '100%', background: 'rgba(255,255,255,0.5)', borderRadius: 1, transition: 'width 1s linear' }} />
           </div>
-          <span style={{ fontSize: '10px', fontWeight: 500, color: 'rgba(255,255,255,0.7)', fontFamily: "'SF Pro Text', -apple-system, sans-serif", flexShrink: 0 }}>
+          <span style={{ fontSize: '17px', fontWeight: 500, color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Pro Text', -apple-system, sans-serif", flexShrink: 0 }}>
             {fmtTime(progress)}
           </span>
         </div>
@@ -5289,6 +5290,11 @@ function ChronographWatch() {
 function TerminalContent() {
   const { state, dispatch } = useDesktop();
   const isFullscreen = state.windows.terminal?.isFullscreen ?? false;
+  const [bbAuth, setBbAuth] = useState(false);
+  const [bbPassHash, setBbPassHash] = useState('');
+  const [bbPassInput, setBbPassInput] = useState('');
+  const [bbShake, setBbShake] = useState(false);
+  const bbInputRef = useRef<HTMLInputElement>(null);
   const [history, setHistory] = useState<TerminalLine[]>([]);
   const [input, setInput] = useState('');
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
@@ -5714,6 +5720,35 @@ function TerminalContent() {
     );
   }
 
+  // ═══════════════ FULLSCREEN: Blackbook Dashboard ═══════════════
+  if (isFullscreen) {
+    if (!bbAuth) {
+      // Show the real Blackbook PasswordGate (fingerprint + input + "press enter")
+      return (
+        <PasswordGate
+          inline
+          onUnlock={async (pw) => {
+            const hash = await hashPass(pw);
+            setBbAuth(true);
+            setBbPassHash(hash);
+          }}
+          onClose={() => dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' })}
+        />
+      );
+    }
+
+    // Authenticated — Blackbook fills entire window
+    return (
+      <div style={{ height: '100%', overflow: 'hidden' }}>
+        <BlackbookDashboard
+          onClose={() => { setBbAuth(false); dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' }); }}
+          passHash={bbPassHash}
+          transparent
+        />
+      </div>
+    );
+  }
+
   // ═══════════════ SPLIT PANELS (default) ═══════════════
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden', position: 'relative' as const }}>
@@ -5852,13 +5887,13 @@ function TerminalContent() {
               );
             })() : (
               <>
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.8)', fontSize: '15px', lineHeight: 1.7, fontWeight: 600 }}>
+                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', lineHeight: 1.7, fontWeight: 500 }}>
                   Using {showRotating && <RotatingWords />}
                 </div>
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.8)', fontSize: '15px', lineHeight: 1.7, fontWeight: 600 }}>
+                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', lineHeight: 1.7, fontWeight: 500 }}>
                   to create elegant and scalable
                 </div>
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.8)', fontSize: '15px', lineHeight: 1.7, fontWeight: 600 }}>
+                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', lineHeight: 1.7, fontWeight: 500 }}>
                   solutions to real world problems.
                 </div>
               </>
@@ -6135,7 +6170,7 @@ function Desktop() {
         cursor: 'default',
       }}
     >
-      <Background overlayOpacity={['stocks', 'education', 'experience'].includes(state.focusedWindowId as string) ? 0.35 : 0.1} />
+      <Background overlayOpacity={['stocks', 'education', 'experience', 'terminal'].includes(state.focusedWindowId as string) ? 0.35 : 0.1} />
       <BootScreen key={state.bootComplete ? 'booted' : 'booting'} />
 
       {state.bootComplete && (
@@ -6145,9 +6180,11 @@ function Desktop() {
           {/* Windows */}
           {openWindows.map(win => {
             // Title bar bg matches each app's content color
+            const isTerminalFullscreen = win.id === 'terminal' && win.isFullscreen;
             const titleBarBgMap: Record<string, string> = {
               projects: '#252526',
               blog: '#f9f9f8',
+              ...(isTerminalFullscreen ? { terminal: 'rgba(0,0,0,0.4)' } : {}),
             };
             // Apps with dark content need light title bar text
             const darkTitleBars = ['projects', 'terminal'];

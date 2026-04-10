@@ -10,13 +10,13 @@ const SUPABASE_URL = 'https://czdvtqqanvmgptginlwa.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_cNeHCMWzmLHmEfor6SDG3A_RJhF1SCZ';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
-async function hashPass(pw: string): Promise<string> {
+export async function hashPass(pw: string): Promise<string> {
   const data = new TextEncoder().encode(pw);
   const buf = await crypto.subtle.digest('SHA-256', data);
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-const PASS = 'ilovefluffy123!';
+export const PASS = 'vaishali123!';
 const FONT = "'NeueMontreal-Regular', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 const FONT_MEDIUM = "'NeueMontreal-Medium', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 
@@ -354,11 +354,20 @@ function FingerprintIcon({ onClick }: { onClick: () => void }) {
 }
 
 // ── Password Gate ──
-function PasswordGate({ onUnlock, onClose }: { onUnlock: (pw: string) => void; onClose: () => void }) {
+export function PasswordGate({ onUnlock, onClose, inline }: { onUnlock: (pw: string) => void; onClose: () => void; inline?: boolean }) {
   const [pw, setPw] = useState('');
   const [shake, setShake] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const t = useBlackbookTheme();
+  const baseTheme = useBlackbookTheme();
+  const t = inline ? {
+    ...baseTheme,
+    text: 'rgba(0,0,0,0.8)',
+    textStrong: '#1d1d1f',
+    textMuted: 'rgba(0,0,0,0.45)',
+    border: 'rgba(0,0,0,0.1)',
+    inputBg: 'rgba(255,255,255,0.5)',
+    accentSubtle: 'rgba(255,255,255,0.4)',
+  } : baseTheme;
   useEffect(() => { inputRef.current?.focus(); }, []);
 
   const submit = () => {
@@ -368,11 +377,14 @@ function PasswordGate({ onUnlock, onClose }: { onUnlock: (pw: string) => void; o
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 10000,
-      background: t.bg, backdropFilter: 'blur(40px)',
-      WebkitBackdropFilter: 'blur(40px)',
+      position: inline ? 'relative' : 'fixed', inset: inline ? undefined : 0,
+      width: inline ? '100%' : undefined, height: inline ? '100%' : undefined,
+      zIndex: inline ? undefined : 10000,
+      background: inline ? 'transparent' : t.bg,
+      backdropFilter: inline ? undefined : 'blur(40px)',
+      WebkitBackdropFilter: inline ? undefined : 'blur(40px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT,
-    }} onClick={onClose}>
+    }} onClick={inline ? undefined : onClose}>
       <div onClick={e => e.stopPropagation()} style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
         animation: shake ? 'bb-shake 0.4s ease' : undefined,
@@ -403,7 +415,7 @@ function PasswordGate({ onUnlock, onClose }: { onUnlock: (pw: string) => void; o
             width: 240, textAlign: 'center', letterSpacing: 2,
           }}
         />
-        <span style={{ color: t.textMuted, fontSize: 14, fontWeight: 500, opacity: 0.6 }}>press enter</span>
+        <span style={{ color: t.textMuted, fontSize: 14, fontWeight: 500 }}>press enter</span>
       </div>
       <style>{`
         @keyframes bb-shake {
@@ -654,39 +666,45 @@ function JournalTab({ journal, setJournal, contacts, t }: {
 
   return (
     <div>
-      {/* Calendar + Upcoming — top section */}
-      <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 24, marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${t.border}` }}>
-        <MiniCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate}
-          journalDates={journalDates} t={t} />
-        <UpcomingMeetings journal={journal} onSelectDate={setSelectedDate} t={t} />
-      </div>
-
-      {/* Day header */}
-      <div style={{ marginBottom: 16 }}>
-        <span style={{ fontSize: 16, color: t.textStrong, fontFamily: FONT_MEDIUM }}>{dayLabel}</span>
-        {selectedDate === today && <span style={{ fontSize: 14, color: t.textMuted, marginLeft: 8 }}>today</span>}
-      </div>
-
-      {/* Meetings first — most actionable */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM }}>Meetings</label>
-          <button onClick={addMeeting} style={{
-            background: 'none', border: 'none', color: t.textMuted,
-            cursor: 'pointer', fontFamily: FONT, fontSize: 14,
-          }}>+ add</button>
+      {/* Calendar + Upcoming — one dark pane */}
+      <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 0, marginBottom: 16, background: t.cardBg, borderRadius: 12, border: `0.5px solid ${t.border}`, overflow: 'hidden' }}>
+        <div style={{ padding: '16px' }}>
+          <MiniCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate}
+            journalDates={journalDates} t={t} />
         </div>
-        {(entry?.meetings || []).length === 0 && (
-          <p style={{ color: t.textMuted, fontSize: 14, opacity: 0.6 }}>No meetings scheduled</p>
-        )}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {(entry?.meetings || []).map(m => (
-            <MeetingRow key={m.id} meeting={m}
-              onChange={patch => updateMeeting(m.id, patch)}
-              onRemove={() => removeMeeting(m.id)} contacts={contacts} t={t} />
-          ))}
+        <div style={{ padding: '16px', borderLeft: `0.5px solid ${t.border}` }}>
+          <UpcomingMeetings journal={journal} onSelectDate={setSelectedDate} t={t} />
         </div>
       </div>
+
+      {/* Day section — one dark pane for header + meetings + journal */}
+      <div style={{ background: t.cardBg, borderRadius: 12, border: `0.5px solid ${t.border}`, padding: 16 }}>
+        {/* Day header */}
+        <div style={{ marginBottom: 16 }}>
+          <span style={{ fontSize: 16, color: t.textStrong, fontFamily: FONT_MEDIUM }}>{dayLabel}</span>
+          {selectedDate === today && <span style={{ fontSize: 14, color: t.textMuted, marginLeft: 8 }}>today</span>}
+        </div>
+
+        {/* Meetings */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM }}>Meetings</label>
+            <button onClick={addMeeting} style={{
+              background: 'none', border: 'none', color: t.textMuted,
+              cursor: 'pointer', fontFamily: FONT, fontSize: 14,
+            }}>+ add</button>
+          </div>
+          {(entry?.meetings || []).length === 0 && (
+            <p style={{ color: t.textMuted, fontSize: 14, opacity: 0.6 }}>No meetings scheduled</p>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {(entry?.meetings || []).map(m => (
+              <MeetingRow key={m.id} meeting={m}
+                onChange={patch => updateMeeting(m.id, patch)}
+                onRemove={() => removeMeeting(m.id)} contacts={contacts} t={t} />
+            ))}
+          </div>
+        </div>
 
       {/* Journal writing */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -710,6 +728,7 @@ function JournalTab({ journal, setJournal, contacts, t }: {
           </div>
         )}
       </div>
+      </div>
     </div>
   );
 }
@@ -728,7 +747,7 @@ function UpcomingMeetings({ journal, onSelectDate, t }: {
   if (upcoming.length === 0) return null;
 
   return (
-    <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${t.border}` }}>
+    <div>
       <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 8 }}>Upcoming</label>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {upcoming.map(m => {
@@ -748,8 +767,8 @@ function UpcomingMeetings({ journal, onSelectDate, t }: {
                 <span style={{ fontSize: 14, color: isToday ? '#2d8a56' : t.textMuted, fontFamily: FONT_MEDIUM }}>{dateLabel}</span>
                 {m.time && <span style={{ fontSize: 14, color: t.textMuted }}>{m.time}</span>}
               </div>
-              <span style={{ fontSize: 14, color: t.text }}>{m.title || 'Untitled meeting'}</span>
-              {m.person && <span style={{ fontSize: 14, color: t.textMuted }}>{m.person}</span>}
+              <span style={{ fontSize: 14, fontWeight: 600, color: t.textStrong }}>{m.title || 'Untitled meeting'}</span>
+              {m.person && <span style={{ fontSize: 14, fontWeight: 500, color: t.text }}>{m.person}</span>}
               {m.link && (
                 <a href={m.link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{
                   fontSize: 11, fontFamily: FONT_MEDIUM, color: '#2d8a56', textDecoration: 'none',
@@ -920,33 +939,8 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
 
   return (
     <div>
-      {/* LinkedIn paste */}
-      <div style={{ marginBottom: 12 }}>
-        <input value={pasteUrl} onChange={e => setPasteUrl(e.target.value)}
-          onPaste={e => {
-            const text = e.clipboardData.getData('text');
-            if (text.includes('linkedin.com/in/')) { e.preventDefault(); addFromLinkedIn(text); }
-          }}
-          onKeyDown={e => { if (e.key === 'Enter' && pasteUrl) addFromLinkedIn(pasteUrl); }}
-          placeholder="Paste a LinkedIn URL to add contact..."
-          style={{
-            width: '100%', background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-            padding: '8px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
-            outline: 'none', boxSizing: 'border-box',
-          }} />
-        {pasteStatus && <div style={{ fontSize: 12, fontFamily: FONT_MEDIUM, marginTop: 4, color: pasteStatus.startsWith('Added') ? '#22c55e' : '#ef4444' }}>{pasteStatus}</div>}
-      </div>
-
-      {/* Filter */}
-      <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Filter..."
-        style={{
-          width: '100%', background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-          padding: '8px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
-          outline: 'none', boxSizing: 'border-box', marginBottom: 16,
-        }} />
-
       {/* Traffic light counts */}
-      <div style={{ display: 'flex', gap: 16, marginBottom: 16, fontSize: 14, fontFamily: FONT }}>
+      <div style={{ display: 'flex', gap: 16, marginBottom: 16, fontSize: 14, fontFamily: FONT, background: t.cardBg, borderRadius: 10, padding: '10px 14px', border: `0.5px solid ${t.border}` }}>
         <span><span style={{ color: '#22c55e', fontFamily: FONT_MEDIUM, fontSize: 16 }}>{greenCount}</span> <span style={{ color: t.textMuted }}>active</span></span>
         <span><span style={{ color: '#eab308', fontFamily: FONT_MEDIUM, fontSize: 16 }}>{yellowCount}</span> <span style={{ color: t.textMuted }}>needs work</span></span>
         <span><span style={{ color: '#ef4444', fontFamily: FONT_MEDIUM, fontSize: 16 }}>{redCount}</span> <span style={{ color: t.textMuted }}>inactive</span></span>
@@ -963,7 +957,7 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
 
       {/* Add */}
       <button onClick={addContact} style={{
-        background: 'transparent', border: `1px dashed ${t.border}`,
+        background: t.cardBg, border: `1px dashed ${t.border}`,
         color: t.textMuted, padding: '10px', borderRadius: 10, width: '100%',
         cursor: 'pointer', fontFamily: FONT, fontSize: 14, marginTop: 16,
       }}>+ Add Contact</button>
@@ -1015,7 +1009,7 @@ function ContactCard({ contact: c, expanded, onToggle, onUpdate, onRemove, t }: 
   return (
     <div style={{
       border: `1px solid ${t.border}`, borderRadius: 10, overflow: 'hidden',
-      display: 'flex', cursor: 'pointer',
+      display: 'flex', cursor: 'pointer', background: t.cardBg,
       opacity: isCold && !expanded ? 0.55 : 1, transition: 'opacity 0.15s',
     }} onClick={onToggle}
       onMouseEnter={e => { if (isCold) e.currentTarget.style.opacity = '0.85'; }}
@@ -1270,10 +1264,11 @@ function TaskRow({ task, today, onUpdate, onRemove, t }: {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
-      borderRadius: 8, transition: 'background 0.15s',
+      borderRadius: 8, transition: 'background 0.15s', background: t.cardBg,
+      border: `0.5px solid ${t.border}`,
     }}
       onMouseEnter={e => { e.currentTarget.style.background = t.accentSubtle; }}
-      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+      onMouseLeave={e => { e.currentTarget.style.background = t.cardBg; }}
     >
       {/* Checkbox */}
       <button onClick={() => onUpdate({ status: isDone ? 'todo' : 'done' })} style={{
@@ -1358,7 +1353,7 @@ function GoalsTab({ goals, setGoals, t }: {
         </div>
       )}
       <button onClick={addGoal} style={{
-        background: 'transparent', border: `1px dashed ${t.border}`,
+        background: t.cardBg, border: `1px dashed ${t.border}`,
         color: t.textMuted, padding: '12px', borderRadius: 10, width: '100%',
         cursor: 'pointer', fontFamily: FONT, fontSize: 14, marginTop: 16,
       }}>+ Add Goal</button>
@@ -1400,7 +1395,7 @@ function GoalCard({ goal: g, onUpdate, onRemove, t }: {
   };
 
   return (
-    <div style={{ border: `1px solid ${t.border}`, borderRadius: 10, padding: 16 }}>
+    <div style={{ border: `1px solid ${t.border}`, borderRadius: 10, padding: 16, background: t.cardBg }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 8 }}>
         <input value={g.title} onChange={e => onUpdate({ title: e.target.value })} placeholder="Goal title..."
@@ -1542,7 +1537,7 @@ function IdeaCard({ idea, onUpdate, onRemove, t }: {
   const dateLabel = new Date(idea.createdAt).toLocaleDateString('en', { month: 'short', day: 'numeric' });
 
   return (
-    <div style={{ border: `1px solid ${t.border}`, borderRadius: 10, padding: 14 }}>
+    <div style={{ border: `1px solid ${t.border}`, borderRadius: 10, padding: 14, background: t.cardBg }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
         <div style={{ flex: 1 }}>
           <input value={idea.title} onChange={e => onUpdate({ title: e.target.value })} style={{
@@ -1669,8 +1664,21 @@ function runOneTimeSeed(
 }
 
 // ── Main Dashboard ──
-function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: string }) {
-  const t = useBlackbookTheme();
+export function BlackbookDashboard({ onClose, passHash, transparent }: { onClose: () => void; passHash: string; transparent?: boolean }) {
+  const baseTheme = useBlackbookTheme();
+  // When transparent, override backgrounds to be see-through
+  // Apple Control Center style: dark overlay bg, light frosted cards, dark text
+  const t = transparent ? {
+    ...baseTheme,
+    bg: 'rgba(0,0,0,0.35)',
+    cardBg: 'rgba(255,255,255,0.6)',
+    inputBg: 'rgba(255,255,255,0.5)',
+    border: 'rgba(0,0,0,0.12)',
+    text: '#1c1917',
+    textStrong: '#0c0a09',
+    textMuted: 'rgba(0,0,0,0.6)',
+    accentSubtle: 'rgba(0,0,0,0.08)',
+  } : baseTheme;
   const [tab, setTab] = useState<'journal' | 'network' | 'tasks' | 'goals' | 'ideas'>('journal');
   const [journal, setJournal] = useState<JournalEntry[]>(() => load('journal', []));
   const [contacts, setContacts] = useState<NetworkContact[]>(() => load('contacts', DEFAULT_CONTACTS));
@@ -1931,45 +1939,52 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 10001,
+      position: transparent ? 'relative' : 'fixed',
+      inset: transparent ? undefined : 0,
+      width: transparent ? '100%' : undefined,
+      height: transparent ? '100%' : undefined,
+      zIndex: transparent ? undefined : 10001,
       background: t.bg, color: t.text, fontFamily: FONT,
       fontSize: 15, overflow: 'auto',
     }}>
-      {/* Header */}
+      {/* Header + Tabs — dark bar */}
       <div style={{
-        padding: '14px 24px', borderBottom: `1px solid ${t.border}`,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        position: 'sticky', top: 0, zIndex: 10,
+        background: transparent ? 'transparent' : t.bg,
+        borderBottom: transparent ? 'none' : `1px solid ${t.border}`,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 16, fontFamily: FONT_MEDIUM, color: t.textStrong }}>Ronniel's Blackbook</span>
-          <span style={{ color: t.textMuted, fontSize: 13 }}>
-            {new Date().toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}
-          </span>
+        <div style={{
+          padding: '14px 24px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 16, fontFamily: FONT_MEDIUM, color: transparent ? '#fff' : t.textStrong }}>Ronniel's Blackbook</span>
+            <span style={{ color: transparent ? 'rgba(255,255,255,0.5)' : t.textMuted, fontSize: 13 }}>
+              {new Date().toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <SaveIndicator status={saveStatus} t={t} />
+            <button onClick={onClose} style={{
+              background: transparent ? 'rgba(255,255,255,0.12)' : t.accentSubtle, border: 'none',
+              color: transparent ? 'rgba(255,255,255,0.8)' : t.textMuted, cursor: 'pointer', padding: '5px 12px', borderRadius: 6,
+              fontSize: 14, fontFamily: FONT_MEDIUM,
+            }}>Done</button>
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <SaveIndicator status={saveStatus} t={t} />
-          <button onClick={onClose} style={{
-            background: t.accentSubtle, border: 'none',
-            color: t.textMuted, cursor: 'pointer', padding: '5px 12px', borderRadius: 6,
-            fontSize: 14, fontFamily: FONT_MEDIUM,
-          }}>Done</button>
-        </div>
-      </div>
 
-      {/* Tabs */}
-      <div style={{
-        display: 'flex', gap: 0, padding: '0 24px',
-        borderBottom: `1px solid ${t.border}`,
-      }}>
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: 0, padding: '0 24px' }}>
         {(['journal', 'network', 'tasks', 'goals', 'ideas'] as const).map(tb => (
           <button key={tb} onClick={() => setTab(tb)} style={{
             background: 'transparent', border: 'none',
-            borderBottom: tab === tb ? `2px solid ${t.textStrong}` : '2px solid transparent',
-            color: tab === tb ? t.textStrong : t.textMuted,
+            borderBottom: tab === tb ? `2px solid ${transparent ? '#fff' : t.textStrong}` : '2px solid transparent',
+            color: tab === tb ? (transparent ? '#fff' : t.textStrong) : (transparent ? 'rgba(255,255,255,0.5)' : t.textMuted),
             padding: '10px 16px', cursor: 'pointer',
             fontSize: 14, fontFamily: FONT_MEDIUM, transition: 'all 0.15s',
           }}>{tb.charAt(0).toUpperCase() + tb.slice(1)}</button>
         ))}
+      </div>
       </div>
 
       {/* Content */}
@@ -1980,6 +1995,14 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
         {tab === 'goals' && <GoalsTab goals={goals} setGoals={setGoals} t={t} />}
         {tab === 'ideas' && <IdeasTab ideas={ideas} setIdeas={setIdeas} t={t} />}
       </div>
+      {transparent && <style>{`
+        input::placeholder, textarea::placeholder {
+          color: rgba(0,0,0,0.55) !important;
+          opacity: 1 !important;
+        }
+        select { color: rgba(0,0,0,0.8) !important; }
+        option { background: #fff; color: #1d1d1f; }
+      `}</style>}
     </div>
   );
 }
@@ -2009,7 +2032,7 @@ export default function Blackbook() {
       {state === 'password' && (
         <PasswordGate onUnlock={handleUnlock} onClose={() => setState('hidden')} />
       )}
-      {state === 'open' && <Dashboard onClose={() => setState('hidden')} passHash={passHash} />}
+      {state === 'open' && <BlackbookDashboard onClose={() => setState('hidden')} passHash={passHash} />}
     </>
   );
 }
