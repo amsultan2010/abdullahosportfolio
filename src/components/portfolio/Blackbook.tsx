@@ -285,6 +285,9 @@ const COMPANY_DOMAINS: Record<string, string> = {
   'vercel': 'vercel.com', 'mercury': 'mercury.com', 'kalshi': 'kalshi.com', 'entorr': 'entorr.com',
   'rippling': 'rippling.com', 'boardy.ai': 'boardy.ai', 'fable': 'fable.app',
   'maxima': 'maxima.com', 'builder': 'builder.io', 'gentube': 'gentube.app',
+  'doordash': 'doordash.com', 'university of waterloo': 'uwaterloo.ca', 'uwaterloo': 'uwaterloo.ca',
+  'hexa / stackadapt': 'stackadapt.com', 'stackadapt': 'stackadapt.com',
+  'bahl': 'bahl.com', 'bcv/kp fellow': 'kleinerperkins.com',
 };
 
 function getCompanyLogo(company: string) {
