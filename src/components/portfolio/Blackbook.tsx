@@ -292,7 +292,7 @@ const COMPANY_DOMAINS: Record<string, string> = {
 
 function getCompanyLogo(company: string) {
   const domain = COMPANY_DOMAINS[company.toLowerCase()];
-  return domain ? `https://logo.clearbit.com/${domain}` : null;
+  return domain ? `https://unavatar.io/${domain}?fallback=false` : null;
 }
 
 function getLinkedInSearchUrl(company: string) {
@@ -1049,31 +1049,77 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
           });
 
         const noCompany = [...(byCompany[''] || []), ...(byCompany['Personal'] || [])];
+        const hotPeople = filtered.filter(c => c.urgency === 'now' || c.urgency === 'soon');
 
         return (
           <>
+            {/* Active right now */}
+            {hotPeople.length > 0 && (
+              <div style={{
+                background: '#ef444408', border: '1px solid #ef444420', borderLeft: '4px solid #ef4444',
+                borderRadius: 10, padding: '14px 16px', marginBottom: 16,
+              }}>
+                <div style={{ fontSize: 12, fontFamily: FONT_MEDIUM, color: '#ef4444', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+                  Active now ({hotPeople.length})
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {hotPeople.map(c => (
+                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {c.company ? <CompanyLogo company={c.company} size={20} t={t} /> : (
+                        <div style={{ width: 20, height: 20, borderRadius: 5, background: t.accentSubtle, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: FONT_MEDIUM, color: t.textMuted, flexShrink: 0 }}>{(c.name || '?')[0]}</div>
+                      )}
+                      <span style={{ fontFamily: FONT_MEDIUM, fontSize: 14, color: t.textStrong }}>{c.name}</span>
+                      {c.company && <span style={{ fontSize: 13, color: t.textMuted }}>{c.company}</span>}
+                      <span style={{ fontSize: 13, color: t.text, marginLeft: 'auto', textAlign: 'right', maxWidth: '45%' }}>{c.actionNeeded}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {/* Target Companies */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {companyGroups.map(([company, people]) => {
                 const isCollapsedCo = collapsed[company];
                 const hotCount = people.filter(c => c.urgency === 'now' || c.urgency === 'soon').length;
+                const hasHot = hotCount > 0;
+                const borderColor = hasHot ? '#ef4444' : t.border;
                 return (
-                  <div key={company} style={{ border: `1px solid ${t.border}`, borderRadius: 10, overflow: 'hidden' }}>
+                  <div key={company} style={{
+                    border: `1px solid ${borderColor}`,
+                    borderLeft: `4px solid ${hasHot ? '#ef4444' : t.border}`,
+                    borderRadius: 10, overflow: 'hidden',
+                  }}>
                     {/* Company header */}
                     <button onClick={() => setCollapsed(p => ({ ...p, [company]: !p[company] }))} style={{
                       width: '100%', background: t.cardBg, border: 'none', cursor: 'pointer',
-                      padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
+                      padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
                     }}>
-                      <CompanyLogo company={company} size={24} t={t} />
-                      <span style={{ fontFamily: FONT_MEDIUM, fontSize: 15, color: t.textStrong }}>{company}</span>
-                      <span style={{ fontSize: 13, color: t.textMuted }}>{people.length} {people.length === 1 ? 'person' : 'people'}</span>
-                      {hotCount > 0 && <span style={{ fontSize: 11, fontFamily: FONT_MEDIUM, color: '#ef4444', background: '#ef444412', padding: '1px 6px', borderRadius: 4 }}>{hotCount} hot</span>}
-                      <span style={{ fontSize: 14, color: t.textMuted, marginLeft: 'auto' }}>{isCollapsedCo ? '+' : '-'}</span>
+                      <CompanyLogo company={company} size={32} t={t} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontFamily: FONT_MEDIUM, fontSize: 16, color: t.textStrong }}>{company}</span>
+                          <span style={{ fontSize: 13, color: t.textMuted }}>{people.length}</span>
+                          {hasHot && <span style={{ fontSize: 11, fontFamily: FONT_MEDIUM, color: '#ef4444', background: '#ef444415', padding: '2px 8px', borderRadius: 10 }}>{hotCount} active</span>}
+                        </div>
+                        {/* Quick preview of hot people */}
+                        {hasHot && !isCollapsedCo === false && (
+                          <div style={{ fontSize: 12, color: t.text, marginTop: 2 }}>
+                            {people.filter(c => c.urgency === 'now' || c.urgency === 'soon').map(c => c.name).join(', ')}
+                          </div>
+                        )}
+                      </div>
+                      <span style={{ fontSize: 14, color: t.textMuted }}>{isCollapsedCo ? '+' : '-'}</span>
                     </button>
                     {/* People at this company */}
                     {!isCollapsedCo && (
-                      <div style={{ padding: '0 4px 4px' }}>
-                        {people.map(c => (
+                      <div style={{ padding: '4px 8px 8px' }}>
+                        {/* Hot people first, then warm, then cold */}
+                        {people
+                          .sort((a, b) => {
+                            const order = (u: string) => u === 'now' ? 0 : u === 'soon' ? 1 : u === 'later' ? 2 : 3;
+                            return order(a.urgency) - order(b.urgency);
+                          })
+                          .map(c => (
                           <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
                             onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
                             onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
@@ -1172,11 +1218,17 @@ function ContactCard({ contact: c, expanded, onToggle, onUpdate, onRemove, t }: 
 
   const urgColor = URGENCY_COLORS[c.urgency];
 
+  const isCold = c.urgency === 'waiting' || c.urgency === 'later';
+
   return (
     <div style={{
       border: `1px solid ${t.border}`, borderRadius: 10, overflow: 'hidden',
       display: 'flex', cursor: 'pointer',
-    }} onClick={onToggle}>
+      opacity: isCold && !expanded ? 0.55 : 1, transition: 'opacity 0.15s',
+    }} onClick={onToggle}
+      onMouseEnter={e => { if (isCold) e.currentTarget.style.opacity = '0.85'; }}
+      onMouseLeave={e => { if (isCold && !expanded) e.currentTarget.style.opacity = '0.55'; }}
+    >
       {/* Left urgency bar */}
       <div style={{ width: 4, flexShrink: 0, background: urgColor }} />
 
