@@ -6188,14 +6188,15 @@ function Desktop() {
           {/* Windows */}
           {openWindows.map(win => {
             // Title bar bg matches each app's content color
-            const isTerminalDashboard = win.id === 'terminal' && win.isFullscreen && bbAuthState;
+            const isTerminalFullscreen = win.id === 'terminal' && win.isFullscreen;
+            const isTerminalDashboard = isTerminalFullscreen && bbAuthState;
             const titleBarBgMap: Record<string, string> = {
               projects: '#252526',
               blog: '#f9f9f8',
               ...(isTerminalDashboard ? { terminal: 'rgba(0,0,0,0.4)' } : {}),
             };
             // Apps with dark content need light title bar text
-            const darkTitleBars = isTerminalDashboard ? ['projects', 'terminal'] : ['projects'];
+            const darkTitleBars = isTerminalFullscreen ? ['projects', 'terminal'] : ['projects'];
             const titleBarBg = titleBarBgMap[win.id];
             const titleBarDark = darkTitleBars.includes(win.id);
             if (win.id === 'detail' && state.activeDetail) {
