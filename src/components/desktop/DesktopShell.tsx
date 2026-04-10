@@ -6155,16 +6155,12 @@ function Desktop() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [state.focusedWindowId, dispatch]);
 
-  // Mobile — show boot animation, then mobile layout
-  if (isMobile) {
-    return (
-      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0b1220' }}>
-        <Background />
-        <BootScreen />
-        {state.bootComplete && <MobileLayout />}
-      </div>
-    );
-  }
+  // Auto-fullscreen terminal on mobile after boot
+  useEffect(() => {
+    if (isMobile && state.bootComplete && state.windows.terminal?.isOpen && !state.windows.terminal?.isFullscreen) {
+      dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' });
+    }
+  }, [isMobile, state.bootComplete]);
 
   const openWindows = Object.values(state.windows).filter(w => w.isOpen);
 

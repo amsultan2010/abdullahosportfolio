@@ -6,6 +6,20 @@ function createWindow(id: WindowId, zIndex: number, titleOverride?: string): Win
   const defaults = WINDOW_DEFAULTS[id];
   const screenW = typeof window !== 'undefined' ? window.innerWidth : 1440;
   const screenH = typeof window !== 'undefined' ? window.innerHeight : 900;
+  const isMobile = screenW <= 768;
+  // On mobile, auto-fullscreen all windows
+  if (isMobile) {
+    return {
+      id,
+      title: titleOverride || defaults.title,
+      isOpen: true,
+      isMinimized: false,
+      isFullscreen: true,
+      zIndex,
+      position: { x: 0, y: 28 },
+      size: { width: screenW, height: screenH - 28 - 80 },
+    };
+  }
   // Clamp window size to fit screen (leave room for dock + menu bar)
   const maxW = screenW - 40;
   const maxH = screenH - 28 - 70;

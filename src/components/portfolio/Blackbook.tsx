@@ -332,18 +332,20 @@ function FingerprintIcon({ onClick }: { onClick: () => void }) {
   useEffect(() => { const timer = setTimeout(() => setVisible(true), 3000); return () => clearTimeout(timer); }, []);
 
   const isDark = typeof window !== 'undefined' && localStorage.getItem('rg-theme') === 'dark';
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+  const iconSize = isMobile ? 18 : 28;
 
   return (
     <button onClick={onClick} aria-label="Access" style={{
-      position: 'fixed', bottom: 20, right: 20, zIndex: 9999,
+      position: 'fixed', bottom: isMobile ? 12 : 20, right: isMobile ? 12 : 20, zIndex: 9999,
       background: 'none', border: 'none', cursor: 'pointer',
       opacity: visible ? 0.15 : 0, transition: 'opacity 1.5s ease',
-      padding: 8, color: isDark ? '#78716c' : '#78716c',
+      padding: isMobile ? 4 : 8, color: isDark ? '#78716c' : '#78716c',
     }}
       onMouseEnter={e => { e.currentTarget.style.opacity = '0.35'; }}
       onMouseLeave={e => { e.currentTarget.style.opacity = '0.15'; }}
     >
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4"/>
         <path d="M5 19.5C5.5 18 6 15 6 12c0-3.5 2.5-6 6-6 3 0 5.5 2 6 5"/>
         <path d="M9 12c0-1.5 1.5-3 3-3s3 1.5 3 3-1 6-2 8"/>
