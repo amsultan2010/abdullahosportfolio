@@ -54,6 +54,7 @@ function useBlackbookTheme(): Theme {
 // ── Types ──
 interface Meeting {
   id: string; title: string; person: string; time: string; notes: string; link?: string;
+  contactId?: string;
 }
 
 interface JournalEntry {
@@ -527,20 +528,51 @@ function MiniCalendar({ selectedDate, onSelectDate, journalDates, t }: {
 }
 
 // ── Meeting Row ──
-function MeetingRow({ meeting, onChange, onRemove, t }: {
-  meeting: Meeting; onChange: (patch: Partial<Meeting>) => void; onRemove: () => void; t: Theme;
+function MeetingRow({ meeting, onChange, onRemove, contacts, t }: {
+  meeting: Meeting; onChange: (patch: Partial<Meeting>) => void; onRemove: () => void;
+  contacts?: NetworkContact[]; t: Theme;
 }) {
+  const linkedContact = contacts?.find(c => c.id === meeting.contactId);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr auto', gap: 8, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr auto', gap: 8, alignItems: 'start' }}>
         <Field value={meeting.time} onChange={v => onChange({ time: v })} placeholder="2:00 PM" t={t} />
         <Field value={meeting.title} onChange={v => onChange({ title: v })} placeholder="Meeting title" t={t} />
-        <Field value={meeting.person} onChange={v => onChange({ person: v })} placeholder="With..." t={t} />
         <button onClick={onRemove} style={{
           background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
           fontSize: 14, padding: '6px 4px', marginTop: 1,
         }}>&times;</button>
       </div>
+      {/* Contact picker + person field */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        {contacts && contacts.length > 0 && (
+          <select value={meeting.contactId || ''} onChange={e => {
+            const cId = e.target.value;
+            if (cId) {
+              const c = contacts.find(x => x.id === cId);
+              if (c) onChange({ contactId: cId, person: c.name });
+            } else {
+              onChange({ contactId: undefined });
+            }
+          }} style={{
+            background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+            padding: '7px 8px', borderRadius: 8, fontFamily: FONT, fontSize: 13, outline: 'none',
+            maxWidth: 180,
+          }}>
+            <option value="">Pick contact...</option>
+            {contacts.filter(c => c.category !== 'archived').map(c => (
+              <option key={c.id} value={c.id}>{c.name}{c.company ? ` (${c.company})` : ''}</option>
+            ))}
+          </select>
+        )}
+        <div style={{ flex: 1 }}>
+          <Field value={meeting.person} onChange={v => onChange({ person: v })} placeholder="With..." t={t} />
+        </div>
+        {linkedContact?.company && (
+          <span style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, flexShrink: 0 }}>{linkedContact.company}</span>
+        )}
+      </div>
+      {/* Meeting link */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ flex: 1 }}>
           <TextArea value={meeting.link || ''} onChange={v => onChange({ link: v })} placeholder="Meeting link (Zoom, Google Meet...)" t={t} minHeight={34} />
@@ -553,14 +585,14 @@ function MeetingRow({ meeting, onChange, onRemove, t }: {
           }}>Join</a>
         )}
       </div>
-
     </div>
   );
 }
 
 // ── Journal Tab ──
-function JournalTab({ journal, setJournal, t }: {
-  journal: JournalEntry[]; setJournal: (fn: (prev: JournalEntry[]) => JournalEntry[]) => void; t: Theme;
+function JournalTab({ journal, setJournal, contacts, t }: {
+  journal: JournalEntry[]; setJournal: (fn: (prev: JournalEntry[]) => JournalEntry[]) => void;
+  contacts?: NetworkContact[]; t: Theme;
 }) {
   const today = localToday();
   const [selectedDate, setSelectedDate] = useState(today);
@@ -618,14 +650,43 @@ function JournalTab({ journal, setJournal, t }: {
   });
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: 24 }}>
-      {/* Writing area */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div>
-          <span style={{ fontSize: 15, color: t.textStrong, fontFamily: FONT_MEDIUM }}>{dayLabel}</span>
-          {selectedDate === today && <span style={{ fontSize: 14, color: t.textMuted, marginLeft: 8 }}>today</span>}
-        </div>
+    <div>
+      {/* Calendar + Upcoming — top section */}
+      <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 24, marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${t.border}` }}>
+        <MiniCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate}
+          journalDates={journalDates} t={t} />
+        <UpcomingMeetings journal={journal} onSelectDate={setSelectedDate} t={t} />
+      </div>
 
+      {/* Day header */}
+      <div style={{ marginBottom: 16 }}>
+        <span style={{ fontSize: 16, color: t.textStrong, fontFamily: FONT_MEDIUM }}>{dayLabel}</span>
+        {selectedDate === today && <span style={{ fontSize: 14, color: t.textMuted, marginLeft: 8 }}>today</span>}
+      </div>
+
+      {/* Meetings first — most actionable */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM }}>Meetings</label>
+          <button onClick={addMeeting} style={{
+            background: 'none', border: 'none', color: t.textMuted,
+            cursor: 'pointer', fontFamily: FONT, fontSize: 14,
+          }}>+ add</button>
+        </div>
+        {(entry?.meetings || []).length === 0 && (
+          <p style={{ color: t.textMuted, fontSize: 14, opacity: 0.6 }}>No meetings scheduled</p>
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {(entry?.meetings || []).map(m => (
+            <MeetingRow key={m.id} meeting={m}
+              onChange={patch => updateMeeting(m.id, patch)}
+              onRemove={() => removeMeeting(m.id)} contacts={contacts} t={t} />
+          ))}
+        </div>
+      </div>
+
+      {/* Journal writing */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
           <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 6 }}>What did you do?</label>
           <TextArea value={entry?.body || ''} onChange={v => updateEntry({ body: v })} placeholder="Write about your day..." t={t} />
@@ -634,27 +695,6 @@ function JournalTab({ journal, setJournal, t }: {
         <div>
           <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 6 }}>Plan for tomorrow</label>
           <TextArea value={entry?.tomorrow || ''} onChange={v => updateEntry({ tomorrow: v })} placeholder="What's the plan?" t={t} minHeight={80} />
-        </div>
-
-        {/* Meetings */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM }}>Meetings</label>
-            <button onClick={addMeeting} style={{
-              background: 'none', border: 'none', color: t.textMuted,
-              cursor: 'pointer', fontFamily: FONT, fontSize: 14,
-            }}>+ add</button>
-          </div>
-          {(entry?.meetings || []).length === 0 && (
-            <p style={{ color: t.textMuted, fontSize: 14, opacity: 0.6 }}>No meetings scheduled</p>
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {(entry?.meetings || []).map(m => (
-              <MeetingRow key={m.id} meeting={m}
-                onChange={patch => updateMeeting(m.id, patch)}
-                onRemove={() => removeMeeting(m.id)} t={t} />
-            ))}
-          </div>
         </div>
 
         {/* Past entries */}
@@ -666,15 +706,6 @@ function JournalTab({ journal, setJournal, t }: {
             ))}
           </div>
         )}
-      </div>
-
-      {/* Calendar sidebar */}
-      <div style={{ borderLeft: `1px solid ${t.border}`, paddingLeft: 20 }}>
-        <MiniCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate}
-          journalDates={journalDates} t={t} />
-
-        {/* Upcoming meetings */}
-        <UpcomingMeetings journal={journal} onSelectDate={setSelectedDate} t={t} />
       </div>
     </div>
   );
@@ -941,30 +972,6 @@ function NetworkTab({ contacts, setContacts, t }: {
       {/* Outreach view */}
       {view === 'outreach' && (
         <>
-          {/* Action feed — what needs attention NOW */}
-          {(() => {
-            const urgent = active.filter(c => c.category === 'call-booked' || c.category === 'reply-needed');
-            if (urgent.length === 0) return null;
-            return (
-              <div style={{
-                background: t.cardBg, border: `1px solid ${t.border}`, borderRadius: 10,
-                padding: '12px 14px', marginBottom: 16,
-              }}>
-                <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  Needs attention now
-                </label>
-                {urgent.map(c => (
-                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: URGENCY_COLORS[c.urgency], flexShrink: 0 }} />
-                    <span style={{ fontFamily: FONT_MEDIUM, fontSize: 14, color: t.textStrong }}>{c.name}</span>
-                    {c.company && <span style={{ fontSize: 13, color: t.textMuted }}>{c.company}</span>}
-                    <span style={{ fontSize: 13, color: t.text, marginLeft: 'auto', textAlign: 'right', maxWidth: '50%' }}>{c.actionNeeded}</span>
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
-
           {/* Summary counts */}
           <div style={{ fontSize: 14, color: t.textMuted, marginBottom: 14, fontFamily: FONT, display: 'flex', gap: 14 }}>
             {CATEGORY_META.map(cm => (
@@ -2028,7 +2035,7 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
 
       {/* Content */}
       <div style={{ padding: 24, maxWidth: 940, margin: '0 auto' }}>
-        {tab === 'journal' && <JournalTab journal={journal} setJournal={setJournal} t={t} />}
+        {tab === 'journal' && <JournalTab journal={journal} setJournal={setJournal} contacts={contacts} t={t} />}
         {tab === 'network' && <NetworkTab contacts={contacts} setContacts={setContacts} t={t} />}
         {tab === 'tasks' && <TasksTab tasks={tasks} setTasks={setTasks} t={t} />}
         {tab === 'goals' && <GoalsTab goals={goals} setGoals={setGoals} t={t} />}
