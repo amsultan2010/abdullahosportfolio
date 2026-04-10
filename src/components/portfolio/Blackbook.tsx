@@ -66,17 +66,14 @@ interface JournalEntry {
 type ScoutingStatus = 'researching' | 'ready' | 'archived';
 type OutreachStatus = 'queued' | 'dm-sent' | 'replied' | 'call-scheduled' | 'call-done' | 'connected';
 
-// Contact system — value type (what they can do) + temperature (how active)
-type ContactValue = 'can-refer' | 'can-hire' | 'can-intro' | 'can-advise' | 'networking' | 'archived';
-type ContactTemp = 'hot' | 'warm' | 'cold';
-// Keep old types as aliases for backward compat
-type ContactCategory = ContactValue;
-type Urgency = ContactTemp;
+// New contact system
+type ContactCategory = 'call-booked' | 'reply-needed' | 'warm' | 'awaiting-reply' | 'connected' | 'archived';
+type Urgency = 'now' | 'soon' | 'later' | 'waiting';
 
 interface NetworkContact {
   id: string; name: string; company: string; role: string;
   // New fields
-  category: ContactValue; urgency: ContactTemp;
+  category: ContactCategory; urgency: Urgency;
   whatTheySaid: string; actionNeeded: string; followUpDate?: string;
   linkedinUrl?: string; tags?: string[];
   notes: string; createdAt: string;
@@ -787,22 +784,15 @@ function PastEntry({ entry, onSelect, t }: { entry: JournalEntry; onSelect: () =
 }
 
 // ── Network Tab (category-based, person-first) ──
-// Temperature colors (shown as left bar on cards)
-const TEMP_COLORS: Record<ContactTemp, string> = {
-  hot: '#ef4444', warm: '#f59e0b', cold: '#6b7280',
+const URGENCY_COLORS: Record<Urgency, string> = {
+  now: '#ef4444', soon: '#f59e0b', later: '#3b82f6', waiting: '#6b7280',
 };
-// Keep old name for backward compat
-const URGENCY_COLORS = TEMP_COLORS as Record<string, string>;
-
-// Value-based grouping
-const VALUE_META: { key: ContactValue; label: string; accent: string; emoji: string }[] = [
-  { key: 'can-refer', label: 'Can Refer', accent: '#2d8a56', emoji: '→' },
-  { key: 'can-hire', label: 'Can Hire', accent: '#2563eb', emoji: '★' },
-  { key: 'can-intro', label: 'Can Intro', accent: '#8b5cf6', emoji: '⟷' },
-  { key: 'can-advise', label: 'Can Advise', accent: '#f59e0b', emoji: '◆' },
-  { key: 'networking', label: 'Networking', accent: '#6b7280', emoji: '○' },
+const CATEGORY_META: { key: ContactCategory; label: string; accent: string }[] = [
+  { key: 'call-booked', label: 'Calls Booked', accent: '#ef4444' },
+  { key: 'reply-needed', label: 'Need to Reply', accent: '#f59e0b' },
+  { key: 'warm', label: 'Warm — Check In Later', accent: '#3b82f6' },
+  { key: 'awaiting-reply', label: 'Awaiting Reply', accent: '#6b7280' },
 ];
-const CATEGORY_META = VALUE_META;
 
 // ── LinkedIn URL parser ──
 function parseLinkedInUrl(url: string): { name: string; linkedinUrl: string } | null {
@@ -856,7 +846,7 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
   const addContact = () => {
     const id = Date.now().toString();
     setContacts(prev => [...prev, {
-      id, name: '', company: '', role: '', category: 'networking', urgency: 'warm',
+      id, name: '', company: '', role: '', category: 'warm', urgency: 'later',
       whatTheySaid: '', actionNeeded: '', notes: '', createdAt: new Date().toISOString(),
     }]);
     setExpandedCard(id);
@@ -877,7 +867,7 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
     }
     const id = Date.now().toString();
     setContacts(prev => [...prev, {
-      id, name: parsed.name, company: '', role: '', category: 'networking', urgency: 'warm',
+      id, name: parsed.name, company: '', role: '', category: 'warm', urgency: 'later',
       whatTheySaid: '', actionNeeded: '', linkedinUrl: parsed.linkedinUrl,
       notes: '', createdAt: new Date().toISOString(),
     }]);
@@ -891,8 +881,8 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
     });
   };
 
-  const active = contacts.filter(c => c.category !== 'archived');
-  const archived = contacts.filter(c => c.category === 'archived');
+  const active = contacts.filter(c => c.category !== 'connected' && c.category !== 'archived');
+  const connected = contacts.filter(c => c.category === 'connected');
   const filtered = filter
     ? filter.startsWith('tag:')
       ? active.filter(c => (c.tags || []).includes(filter.slice(4)))
@@ -906,11 +896,11 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
     'awaiting-reply': filtered.filter(c => c.category === 'awaiting-reply').length,
   };
 
-  const filteredArchived = filter
+  const filteredConnected = filter
     ? filter.startsWith('tag:')
-      ? archived.filter(c => (c.tags || []).includes(filter.slice(4)))
-      : archived.filter(c => `${c.name} ${c.company}`.toLowerCase().includes(filter.toLowerCase()))
-    : archived;
+      ? connected.filter(c => (c.tags || []).includes(filter.slice(4)))
+      : connected.filter(c => `${c.name} ${c.company}`.toLowerCase().includes(filter.toLowerCase()))
+    : connected;
 
   return (
     <div>
@@ -922,7 +912,7 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
             border: 'none', color: view === v ? t.textStrong : t.textMuted,
             padding: '6px 14px', cursor: 'pointer', borderRadius: 6,
             fontSize: 14, fontFamily: FONT_MEDIUM, transition: 'all 0.15s',
-          }}>{v === 'outreach' ? `Network (${active.length})` : `Archived (${archived.length})`}</button>
+          }}>{v === 'outreach' ? `Outreach (${active.length})` : `Contact Book (${connected.length})`}</button>
         ))}
       </div>
 
@@ -1064,15 +1054,15 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
         </>
       )}
 
-      {/* Archived view */}
+      {/* Contact Book view */}
       {view === 'contacts' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {filteredArchived.length === 0 && (
+          {filteredConnected.length === 0 && (
             <p style={{ color: t.textMuted, fontSize: 14, textAlign: 'center', padding: 32 }}>
-              No archived contacts.
+              No contacts in your book yet. Move people here when they're fully connected.
             </p>
           )}
-          {filteredArchived.map(c => (
+          {filteredConnected.map(c => (
             <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
               onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
               onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
@@ -1214,23 +1204,24 @@ function ContactCard({ contact: c, expanded, onToggle, onUpdate, onRemove, t }: 
                   background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
                   padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 14, outline: 'none', width: '100%',
                 }}>
-                  <option value="can-refer">Can Refer</option>
-                  <option value="can-hire">Can Hire</option>
-                  <option value="can-intro">Can Intro</option>
-                  <option value="can-advise">Can Advise</option>
-                  <option value="networking">Networking</option>
+                  <option value="call-booked">Call Booked</option>
+                  <option value="reply-needed">Need to Reply</option>
+                  <option value="warm">Warm</option>
+                  <option value="awaiting-reply">Awaiting Reply</option>
+                  <option value="connected">Connected</option>
                   <option value="archived">Archived</option>
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 13, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Temperature</label>
-                <select value={c.urgency} onChange={e => onUpdate({ urgency: e.target.value as ContactTemp })} style={{
+                <label style={{ fontSize: 13, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Urgency</label>
+                <select value={c.urgency} onChange={e => onUpdate({ urgency: e.target.value as Urgency })} style={{
                   background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
                   padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 14, outline: 'none', width: '100%',
                 }}>
-                  <option value="hot">Hot</option>
-                  <option value="warm">Warm</option>
-                  <option value="cold">Cold</option>
+                  <option value="now">Now</option>
+                  <option value="soon">Soon</option>
+                  <option value="later">Later</option>
+                  <option value="waiting">Waiting</option>
                 </select>
               </div>
               <Field label="Follow-up" value={c.followUpDate || ''} onChange={v => onUpdate({ followUpDate: v })} placeholder="mid-May..." t={t} />
@@ -1882,25 +1873,16 @@ function Dashboard({ onClose, passHash }: { onClose: () => void; passHash: strin
         });
       }
 
-      // Migrate contacts to new value-based system
-      const OLD_TO_VALUE: Record<string, ContactValue> = {
-        'call-booked': 'networking', 'reply-needed': 'networking', 'warm': 'networking',
-        'awaiting-reply': 'networking', 'connected': 'networking',
-      };
-      const OLD_TO_TEMP: Record<string, ContactTemp> = {
-        'now': 'hot', 'soon': 'hot', 'later': 'warm', 'waiting': 'cold',
-      };
+      // Migrate contacts to v3 format if needed
       loadedContacts = loadedContacts.map((c: any) => {
-        // Map old categories to new value types if they match old names
-        let category = c.category || 'networking';
-        let urgency = c.urgency || 'warm';
-        if (OLD_TO_VALUE[category]) category = OLD_TO_VALUE[category];
-        if (OLD_TO_TEMP[urgency]) urgency = OLD_TO_TEMP[urgency];
-        // Handle contacts with no category at all (very old format)
-        if (!c.category && c.outreachStatus) {
-          category = 'networking';
-          urgency = c.outreachStatus === 'dm-sent' ? 'cold' : 'warm';
-        }
+        if (c.category) return c;
+        let category: ContactCategory = 'warm';
+        let urgency: Urgency = 'later';
+        const os = c.outreachStatus as string;
+        if (os === 'dm-sent') { category = 'awaiting-reply'; urgency = 'waiting'; }
+        else if (os === 'replied') { category = 'reply-needed'; urgency = 'soon'; }
+        else if (os === 'call-scheduled') { category = 'call-booked'; urgency = 'now'; }
+        else if (os === 'connected') { category = 'connected'; urgency = 'later'; }
         return { ...c, category, urgency, whatTheySaid: c.whatTheySaid || c.notes || '', actionNeeded: c.actionNeeded || c.nextAction || '' };
       });
 
