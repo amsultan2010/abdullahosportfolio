@@ -299,8 +299,7 @@ function Inner() {
         <ContentViewer content={activeContent} onClose={() => setActiveContent(null)} />
       )}
 
-      {/* Hidden dashboard */}
-      <Blackbook />
+      {/* Blackbook removed — only accessible from /desktop */}
 
       <style>{`
         :root {
