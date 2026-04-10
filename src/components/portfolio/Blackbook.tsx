@@ -786,16 +786,22 @@ function PastEntry({ entry, onSelect, t }: { entry: JournalEntry; onSelect: () =
   );
 }
 
-// ── Network Tab (category-based, person-first) ──
-const URGENCY_COLORS: Record<Urgency, string> = {
-  now: '#ef4444', soon: '#f59e0b', later: '#3b82f6', waiting: '#6b7280',
+// ── Network Tab ──
+// Traffic light: green = active/ready, yellow = needs work, red = dead
+const TRAFFIC_COLORS: Record<string, string> = {
+  green: '#22c55e', yellow: '#eab308', red: '#ef4444',
 };
-const CATEGORY_META: { key: ContactCategory; label: string; accent: string }[] = [
-  { key: 'call-booked', label: 'Calls Booked', accent: '#ef4444' },
-  { key: 'reply-needed', label: 'Need to Reply', accent: '#f59e0b' },
-  { key: 'warm', label: 'Warm — Check In Later', accent: '#3b82f6' },
-  { key: 'awaiting-reply', label: 'Awaiting Reply', accent: '#6b7280' },
-];
+// Map any urgency value to a traffic light
+function getLight(urgency: string): 'green' | 'yellow' | 'red' {
+  if (['now', 'soon', 'hot', 'green'].includes(urgency)) return 'green';
+  if (['later', 'warm', 'yellow', 'waiting'].includes(urgency)) return 'yellow';
+  return 'red';
+}
+// Keep old names for backward compat
+const URGENCY_COLORS: Record<string, string> = new Proxy(TRAFFIC_COLORS, {
+  get: (_, key: string) => TRAFFIC_COLORS[getLight(key)] || '#6b7280',
+});
+const CATEGORY_META: any[] = []; // unused but referenced
 
 // ── LinkedIn URL parser ──
 function parseLinkedInUrl(url: string): { name: string; linkedinUrl: string } | null {
@@ -905,272 +911,57 @@ function NetworkTab({ contacts, setContacts, journal, t }: {
       : connected.filter(c => `${c.name} ${c.company}`.toLowerCase().includes(filter.toLowerCase()))
     : connected;
 
+  // Sort: green first, yellow middle, red last
+  const lightOrder = (c: NetworkContact) => { const l = getLight(c.urgency); return l === 'green' ? 0 : l === 'yellow' ? 1 : 2; };
+  const sorted = [...filtered].sort((a, b) => lightOrder(a) - lightOrder(b));
+  const greenCount = sorted.filter(c => getLight(c.urgency) === 'green').length;
+  const yellowCount = sorted.filter(c => getLight(c.urgency) === 'yellow').length;
+  const redCount = sorted.filter(c => getLight(c.urgency) === 'red').length;
+
   return (
     <div>
-      {/* Sub-tabs */}
-      <div style={{ display: 'flex', gap: 2, marginBottom: 16 }}>
-        {(['outreach', 'contacts'] as const).map(v => (
-          <button key={v} onClick={() => setView(v)} style={{
-            background: view === v ? t.accentSubtle : 'transparent',
-            border: 'none', color: view === v ? t.textStrong : t.textMuted,
-            padding: '6px 14px', cursor: 'pointer', borderRadius: 6,
-            fontSize: 14, fontFamily: FONT_MEDIUM, transition: 'all 0.15s',
-          }}>{v === 'outreach' ? `Outreach (${active.length})` : `Contact Book (${connected.length})`}</button>
-        ))}
-      </div>
-
-      {/* LinkedIn paste-to-add */}
+      {/* LinkedIn paste */}
       <div style={{ marginBottom: 12 }}>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input value={pasteUrl} onChange={e => setPasteUrl(e.target.value)}
-            onPaste={e => {
-              const text = e.clipboardData.getData('text');
-              if (text.includes('linkedin.com/in/')) {
-                e.preventDefault();
-                addFromLinkedIn(text);
-              }
-            }}
-            onKeyDown={e => { if (e.key === 'Enter' && pasteUrl) addFromLinkedIn(pasteUrl); }}
-            placeholder="Paste a LinkedIn URL to add contact..."
-            style={{
-              flex: 1, background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-              padding: '8px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
-              outline: 'none', boxSizing: 'border-box',
-            }} />
-        </div>
-        {pasteStatus && (
-          <div style={{
-            fontSize: 12, fontFamily: FONT_MEDIUM, marginTop: 4, padding: '2px 0',
-            color: pasteStatus.startsWith('Added') ? '#2d8a56' : pasteStatus.includes('already') ? t.textMuted : '#ef4444',
-          }}>{pasteStatus}</div>
-        )}
+        <input value={pasteUrl} onChange={e => setPasteUrl(e.target.value)}
+          onPaste={e => {
+            const text = e.clipboardData.getData('text');
+            if (text.includes('linkedin.com/in/')) { e.preventDefault(); addFromLinkedIn(text); }
+          }}
+          onKeyDown={e => { if (e.key === 'Enter' && pasteUrl) addFromLinkedIn(pasteUrl); }}
+          placeholder="Paste a LinkedIn URL to add contact..."
+          style={{
+            width: '100%', background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+            padding: '8px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
+            outline: 'none', boxSizing: 'border-box',
+          }} />
+        {pasteStatus && <div style={{ fontSize: 12, fontFamily: FONT_MEDIUM, marginTop: 4, color: pasteStatus.startsWith('Added') ? '#22c55e' : '#ef4444' }}>{pasteStatus}</div>}
       </div>
 
       {/* Filter */}
-      <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Filter by name or company..."
+      <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Filter..."
         style={{
-          background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+          width: '100%', background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
           padding: '8px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
-          outline: 'none', width: '100%', boxSizing: 'border-box', marginBottom: 16,
+          outline: 'none', boxSizing: 'border-box', marginBottom: 16,
         }} />
 
-      {/* Tag filter */}
-      {(() => {
-        const allTags = [...new Set(contacts.flatMap(c => c.tags || []))];
-        if (allTags.length === 0) return null;
-        return (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 14 }}>
-            {allTags.map(tag => (
-              <button key={tag} onClick={() => setFilter(filter === `tag:${tag}` ? '' : `tag:${tag}`)} style={{
-                background: filter === `tag:${tag}` ? `${TAG_COLORS[tag] || t.textMuted}22` : 'transparent',
-                border: `1px solid ${filter === `tag:${tag}` ? (TAG_COLORS[tag] || t.textMuted) : t.border}`,
-                color: TAG_COLORS[tag] || t.textMuted,
-                padding: '3px 8px', borderRadius: 5, cursor: 'pointer', fontFamily: FONT_MEDIUM, fontSize: 11,
-                transition: 'all 0.15s',
-              }}>{tag}</button>
-            ))}
-          </div>
-        );
-      })()}
+      {/* Traffic light counts */}
+      <div style={{ display: 'flex', gap: 16, marginBottom: 16, fontSize: 14, fontFamily: FONT }}>
+        <span><span style={{ color: '#22c55e', fontFamily: FONT_MEDIUM, fontSize: 16 }}>{greenCount}</span> <span style={{ color: t.textMuted }}>active</span></span>
+        <span><span style={{ color: '#eab308', fontFamily: FONT_MEDIUM, fontSize: 16 }}>{yellowCount}</span> <span style={{ color: t.textMuted }}>needs work</span></span>
+        <span><span style={{ color: '#ef4444', fontFamily: FONT_MEDIUM, fontSize: 16 }}>{redCount}</span> <span style={{ color: t.textMuted }}>inactive</span></span>
+      </div>
 
-      {/* Upcoming meetings with contacts */}
-      {journal && (() => {
-        const today = localToday();
-        const upcoming = journal
-          .filter(e => e.date >= today && e.meetings.length > 0)
-          .sort((a, b) => a.date.localeCompare(b.date))
-          .flatMap(e => e.meetings.map(m => ({ ...m, date: e.date })))
-          .filter(m => m.contactId || contacts.some(c => c.name === m.person))
-          .slice(0, 6);
-        if (upcoming.length === 0) return null;
-        return (
-          <div style={{
-            background: t.cardBg, border: `1px solid ${t.border}`, borderRadius: 10,
-            padding: '12px 14px', marginBottom: 16,
-          }}>
-            <label style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Upcoming meetings
-            </label>
-            {upcoming.map(m => {
-              const isToday = m.date === today;
-              const dateLabel = isToday ? 'Today' : new Date(m.date + 'T12:00').toLocaleDateString('en', { month: 'short', day: 'numeric' });
-              const contact = m.contactId ? contacts.find(c => c.id === m.contactId) : contacts.find(c => c.name === m.person);
-              return (
-                <div key={m.id + m.date} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0' }}>
-                  <span style={{ fontSize: 13, color: isToday ? '#2d8a56' : t.textMuted, fontFamily: FONT_MEDIUM, minWidth: 50 }}>{dateLabel}</span>
-                  {m.time && <span style={{ fontSize: 13, color: t.textMuted }}>{m.time}</span>}
-                  <span style={{ fontSize: 14, color: t.textStrong, fontFamily: FONT_MEDIUM }}>{m.title || 'Meeting'}</span>
-                  <span style={{ fontSize: 13, color: t.textMuted }}>w/ {m.person}</span>
-                  {contact?.company && <span style={{ fontSize: 12, color: t.textMuted, opacity: 0.7 }}>({contact.company})</span>}
-                  {m.link && (
-                    <a href={m.link} target="_blank" rel="noopener noreferrer" style={{
-                      fontSize: 11, fontFamily: FONT_MEDIUM, color: '#2d8a56', textDecoration: 'none', marginLeft: 'auto',
-                    }}>Join</a>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        );
-      })()}
+      {/* Contact list — flat, sorted by light */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {sorted.map(c => (
+          <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
+            onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
+            onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
+        ))}
+      </div>
 
-      {/* Pipeline stats */}
-      {view === 'outreach' && (() => {
-        const companies = [...new Set(filtered.map(c => c.company).filter(Boolean))];
-        const hot = filtered.filter(c => c.urgency === 'now' || c.urgency === 'soon').length;
-        const withCompany = filtered.filter(c => c.company).length;
-        return (
-          <div style={{ fontSize: 14, color: t.textMuted, marginBottom: 16, fontFamily: FONT, display: 'flex', gap: 16 }}>
-            <span><span style={{ color: t.textStrong, fontFamily: FONT_MEDIUM }}>{companies.length}</span> companies</span>
-            <span><span style={{ color: '#ef4444', fontFamily: FONT_MEDIUM }}>{hot}</span> hot</span>
-            <span><span style={{ color: t.textStrong, fontFamily: FONT_MEDIUM }}>{withCompany}</span> contacts</span>
-          </div>
-        );
-      })()}
-
-      {/* Main view — company-centric */}
-      {view === 'outreach' && (() => {
-        // Group by company, then separate out connectors (no company or non-target)
-        const byCompany = filtered.reduce<Record<string, NetworkContact[]>>((acc, c) => {
-          const key = c.company?.trim() || '';
-          if (!acc[key]) acc[key] = [];
-          acc[key].push(c);
-          return acc;
-        }, {});
-
-        const companyGroups = Object.entries(byCompany)
-          .filter(([k]) => k !== '' && k !== 'Personal')
-          .sort((a, b) => {
-            // Sort by hottest contact in each company
-            const tempOrder = (u: string) => u === 'now' ? 0 : u === 'soon' ? 1 : u === 'later' ? 2 : 3;
-            const aHot = Math.min(...a[1].map(c => tempOrder(c.urgency)));
-            const bHot = Math.min(...b[1].map(c => tempOrder(c.urgency)));
-            return aHot - bHot;
-          });
-
-        const noCompany = [...(byCompany[''] || []), ...(byCompany['Personal'] || [])];
-        const hotPeople = filtered.filter(c => c.urgency === 'now' || c.urgency === 'soon');
-
-        return (
-          <>
-            {/* Active right now */}
-            {hotPeople.length > 0 && (
-              <div style={{
-                background: '#ef444408', border: '1px solid #ef444420', borderLeft: '4px solid #ef4444',
-                borderRadius: 10, padding: '14px 16px', marginBottom: 16,
-              }}>
-                <div style={{ fontSize: 12, fontFamily: FONT_MEDIUM, color: '#ef4444', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
-                  Active now ({hotPeople.length})
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {hotPeople.map(c => (
-                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      {c.company ? <CompanyLogo company={c.company} size={20} t={t} /> : (
-                        <div style={{ width: 20, height: 20, borderRadius: 5, background: t.accentSubtle, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: FONT_MEDIUM, color: t.textMuted, flexShrink: 0 }}>{(c.name || '?')[0]}</div>
-                      )}
-                      <span style={{ fontFamily: FONT_MEDIUM, fontSize: 14, color: t.textStrong }}>{c.name}</span>
-                      {c.company && <span style={{ fontSize: 13, color: t.textMuted }}>{c.company}</span>}
-                      <span style={{ fontSize: 13, color: t.text, marginLeft: 'auto', textAlign: 'right', maxWidth: '45%' }}>{c.actionNeeded}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {/* Target Companies */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {companyGroups.map(([company, people]) => {
-                const isCollapsedCo = collapsed[company];
-                const hotCount = people.filter(c => c.urgency === 'now' || c.urgency === 'soon').length;
-                const hasHot = hotCount > 0;
-                const borderColor = hasHot ? '#ef4444' : t.border;
-                return (
-                  <div key={company} style={{
-                    border: `1px solid ${borderColor}`,
-                    borderLeft: `4px solid ${hasHot ? '#ef4444' : t.border}`,
-                    borderRadius: 10, overflow: 'hidden',
-                  }}>
-                    {/* Company header */}
-                    <button onClick={() => setCollapsed(p => ({ ...p, [company]: !p[company] }))} style={{
-                      width: '100%', background: t.cardBg, border: 'none', cursor: 'pointer',
-                      padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
-                    }}>
-                      <CompanyLogo company={company} size={32} t={t} />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontFamily: FONT_MEDIUM, fontSize: 16, color: t.textStrong }}>{company}</span>
-                          <span style={{ fontSize: 13, color: t.textMuted }}>{people.length}</span>
-                          {hasHot && <span style={{ fontSize: 11, fontFamily: FONT_MEDIUM, color: '#ef4444', background: '#ef444415', padding: '2px 8px', borderRadius: 10 }}>{hotCount} active</span>}
-                        </div>
-                        {/* Quick preview of hot people */}
-                        {hasHot && !isCollapsedCo === false && (
-                          <div style={{ fontSize: 12, color: t.text, marginTop: 2 }}>
-                            {people.filter(c => c.urgency === 'now' || c.urgency === 'soon').map(c => c.name).join(', ')}
-                          </div>
-                        )}
-                      </div>
-                      <span style={{ fontSize: 14, color: t.textMuted }}>{isCollapsedCo ? '+' : '-'}</span>
-                    </button>
-                    {/* People at this company */}
-                    {!isCollapsedCo && (
-                      <div style={{ padding: '4px 8px 8px' }}>
-                        {/* Hot people first, then warm, then cold */}
-                        {people
-                          .sort((a, b) => {
-                            const order = (u: string) => u === 'now' ? 0 : u === 'soon' ? 1 : u === 'later' ? 2 : 3;
-                            return order(a.urgency) - order(b.urgency);
-                          })
-                          .map(c => (
-                          <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
-                            onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
-                            onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Connectors & General Network (no company) */}
-            {noCompany.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                  <div style={{ width: 3, height: 14, borderRadius: 2, background: t.textMuted }} />
-                  <span style={{ fontFamily: FONT_MEDIUM, fontSize: 14, color: t.textStrong, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    General Network
-                  </span>
-                  <span style={{ fontSize: 14, color: t.textMuted }}>({noCompany.length})</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {noCompany.map(c => (
-                    <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
-                      onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
-                      onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        );
-      })()}
-
-      {/* Archived view */}
-      {view === 'contacts' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {filteredConnected.length === 0 && (
-            <p style={{ color: t.textMuted, fontSize: 14, textAlign: 'center', padding: 32 }}>
-              No archived contacts.
-            </p>
-          )}
-          {filteredConnected.map(c => (
-            <ContactCard key={c.id} contact={c} expanded={expandedCard === c.id}
-              onToggle={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
-              onUpdate={p => updateContact(c.id, p)} onRemove={() => removeContact(c.id)} t={t} />
-          ))}
-        </div>
-      )}
-
-      {/* Add contact */}
+      {/* Add */}
       <button onClick={addContact} style={{
         background: 'transparent', border: `1px dashed ${t.border}`,
         color: t.textMuted, padding: '10px', borderRadius: 10, width: '100%',
@@ -1216,9 +1007,10 @@ function ContactCard({ contact: c, expanded, onToggle, onUpdate, onRemove, t }: 
   };
   const removeTag = (tag: string) => onUpdate({ tags: tags.filter(t => t !== tag) });
 
-  const urgColor = URGENCY_COLORS[c.urgency];
+  const light = getLight(c.urgency);
+  const urgColor = TRAFFIC_COLORS[light];
 
-  const isCold = c.urgency === 'waiting' || c.urgency === 'later';
+  const isCold = ['waiting', 'later', 'cold'].includes(c.urgency);
 
   return (
     <div style={{
@@ -1319,15 +1111,14 @@ function ContactCard({ contact: c, expanded, onToggle, onUpdate, onRemove, t }: 
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 13, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Urgency</label>
-                <select value={c.urgency} onChange={e => onUpdate({ urgency: e.target.value as Urgency })} style={{
+                <label style={{ fontSize: 13, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 3 }}>Status</label>
+                <select value={getLight(c.urgency)} onChange={e => onUpdate({ urgency: e.target.value as any })} style={{
                   background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
                   padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 14, outline: 'none', width: '100%',
                 }}>
-                  <option value="now">Now</option>
-                  <option value="soon">Soon</option>
-                  <option value="later">Later</option>
-                  <option value="waiting">Waiting</option>
+                  <option value="green">🟢 Active</option>
+                  <option value="yellow">🟡 Needs Work</option>
+                  <option value="red">🔴 Inactive</option>
                 </select>
               </div>
               <Field label="Follow-up" value={c.followUpDate || ''} onChange={v => onUpdate({ followUpDate: v })} placeholder="mid-May..." t={t} />
