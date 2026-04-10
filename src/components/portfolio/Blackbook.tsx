@@ -444,6 +444,7 @@ function TextArea({ value, onChange, placeholder, t, minHeight = 120 }: {
       padding: '10px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
       width: '100%', outline: 'none', resize: 'vertical', minHeight,
       lineHeight: '1.6', transition: 'border-color 0.2s', boxSizing: 'border-box',
+      wordBreak: 'break-word', overflowWrap: 'break-word',
     }}
       onFocus={e => { e.target.style.borderColor = t.textMuted; }}
       onBlur={e => { e.target.style.borderColor = t.border; }}
@@ -541,7 +542,9 @@ function MeetingRow({ meeting, onChange, onRemove, t }: {
         }}>&times;</button>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Field value={meeting.link || ''} onChange={v => onChange({ link: v })} placeholder="Meeting link (Zoom, Google Meet...)" t={t} />
+        <div style={{ flex: 1 }}>
+          <TextArea value={meeting.link || ''} onChange={v => onChange({ link: v })} placeholder="Meeting link (Zoom, Google Meet...)" t={t} minHeight={34} />
+        </div>
         {meeting.link && (
           <a href={meeting.link} target="_blank" rel="noopener noreferrer" style={{
             fontSize: 12, fontFamily: FONT_MEDIUM, color: '#2d8a56', textDecoration: 'none',
@@ -550,6 +553,7 @@ function MeetingRow({ meeting, onChange, onRemove, t }: {
           }}>Join</a>
         )}
       </div>
+
     </div>
   );
 }
