@@ -6034,10 +6034,10 @@ function Desktop() {
 
   // Open terminal on boot complete
   useEffect(() => {
-    if (state.bootComplete && !isMobile && Object.keys(state.windows).length === 0) {
+    if (state.bootComplete && Object.keys(state.windows).length === 0) {
       dispatch({ type: 'OPEN_WINDOW', id: 'terminal' });
     }
-  }, [state.bootComplete, isMobile]);
+  }, [state.bootComplete]);
 
   // Desktop click — deselect all windows
   const handleDesktopClick = useCallback((e: React.MouseEvent) => {
