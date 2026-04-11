@@ -943,6 +943,11 @@ export default function PortfolioApp() {
           transition: opacity 0.05s linear !important;
         }
 
+        /* ═══ Hide peel when blackbook is open ═══ */
+        body.blackbook-active .peek-container {
+          display: none !important;
+        }
+
         /* ═══ Mobile — hide peel entirely ═══ */
         @media (max-width: 768px) {
           .peek-container {

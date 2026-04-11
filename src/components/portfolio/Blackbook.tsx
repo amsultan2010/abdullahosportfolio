@@ -2092,6 +2092,16 @@ export default function Blackbook() {
     return () => window.removeEventListener('keydown', handler);
   }, [state]);
 
+  // Hide page peel when blackbook is active
+  useEffect(() => {
+    if (state !== 'hidden') {
+      document.body.classList.add('blackbook-active');
+    } else {
+      document.body.classList.remove('blackbook-active');
+    }
+    return () => document.body.classList.remove('blackbook-active');
+  }, [state]);
+
   const handleUnlock = async (pw: string) => {
     const hash = await hashPass(pw);
     setPassHash(hash);
