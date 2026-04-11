@@ -689,7 +689,7 @@ function JournalTab({ journal, setJournal, contacts, t }: {
             journalDates={journalDates} t={t} />
         </div>
         <div style={{ padding: '16px', borderLeft: `0.5px solid ${t.border}` }}>
-          <UpcomingMeetings journal={journal} onSelectDate={setSelectedDate} t={t} />
+          <UpcomingMeetings journal={journal} onSelectDate={setSelectedDate} t={t} selectedDate={selectedDate} />
         </div>
       </div>
 
@@ -770,10 +770,10 @@ function JournalTab({ journal, setJournal, contacts, t }: {
 }
 
 // ── Upcoming Meetings ──
-function UpcomingMeetings({ journal, onSelectDate, t }: {
-  journal: JournalEntry[]; onSelectDate: (d: string) => void; t: Theme;
+function UpcomingMeetings({ journal, onSelectDate, t, selectedDate }: {
+  journal: JournalEntry[]; onSelectDate: (d: string) => void; t: Theme; selectedDate: string;
 }) {
-  const today = localToday();
+  const today = selectedDate;
   // Helper: get next day from a YYYY-MM-DD string
   const nextDay = (dateStr: string) => {
     const d = new Date(dateStr + 'T12:00');
@@ -804,7 +804,7 @@ function UpcomingMeetings({ journal, onSelectDate, t }: {
       <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 8 }}>Upcoming</label>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {allUpcoming.map(m => {
-          const isToday = m.date === today;
+          const isToday = m.date === localToday();
           const dateLabel = isToday ? 'Today' : new Date(m.date + 'T12:00').toLocaleDateString('en', { month: 'short', day: 'numeric' });
           return (
             <button key={m.id + m.date} onClick={() => onSelectDate(m.date)} style={{
