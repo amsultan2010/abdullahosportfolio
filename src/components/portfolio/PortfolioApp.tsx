@@ -11,7 +11,7 @@ const LazyDesktopShell = lazy(() => import('../desktop/DesktopShell'));
    Theme context — dark/light mode
    ══════════════════════════════════════════════════════════ */
 
-const ThemeCtx = createContext<{ dark: boolean; toggle: () => void }>({ dark: false, toggle: () => {} });
+const ThemeCtx = createContext<{ dark: boolean; toggle: () => void; siteReady: boolean }>({ dark: false, toggle: () => {}, siteReady: false });
 
 function getInitialTheme() {
   if (typeof window !== 'undefined') {
@@ -20,7 +20,7 @@ function getInitialTheme() {
   return false;
 }
 
-function ThemeProvider({ children }: { children: React.ReactNode }) {
+function ThemeProvider({ children, siteReady = false }: { children: React.ReactNode; siteReady?: boolean }) {
   const [dark, setDark] = useState(getInitialTheme);
   const toggle = () => {
     setDark(d => {
@@ -28,7 +28,7 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
       return !d;
     });
   };
-  return <ThemeCtx.Provider value={{ dark, toggle }}>{children}</ThemeCtx.Provider>;
+  return <ThemeCtx.Provider value={{ dark, toggle, siteReady }}>{children}</ThemeCtx.Provider>;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -607,10 +607,12 @@ function Inner() {
 }
 
 function SignatureReveal({ dark }: { dark: boolean }) {
+  const { siteReady } = useContext(ThemeCtx);
   const [key, setKey] = useState(0);
-  const [loaded, setLoaded] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const animate = imgLoaded && siteReady;
 
-  const replay = () => { setLoaded(false); requestAnimationFrame(() => { setKey(k => k + 1); setLoaded(true); }); };
+  const replay = () => { setImgLoaded(false); requestAnimationFrame(() => { setKey(k => k + 1); setImgLoaded(true); }); };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, marginTop: 16 }}>
@@ -618,8 +620,8 @@ function SignatureReveal({ dark }: { dark: boolean }) {
         key={key}
         src="/ronniel_signature_transparent_clean.png"
         alt="R Gandhe signature"
-        className={`rg-signature-img${loaded ? ' rg-sig-animate' : ''}`}
-        onLoad={() => setLoaded(true)}
+        className={`rg-signature-img${animate ? ' rg-sig-animate' : ''}`}
+        onLoad={() => setImgLoaded(true)}
         style={{
           filter: dark ? 'invert(1) contrast(2) brightness(2)' : 'contrast(2) brightness(0.1)',
         }}
@@ -839,7 +841,7 @@ export default function PortfolioApp() {
   }, [expanded, phase]);
 
   return (
-    <ThemeProvider>
+    <ThemeProvider siteReady={phase !== 'loading'}>
       {/* Portfolio page — the main content (hidden but not unmounted during desktop phase to avoid remount flash) */}
       <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh', background: '#f5f5f4', display: (phase === 'loading' || phase === 'site') ? undefined : 'none' }}>
         <Inner />
