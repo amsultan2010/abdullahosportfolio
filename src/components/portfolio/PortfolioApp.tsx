@@ -832,12 +832,10 @@ export default function PortfolioApp() {
 
   return (
     <ThemeProvider>
-      {/* Portfolio page — the main content */}
-      {(phase === 'loading' || phase === 'site') && (
-        <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh', background: '#f5f5f4' }}>
-          <Inner />
-        </div>
-      )}
+      {/* Portfolio page — the main content (hidden but not unmounted during desktop phase to avoid remount flash) */}
+      <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh', background: '#f5f5f4', display: (phase === 'loading' || phase === 'site') ? undefined : 'none' }}>
+        <Inner />
+      </div>
 
       {/* ryo.lu peek container — fixed overlay with clip-path reveal */}
       {(phase === 'site' || phase === 'desktop') && (
