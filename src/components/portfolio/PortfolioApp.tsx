@@ -608,30 +608,18 @@ function Inner() {
 
 function SignatureReveal({ dark }: { dark: boolean }) {
   const [key, setKey] = useState(0);
-  const [visible, setVisible] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0.3 },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
-  // replay resets visibility briefly so animation re-triggers
-  const replay = () => { setVisible(false); requestAnimationFrame(() => { setKey(k => k + 1); setVisible(true); }); };
+  const replay = () => { setLoaded(false); requestAnimationFrame(() => { setKey(k => k + 1); setLoaded(true); }); };
 
   return (
-    <div ref={wrapRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, marginTop: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, marginTop: 16 }}>
       <img
         key={key}
         src="/ronniel_signature_transparent_clean.png"
         alt="R Gandhe signature"
-        className={`rg-signature-img${visible ? ' rg-sig-animate' : ''}`}
+        className={`rg-signature-img${loaded ? ' rg-sig-animate' : ''}`}
+        onLoad={() => setLoaded(true)}
         style={{
           filter: dark ? 'invert(1) contrast(2) brightness(2)' : 'contrast(2) brightness(0.1)',
         }}
