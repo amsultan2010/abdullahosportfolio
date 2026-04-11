@@ -810,11 +810,12 @@ export default function PortfolioApp() {
   }, []);
 
   // Toggle peek open/close
+  const peelTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const togglePeek = useCallback(() => {
     if (!expanded) {
       setExpanded(true);
       // After the clip-path transition finishes, switch to full desktop mode
-      setTimeout(() => setPhase('desktop'), 700);
+      peelTimer.current = setTimeout(() => setPhase('desktop'), 700);
     }
   }, [expanded]);
 
@@ -822,6 +823,7 @@ export default function PortfolioApp() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && (expanded || phase === 'desktop')) {
+        clearTimeout(peelTimer.current);
         setExpanded(false);
         setPhase('site');
       }
