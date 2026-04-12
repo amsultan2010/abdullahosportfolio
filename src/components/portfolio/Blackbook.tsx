@@ -95,10 +95,16 @@ interface Task {
 }
 
 type GoalStatus = 'active' | 'completed' | 'paused';
+type GoalTimeframe = 'short' | 'long';
+
+interface GoalCheckItem { id: string; text: string; done: boolean; }
+interface GoalLogEntry { id: string; text: string; date: string; }
 
 interface Goal {
   id: string; title: string; description: string; status: GoalStatus;
-  progress: number; milestones: string[]; completedMilestones: boolean[];
+  timeframe: GoalTimeframe; deadline?: string;
+  progress: number; checklist: GoalCheckItem[]; log: GoalLogEntry[];
+  milestones?: string[]; completedMilestones?: boolean[];
   createdAt: string; updatedAt: string;
 }
 
@@ -1391,45 +1397,98 @@ function TaskRow({ task, today, onUpdate, onRemove, t }: {
 }
 
 // ── Goals Tab ──
+// ── Goal migration: convert legacy milestones to checklist format ──
+function migrateGoal(g: any): Goal {
+  if (g.checklist) return g;
+  const checklist: GoalCheckItem[] = (g.milestones || []).map((text: string, i: number) => ({
+    id: Date.now().toString() + '_' + i, text, done: g.completedMilestones?.[i] ?? false,
+  }));
+  const doneCount = checklist.filter(c => c.done).length;
+  return {
+    ...g,
+    timeframe: g.timeframe || 'short',
+    checklist,
+    log: g.log || [],
+    progress: checklist.length > 0 ? Math.round((doneCount / checklist.length) * 100) : 0,
+  };
+}
+
 function GoalsTab({ goals, setGoals, t }: {
   goals: Goal[]; setGoals: (fn: (prev: Goal[]) => Goal[]) => void; t: Theme;
 }) {
-  const addGoal = () => {
+  // Migrate legacy goals on first render
+  useEffect(() => {
+    setGoals(prev => {
+      const needsMigration = prev.some((g: any) => !g.checklist);
+      return needsMigration ? prev.map(migrateGoal) : prev;
+    });
+  }, []);
+
+  const addGoal = (timeframe: GoalTimeframe) => {
     const now = new Date().toISOString();
     setGoals(prev => [...prev, {
-      id: Date.now().toString(), title: '', description: '', status: 'active',
-      progress: 0, milestones: [], completedMilestones: [],
+      id: Date.now().toString(), title: '', description: '', status: 'active' as GoalStatus,
+      progress: 0, timeframe, checklist: [], log: [],
       createdAt: now, updatedAt: now,
     }]);
   };
+
   const updateGoal = (id: string, patch: Partial<Goal>) => {
     setGoals(prev => prev.map(g => g.id === id ? { ...g, ...patch, updatedAt: new Date().toISOString() } : g));
   };
+
   const removeGoal = (id: string) => {
     setGoals(prev => prev.filter(g => g.id !== id));
   };
 
-  const active = goals.filter(g => g.status === 'active');
-  const other = goals.filter(g => g.status !== 'active');
+  const shortActive = goals.filter(g => (g.timeframe || 'short') === 'short' && g.status === 'active');
+  const longActive = goals.filter(g => (g.timeframe || 'short') === 'long' && g.status === 'active');
+  const done = goals.filter(g => g.status !== 'active');
+
+  const sectionHead = (label: string, count: number) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+      <span style={{ fontSize: 14, fontFamily: FONT_MEDIUM, color: t.textStrong, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
+      {count > 0 && <span style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT }}>{count} active</span>}
+    </div>
+  );
+
+  const addBtn = (tf: GoalTimeframe) => (
+    <button onClick={() => addGoal(tf)} style={{
+      background: 'transparent', border: `1px dashed ${t.border}`,
+      color: t.textMuted, padding: '10px', borderRadius: 8, width: '100%',
+      cursor: 'pointer', fontFamily: FONT, fontSize: 14, marginTop: 8,
+    }}>+ Add {tf === 'short' ? 'short-term' : 'long-term'} goal</button>
+  );
 
   return (
-    <div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {active.map(g => <GoalCard key={g.id} goal={g} onUpdate={p => updateGoal(g.id, p)} onRemove={() => removeGoal(g.id)} t={t} />)}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+      {/* Short-term */}
+      <div>
+        {sectionHead('Short-term', shortActive.length)}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {shortActive.map(g => <GoalCard key={g.id} goal={migrateGoal(g)} onUpdate={p => updateGoal(g.id, p)} onRemove={() => removeGoal(g.id)} t={t} />)}
+        </div>
+        {addBtn('short')}
       </div>
-      {other.length > 0 && (
-        <div style={{ marginTop: 20, opacity: 0.6 }}>
-          <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, marginBottom: 8, display: 'block' }}>Paused / Completed</label>
+
+      {/* Long-term */}
+      <div>
+        {sectionHead('Long-term', longActive.length)}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {longActive.map(g => <GoalCard key={g.id} goal={migrateGoal(g)} onUpdate={p => updateGoal(g.id, p)} onRemove={() => removeGoal(g.id)} t={t} />)}
+        </div>
+        {addBtn('long')}
+      </div>
+
+      {/* Completed / Paused */}
+      {done.length > 0 && (
+        <div style={{ opacity: 0.5 }}>
+          {sectionHead('Completed / Paused', done.length)}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {other.map(g => <GoalCard key={g.id} goal={g} onUpdate={p => updateGoal(g.id, p)} onRemove={() => removeGoal(g.id)} t={t} />)}
+            {done.map(g => <GoalCard key={g.id} goal={migrateGoal(g)} onUpdate={p => updateGoal(g.id, p)} onRemove={() => removeGoal(g.id)} t={t} />)}
           </div>
         </div>
       )}
-      <button onClick={addGoal} style={{
-        background: t.cardBg, border: `1px dashed ${t.border}`,
-        color: t.textMuted, padding: '12px', borderRadius: 10, width: '100%',
-        cursor: 'pointer', fontFamily: FONT, fontSize: 14, marginTop: 16,
-      }}>+ Add Goal</button>
     </div>
   );
 }
@@ -1437,44 +1496,59 @@ function GoalsTab({ goals, setGoals, t }: {
 function GoalCard({ goal: g, onUpdate, onRemove, t }: {
   goal: Goal; onUpdate: (p: Partial<Goal>) => void; onRemove: () => void; t: Theme;
 }) {
-  const [newMilestone, setNewMilestone] = useState('');
-  const statusColors = { active: '#2d8a56', paused: '#f59e0b', completed: '#2d8a56' };
+  const [newItem, setNewItem] = useState('');
+  const [newLog, setNewLog] = useState('');
+  const [showLog, setShowLog] = useState(false);
 
-  const addMilestone = () => {
-    if (!newMilestone.trim()) return;
-    onUpdate({
-      milestones: [...(g.milestones || []), newMilestone.trim()],
-      completedMilestones: [...(g.completedMilestones || []), false],
-    });
-    setNewMilestone('');
+  const checklist = g.checklist || [];
+  const log = g.log || [];
+  const doneCount = checklist.filter(c => c.done).length;
+  const progress = checklist.length > 0 ? Math.round((doneCount / checklist.length) * 100) : 0;
+  const statusColors: Record<string, string> = { active: '#2d8a56', paused: '#f59e0b', completed: '#2d8a56' };
+
+  const addCheckItem = () => {
+    if (!newItem.trim()) return;
+    const item: GoalCheckItem = { id: Date.now().toString(), text: newItem.trim(), done: false };
+    onUpdate({ checklist: [...checklist, item] });
+    setNewItem('');
   };
 
-  const toggleMilestone = (i: number) => {
-    const completed = [...(g.completedMilestones || [])];
-    completed[i] = !completed[i];
-    const doneCount = completed.filter(Boolean).length;
-    const total = g.milestones?.length || 1;
-    onUpdate({ completedMilestones: completed, progress: Math.round((doneCount / total) * 100) });
+  const toggleCheck = (id: string) => {
+    const updated = checklist.map(c => c.id === id ? { ...c, done: !c.done } : c);
+    const d = updated.filter(c => c.done).length;
+    onUpdate({ checklist: updated, progress: Math.round((d / updated.length) * 100) });
   };
 
-  const removeMilestone = (i: number) => {
-    const milestones = [...(g.milestones || [])];
-    const completed = [...(g.completedMilestones || [])];
-    milestones.splice(i, 1);
-    completed.splice(i, 1);
-    const doneCount = completed.filter(Boolean).length;
-    const total = milestones.length || 1;
-    onUpdate({ milestones, completedMilestones: completed, progress: Math.round((doneCount / total) * 100) });
+  const removeCheck = (id: string) => {
+    const updated = checklist.filter(c => c.id !== id);
+    const d = updated.filter(c => c.done).length;
+    onUpdate({ checklist: updated, progress: updated.length > 0 ? Math.round((d / updated.length) * 100) : 0 });
+  };
+
+  const addLogEntry = () => {
+    if (!newLog.trim()) return;
+    const entry: GoalLogEntry = { id: Date.now().toString(), text: newLog.trim(), date: localToday() };
+    onUpdate({ log: [entry, ...log] });
+    setNewLog('');
+  };
+
+  const removeLog = (id: string) => {
+    onUpdate({ log: log.filter(l => l.id !== id) });
+  };
+
+  const fmtDate = (d: string) => {
+    const dt = new Date(d + 'T12:00:00');
+    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   return (
     <div style={{ border: `1px solid ${t.border}`, borderRadius: 10, padding: 16, background: t.cardBg }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 8 }}>
+      {/* Header: title + status + delete */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 4 }}>
         <input value={g.title} onChange={e => onUpdate({ title: e.target.value })} placeholder="Goal title..."
           style={{
             background: 'transparent', border: 'none', color: t.textStrong,
-            fontFamily: FONT_MEDIUM, fontSize: 14, outline: 'none', flex: 1, padding: 0,
+            fontFamily: FONT_MEDIUM, fontSize: 15, outline: 'none', flex: 1, padding: 0,
           }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           <span style={{
@@ -1487,51 +1561,109 @@ function GoalCard({ goal: g, onUpdate, onRemove, t }: {
         </div>
       </div>
 
-      {/* Description */}
-      <TextArea value={g.description} onChange={v => onUpdate({ description: v })} placeholder="What does this goal look like when done?" t={t} minHeight={40} />
+      {/* Description - compact */}
+      <TextArea value={g.description} onChange={v => onUpdate({ description: v })}
+        placeholder="What does done look like?" t={t} minHeight={32} />
 
-      {/* Milestones */}
-      <div style={{ marginTop: 10 }}>
-        <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 4 }}>Milestones</label>
-        {(g.milestones || []).map((m, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
-            <button onClick={() => toggleMilestone(i)} style={{
-              width: 14, height: 14, borderRadius: 3, flexShrink: 0,
-              border: `1.5px solid ${g.completedMilestones?.[i] ? 'rgba(48, 180, 98, 0.5)' : t.border}`,
-              background: g.completedMilestones?.[i] ? 'rgba(48, 180, 98, 0.15)' : 'transparent',
+      {/* Deadline */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT }}>Target:</span>
+        <input type="date" value={g.deadline || ''} onChange={e => onUpdate({ deadline: e.target.value })}
+          style={{ background: 'transparent', border: 'none', color: t.text, fontFamily: FONT, fontSize: 14, outline: 'none' }} />
+      </div>
+
+      {/* Progress bar */}
+      {checklist.length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <span style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT }}>{doneCount}/{checklist.length} done</span>
+            <span style={{ fontSize: 14, color: progress === 100 ? '#2d8a56' : t.textMuted, fontFamily: FONT_MEDIUM }}>{progress}%</span>
+          </div>
+          <div style={{ height: 6, borderRadius: 3, background: t.accentSubtle, overflow: 'hidden' }}>
+            <div style={{
+              width: `${progress}%`, height: '100%', borderRadius: 3,
+              background: progress === 100 ? '#2d8a56' : '#3b82f6',
+              transition: 'width 0.3s ease',
+            }} />
+          </div>
+        </div>
+      )}
+
+      {/* Checklist */}
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 6 }}>Checklist</label>
+        {checklist.map(c => (
+          <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
+            <button onClick={() => toggleCheck(c.id)} style={{
+              width: 16, height: 16, borderRadius: 4, flexShrink: 0,
+              border: `1.5px solid ${c.done ? 'rgba(48,180,98,0.5)' : t.border}`,
+              background: c.done ? 'rgba(48,180,98,0.15)' : 'transparent',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#2d8a56', fontSize: 14,
-            }}>{g.completedMilestones?.[i] ? '✓' : ''}</button>
+            }}>{c.done ? '✓' : ''}</button>
             <span style={{
-              fontSize: 14, color: g.completedMilestones?.[i] ? t.textMuted : t.text,
-              fontFamily: FONT, textDecoration: g.completedMilestones?.[i] ? 'line-through' : 'none', flex: 1,
-            }}>{m}</span>
-            <button onClick={() => removeMilestone(i)} style={{
-              background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 14, opacity: 0.5,
+              fontSize: 14, color: c.done ? t.textMuted : t.text, fontFamily: FONT,
+              textDecoration: c.done ? 'line-through' : 'none', flex: 1,
+            }}>{c.text}</span>
+            <button onClick={() => removeCheck(c.id)} style={{
+              background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 14, opacity: 0.4,
             }}>&times;</button>
           </div>
         ))}
         <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-          <input value={newMilestone} onChange={e => setNewMilestone(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && addMilestone()}
-            placeholder="Add milestone..." style={{
+          <input value={newItem} onChange={e => setNewItem(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addCheckItem()}
+            placeholder="Add item..." style={{
               flex: 1, background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
               padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 14, outline: 'none',
             }} />
         </div>
       </div>
 
-      {/* Status */}
-      <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
-        <select value={g.status} onChange={e => onUpdate({ status: e.target.value as GoalStatus })} style={{
-          background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-          padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 14, outline: 'none',
+      {/* Progress Log */}
+      <div style={{ marginBottom: 10 }}>
+        <button onClick={() => setShowLog(!showLog)} style={{
+          background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+          display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6,
         }}>
-          <option value="active">Active</option>
-          <option value="paused">Paused</option>
-          <option value="completed">Completed</option>
-        </select>
+          <span style={{
+            fontSize: 10, color: t.textMuted, display: 'inline-block',
+            transform: showLog ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s',
+          }}>&#9654;</span>
+          <span style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM }}>Log ({log.length})</span>
+        </button>
+        {showLog && (
+          <>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+              <input value={newLog} onChange={e => setNewLog(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addLogEntry()}
+                placeholder="Log an update..." style={{
+                  flex: 1, background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+                  padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 14, outline: 'none',
+                }} />
+            </div>
+            {log.map(l => (
+              <div key={l.id} style={{ display: 'flex', gap: 8, padding: '3px 0', alignItems: 'start' }}>
+                <span style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT, flexShrink: 0, minWidth: 50 }}>{fmtDate(l.date)}</span>
+                <span style={{ fontSize: 14, color: t.text, fontFamily: FONT, flex: 1 }}>{l.text}</span>
+                <button onClick={() => removeLog(l.id)} style={{
+                  background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 14, opacity: 0.4,
+                }}>&times;</button>
+              </div>
+            ))}
+          </>
+        )}
       </div>
+
+      {/* Status control */}
+      <select value={g.status} onChange={e => onUpdate({ status: e.target.value as GoalStatus })} style={{
+        background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+        padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 14, outline: 'none',
+      }}>
+        <option value="active">Active</option>
+        <option value="paused">Paused</option>
+        <option value="completed">Completed</option>
+      </select>
     </div>
   );
 }
