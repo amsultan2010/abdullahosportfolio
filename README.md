@@ -1,3 +1,3 @@
 # rg-portfolio
 
-[ronnielgandhe.tech](https://ronnielgandhe.tech)
+[ronnielgandhe.com](https://ronnielgandhe.com)
