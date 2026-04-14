@@ -49,7 +49,6 @@ next-env.d.ts
 cool-interactive-reports/
 dashboard/
 src/content/blog/_archive/
-src/layouts/_archive/
 
 # Project docs (not part of the site)
 *_SUMMARY.md
