@@ -37,18 +37,18 @@ function ThemeProvider({ children, siteReady = false }: { children: React.ReactN
 
 const BUILDING = [
   {
+    label: 'LeanFetch',
+    href: 'https://github.com/ronnielgandhe/leanfetch',
+    cover: '/leanfetch-cover.png',
+    desc: 'a tool that stops 90% of startups from losing 90% of their cash to unnecessary api calls',
+    tech: ['Node', 'Anthropic SDK'],
+  },
+  {
     label: 'QuantZoo',
     href: 'https://github.com/ronnielgandhe/quantzoo',
     cover: '/trading.png',
     desc: 'Python framework for systematic strategy research, backtesting, and real-time streaming.',
     tech: ['Python', 'FastAPI', 'WebSocket'],
-  },
-  {
-    label: 'CreatorScope',
-    href: 'https://github.com/ronnielgandhe/creatorscope',
-    cover: '/cover.png',
-    desc: 'Automates sourcing and scoring TikTok creators for brand deals. Multi-source discovery.',
-    tech: ['Python', 'FastAPI', 'SQLAlchemy'],
   },
 ];
 
