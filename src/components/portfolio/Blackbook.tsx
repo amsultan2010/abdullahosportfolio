@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
@@ -17,8 +18,18 @@ export async function hashPass(pw: string): Promise<string> {
 }
 
 export const PASS = 'vaishali123!';
-const FONT = "'NeueMontreal-Regular', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-const FONT_MEDIUM = "'NeueMontreal-Medium', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+// Apple/YouOS font stack (SF Pro on macOS/iOS, system fonts elsewhere)
+const FONT = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'NeueMontreal-Regular', 'Segoe UI', sans-serif";
+const FONT_MEDIUM = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'NeueMontreal-Medium', 'Segoe UI', sans-serif";
+
+// Apple-style spring transition (used everywhere)
+const APPLE_TRANSITION = 'all 200ms cubic-bezier(0.16, 1, 0.3, 1)';
+const CARD_RADIUS = 18;
+const CARD_RADIUS_SM = 12;
+const CARD_SHADOW = '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.08)';
+
+// CAD/USD reference rate (manual, conservative). Can be overridden by user later.
+const FX_USD_TO_CAD = 1.37;
 
 // ── Theme ──
 interface Theme {
@@ -113,11 +124,58 @@ interface ProjectIdea {
   tags: string[]; createdAt: string; updatedAt: string;
 }
 
+// ── Finance types ──
+type Currency = 'USD' | 'CAD';
+type AccountType = 'checking' | 'savings' | 'tfsa' | 'crypto' | 'cash';
+
+interface Account {
+  id: string; name: string; type: AccountType;
+  currency: Currency; balance: number; updatedAt: string;
+}
+
+interface Transaction {
+  id: string; date: string; amount: number; currency: Currency;
+  type: 'income' | 'expense'; category: string; note: string; createdAt: string;
+}
+
+interface Budget {
+  id: string; category: string; monthlyTarget: number; currency: Currency;
+}
+
+interface FinancialGoal {
+  id: string; name: string; targetAmount: number; currentAmount: number;
+  currency: Currency; deadline?: string;
+}
+
+interface FinanceData {
+  accounts: Account[]; transactions: Transaction[];
+  budgets: Budget[]; goals: FinancialGoal[];
+}
+
 interface BlackbookData {
   journal: JournalEntry[]; contacts: NetworkContact[]; ideas: ProjectIdea[];
-  tasks: Task[]; goals: Goal[];
+  tasks: Task[]; goals: Goal[]; finance: FinanceData;
   journalUpdatedAt?: string; contactsUpdatedAt?: string; ideasUpdatedAt?: string;
-  tasksUpdatedAt?: string; goalsUpdatedAt?: string;
+  tasksUpdatedAt?: string; goalsUpdatedAt?: string; financeUpdatedAt?: string;
+}
+
+// Default empty finance state
+const DEFAULT_FINANCE: FinanceData = {
+  accounts: [], transactions: [], budgets: [], goals: [],
+};
+
+// Convert to CAD for net-worth aggregation
+function toCAD(amount: number, currency: Currency): number {
+  return currency === 'USD' ? amount * FX_USD_TO_CAD : amount;
+}
+
+// YYYY-MM string for "this month" filtering
+function monthKey(dateStr: string): string {
+  return dateStr.slice(0, 7);
+}
+function thisMonthKey(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
 // ── Date helper (local timezone, not UTC) ──
@@ -205,6 +263,25 @@ function migrateContactsV3() {
   localStorage.setItem('bb-migrated-v3-contacts', '1');
 }
 
+// ── Finance migration: ensure default empty finance shape exists ──
+function migrateFinance() {
+  if (localStorage.getItem('bb-migrated-finance')) return;
+  const existing = load<any>('finance', null);
+  if (!existing || typeof existing !== 'object' || !Array.isArray(existing.accounts)) {
+    save('finance', DEFAULT_FINANCE);
+  } else {
+    // Patch any missing arrays to keep older partials valid
+    const patched: FinanceData = {
+      accounts: Array.isArray(existing.accounts) ? existing.accounts : [],
+      transactions: Array.isArray(existing.transactions) ? existing.transactions : [],
+      budgets: Array.isArray(existing.budgets) ? existing.budgets : [],
+      goals: Array.isArray(existing.goals) ? existing.goals : [],
+    };
+    save('finance', patched);
+  }
+  localStorage.setItem('bb-migrated-finance', '1');
+}
+
 // ── Supabase sync ──
 async function loadFromCloud(passHash: string) {
   const { data } = await supabase
@@ -240,11 +317,13 @@ function mergeCloudLocal(cloud: BlackbookData | null, local: BlackbookData): Bla
     ideas: pick(cloud.ideas, cloud.ideasUpdatedAt, local.ideas, local.ideasUpdatedAt, []),
     tasks: pick(cloud.tasks, cloud.tasksUpdatedAt, local.tasks, local.tasksUpdatedAt, []),
     goals: pick(cloud.goals, cloud.goalsUpdatedAt, local.goals, local.goalsUpdatedAt, []),
+    finance: pick(cloud.finance, cloud.financeUpdatedAt, local.finance, local.financeUpdatedAt, DEFAULT_FINANCE),
     journalUpdatedAt: [cloud.journalUpdatedAt, local.journalUpdatedAt].filter(Boolean).sort().pop(),
     contactsUpdatedAt: [cloud.contactsUpdatedAt, local.contactsUpdatedAt].filter(Boolean).sort().pop(),
     ideasUpdatedAt: [cloud.ideasUpdatedAt, local.ideasUpdatedAt].filter(Boolean).sort().pop(),
     tasksUpdatedAt: [cloud.tasksUpdatedAt, local.tasksUpdatedAt].filter(Boolean).sort().pop(),
     goalsUpdatedAt: [cloud.goalsUpdatedAt, local.goalsUpdatedAt].filter(Boolean).sort().pop(),
+    financeUpdatedAt: [cloud.financeUpdatedAt, local.financeUpdatedAt].filter(Boolean).sort().pop(),
   };
 }
 
@@ -441,40 +520,47 @@ export function PasswordGate({ onUnlock, onClose, inline }: { onUnlock: (pw: str
   );
 }
 
-// ── Shared Field ──
-function Field({ label, value, onChange, placeholder, t }: {
-  label?: string; value: string; onChange: (v: string) => void; placeholder?: string; t: Theme;
+// ── Shared Field (Apple-aesthetic) ──
+function Field({ label, value, onChange, placeholder, t, type }: {
+  label?: string; value: string; onChange: (v: string) => void;
+  placeholder?: string; t: Theme; type?: string;
 }) {
   return (
     <div>
-      {label && <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 4 }}>{label}</label>}
-      <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{
-        background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-        padding: '7px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
-        width: '100%', outline: 'none', transition: 'border-color 0.2s',
-        boxSizing: 'border-box',
-      }}
-        onFocus={e => { e.target.style.borderColor = t.textMuted; }}
-        onBlur={e => { e.target.style.borderColor = t.border; }}
+      {label && <label style={{
+        fontSize: 11, color: t.textMuted, fontFamily: FONT_MEDIUM,
+        display: 'block', marginBottom: 6,
+        textTransform: 'uppercase', letterSpacing: '0.04em',
+      }}>{label}</label>}
+      <input value={value} onChange={e => onChange(e.target.value)}
+        placeholder={placeholder} type={type || 'text'} style={{
+          background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+          padding: '9px 12px', borderRadius: 10, fontFamily: FONT, fontSize: 13,
+          width: '100%', outline: 'none', transition: APPLE_TRANSITION,
+          boxSizing: 'border-box', letterSpacing: '-0.005em',
+        }}
+        onFocus={e => { e.target.style.borderColor = t.textMuted; e.target.style.background = t.cardBg; }}
+        onBlur={e => { e.target.style.borderColor = t.border; e.target.style.background = t.inputBg; }}
       />
     </div>
   );
 }
 
-// ── Shared TextArea ──
+// ── Shared TextArea (Apple-aesthetic) ──
 function TextArea({ value, onChange, placeholder, t, minHeight = 120 }: {
   value: string; onChange: (v: string) => void; placeholder?: string; t: Theme; minHeight?: number;
 }) {
   return (
     <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{
       background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-      padding: '10px 12px', borderRadius: 8, fontFamily: FONT, fontSize: 14,
+      padding: '11px 14px', borderRadius: 10, fontFamily: FONT, fontSize: 13,
       width: '100%', outline: 'none', resize: 'vertical', minHeight,
-      lineHeight: '1.6', transition: 'border-color 0.2s', boxSizing: 'border-box',
+      lineHeight: '1.55', transition: APPLE_TRANSITION, boxSizing: 'border-box',
       wordBreak: 'break-word', overflowWrap: 'break-word',
+      letterSpacing: '-0.005em',
     }}
-      onFocus={e => { e.target.style.borderColor = t.textMuted; }}
-      onBlur={e => { e.target.style.borderColor = t.border; }}
+      onFocus={e => { e.target.style.borderColor = t.textMuted; e.target.style.background = t.cardBg; }}
+      onBlur={e => { e.target.style.borderColor = t.border; e.target.style.background = t.inputBg; }}
     />
   );
 }
@@ -1445,45 +1531,73 @@ function GoalsTab({ goals, setGoals, t }: {
   const longActive = goals.filter(g => (g.timeframe || 'short') === 'long' && g.status === 'active');
   const done = goals.filter(g => g.status !== 'active');
 
-  const sectionHead = (label: string, count: number) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
-      <span style={{ fontSize: 14, fontFamily: FONT_MEDIUM, color: t.textStrong, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
-      {count > 0 && <span style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT }}>{count} active</span>}
+  const sectionHead = (icon: string, label: string, count: number, suffix: string = 'active') => (
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 12 }}>
+      <span style={{ fontSize: 16 }}>{icon}</span>
+      <span style={{ fontSize: 15, fontFamily: FONT_MEDIUM, color: t.textStrong, letterSpacing: '-0.01em' }}>{label}</span>
+      <span style={{ fontSize: 13, color: t.textMuted, fontFamily: FONT }}>· {count} {suffix}</span>
     </div>
   );
 
   const addBtn = (tf: GoalTimeframe) => (
     <button onClick={() => addGoal(tf)} style={{
       background: 'transparent', border: `1px dashed ${t.border}`,
-      color: t.textMuted, padding: '10px', borderRadius: 8, width: '100%',
-      cursor: 'pointer', fontFamily: FONT, fontSize: 14, marginTop: 8,
-    }}>+ Add {tf === 'short' ? 'short-term' : 'long-term'} goal</button>
+      color: t.textMuted, padding: '12px', borderRadius: CARD_RADIUS_SM, width: '100%',
+      cursor: 'pointer', fontFamily: FONT, fontSize: 14, marginTop: 10,
+      transition: APPLE_TRANSITION, boxSizing: 'border-box',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = t.textMuted; e.currentTarget.style.color = t.text; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
+    >+ Add {tf === 'short' ? 'short-term' : 'long-term'} goal</button>
+  );
+
+  const emptyState = (tf: GoalTimeframe) => (
+    <div style={{
+      border: `1px dashed ${t.border}`, borderRadius: CARD_RADIUS_SM,
+      padding: '20px 16px', textAlign: 'center', background: 'transparent',
+    }}>
+      <div style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT, marginBottom: 4 }}>
+        No {tf === 'short' ? 'short-term' : 'long-term'} goals yet.
+      </div>
+      <button onClick={() => addGoal(tf)} style={{
+        background: 'none', border: 'none', color: t.text, fontFamily: FONT_MEDIUM,
+        fontSize: 14, cursor: 'pointer', padding: 0, marginTop: 2,
+      }}>Add one →</button>
+    </div>
   );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
       {/* Short-term */}
       <div>
-        {sectionHead('Short-term', shortActive.length)}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {shortActive.map(g => <GoalCard key={g.id} goal={migrateGoal(g)} onUpdate={p => updateGoal(g.id, p)} onRemove={() => removeGoal(g.id)} t={t} />)}
-        </div>
-        {addBtn('short')}
+        {sectionHead('🎯', 'Short-term', shortActive.length)}
+        {shortActive.length === 0 ? emptyState('short') : (
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {shortActive.map(g => <GoalCard key={g.id} goal={migrateGoal(g)} onUpdate={p => updateGoal(g.id, p)} onRemove={() => removeGoal(g.id)} t={t} />)}
+            </div>
+            {addBtn('short')}
+          </>
+        )}
       </div>
 
       {/* Long-term */}
       <div>
-        {sectionHead('Long-term', longActive.length)}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {longActive.map(g => <GoalCard key={g.id} goal={migrateGoal(g)} onUpdate={p => updateGoal(g.id, p)} onRemove={() => removeGoal(g.id)} t={t} />)}
-        </div>
-        {addBtn('long')}
+        {sectionHead('🌟', 'Long-term', longActive.length)}
+        {longActive.length === 0 ? emptyState('long') : (
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {longActive.map(g => <GoalCard key={g.id} goal={migrateGoal(g)} onUpdate={p => updateGoal(g.id, p)} onRemove={() => removeGoal(g.id)} t={t} />)}
+            </div>
+            {addBtn('long')}
+          </>
+        )}
       </div>
 
       {/* Completed / Paused */}
       {done.length > 0 && (
-        <div style={{ opacity: 0.5 }}>
-          {sectionHead('Completed / Paused', done.length)}
+        <div style={{ opacity: 0.6 }}>
+          {sectionHead('✓', 'Completed / Paused', done.length, done.length === 1 ? 'goal' : 'goals')}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {done.map(g => <GoalCard key={g.id} goal={migrateGoal(g)} onUpdate={p => updateGoal(g.id, p)} onRemove={() => removeGoal(g.id)} t={t} />)}
           </div>
@@ -1496,27 +1610,61 @@ function GoalsTab({ goals, setGoals, t }: {
 function GoalCard({ goal: g, onUpdate, onRemove, t }: {
   goal: Goal; onUpdate: (p: Partial<Goal>) => void; onRemove: () => void; t: Theme;
 }) {
+  // New goals (no title) start expanded so the user can fill them in.
+  const [expanded, setExpanded] = useState(!g.title);
+  const [hovered, setHovered] = useState(false);
   const [newItem, setNewItem] = useState('');
   const [newLog, setNewLog] = useState('');
-  const [showLog, setShowLog] = useState(false);
 
   const checklist = g.checklist || [];
   const log = g.log || [];
   const doneCount = checklist.filter(c => c.done).length;
   const progress = checklist.length > 0 ? Math.round((doneCount / checklist.length) * 100) : 0;
-  const statusColors: Record<string, string> = { active: '#2d8a56', paused: '#f59e0b', completed: '#2d8a56' };
+  const allDone = checklist.length > 0 && doneCount === checklist.length;
+
+  // Status pill styling (compact view)
+  const statusStyles: Record<GoalStatus, { bg: string; text: string }> = {
+    active: { bg: 'rgba(48,180,98,0.15)', text: '#2d8a56' },
+    paused: { bg: 'rgba(245,158,11,0.15)', text: '#d97706' },
+    completed: { bg: '#2d8a56', text: '#ffffff' },
+  };
+  const statusLabel: Record<GoalStatus, string> = {
+    active: 'Active', paused: 'Paused', completed: 'Completed',
+  };
+
+  // Deadline display: "Jul 1 (62d)" or "62d overdue" or "no deadline"
+  const deadlineDisplay = (() => {
+    if (!g.deadline) return { label: 'no deadline', color: t.textMuted, overdue: false };
+    const dt = new Date(g.deadline + 'T12:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffMs = dt.getTime() - today.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (diffDays < 0) {
+      return { label: `${Math.abs(diffDays)}d overdue`, color: '#ef4444', overdue: true };
+    }
+    if (diffDays === 0) {
+      return { label: `${dateStr} (today)`, color: '#d97706', overdue: false };
+    }
+    return { label: `${dateStr} (${diffDays}d)`, color: t.textMuted, overdue: false };
+  })();
+
+  const isOverdueAndIncomplete = deadlineDisplay.overdue && progress < 100 && g.status === 'active';
 
   const addCheckItem = () => {
     if (!newItem.trim()) return;
     const item: GoalCheckItem = { id: Date.now().toString(), text: newItem.trim(), done: false };
-    onUpdate({ checklist: [...checklist, item] });
+    const updated = [...checklist, item];
+    const d = updated.filter(c => c.done).length;
+    onUpdate({ checklist: updated, progress: updated.length > 0 ? Math.round((d / updated.length) * 100) : 0 });
     setNewItem('');
   };
 
   const toggleCheck = (id: string) => {
     const updated = checklist.map(c => c.id === id ? { ...c, done: !c.done } : c);
     const d = updated.filter(c => c.done).length;
-    onUpdate({ checklist: updated, progress: Math.round((d / updated.length) * 100) });
+    onUpdate({ checklist: updated, progress: updated.length > 0 ? Math.round((d / updated.length) * 100) : 0 });
   };
 
   const removeCheck = (id: string) => {
@@ -1541,129 +1689,349 @@ function GoalCard({ goal: g, onUpdate, onRemove, t }: {
     return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  return (
-    <div style={{ border: `1px solid ${t.border}`, borderRadius: 10, padding: 16, background: t.cardBg }}>
-      {/* Header: title + status + delete */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 4 }}>
-        <input value={g.title} onChange={e => onUpdate({ title: e.target.value })} placeholder="Goal title..."
-          style={{
-            background: 'transparent', border: 'none', color: t.textStrong,
-            fontFamily: FONT_MEDIUM, fontSize: 15, outline: 'none', flex: 1, padding: 0,
-          }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+  // First unchecked item (the "next action")
+  const nextAction = checklist.find(c => !c.done);
+
+  // Goal-type emoji
+  const goalEmoji = g.timeframe === 'long' ? '🌟' : '🎯';
+
+  // Progress bar color
+  const progressColor = isOverdueAndIncomplete ? '#ef4444' : progress === 100 ? '#2d8a56' : '#3b82f6';
+
+  // ───────── COMPACT VIEW ─────────
+  if (!expanded) {
+    const titleDisplay = g.title.trim() || 'Untitled goal';
+    return (
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onClick={(e) => {
+          // Only toggle when clicking the card body, not interactive elements
+          const target = e.target as HTMLElement;
+          if (target.closest('button') || target.closest('input')) return;
+          setExpanded(true);
+        }}
+        style={{
+          border: `1px solid ${t.border}`, borderRadius: CARD_RADIUS,
+          padding: 16, background: t.cardBg, cursor: 'pointer',
+          transition: APPLE_TRANSITION,
+          boxShadow: hovered ? CARD_SHADOW : 'none',
+          transform: hovered ? 'translateY(-1px)' : 'none',
+        }}
+      >
+        {/* Top row: title + emoji + deadline */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <span style={{ fontSize: 16, flexShrink: 0 }}>{goalEmoji}</span>
           <span style={{
-            fontSize: 14, fontFamily: FONT_MEDIUM, padding: '2px 8px', borderRadius: 4,
-            background: `${statusColors[g.status]}22`, color: statusColors[g.status],
-          }}>{g.status}</span>
-          <button onClick={onRemove} style={{
-            background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 14,
-          }}>&times;</button>
+            flex: 1, fontFamily: FONT_MEDIUM, fontSize: 15,
+            color: g.title.trim() ? t.textStrong : t.textMuted,
+            letterSpacing: '-0.01em',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>{titleDisplay}</span>
+          <span style={{
+            fontSize: 13, color: deadlineDisplay.color, fontFamily: FONT_MEDIUM,
+            flexShrink: 0,
+          }}>{deadlineDisplay.label}</span>
         </div>
-      </div>
 
-      {/* Description - compact */}
-      <TextArea value={g.description} onChange={v => onUpdate({ description: v })}
-        placeholder="What does done look like?" t={t} minHeight={32} />
-
-      {/* Deadline */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, marginBottom: 10 }}>
-        <span style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT }}>Target:</span>
-        <input type="date" value={g.deadline || ''} onChange={e => onUpdate({ deadline: e.target.value })}
-          style={{ background: 'transparent', border: 'none', color: t.text, fontFamily: FONT, fontSize: 14, outline: 'none' }} />
-      </div>
-
-      {/* Progress bar */}
-      {checklist.length > 0 && (
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-            <span style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT }}>{doneCount}/{checklist.length} done</span>
-            <span style={{ fontSize: 14, color: progress === 100 ? '#2d8a56' : t.textMuted, fontFamily: FONT_MEDIUM }}>{progress}%</span>
-          </div>
-          <div style={{ height: 6, borderRadius: 3, background: t.accentSubtle, overflow: 'hidden' }}>
+        {/* Progress bar */}
+        {checklist.length > 0 ? (
+          <div style={{ marginBottom: 12 }}>
             <div style={{
-              width: `${progress}%`, height: '100%', borderRadius: 3,
-              background: progress === 100 ? '#2d8a56' : '#3b82f6',
-              transition: 'width 0.3s ease',
-            }} />
+              height: 8, borderRadius: 4, background: t.accentSubtle, overflow: 'hidden',
+            }}>
+              <div style={{
+                width: `${progress}%`, height: '100%', borderRadius: 4,
+                background: progressColor,
+                transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+              }} />
+            </div>
+            <div style={{ marginTop: 5, fontSize: 12, color: t.textMuted, fontFamily: FONT }}>
+              {progress}% · {doneCount} of {checklist.length} done
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{
+              height: 8, borderRadius: 4, background: t.accentSubtle, overflow: 'hidden',
+            }} />
+            <div style={{ marginTop: 5, fontSize: 12, color: t.textMuted, fontFamily: FONT }}>
+              No checklist yet
+            </div>
+          </div>
+        )}
 
-      {/* Checklist */}
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM, display: 'block', marginBottom: 6 }}>Checklist</label>
-        {checklist.map(c => (
-          <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
-            <button onClick={() => toggleCheck(c.id)} style={{
-              width: 16, height: 16, borderRadius: 4, flexShrink: 0,
-              border: `1.5px solid ${c.done ? 'rgba(48,180,98,0.5)' : t.border}`,
-              background: c.done ? 'rgba(48,180,98,0.15)' : 'transparent',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#2d8a56', fontSize: 14,
-            }}>{c.done ? '✓' : ''}</button>
+        {/* Next action / all done / empty */}
+        {checklist.length === 0 ? (
+          <button onClick={(e) => { e.stopPropagation(); setExpanded(true); }} style={{
+            width: '100%', background: t.inputBg, border: `1px solid ${t.border}`,
+            color: t.textMuted, padding: '10px 12px', borderRadius: CARD_RADIUS_SM,
+            fontFamily: FONT, fontSize: 13, cursor: 'pointer', textAlign: 'left',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            transition: APPLE_TRANSITION,
+          }}>
+            <span>↪ Add first action item</span>
+            <span style={{ opacity: 0.6 }}>→</span>
+          </button>
+        ) : allDone && g.status === 'active' ? (
+          <button onClick={(e) => { e.stopPropagation(); onUpdate({ status: 'completed' }); }} style={{
+            width: '100%', background: 'rgba(48,180,98,0.12)', border: `1px solid rgba(48,180,98,0.3)`,
+            color: '#2d8a56', padding: '10px 12px', borderRadius: CARD_RADIUS_SM,
+            fontFamily: FONT_MEDIUM, fontSize: 13, cursor: 'pointer', textAlign: 'left',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            transition: APPLE_TRANSITION,
+          }}>
+            <span>✓ All actions done — mark goal complete?</span>
+            <span>→</span>
+          </button>
+        ) : nextAction ? (
+          <div style={{
+            background: t.inputBg, border: `1px solid ${t.border}`,
+            borderRadius: CARD_RADIUS_SM, padding: '8px 10px',
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}>
             <span style={{
-              fontSize: 14, color: c.done ? t.textMuted : t.text, fontFamily: FONT,
-              textDecoration: c.done ? 'line-through' : 'none', flex: 1,
-            }}>{c.text}</span>
-            <button onClick={() => removeCheck(c.id)} style={{
-              background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 14, opacity: 0.4,
-            }}>&times;</button>
+              fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM, flexShrink: 0,
+            }}>↪ Next:</span>
+            <span style={{
+              flex: 1, fontSize: 13, color: t.text, fontFamily: FONT,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>{nextAction.text}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); toggleCheck(nextAction.id); }}
+              title="Mark done"
+              style={{
+                width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                border: `1.5px solid ${t.border}`, background: 'transparent',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: t.textMuted, fontSize: 12, transition: APPLE_TRANSITION,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = 'rgba(48,180,98,0.5)';
+                e.currentTarget.style.background = 'rgba(48,180,98,0.1)';
+                e.currentTarget.style.color = '#2d8a56';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = t.border;
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = t.textMuted;
+              }}
+            >☐</button>
           </div>
-        ))}
-        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-          <input value={newItem} onChange={e => setNewItem(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && addCheckItem()}
-            placeholder="Add item..." style={{
-              flex: 1, background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-              padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 14, outline: 'none',
-            }} />
-        </div>
-      </div>
+        ) : null}
 
-      {/* Progress Log */}
-      <div style={{ marginBottom: 10 }}>
-        <button onClick={() => setShowLog(!showLog)} style={{
-          background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-          display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6,
+        {/* Bottom row: status pill + log count + edit */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10, marginTop: 12,
         }}>
           <span style={{
-            fontSize: 10, color: t.textMuted, display: 'inline-block',
-            transform: showLog ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s',
-          }}>&#9654;</span>
-          <span style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT_MEDIUM }}>Log ({log.length})</span>
-        </button>
-        {showLog && (
-          <>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-              <input value={newLog} onChange={e => setNewLog(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addLogEntry()}
-                placeholder="Log an update..." style={{
-                  flex: 1, background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-                  padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 14, outline: 'none',
-                }} />
-            </div>
-            {log.map(l => (
-              <div key={l.id} style={{ display: 'flex', gap: 8, padding: '3px 0', alignItems: 'start' }}>
-                <span style={{ fontSize: 14, color: t.textMuted, fontFamily: FONT, flexShrink: 0, minWidth: 50 }}>{fmtDate(l.date)}</span>
-                <span style={{ fontSize: 14, color: t.text, fontFamily: FONT, flex: 1 }}>{l.text}</span>
-                <button onClick={() => removeLog(l.id)} style={{
-                  background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer', fontSize: 14, opacity: 0.4,
+            fontSize: 12, fontFamily: FONT_MEDIUM, padding: '3px 9px', borderRadius: 999,
+            background: statusStyles[g.status].bg, color: statusStyles[g.status].text,
+          }}>{statusLabel[g.status]}</span>
+          <span style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT }}>·</span>
+          <span style={{ fontSize: 12, color: t.textMuted, fontFamily: FONT }}>
+            {log.length} {log.length === 1 ? 'log' : 'logs'}
+          </span>
+          <span style={{ flex: 1 }} />
+          <button
+            onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
+            style={{
+              background: 'none', border: 'none', color: t.textMuted,
+              fontFamily: FONT_MEDIUM, fontSize: 12, cursor: 'pointer', padding: '2px 4px',
+              transition: APPLE_TRANSITION, display: 'flex', alignItems: 'center', gap: 4,
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = t.text; }}
+            onMouseLeave={e => { e.currentTarget.style.color = t.textMuted; }}
+          >✏ Edit</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ───────── EXPANDED EDIT VIEW ─────────
+  const sectionLabel = (text: string) => (
+    <div style={{
+      fontSize: 11, fontFamily: FONT_MEDIUM, color: t.textMuted,
+      textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8,
+    }}>{text}</div>
+  );
+
+  const segBtnStyle = (active: boolean): React.CSSProperties => ({
+    flex: 1, padding: '7px 10px', borderRadius: 7,
+    background: active ? t.cardBg : 'transparent',
+    color: active ? t.textStrong : t.textMuted,
+    border: 'none',
+    fontFamily: FONT_MEDIUM, fontSize: 13, cursor: 'pointer',
+    transition: APPLE_TRANSITION,
+    boxShadow: active ? '0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)' : 'none',
+  });
+
+  return (
+    <div style={{
+      border: `1px solid ${t.border}`, borderRadius: CARD_RADIUS,
+      padding: 18, background: t.cardBg,
+      boxShadow: CARD_SHADOW,
+      transition: APPLE_TRANSITION,
+    }}>
+      {/* Header bar with collapse */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <span style={{ fontSize: 16 }}>{goalEmoji}</span>
+        <span style={{
+          flex: 1, fontFamily: FONT_MEDIUM, fontSize: 13, color: t.textMuted,
+          textTransform: 'uppercase', letterSpacing: '0.06em',
+        }}>Editing goal</span>
+        <button onClick={() => setExpanded(false)} style={{
+          background: 'none', border: 'none', color: t.textMuted,
+          fontFamily: FONT_MEDIUM, fontSize: 13, cursor: 'pointer', padding: '4px 8px',
+          borderRadius: 6, transition: APPLE_TRANSITION,
+        }}
+          onMouseEnter={e => { e.currentTarget.style.color = t.text; e.currentTarget.style.background = t.inputBg; }}
+          onMouseLeave={e => { e.currentTarget.style.color = t.textMuted; e.currentTarget.style.background = 'transparent'; }}
+        >Done editing ✓</button>
+      </div>
+
+      {/* ── Goal section ── */}
+      <div style={{ marginBottom: 18 }}>
+        {sectionLabel('Goal')}
+        <input value={g.title} onChange={e => onUpdate({ title: e.target.value })}
+          placeholder="Goal title..."
+          style={{
+            background: t.inputBg, border: `1px solid ${t.border}`, color: t.textStrong,
+            fontFamily: FONT_MEDIUM, fontSize: 15, outline: 'none', width: '100%',
+            padding: '9px 12px', borderRadius: CARD_RADIUS_SM, boxSizing: 'border-box',
+            marginBottom: 8, transition: APPLE_TRANSITION, letterSpacing: '-0.01em',
+          }}
+          onFocus={e => { e.target.style.borderColor = t.textMuted; }}
+          onBlur={e => { e.target.style.borderColor = t.border; }}
+        />
+        <TextArea value={g.description} onChange={v => onUpdate({ description: v })}
+          placeholder="Why this matters and what 'done' looks like" t={t} minHeight={60} />
+      </div>
+
+      {/* ── Timeline section ── */}
+      <div style={{ marginBottom: 18 }}>
+        {sectionLabel('Timeline')}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <span style={{ fontSize: 13, color: t.textMuted, fontFamily: FONT, flexShrink: 0 }}>Target:</span>
+          <input type="date" value={g.deadline || ''} onChange={e => onUpdate({ deadline: e.target.value })}
+            style={{
+              background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+              fontFamily: FONT, fontSize: 13, outline: 'none',
+              padding: '6px 10px', borderRadius: 8, transition: APPLE_TRANSITION,
+            }}
+          />
+          {g.deadline && (
+            <span style={{ fontSize: 12, color: deadlineDisplay.color, fontFamily: FONT_MEDIUM }}>
+              {deadlineDisplay.label}
+            </span>
+          )}
+        </div>
+        {/* Segmented status switcher */}
+        <div style={{
+          display: 'flex', gap: 2, padding: 3, background: t.accentSubtle,
+          borderRadius: 9,
+        }}>
+          {(['active', 'paused', 'completed'] as GoalStatus[]).map(s => (
+            <button key={s} onClick={() => onUpdate({ status: s })} style={segBtnStyle(g.status === s)}>
+              {statusLabel[s]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Action items section ── */}
+      <div style={{ marginBottom: 18 }}>
+        {sectionLabel(`Action items${checklist.length > 0 ? ` · ${doneCount}/${checklist.length}` : ''}`)}
+        {checklist.length > 0 && (
+          <div style={{ marginBottom: 8 }}>
+            {checklist.map(c => (
+              <div key={c.id} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '5px 0',
+              }}>
+                <button onClick={() => toggleCheck(c.id)} style={{
+                  width: 18, height: 18, borderRadius: 5, flexShrink: 0,
+                  border: `1.5px solid ${c.done ? 'rgba(48,180,98,0.5)' : t.border}`,
+                  background: c.done ? 'rgba(48,180,98,0.15)' : 'transparent',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#2d8a56', fontSize: 12, transition: APPLE_TRANSITION,
+                }}>{c.done ? '✓' : ''}</button>
+                <span style={{
+                  fontSize: 13, color: c.done ? t.textMuted : t.text, fontFamily: FONT,
+                  textDecoration: c.done ? 'line-through' : 'none', flex: 1,
+                }}>{c.text}</span>
+                <button onClick={() => removeCheck(c.id)} style={{
+                  background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
+                  fontSize: 14, opacity: 0.5, padding: '2px 4px',
                 }}>&times;</button>
               </div>
             ))}
-          </>
+          </div>
+        )}
+        <input value={newItem} onChange={e => setNewItem(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && addCheckItem()}
+          placeholder="Add an action item, press Enter..."
+          style={{
+            width: '100%', background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+            padding: '8px 12px', borderRadius: CARD_RADIUS_SM,
+            fontFamily: FONT, fontSize: 13, outline: 'none',
+            boxSizing: 'border-box', transition: APPLE_TRANSITION,
+          }}
+          onFocus={e => { e.target.style.borderColor = t.textMuted; }}
+          onBlur={e => { e.target.style.borderColor = t.border; }}
+        />
+      </div>
+
+      {/* ── Progress log section ── */}
+      <div style={{ marginBottom: 16 }}>
+        {sectionLabel(`Progress log${log.length > 0 ? ` · ${log.length}` : ''}`)}
+        <input value={newLog} onChange={e => setNewLog(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && addLogEntry()}
+          placeholder={log.length === 0 ? 'Log your first update, press Enter...' : 'Log an update, press Enter...'}
+          style={{
+            width: '100%', background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+            padding: '8px 12px', borderRadius: CARD_RADIUS_SM,
+            fontFamily: FONT, fontSize: 13, outline: 'none',
+            boxSizing: 'border-box', marginBottom: log.length > 0 ? 10 : 0,
+            transition: APPLE_TRANSITION,
+          }}
+          onFocus={e => { e.target.style.borderColor = t.textMuted; }}
+          onBlur={e => { e.target.style.borderColor = t.border; }}
+        />
+        {log.length > 0 && (
+          <div>
+            {log.map(l => (
+              <div key={l.id} style={{
+                display: 'flex', gap: 10, padding: '5px 0', alignItems: 'start',
+              }}>
+                <span style={{
+                  fontSize: 12, color: t.textMuted, fontFamily: FONT_MEDIUM,
+                  flexShrink: 0, minWidth: 50, paddingTop: 1,
+                }}>{fmtDate(l.date)}</span>
+                <span style={{ fontSize: 13, color: t.text, fontFamily: FONT, flex: 1 }}>{l.text}</span>
+                <button onClick={() => removeLog(l.id)} style={{
+                  background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
+                  fontSize: 14, opacity: 0.5, padding: '0 4px',
+                }}>&times;</button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Status control */}
-      <select value={g.status} onChange={e => onUpdate({ status: e.target.value as GoalStatus })} style={{
-        background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
-        padding: '5px 8px', borderRadius: 6, fontFamily: FONT, fontSize: 14, outline: 'none',
+      {/* ── Footer: delete ── */}
+      <div style={{
+        display: 'flex', justifyContent: 'flex-end',
+        paddingTop: 12, borderTop: `1px solid ${t.border}`,
       }}>
-        <option value="active">Active</option>
-        <option value="paused">Paused</option>
-        <option value="completed">Completed</option>
-      </select>
+        <button onClick={onRemove} style={{
+          background: 'none', border: 'none', color: '#ef4444',
+          fontFamily: FONT, fontSize: 12, cursor: 'pointer', padding: '4px 8px',
+          opacity: 0.75, transition: APPLE_TRANSITION, borderRadius: 6,
+        }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = '0.75'; e.currentTarget.style.background = 'transparent'; }}
+        >Delete goal</button>
+      </div>
     </div>
   );
 }
@@ -1801,10 +2169,12 @@ function runOneTimeSeed(
       { name: 'Lena Vu Sawyer' }, { name: 'Sabin Roman' },
       { name: 'Tom Moor' }, { name: 'Mufeez Amjad' },
     ];
-    c = [...c, ...people.map((p, i) => ({
+    c = [...c, ...people.map((p, i): NetworkContact => ({
       id: `linear-${Date.now()}-${i}`, name: p.name, company: 'Linear', role: '',
+      category: 'awaiting-reply', urgency: 'waiting',
+      whatTheySaid: '', actionNeeded: 'Wait for reply',
       whyReachOut: '', companyInfo: 'Project management tool for software teams', foundVia: 'LinkedIn',
-      scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
+      scoutingStatus: 'ready', outreachStatus: 'dm-sent',
       platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
       notes: '', createdAt: new Date().toISOString(),
     }))];
@@ -1817,10 +2187,12 @@ function runOneTimeSeed(
       { name: 'Alston Lin', role: 'CTO & Co-founder' },
       { name: 'Luis Ruiz Morel', role: 'Founding Engineer' },
     ];
-    c = [...c, ...people.map((p, i) => ({
+    c = [...c, ...people.map((p, i): NetworkContact => ({
       id: `offdeal-${Date.now()}-${i}`, name: p.name, company: 'Offdeal', role: p.role,
+      category: 'awaiting-reply', urgency: 'waiting',
+      whatTheySaid: '', actionNeeded: 'Wait for reply',
       whyReachOut: '', companyInfo: '', foundVia: 'LinkedIn',
-      scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
+      scoutingStatus: 'ready', outreachStatus: 'dm-sent',
       platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
       notes: 'Connection request sent with note', createdAt: new Date().toISOString(),
     }))];
@@ -1829,13 +2201,16 @@ function runOneTimeSeed(
   if (key === 'ostium') {
     if (c.some(x => x.company === 'Ostium')) { if (typeof window !== 'undefined') localStorage.setItem(flag, '1'); return { contacts: c, journal: j }; }
     const today = localToday();
-    c = [...c, {
+    const ostium: NetworkContact = {
       id: `ostium-${Date.now()}-0`, name: 'Shrey Paharia', company: 'Ostium', role: 'Senior Developer',
+      category: 'awaiting-reply', urgency: 'waiting',
+      whatTheySaid: '', actionNeeded: 'Wait for reply',
       whyReachOut: '', companyInfo: '$38B+ volume, backed by General Catalyst & Jump', foundVia: 'LinkedIn',
-      scoutingStatus: 'ready' as ScoutingStatus, outreachStatus: 'dm-sent' as OutreachStatus,
+      scoutingStatus: 'ready', outreachStatus: 'dm-sent',
       platform: 'LinkedIn', lastContactDate: today, nextAction: 'Wait for reply',
       notes: 'Connection request sent with note', createdAt: new Date().toISOString(),
-    }];
+    };
+    c = [...c, ostium];
   }
 
   if (key === 'vivek-apr9') {
@@ -1860,6 +2235,1052 @@ function runOneTimeSeed(
   return { contacts: c, journal: j };
 }
 
+/* ═══════════════════════════════════════════════════════════
+   GOOGLE CALENDAR INTEGRATION
+   ═══════════════════════════════════════════════════════════
+   GOOGLE CALENDAR SETUP:
+   1. Go to https://console.cloud.google.com/
+   2. Create a new project (or select an existing one)
+   3. Enable the Google Calendar API
+   4. Create OAuth 2.0 credentials (Web application)
+   5. Add the following to "Authorized JavaScript origins":
+        - http://localhost:4321
+        - https://www.ronnielgandhe.com
+   6. Copy the Client ID and either:
+        a) set VITE_GOOGLE_CLIENT_ID in your .env, OR
+        b) replace 'PASTE_CLIENT_ID_HERE' below with the literal id
+*/
+const GOOGLE_CLIENT_ID =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID) ||
+  'PASTE_CLIENT_ID_HERE';
+const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
+const GOOGLE_TOKEN_KEY = 'bb-google-token';
+
+interface GoogleEvent {
+  id: string; summary: string; start: string; end: string;
+  description?: string; htmlLink?: string;
+}
+
+interface GoogleTokenInfo {
+  access_token: string; expires_at: number;
+}
+
+// Loads gapi/gis scripts (idempotent)
+function loadGoogleScripts(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve();
+  const w = window as any;
+  if (w.__bbGapiLoaded) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const ensure = (src: string) => new Promise<void>((res, rej) => {
+      if (document.querySelector(`script[src="${src}"]`)) { res(); return; }
+      const s = document.createElement('script');
+      s.src = src; s.async = true; s.defer = true;
+      s.onload = () => res();
+      s.onerror = () => rej(new Error('Failed to load ' + src));
+      document.head.appendChild(s);
+    });
+    Promise.all([
+      ensure('https://accounts.google.com/gsi/client'),
+      ensure('https://apis.google.com/js/api.js'),
+    ]).then(() => {
+      w.__bbGapiLoaded = true;
+      resolve();
+    }).catch(reject);
+  });
+}
+
+function useGoogleCalendar() {
+  const [token, setToken] = useState<GoogleTokenInfo | null>(() => {
+    try {
+      const raw = localStorage.getItem(GOOGLE_TOKEN_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as GoogleTokenInfo;
+      if (parsed.expires_at < Date.now()) return null;
+      return parsed;
+    } catch { return null; }
+  });
+  const [events, setEvents] = useState<GoogleEvent[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const tokenClientRef = useRef<any>(null);
+
+  const isConfigured = GOOGLE_CLIENT_ID !== 'PASTE_CLIENT_ID_HERE' && !!GOOGLE_CLIENT_ID;
+
+  // Initialize the token client lazily
+  const ensureClient = useCallback(async () => {
+    if (!isConfigured) throw new Error('Google Client ID not configured');
+    await loadGoogleScripts();
+    const w = window as any;
+    if (!tokenClientRef.current && w.google?.accounts?.oauth2) {
+      tokenClientRef.current = w.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: GOOGLE_SCOPES,
+        callback: (resp: any) => {
+          if (resp.error) { setError(resp.error); return; }
+          const info: GoogleTokenInfo = {
+            access_token: resp.access_token,
+            expires_at: Date.now() + (resp.expires_in ?? 3000) * 1000,
+          };
+          localStorage.setItem(GOOGLE_TOKEN_KEY, JSON.stringify(info));
+          setToken(info);
+        },
+      });
+    }
+  }, [isConfigured]);
+
+  const connect = useCallback(async () => {
+    setError(null);
+    try {
+      await ensureClient();
+      tokenClientRef.current?.requestAccessToken();
+    } catch (e: any) {
+      setError(e?.message || 'Could not connect Google Calendar');
+    }
+  }, [ensureClient]);
+
+  const disconnect = useCallback(() => {
+    localStorage.removeItem(GOOGLE_TOKEN_KEY);
+    setToken(null);
+    setEvents([]);
+  }, []);
+
+  // Fetch the next 7 days of events whenever token changes
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    setLoading(true);
+    const now = new Date();
+    const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const url = new URL('https://www.googleapis.com/calendar/v3/calendars/primary/events');
+    url.searchParams.set('timeMin', now.toISOString());
+    url.searchParams.set('timeMax', weekFromNow.toISOString());
+    url.searchParams.set('singleEvents', 'true');
+    url.searchParams.set('orderBy', 'startTime');
+    url.searchParams.set('maxResults', '25');
+    fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${token.access_token}` },
+    })
+      .then(r => {
+        if (r.status === 401) { disconnect(); throw new Error('Session expired'); }
+        return r.json();
+      })
+      .then(data => {
+        if (cancelled) return;
+        const items = (data?.items || []) as any[];
+        setEvents(items.map(e => ({
+          id: e.id,
+          summary: e.summary || '(No title)',
+          start: e.start?.dateTime || e.start?.date || '',
+          end: e.end?.dateTime || e.end?.date || '',
+          description: e.description,
+          htmlLink: e.htmlLink,
+        })));
+      })
+      .catch(e => { if (!cancelled) setError(e?.message || 'Calendar fetch failed'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [token, disconnect]);
+
+  return { token, events, loading, error, isConfigured, connect, disconnect };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FINANCE TAB
+   ═══════════════════════════════════════════════════════════ */
+
+const ACCOUNT_TYPE_META: Record<AccountType, { label: string; icon: string }> = {
+  checking: { label: 'Checking', icon: 'C' },
+  savings: { label: 'Savings', icon: 'S' },
+  tfsa: { label: 'TFSA', icon: 'T' },
+  crypto: { label: 'Crypto', icon: '₿' },
+  cash: { label: 'Cash', icon: '$' },
+};
+
+const DEFAULT_CATEGORIES = ['food', 'rent', 'transport', 'subs', 'salary', 'shopping', 'travel', 'misc'];
+
+function fmtMoney(amount: number, currency: Currency): string {
+  const sign = amount < 0 ? '-' : '';
+  const abs = Math.abs(amount);
+  const formatted = abs.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: abs % 1 === 0 ? 0 : 2 });
+  return `${sign}${currency === 'USD' ? '$' : 'CA$'}${formatted}`;
+}
+
+// Parse "Coffee 6 USD food" → { note, amount, currency, category, type }
+function parseQuickTransaction(input: string): Omit<Transaction, 'id' | 'date' | 'createdAt'> | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+  // Look for amount (first number, possibly with decimal, optional leading + or -)
+  const amtMatch = trimmed.match(/(-?\$?\d+(?:\.\d{1,2})?)/);
+  if (!amtMatch) return null;
+  const rawAmt = amtMatch[1].replace('$', '');
+  const amount = parseFloat(rawAmt);
+  if (Number.isNaN(amount)) return null;
+  const type: 'income' | 'expense' = amount < 0 || /\b(spent|paid|bought)\b/i.test(trimmed) ? 'expense'
+    : /\b(income|earned|got|received|paid me)\b/i.test(trimmed) ? 'income' : 'expense';
+  const tokens = trimmed.split(/\s+/);
+  const currency: Currency = tokens.some(tok => /usd/i.test(tok)) ? 'USD'
+    : tokens.some(tok => /cad/i.test(tok)) ? 'CAD' : 'USD';
+  const noteParts: string[] = [];
+  let category = '';
+  for (const tok of tokens) {
+    if (tok === amtMatch[1] || /^\$?\d/.test(tok)) continue;
+    if (/^(usd|cad)$/i.test(tok)) continue;
+    if (!category && DEFAULT_CATEGORIES.includes(tok.toLowerCase())) {
+      category = tok.toLowerCase();
+    } else {
+      noteParts.push(tok);
+    }
+  }
+  if (!category) category = 'misc';
+  return {
+    amount: Math.abs(amount),
+    currency, type, category,
+    note: noteParts.join(' '),
+  };
+}
+
+function FinanceOverview({ finance, t }: { finance: FinanceData; t: Theme }) {
+  const month = thisMonthKey();
+  const monthlyTx = finance.transactions.filter(x => monthKey(x.date) === month);
+  const incomeCAD = monthlyTx.filter(x => x.type === 'income').reduce((s, x) => s + toCAD(x.amount, x.currency), 0);
+  const expenseCAD = monthlyTx.filter(x => x.type === 'expense').reduce((s, x) => s + toCAD(x.amount, x.currency), 0);
+  const savingsRate = incomeCAD > 0 ? Math.max(0, Math.round((1 - expenseCAD / incomeCAD) * 100)) : 0;
+  const netWorthCAD = finance.accounts.reduce((s, a) => s + toCAD(a.balance, a.currency), 0);
+  const tfsaGoal = finance.goals.find(g => /tfsa/i.test(g.name));
+
+  const Stat = ({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: 'pos' | 'neg' }) => (
+    <div style={{
+      flex: 1, minWidth: 140, padding: '14px 16px',
+      background: t.inputBg, border: `1px solid ${t.border}`, borderRadius: CARD_RADIUS_SM,
+    }}>
+      <div style={{ fontSize: 11, color: t.textMuted, fontFamily: FONT_MEDIUM, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 22, fontFamily: FONT_MEDIUM, color: tone === 'pos' ? '#22c55e' : tone === 'neg' ? '#ef4444' : t.textStrong, letterSpacing: '-0.02em' }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: t.textMuted, marginTop: 2 }}>{sub}</div>}
+    </div>
+  );
+
+  return (
+    <div style={{
+      background: t.cardBg, borderRadius: CARD_RADIUS, padding: 20,
+      border: `1px solid ${t.border}`, marginBottom: 20,
+    }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+        <Stat label="Net Worth" value={fmtMoney(Math.round(netWorthCAD), 'CAD')} sub={`across ${finance.accounts.length} accounts`} />
+        <Stat label="In (this month)" value={fmtMoney(Math.round(incomeCAD), 'CAD')} tone="pos" />
+        <Stat label="Out (this month)" value={fmtMoney(Math.round(expenseCAD), 'CAD')} tone="neg" />
+        <Stat label="Savings Rate" value={`${savingsRate}%`} sub={savingsRate >= 50 ? 'on track' : 'push harder'} />
+      </div>
+      {tfsaGoal && tfsaGoal.targetAmount > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+            <span style={{ fontSize: 13, fontFamily: FONT_MEDIUM, color: t.textStrong }}>{tfsaGoal.name}</span>
+            <span style={{ fontSize: 12, color: t.textMuted }}>
+              {fmtMoney(tfsaGoal.currentAmount, tfsaGoal.currency)} of {fmtMoney(tfsaGoal.targetAmount, tfsaGoal.currency)}
+            </span>
+          </div>
+          <div style={{ height: 8, background: t.accentSubtle, borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{
+              width: `${Math.min(100, Math.max(0, (tfsaGoal.currentAmount / tfsaGoal.targetAmount) * 100))}%`,
+              height: '100%', background: '#22c55e',
+              transition: APPLE_TRANSITION,
+            }} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FinanceAccounts({ finance, setFinance, t }: {
+  finance: FinanceData; setFinance: (fn: (prev: FinanceData) => FinanceData) => void; t: Theme;
+}) {
+  const updateAccount = (id: string, patch: Partial<Account>) => {
+    setFinance(prev => ({
+      ...prev,
+      accounts: prev.accounts.map(a => a.id === id
+        ? { ...a, ...patch, updatedAt: new Date().toISOString() } : a),
+    }));
+  };
+  const addAccount = () => {
+    setFinance(prev => ({
+      ...prev,
+      accounts: [...prev.accounts, {
+        id: Date.now().toString(), name: '', type: 'checking',
+        currency: 'CAD', balance: 0, updatedAt: new Date().toISOString(),
+      }],
+    }));
+  };
+  const removeAccount = (id: string) => {
+    setFinance(prev => ({ ...prev, accounts: prev.accounts.filter(a => a.id !== id) }));
+  };
+
+  return (
+    <div style={{
+      background: t.cardBg, borderRadius: CARD_RADIUS, padding: 20,
+      border: `1px solid ${t.border}`, marginBottom: 20,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+        <span style={{ fontSize: 17, fontFamily: FONT_MEDIUM, color: t.textStrong, letterSpacing: '-0.01em' }}>Accounts</span>
+        <button onClick={addAccount} style={{
+          background: t.accentSubtle, border: 'none', color: t.textStrong,
+          padding: '6px 12px', borderRadius: 8, cursor: 'pointer',
+          fontFamily: FONT_MEDIUM, fontSize: 12, transition: APPLE_TRANSITION,
+        }}>+ Account</button>
+      </div>
+      {finance.accounts.length === 0 && (
+        <p style={{ color: t.textMuted, fontSize: 13, padding: 20, textAlign: 'center' }}>No accounts yet. Add your first.</p>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {finance.accounts.map(a => (
+          <div key={a.id} style={{
+            display: 'grid', gridTemplateColumns: '32px 1.5fr 1fr 80px 1fr 24px',
+            gap: 10, alignItems: 'center', padding: '10px 12px',
+            background: t.inputBg, borderRadius: CARD_RADIUS_SM,
+            border: `1px solid ${t.border}`,
+          }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: 8, background: t.accentSubtle,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 13, fontFamily: FONT_MEDIUM, color: t.textMuted,
+            }}>{ACCOUNT_TYPE_META[a.type].icon}</div>
+            <input value={a.name} onChange={e => updateAccount(a.id, { name: e.target.value })}
+              placeholder="Account name" style={{
+                background: 'transparent', border: 'none', color: t.textStrong,
+                fontFamily: FONT_MEDIUM, fontSize: 13, outline: 'none', padding: 0,
+              }} />
+            <select value={a.type} onChange={e => updateAccount(a.id, { type: e.target.value as AccountType })}
+              style={{
+                background: 'transparent', border: 'none', color: t.textMuted,
+                fontFamily: FONT, fontSize: 12, outline: 'none', cursor: 'pointer',
+              }}>
+              {(Object.keys(ACCOUNT_TYPE_META) as AccountType[]).map(k => (
+                <option key={k} value={k}>{ACCOUNT_TYPE_META[k].label}</option>
+              ))}
+            </select>
+            <select value={a.currency} onChange={e => updateAccount(a.id, { currency: e.target.value as Currency })}
+              style={{
+                background: 'transparent', border: 'none', color: t.textMuted,
+                fontFamily: FONT, fontSize: 12, outline: 'none', cursor: 'pointer',
+              }}>
+              <option value="CAD">CAD</option>
+              <option value="USD">USD</option>
+            </select>
+            <input value={a.balance} onChange={e => updateAccount(a.id, { balance: parseFloat(e.target.value) || 0 })}
+              type="number" step="0.01" style={{
+                background: 'transparent', border: 'none', color: t.textStrong,
+                fontFamily: FONT_MEDIUM, fontSize: 13, outline: 'none', padding: 0,
+                textAlign: 'right',
+              }} />
+            <button onClick={() => removeAccount(a.id)} style={{
+              background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
+              fontSize: 14, opacity: 0.5,
+            }}>&times;</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FinanceTransactions({ finance, setFinance, t }: {
+  finance: FinanceData; setFinance: (fn: (prev: FinanceData) => FinanceData) => void; t: Theme;
+}) {
+  const [quickInput, setQuickInput] = useState('');
+  const [filterCat, setFilterCat] = useState<string>('all');
+  const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
+
+  const addTransaction = (tx: Omit<Transaction, 'id' | 'createdAt' | 'date'>) => {
+    const now = new Date().toISOString();
+    const t: Transaction = {
+      id: Date.now().toString(), date: localToday(),
+      createdAt: now, ...tx,
+    };
+    setFinance(prev => ({ ...prev, transactions: [t, ...prev.transactions] }));
+  };
+  const updateTransaction = (id: string, patch: Partial<Transaction>) => {
+    setFinance(prev => ({
+      ...prev, transactions: prev.transactions.map(x => x.id === id ? { ...x, ...patch } : x),
+    }));
+  };
+  const removeTransaction = (id: string) => {
+    setFinance(prev => ({ ...prev, transactions: prev.transactions.filter(x => x.id !== id) }));
+  };
+
+  const handleQuickAdd = () => {
+    if (!quickInput.trim()) return;
+    const parsed = parseQuickTransaction(quickInput);
+    if (parsed) {
+      addTransaction(parsed);
+      setQuickInput('');
+    }
+  };
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+  const cutoffStr = cutoff.toISOString().slice(0, 10);
+  let visible = finance.transactions
+    .filter(x => x.date >= cutoffStr)
+    .sort((a, b) => b.date.localeCompare(a.date));
+  if (filterCat !== 'all') visible = visible.filter(x => x.category === filterCat);
+  if (filterType !== 'all') visible = visible.filter(x => x.type === filterType);
+
+  const allCategories = Array.from(new Set([...DEFAULT_CATEGORIES, ...finance.transactions.map(x => x.category).filter(Boolean)]));
+
+  return (
+    <div style={{
+      background: t.cardBg, borderRadius: CARD_RADIUS, padding: 20,
+      border: `1px solid ${t.border}`, marginBottom: 20,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+        <span style={{ fontSize: 17, fontFamily: FONT_MEDIUM, color: t.textStrong, letterSpacing: '-0.01em' }}>Transactions</span>
+        <span style={{ fontSize: 12, color: t.textMuted }}>last 30 days</span>
+      </div>
+
+      {/* Quick add */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <input value={quickInput} onChange={e => setQuickInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleQuickAdd()}
+          placeholder="e.g. Coffee 6 USD food"
+          style={{
+            flex: 1, background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+            padding: '10px 14px', borderRadius: 10, fontFamily: FONT, fontSize: 13,
+            outline: 'none', transition: APPLE_TRANSITION,
+          }} />
+        <button onClick={handleQuickAdd} style={{
+          background: t.accentSubtle, border: 'none', color: t.textStrong,
+          padding: '0 16px', borderRadius: 10, cursor: 'pointer',
+          fontFamily: FONT_MEDIUM, fontSize: 13,
+        }}>Add</button>
+      </div>
+
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12, fontSize: 12 }}>
+        <select value={filterType} onChange={e => setFilterType(e.target.value as any)} style={{
+          background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+          padding: '6px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 12, outline: 'none',
+        }}>
+          <option value="all">All</option>
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+        <select value={filterCat} onChange={e => setFilterCat(e.target.value)} style={{
+          background: t.inputBg, border: `1px solid ${t.border}`, color: t.text,
+          padding: '6px 10px', borderRadius: 8, fontFamily: FONT, fontSize: 12, outline: 'none',
+        }}>
+          <option value="all">All categories</option>
+          {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
+
+      {/* List */}
+      {visible.length === 0 && (
+        <p style={{ color: t.textMuted, fontSize: 13, padding: 20, textAlign: 'center' }}>No transactions in this range.</p>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {visible.map(x => (
+          <div key={x.id} style={{
+            display: 'grid', gridTemplateColumns: '70px 1fr 80px 100px 24px',
+            gap: 10, alignItems: 'center', padding: '8px 10px',
+            borderRadius: 8, transition: APPLE_TRANSITION,
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = t.accentSubtle; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+          >
+            <input type="date" value={x.date} onChange={e => updateTransaction(x.id, { date: e.target.value })}
+              style={{
+                background: 'transparent', border: 'none', color: t.textMuted,
+                fontFamily: FONT, fontSize: 12, outline: 'none',
+              }} />
+            <input value={x.note} onChange={e => updateTransaction(x.id, { note: e.target.value })}
+              placeholder="note" style={{
+                background: 'transparent', border: 'none', color: t.text,
+                fontFamily: FONT, fontSize: 13, outline: 'none', padding: 0,
+              }} />
+            <select value={x.category} onChange={e => updateTransaction(x.id, { category: e.target.value })}
+              style={{
+                background: 'transparent', border: 'none', color: t.textMuted,
+                fontFamily: FONT, fontSize: 12, outline: 'none', cursor: 'pointer',
+              }}>
+              {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <span style={{
+              fontFamily: FONT_MEDIUM, fontSize: 13, textAlign: 'right',
+              color: x.type === 'income' ? '#22c55e' : t.text,
+            }}>
+              {x.type === 'income' ? '+' : '-'}{fmtMoney(x.amount, x.currency)}
+            </span>
+            <button onClick={() => removeTransaction(x.id)} style={{
+              background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
+              fontSize: 14, opacity: 0.4,
+            }}>&times;</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FinanceBudgets({ finance, setFinance, t }: {
+  finance: FinanceData; setFinance: (fn: (prev: FinanceData) => FinanceData) => void; t: Theme;
+}) {
+  const month = thisMonthKey();
+  const updateBudget = (id: string, patch: Partial<Budget>) => {
+    setFinance(prev => ({
+      ...prev, budgets: prev.budgets.map(b => b.id === id ? { ...b, ...patch } : b),
+    }));
+  };
+  const addBudget = () => {
+    setFinance(prev => ({
+      ...prev, budgets: [...prev.budgets, {
+        id: Date.now().toString(), category: 'misc', monthlyTarget: 0, currency: 'CAD',
+      }],
+    }));
+  };
+  const removeBudget = (id: string) => {
+    setFinance(prev => ({ ...prev, budgets: prev.budgets.filter(b => b.id !== id) }));
+  };
+
+  return (
+    <div style={{
+      background: t.cardBg, borderRadius: CARD_RADIUS, padding: 20,
+      border: `1px solid ${t.border}`, marginBottom: 20,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+        <span style={{ fontSize: 17, fontFamily: FONT_MEDIUM, color: t.textStrong, letterSpacing: '-0.01em' }}>Budgets</span>
+        <button onClick={addBudget} style={{
+          background: t.accentSubtle, border: 'none', color: t.textStrong,
+          padding: '6px 12px', borderRadius: 8, cursor: 'pointer',
+          fontFamily: FONT_MEDIUM, fontSize: 12,
+        }}>+ Budget</button>
+      </div>
+      {finance.budgets.length === 0 && (
+        <p style={{ color: t.textMuted, fontSize: 13, padding: 20, textAlign: 'center' }}>No budgets yet.</p>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {finance.budgets.map(b => {
+          const spent = finance.transactions
+            .filter(x => x.category === b.category && monthKey(x.date) === month && x.type === 'expense')
+            .reduce((s, x) => s + (x.currency === b.currency ? x.amount : toCAD(x.amount, x.currency) / (b.currency === 'USD' ? FX_USD_TO_CAD : 1)), 0);
+          const pct = b.monthlyTarget > 0 ? Math.min(100, (spent / b.monthlyTarget) * 100) : 0;
+          const color = pct < 80 ? '#22c55e' : pct < 100 ? '#eab308' : '#ef4444';
+          return (
+            <div key={b.id} style={{ position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <input value={b.category} onChange={e => updateBudget(b.id, { category: e.target.value })}
+                  style={{
+                    background: 'transparent', border: 'none', color: t.textStrong,
+                    fontFamily: FONT_MEDIUM, fontSize: 13, outline: 'none', padding: 0, flex: 1,
+                  }} />
+                <span style={{ fontFamily: FONT, fontSize: 12, color: t.textMuted }}>
+                  {fmtMoney(Math.round(spent), b.currency)} /
+                </span>
+                <input value={b.monthlyTarget} onChange={e => updateBudget(b.id, { monthlyTarget: parseFloat(e.target.value) || 0 })}
+                  type="number" step="1" style={{
+                    background: 'transparent', border: 'none', color: t.text,
+                    fontFamily: FONT_MEDIUM, fontSize: 13, outline: 'none', padding: 0, width: 80,
+                    textAlign: 'right',
+                  }} />
+                <select value={b.currency} onChange={e => updateBudget(b.id, { currency: e.target.value as Currency })}
+                  style={{
+                    background: 'transparent', border: 'none', color: t.textMuted,
+                    fontFamily: FONT, fontSize: 12, outline: 'none',
+                  }}>
+                  <option value="CAD">CAD</option>
+                  <option value="USD">USD</option>
+                </select>
+                <button onClick={() => removeBudget(b.id)} style={{
+                  background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
+                  fontSize: 14, opacity: 0.4,
+                }}>&times;</button>
+              </div>
+              <div style={{ height: 6, background: t.accentSubtle, borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{
+                  width: `${pct}%`, height: '100%', background: color,
+                  transition: APPLE_TRANSITION,
+                }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function FinanceGoals({ finance, setFinance, t }: {
+  finance: FinanceData; setFinance: (fn: (prev: FinanceData) => FinanceData) => void; t: Theme;
+}) {
+  const updateGoal = (id: string, patch: Partial<FinancialGoal>) => {
+    setFinance(prev => ({
+      ...prev, goals: prev.goals.map(g => g.id === id ? { ...g, ...patch } : g),
+    }));
+  };
+  const addGoal = () => {
+    setFinance(prev => ({
+      ...prev, goals: [...prev.goals, {
+        id: Date.now().toString(), name: '', targetAmount: 0, currentAmount: 0, currency: 'CAD',
+      }],
+    }));
+  };
+  const removeGoal = (id: string) => {
+    setFinance(prev => ({ ...prev, goals: prev.goals.filter(g => g.id !== id) }));
+  };
+
+  return (
+    <div style={{
+      background: t.cardBg, borderRadius: CARD_RADIUS, padding: 20,
+      border: `1px solid ${t.border}`, marginBottom: 20,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+        <span style={{ fontSize: 17, fontFamily: FONT_MEDIUM, color: t.textStrong, letterSpacing: '-0.01em' }}>Financial Goals</span>
+        <button onClick={addGoal} style={{
+          background: t.accentSubtle, border: 'none', color: t.textStrong,
+          padding: '6px 12px', borderRadius: 8, cursor: 'pointer',
+          fontFamily: FONT_MEDIUM, fontSize: 12,
+        }}>+ Goal</button>
+      </div>
+      {finance.goals.length === 0 && (
+        <p style={{ color: t.textMuted, fontSize: 13, padding: 20, textAlign: 'center' }}>No financial goals yet.</p>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {finance.goals.map(g => {
+          const pct = g.targetAmount > 0 ? Math.min(100, (g.currentAmount / g.targetAmount) * 100) : 0;
+          return (
+            <div key={g.id} style={{
+              padding: 14, background: t.inputBg, borderRadius: CARD_RADIUS_SM,
+              border: `1px solid ${t.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <input value={g.name} onChange={e => updateGoal(g.id, { name: e.target.value })}
+                  placeholder="e.g. TFSA 2026" style={{
+                    flex: 1, background: 'transparent', border: 'none', color: t.textStrong,
+                    fontFamily: FONT_MEDIUM, fontSize: 14, outline: 'none', padding: 0,
+                  }} />
+                <button onClick={() => removeGoal(g.id)} style={{
+                  background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer',
+                  fontSize: 14, opacity: 0.4,
+                }}>&times;</button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 90px 1fr', gap: 8, marginBottom: 8 }}>
+                <div>
+                  <label style={{ fontSize: 10, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Current</label>
+                  <input value={g.currentAmount} onChange={e => updateGoal(g.id, { currentAmount: parseFloat(e.target.value) || 0 })}
+                    type="number" step="1" style={{
+                      width: '100%', background: 'transparent', border: 'none', color: t.text,
+                      fontFamily: FONT_MEDIUM, fontSize: 13, outline: 'none', padding: 0,
+                    }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Target</label>
+                  <input value={g.targetAmount} onChange={e => updateGoal(g.id, { targetAmount: parseFloat(e.target.value) || 0 })}
+                    type="number" step="1" style={{
+                      width: '100%', background: 'transparent', border: 'none', color: t.text,
+                      fontFamily: FONT_MEDIUM, fontSize: 13, outline: 'none', padding: 0,
+                    }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Currency</label>
+                  <select value={g.currency} onChange={e => updateGoal(g.id, { currency: e.target.value as Currency })}
+                    style={{
+                      width: '100%', background: 'transparent', border: 'none', color: t.text,
+                      fontFamily: FONT, fontSize: 12, outline: 'none', padding: 0,
+                    }}>
+                    <option value="CAD">CAD</option>
+                    <option value="USD">USD</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Deadline</label>
+                  <input type="date" value={g.deadline || ''} onChange={e => updateGoal(g.id, { deadline: e.target.value })}
+                    style={{
+                      width: '100%', background: 'transparent', border: 'none', color: t.text,
+                      fontFamily: FONT, fontSize: 12, outline: 'none', padding: 0,
+                    }} />
+                </div>
+              </div>
+              <div style={{ height: 6, background: t.accentSubtle, borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{
+                  width: `${pct}%`, height: '100%',
+                  background: pct >= 100 ? '#22c55e' : '#3b82f6',
+                  transition: APPLE_TRANSITION,
+                }} />
+              </div>
+              <div style={{ fontSize: 11, color: t.textMuted, marginTop: 4, textAlign: 'right' }}>{Math.round(pct)}%</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function FinanceTab({ finance, setFinance, t }: {
+  finance: FinanceData; setFinance: (fn: (prev: FinanceData) => FinanceData) => void; t: Theme;
+}) {
+  return (
+    <div>
+      <FinanceOverview finance={finance} t={t} />
+      <FinanceAccounts finance={finance} setFinance={setFinance} t={t} />
+      <FinanceTransactions finance={finance} setFinance={setFinance} t={t} />
+      <FinanceBudgets finance={finance} setFinance={setFinance} t={t} />
+      <FinanceGoals finance={finance} setFinance={setFinance} t={t} />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DASHBOARD HOME — unified widget grid
+   ═══════════════════════════════════════════════════════════ */
+
+interface DashboardProps {
+  journal: JournalEntry[];
+  setJournal: (fn: (prev: JournalEntry[]) => JournalEntry[]) => void;
+  contacts: NetworkContact[];
+  tasks: Task[];
+  goals: Goal[];
+  finance: FinanceData;
+  onNavigate: (tab: BlackbookTab) => void;
+  t: Theme;
+}
+
+type BlackbookTab = 'dashboard' | 'journal' | 'network' | 'tasks' | 'goals' | 'ideas' | 'finance';
+
+function Widget({ title, onClick, t, children, span }: {
+  title: string; onClick?: () => void; t: Theme; children: ReactNode; span?: number;
+}) {
+  return (
+    <button onClick={onClick} style={{
+      gridColumn: span ? `span ${span}` : undefined,
+      background: t.cardBg, border: `1px solid ${t.border}`,
+      borderRadius: CARD_RADIUS, padding: 18,
+      textAlign: 'left', cursor: onClick ? 'pointer' : 'default',
+      transition: APPLE_TRANSITION, fontFamily: FONT,
+      boxShadow: CARD_SHADOW, display: 'flex', flexDirection: 'column',
+      minHeight: 130,
+    }}
+      onMouseEnter={e => { if (onClick) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.10)'; } }}
+      onMouseLeave={e => { if (onClick) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = CARD_SHADOW; } }}
+    >
+      <div style={{
+        fontSize: 11, fontFamily: FONT_MEDIUM, color: t.textMuted,
+        textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10,
+      }}>{title}</div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {children}
+      </div>
+    </button>
+  );
+}
+
+function TodayWidget({ t }: { t: Theme }) {
+  const now = new Date();
+  const day = now.toLocaleDateString('en', { weekday: 'long' });
+  const dateStr = now.toLocaleDateString('en', { month: 'long', day: 'numeric', year: 'numeric' });
+  return (
+    <Widget title="Today" t={t}>
+      <div style={{ fontSize: 36, fontFamily: FONT_MEDIUM, color: t.textStrong, letterSpacing: '-0.03em', lineHeight: 1 }}>
+        {now.getDate()}
+      </div>
+      <div style={{ fontSize: 13, color: t.text, marginTop: 4, fontFamily: FONT_MEDIUM }}>{day}</div>
+      <div style={{ fontSize: 12, color: t.textMuted, marginTop: 'auto' }}>{dateStr}</div>
+    </Widget>
+  );
+}
+
+function WeatherWidget({ t }: { t: Theme }) {
+  // Static stub for now. TODO: wire OpenWeather or similar.
+  return (
+    <Widget title="Weather · SF" t={t}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ fontSize: 36, lineHeight: 1 }}>☀</div>
+        <div>
+          <div style={{ fontSize: 28, fontFamily: FONT_MEDIUM, color: t.textStrong, letterSpacing: '-0.03em' }}>72°</div>
+          <div style={{ fontSize: 12, color: t.textMuted }}>Clear</div>
+        </div>
+      </div>
+      <div style={{ fontSize: 11, color: t.textMuted, marginTop: 'auto' }}>Stubbed — connect API</div>
+    </Widget>
+  );
+}
+
+function FinanceWidget({ finance, onClick, t }: { finance: FinanceData; onClick: () => void; t: Theme }) {
+  const month = thisMonthKey();
+  const monthlyTx = finance.transactions.filter(x => monthKey(x.date) === month);
+  const incomeCAD = monthlyTx.filter(x => x.type === 'income').reduce((s, x) => s + toCAD(x.amount, x.currency), 0);
+  const expenseCAD = monthlyTx.filter(x => x.type === 'expense').reduce((s, x) => s + toCAD(x.amount, x.currency), 0);
+  const saved = incomeCAD > 0 ? Math.max(0, Math.round((1 - expenseCAD / incomeCAD) * 100)) : 0;
+  return (
+    <Widget title="Finance · This Month" onClick={onClick} t={t}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: t.textMuted }}>In</span>
+          <span style={{ color: '#22c55e', fontFamily: FONT_MEDIUM }}>{fmtMoney(Math.round(incomeCAD), 'CAD')}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: t.textMuted }}>Out</span>
+          <span style={{ color: t.text, fontFamily: FONT_MEDIUM }}>{fmtMoney(Math.round(expenseCAD), 'CAD')}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+          <span style={{ color: t.textMuted }}>Saved</span>
+          <span style={{ color: saved >= 50 ? '#22c55e' : '#eab308', fontFamily: FONT_MEDIUM }}>{saved}%</span>
+        </div>
+      </div>
+    </Widget>
+  );
+}
+
+function CalendarWidget({ journal, googleEvents, googleConfigured, googleConnected, googleLoading, onConnectGoogle, onClick, t }: {
+  journal: JournalEntry[]; googleEvents: GoogleEvent[]; googleConfigured: boolean;
+  googleConnected: boolean; googleLoading: boolean;
+  onConnectGoogle: () => void; onClick: () => void; t: Theme;
+}) {
+  const today = localToday();
+  // Local meetings from journal: next 7 days
+  const localMeetings = journal
+    .filter(e => e.date >= today)
+    .flatMap(e => e.meetings.map(m => ({
+      id: m.id, title: m.title || 'Untitled', date: e.date, time: m.time, source: 'local' as const,
+    })))
+    .filter(x => {
+      const d = new Date(x.date + 'T12:00');
+      const diff = (d.getTime() - new Date(today + 'T00:00').getTime()) / (1000 * 60 * 60 * 24);
+      return diff >= 0 && diff <= 7;
+    });
+  const googleItems = googleEvents.map(e => ({
+    id: e.id, title: e.summary, date: e.start.slice(0, 10),
+    time: e.start.includes('T') ? new Date(e.start).toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' }) : '',
+    source: 'google' as const,
+  }));
+  const all = [...localMeetings, ...googleItems]
+    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
+    .slice(0, 6);
+  return (
+    <Widget title="Calendar · Next 7 Days" onClick={onClick} t={t} span={2}>
+      {!googleConfigured && (
+        <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 8 }}>
+          Google Calendar: paste Client ID in code (see comment near top of file)
+        </div>
+      )}
+      {googleConfigured && !googleConnected && (
+        <button onClick={(e) => { e.stopPropagation(); onConnectGoogle(); }} style={{
+          background: t.accentSubtle, border: `1px solid ${t.border}`, color: t.textStrong,
+          padding: '6px 12px', borderRadius: 8, cursor: 'pointer',
+          fontFamily: FONT_MEDIUM, fontSize: 12, marginBottom: 8, alignSelf: 'flex-start',
+        }}>Connect Google Calendar</button>
+      )}
+      {googleLoading && <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 4 }}>Loading…</div>}
+      {all.length === 0 && (
+        <div style={{ fontSize: 12, color: t.textMuted, opacity: 0.6 }}>Nothing scheduled.</div>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {all.map(m => {
+          const isToday = m.date === today;
+          const dateLabel = isToday ? 'Today' : new Date(m.date + 'T12:00').toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' });
+          return (
+            <div key={m.source + m.id} style={{ display: 'flex', alignItems: 'baseline', gap: 8, fontSize: 12 }}>
+              <span style={{ color: isToday ? '#22c55e' : t.textMuted, fontFamily: FONT_MEDIUM, minWidth: 90 }}>
+                {dateLabel}{m.time ? ` · ${m.time}` : ''}
+              </span>
+              <span style={{ color: t.text, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {m.title}
+              </span>
+              {m.source === 'google' && <span style={{ fontSize: 9, color: t.textMuted, fontFamily: FONT_MEDIUM, textTransform: 'uppercase' }}>cal</span>}
+            </div>
+          );
+        })}
+      </div>
+    </Widget>
+  );
+}
+
+function PrioritiesWidget({ tasks, setTasks, onClick, t }: {
+  tasks: Task[]; setTasks: (fn: (prev: Task[]) => Task[]) => void; onClick: () => void; t: Theme;
+}) {
+  const top = tasks
+    .filter(x => x.status === 'todo' && x.priority === 'high')
+    .slice(0, 3);
+  const fallback = top.length === 0
+    ? tasks.filter(x => x.status === 'todo').slice(0, 3)
+    : top;
+  return (
+    <Widget title="Today's Priorities" onClick={onClick} t={t}>
+      {fallback.length === 0 && (
+        <div style={{ fontSize: 12, color: t.textMuted, opacity: 0.6 }}>No tasks yet.</div>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {fallback.map(task => (
+          <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+            onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => {
+              setTasks(prev => prev.map(t => t.id === task.id
+                ? { ...t, status: t.status === 'done' ? 'todo' : 'done', updatedAt: new Date().toISOString() } : t));
+            }} style={{
+              width: 16, height: 16, borderRadius: 4, flexShrink: 0,
+              border: `1.5px solid ${task.status === 'done' ? 'rgba(48,180,98,0.5)' : t.border}`,
+              background: task.status === 'done' ? 'rgba(48,180,98,0.15)' : 'transparent',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#2d8a56', fontSize: 11,
+            }}>{task.status === 'done' ? '✓' : ''}</button>
+            <span style={{
+              fontSize: 12, color: task.status === 'done' ? t.textMuted : t.text,
+              textDecoration: task.status === 'done' ? 'line-through' : 'none',
+              flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>{task.title}</span>
+          </div>
+        ))}
+      </div>
+    </Widget>
+  );
+}
+
+function GoalsWidget({ goals, onClick, t }: { goals: Goal[]; onClick: () => void; t: Theme }) {
+  const active = goals.filter(g => g.status === 'active').slice(0, 3);
+  return (
+    <Widget title="Active Goals" onClick={onClick} t={t}>
+      {active.length === 0 && (
+        <div style={{ fontSize: 12, color: t.textMuted, opacity: 0.6 }}>No active goals.</div>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {active.map(g => {
+          const checklist = g.checklist || [];
+          const doneCount = checklist.filter(c => c.done).length;
+          const pct = checklist.length > 0 ? Math.round((doneCount / checklist.length) * 100) : (g.progress || 0);
+          return (
+            <div key={g.id}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                <span style={{ fontSize: 12, color: t.text, fontFamily: FONT_MEDIUM, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>{g.title || 'Untitled'}</span>
+                <span style={{ fontSize: 11, color: t.textMuted }}>{pct}%</span>
+              </div>
+              <div style={{ height: 4, background: t.accentSubtle, borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{
+                  width: `${pct}%`, height: '100%',
+                  background: pct === 100 ? '#22c55e' : '#3b82f6', transition: APPLE_TRANSITION,
+                }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Widget>
+  );
+}
+
+function NetworkWidget({ contacts, onClick, t }: { contacts: NetworkContact[]; onClick: () => void; t: Theme }) {
+  const replyNeeded = contacts.filter(c => c.category === 'reply-needed').length;
+  const callsBooked = contacts.filter(c => c.category === 'call-booked').length;
+  const awaiting = contacts.filter(c => c.category === 'awaiting-reply').length;
+  return (
+    <Widget title="Network Pulse" onClick={onClick} t={t}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: t.textMuted }}>Replies needed</span>
+          <span style={{ color: replyNeeded > 0 ? '#ef4444' : t.text, fontFamily: FONT_MEDIUM }}>{replyNeeded}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: t.textMuted }}>Calls booked</span>
+          <span style={{ color: t.text, fontFamily: FONT_MEDIUM }}>{callsBooked}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: t.textMuted }}>Awaiting reply</span>
+          <span style={{ color: t.text, fontFamily: FONT_MEDIUM }}>{awaiting}</span>
+        </div>
+      </div>
+    </Widget>
+  );
+}
+
+function JournalWidget({ journal, setJournal, onClick, t }: {
+  journal: JournalEntry[]; setJournal: (fn: (prev: JournalEntry[]) => JournalEntry[]) => void;
+  onClick: () => void; t: Theme;
+}) {
+  const today = localToday();
+  const entry = journal.find(e => e.date === today);
+  const update = (body: string) => {
+    if (entry) {
+      setJournal(prev => prev.map(e => e.date === today
+        ? { ...e, body, updatedAt: new Date().toISOString() } : e));
+    } else {
+      setJournal(prev => [...prev, {
+        id: today, date: today, body, tomorrow: '', meetings: [],
+        updatedAt: new Date().toISOString(),
+      }]);
+    }
+  };
+  return (
+    <div onClick={onClick} style={{
+      gridColumn: 'span 4',
+      background: t.cardBg, border: `1px solid ${t.border}`,
+      borderRadius: CARD_RADIUS, padding: 18, cursor: 'pointer',
+      transition: APPLE_TRANSITION, fontFamily: FONT, boxShadow: CARD_SHADOW,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+        <span style={{
+          fontSize: 11, fontFamily: FONT_MEDIUM, color: t.textMuted,
+          textTransform: 'uppercase', letterSpacing: '0.06em',
+        }}>Journal · Today</span>
+        <span style={{ fontSize: 11, color: t.textMuted }}>tap to expand</span>
+      </div>
+      <textarea
+        value={entry?.body || ''}
+        onChange={e => update(e.target.value)}
+        onClick={e => e.stopPropagation()}
+        placeholder="What did you do today? Wins, blockers, ideas..."
+        rows={3}
+        style={{
+          width: '100%', background: t.inputBg, border: `1px solid ${t.border}`,
+          color: t.text, padding: '10px 12px', borderRadius: 10,
+          fontFamily: FONT, fontSize: 13, outline: 'none',
+          boxSizing: 'border-box', resize: 'vertical', lineHeight: 1.5,
+          letterSpacing: '-0.005em',
+        }}
+      />
+    </div>
+  );
+}
+
+function DashboardTab({
+  journal, setJournal, contacts, tasks, setTasks, goals, finance, onNavigate,
+  googleEvents, googleConfigured, googleConnected, googleLoading, onConnectGoogle, t,
+}: DashboardProps & {
+  setTasks: (fn: (prev: Task[]) => Task[]) => void;
+  googleEvents: GoogleEvent[]; googleConfigured: boolean;
+  googleConnected: boolean; googleLoading: boolean;
+  onConnectGoogle: () => void;
+}) {
+  const now = new Date();
+  const heading = now.toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  return (
+    <div>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 28, fontFamily: FONT_MEDIUM, color: t.textStrong, letterSpacing: '-0.025em' }}>Today</div>
+        <div style={{ fontSize: 13, color: t.textMuted, marginTop: 2 }}>{heading}</div>
+      </div>
+      <div style={{
+        display: 'grid', gap: 14,
+        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+      }}>
+        <TodayWidget t={t} />
+        <WeatherWidget t={t} />
+        <FinanceWidget finance={finance} onClick={() => onNavigate('finance')} t={t} />
+        <NetworkWidget contacts={contacts} onClick={() => onNavigate('network')} t={t} />
+        <CalendarWidget
+          journal={journal}
+          googleEvents={googleEvents}
+          googleConfigured={googleConfigured}
+          googleConnected={googleConnected}
+          googleLoading={googleLoading}
+          onConnectGoogle={onConnectGoogle}
+          onClick={() => onNavigate('journal')}
+          t={t}
+        />
+        <PrioritiesWidget tasks={tasks} setTasks={setTasks} onClick={() => onNavigate('tasks')} t={t} />
+        <GoalsWidget goals={goals} onClick={() => onNavigate('goals')} t={t} />
+        <JournalWidget journal={journal} setJournal={setJournal} onClick={() => onNavigate('journal')} t={t} />
+      </div>
+    </div>
+  );
+}
+
 // ── Main Dashboard ──
 export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }: { onClose: () => void; onLogout?: () => void; passHash: string; transparent?: boolean }) {
   const baseTheme = useBlackbookTheme();
@@ -1876,19 +3297,23 @@ export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }:
     textMuted: 'rgba(0,0,0,0.6)',
     accentSubtle: 'rgba(0,0,0,0.08)',
   } : baseTheme;
-  const [tab, setTab] = useState<'journal' | 'network' | 'tasks' | 'goals' | 'ideas'>('journal');
+  const [tab, setTab] = useState<BlackbookTab>('dashboard');
   const [journal, setJournal] = useState<JournalEntry[]>(() => load('journal', []));
   const [contacts, setContacts] = useState<NetworkContact[]>(() => load('contacts', DEFAULT_CONTACTS));
   const [ideas, setIdeas] = useState<ProjectIdea[]>(() => load('ideas', []));
   const [tasks, setTasks] = useState<Task[]>(() => load('tasks', []));
   const [goals, setGoals] = useState<Goal[]>(() => load('goals', []));
+  const [finance, setFinance] = useState<FinanceData>(() => load('finance', DEFAULT_FINANCE));
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | 'error' | 'retrying'>('saved');
   const [synced, setSynced] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const saveQueueRef = useRef(new SaveQueue());
 
+  // Google Calendar
+  const gcal = useGoogleCalendar();
+
   // Per-section timestamps — tracks when each section was last edited locally
-  const sectionTs = useRef({ journal: '', contacts: '', ideas: '', tasks: '', goals: '' });
+  const sectionTs = useRef({ journal: '', contacts: '', ideas: '', tasks: '', goals: '', finance: '' });
 
   // Refs that always hold the latest state — used by sync and beforeunload
   const journalRef = useRef(journal);
@@ -1896,11 +3321,13 @@ export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }:
   const ideasRef = useRef(ideas);
   const tasksRef = useRef(tasks);
   const goalsRef = useRef(goals);
+  const financeRef = useRef(finance);
   useEffect(() => { journalRef.current = journal; }, [journal]);
   useEffect(() => { contactsRef.current = contacts; }, [contacts]);
   useEffect(() => { ideasRef.current = ideas; }, [ideas]);
   useEffect(() => { tasksRef.current = tasks; }, [tasks]);
   useEffect(() => { goalsRef.current = goals; }, [goals]);
+  useEffect(() => { financeRef.current = finance; }, [finance]);
 
   // Wire up save queue status
   useEffect(() => {
@@ -1909,7 +3336,7 @@ export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }:
   }, []);
 
   // Run migration once
-  useEffect(() => { migrateIfNeeded(); migrateContactsV3(); }, []);
+  useEffect(() => { migrateIfNeeded(); migrateContactsV3(); migrateFinance(); }, []);
 
   // Load from cloud on mount — merge with localStorage using per-field timestamps
   useEffect(() => {
@@ -1920,11 +3347,13 @@ export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }:
         ideas: load('ideas', []),
         tasks: load('tasks', []),
         goals: load('goals', []),
+        finance: load('finance', DEFAULT_FINANCE),
         journalUpdatedAt: load('journalUpdatedAt', ''),
         contactsUpdatedAt: load('contactsUpdatedAt', ''),
         ideasUpdatedAt: load('ideasUpdatedAt', ''),
         tasksUpdatedAt: load('tasksUpdatedAt', ''),
         goalsUpdatedAt: load('goalsUpdatedAt', ''),
+        financeUpdatedAt: load('financeUpdatedAt', ''),
       };
 
       // Per-field merge: newest timestamp wins per section
@@ -1934,6 +3363,8 @@ export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }:
       const loadedIdeas = merged.ideas ?? [];
       const loadedTasks = merged.tasks ?? [];
       const loadedGoals = merged.goals ?? [];
+      const loadedFinance = (merged.finance && typeof merged.finance === 'object' && Array.isArray((merged.finance as any).accounts))
+        ? merged.finance : DEFAULT_FINANCE;
 
       // Track section timestamps
       const now = new Date().toISOString();
@@ -1943,6 +3374,7 @@ export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }:
         ideas: merged.ideasUpdatedAt || now,
         tasks: merged.tasksUpdatedAt || now,
         goals: merged.goalsUpdatedAt || now,
+        finance: merged.financeUpdatedAt || now,
       };
 
       // One-time seeds — only inject if this device hasn't seeded yet
@@ -1994,26 +3426,30 @@ export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }:
       setIdeas(loadedIdeas);
       setTasks(loadedTasks);
       setGoals(loadedGoals);
+      setFinance(loadedFinance);
       save('journal', loadedJournal);
       save('contacts', loadedContacts);
       save('ideas', loadedIdeas);
       save('tasks', loadedTasks);
       save('goals', loadedGoals);
+      save('finance', loadedFinance);
       save('journalUpdatedAt', sectionTs.current.journal);
       save('contactsUpdatedAt', sectionTs.current.contacts);
       save('ideasUpdatedAt', sectionTs.current.ideas);
       save('tasksUpdatedAt', sectionTs.current.tasks);
       save('goalsUpdatedAt', sectionTs.current.goals);
+      save('financeUpdatedAt', sectionTs.current.finance);
 
       // Sync back to cloud (seeds/dedup may have cleaned data)
       const payload: BlackbookData = {
         journal: loadedJournal, contacts: loadedContacts, ideas: loadedIdeas,
-        tasks: loadedTasks, goals: loadedGoals,
+        tasks: loadedTasks, goals: loadedGoals, finance: loadedFinance,
         journalUpdatedAt: sectionTs.current.journal,
         contactsUpdatedAt: sectionTs.current.contacts,
         ideasUpdatedAt: sectionTs.current.ideas,
         tasksUpdatedAt: sectionTs.current.tasks,
         goalsUpdatedAt: sectionTs.current.goals,
+        financeUpdatedAt: sectionTs.current.finance,
       };
       saveToCloud(passHash, payload);
       setSynced(true);
@@ -2028,11 +3464,13 @@ export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }:
     ideas: ideasRef.current,
     tasks: tasksRef.current,
     goals: goalsRef.current,
+    finance: financeRef.current,
     journalUpdatedAt: sectionTs.current.journal,
     contactsUpdatedAt: sectionTs.current.contacts,
     ideasUpdatedAt: sectionTs.current.ideas,
     tasksUpdatedAt: sectionTs.current.tasks,
     goalsUpdatedAt: sectionTs.current.goals,
+    financeUpdatedAt: sectionTs.current.finance,
   }), []);
 
   // Debounced sync with retry queue
@@ -2042,11 +3480,13 @@ export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }:
     save('ideas', ideasRef.current);
     save('tasks', tasksRef.current);
     save('goals', goalsRef.current);
+    save('finance', financeRef.current);
     save('journalUpdatedAt', sectionTs.current.journal);
     save('contactsUpdatedAt', sectionTs.current.contacts);
     save('ideasUpdatedAt', sectionTs.current.ideas);
     save('tasksUpdatedAt', sectionTs.current.tasks);
     save('goalsUpdatedAt', sectionTs.current.goals);
+    save('financeUpdatedAt', sectionTs.current.finance);
     setSaveStatus('saving');
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
@@ -2062,11 +3502,13 @@ export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }:
     save('ideas', ideasRef.current);
     save('tasks', tasksRef.current);
     save('goals', goalsRef.current);
+    save('finance', financeRef.current);
     save('journalUpdatedAt', sectionTs.current.journal);
     save('contactsUpdatedAt', sectionTs.current.contacts);
     save('ideasUpdatedAt', sectionTs.current.ideas);
     save('tasksUpdatedAt', sectionTs.current.tasks);
     save('goalsUpdatedAt', sectionTs.current.goals);
+    save('financeUpdatedAt', sectionTs.current.finance);
     // Fire-and-forget cloud save via fetch with keepalive
     const payload = buildPayload();
     fetch(`${SUPABASE_URL}/rest/v1/blackbook?pass_hash=eq.${passHash}`, {
@@ -2133,6 +3575,11 @@ export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }:
     sectionTs.current.goals = new Date().toISOString();
     syncToCloud();
   }, [goals]);
+  useEffect(() => {
+    if (!synced) return;
+    sectionTs.current.finance = new Date().toISOString();
+    syncToCloud();
+  }, [finance]);
 
   return (
     <div style={{
@@ -2146,58 +3593,104 @@ export function BlackbookDashboard({ onClose, onLogout, passHash, transparent }:
       backdropFilter: transparent ? 'blur(40px)' : undefined,
       WebkitBackdropFilter: transparent ? 'blur(40px)' : undefined,
     }}>
-      {/* Header + Tabs — dark bar */}
+      {/* Header — Apple-style top bar */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 10,
-        background: transparent ? 'transparent' : t.bg,
-        borderBottom: transparent ? '0.5px solid rgba(255,255,255,0.06)' : `1px solid ${t.border}`,
+        background: transparent
+          ? 'rgba(255,255,255,0.55)'
+          : t.bg,
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        borderBottom: transparent ? '0.5px solid rgba(0,0,0,0.08)' : `1px solid ${t.border}`,
       }}>
         <div style={{
           padding: '14px 24px',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 16, fontFamily: FONT_MEDIUM, color: transparent ? '#fff' : t.textStrong }}>Ronniel's Blackbook</span>
-            <span style={{ color: transparent ? 'rgba(255,255,255,0.5)' : t.textMuted, fontSize: 13 }}>
+            <span style={{
+              fontSize: 17, fontFamily: FONT_MEDIUM,
+              color: t.textStrong, letterSpacing: '-0.02em',
+            }}>Blackbook</span>
+            <span style={{
+              color: t.textMuted, fontSize: 12,
+              fontFamily: FONT, letterSpacing: '-0.005em',
+            }}>
               {new Date().toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <SaveIndicator status={saveStatus} t={t} />
             {onLogout && <button onClick={onLogout} style={{
-              background: transparent ? 'rgba(255,255,255,0.12)' : t.accentSubtle, border: 'none',
-              color: transparent ? 'rgba(255,255,255,0.8)' : t.textMuted, cursor: 'pointer', padding: '5px 12px', borderRadius: 6,
-              fontSize: 14, fontFamily: FONT_MEDIUM,
-            }}>🔒 Lock</button>}
+              background: t.accentSubtle, border: 'none',
+              color: t.textMuted, cursor: 'pointer',
+              padding: '6px 14px', borderRadius: 8,
+              fontSize: 12, fontFamily: FONT_MEDIUM,
+              transition: APPLE_TRANSITION,
+            }}>Lock</button>}
             <button onClick={onClose} style={{
-              background: transparent ? 'rgba(255,255,255,0.12)' : t.accentSubtle, border: 'none',
-              color: transparent ? 'rgba(255,255,255,0.8)' : t.textMuted, cursor: 'pointer', padding: '5px 12px', borderRadius: 6,
-              fontSize: 14, fontFamily: FONT_MEDIUM,
+              background: t.accentSubtle, border: 'none',
+              color: t.textMuted, cursor: 'pointer',
+              padding: '6px 14px', borderRadius: 8,
+              fontSize: 12, fontFamily: FONT_MEDIUM,
+              transition: APPLE_TRANSITION,
             }}>Done</button>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: 0, padding: '0 24px' }}>
-        {(['journal', 'network', 'tasks', 'goals', 'ideas'] as const).map(tb => (
-          <button key={tb} onClick={() => setTab(tb)} style={{
-            background: 'transparent', border: 'none',
-            borderBottom: tab === tb ? `2px solid ${transparent ? '#fff' : t.textStrong}` : '2px solid transparent',
-            color: tab === tb ? (transparent ? '#fff' : t.textStrong) : (transparent ? 'rgba(255,255,255,0.5)' : t.textMuted),
-            padding: '10px 16px', cursor: 'pointer',
-            fontSize: 14, fontFamily: FONT_MEDIUM, transition: 'all 0.15s',
-          }}>{tb.charAt(0).toUpperCase() + tb.slice(1)}</button>
-        ))}
-      </div>
+        {/* Tabs — macOS segmented control */}
+        <div style={{
+          padding: '4px 24px 14px',
+          display: 'flex', justifyContent: 'center',
+        }}>
+          <div style={{
+            display: 'inline-flex',
+            background: t.accentSubtle, padding: 3, borderRadius: 10,
+            border: `0.5px solid ${t.border}`,
+          }}>
+            {(['dashboard', 'journal', 'network', 'tasks', 'goals', 'ideas', 'finance'] as const).map(tb => {
+              const active = tab === tb;
+              return (
+                <button key={tb} onClick={() => setTab(tb)} style={{
+                  background: active ? t.cardBg : 'transparent',
+                  border: 'none', cursor: 'pointer',
+                  color: active ? t.textStrong : t.textMuted,
+                  padding: '6px 14px', borderRadius: 8,
+                  fontSize: 12, fontFamily: FONT_MEDIUM,
+                  transition: APPLE_TRANSITION,
+                  letterSpacing: '-0.005em',
+                  boxShadow: active ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                }}>
+                  {tb.charAt(0).toUpperCase() + tb.slice(1)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Content */}
-      <div style={{ padding: 24, maxWidth: 940, margin: '0 auto' }}>
+      <div style={{ padding: 24, maxWidth: 1100, margin: '0 auto' }}>
+        {tab === 'dashboard' && (
+          <DashboardTab
+            journal={journal} setJournal={setJournal}
+            contacts={contacts} tasks={tasks} setTasks={setTasks}
+            goals={goals} finance={finance}
+            googleEvents={gcal.events}
+            googleConfigured={gcal.isConfigured}
+            googleConnected={!!gcal.token}
+            googleLoading={gcal.loading}
+            onConnectGoogle={gcal.connect}
+            onNavigate={setTab}
+            t={t}
+          />
+        )}
         {tab === 'journal' && <JournalTab journal={journal} setJournal={setJournal} contacts={contacts} t={t} />}
         {tab === 'network' && <NetworkTab contacts={contacts} setContacts={setContacts} journal={journal} t={t} />}
         {tab === 'tasks' && <TasksTab tasks={tasks} setTasks={setTasks} t={t} />}
         {tab === 'goals' && <GoalsTab goals={goals} setGoals={setGoals} t={t} />}
         {tab === 'ideas' && <IdeasTab ideas={ideas} setIdeas={setIdeas} t={t} />}
+        {tab === 'finance' && <FinanceTab finance={finance} setFinance={setFinance} t={t} />}
       </div>
       {transparent && <style>{`
         input::placeholder, textarea::placeholder {

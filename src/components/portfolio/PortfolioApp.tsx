@@ -901,6 +901,20 @@ export default function PortfolioApp() {
             calc(100% - 200px) 0%
           );
           transition: clip-path 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+          animation: triangleReveal 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.7s both;
+        }
+        @keyframes triangleReveal {
+          0% {
+            clip-path: polygon(100% 0%, 100% 0%, 100% 0%, 100% 0%);
+          }
+          100% {
+            clip-path: polygon(
+              calc(100% - 200px) 0%,
+              100% 0%,
+              100% 200px,
+              calc(100% - 200px) 0%
+            );
+          }
         }
         /* Hover: peel back a bit more to tease the desktop */
         .peek-container:hover .peek-desktop {
@@ -916,6 +930,12 @@ export default function PortfolioApp() {
         .peek-expanded:hover .peek-desktop {
           clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
         }
+        /* Suspend the reveal animation if user interacts during it,
+           so hover/click transitions take effect immediately */
+        .peek-container:hover .peek-desktop,
+        .peek-container.peek-expanded .peek-desktop {
+          animation: none;
+        }
 
         /* ═══ Page curl — fold line shadow on the diagonal edge ═══ */
         .page-curl {
@@ -928,6 +948,7 @@ export default function PortfolioApp() {
           cursor: pointer;
           z-index: 1001;
           opacity: 1;
+          transform-origin: 100% 0%;
           /* Fold line: shadow + highlight along the diagonal */
           background:
             linear-gradient(225deg, transparent 48%, rgba(0,0,0,0.06) 49%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.04) 52%, transparent 54%),
@@ -936,11 +957,30 @@ export default function PortfolioApp() {
             width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
             height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
             opacity 0.65s cubic-bezier(0.7, 0, 1, 0.5);
+          animation: curlReveal 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.7s both;
+        }
+        @keyframes curlReveal {
+          0% {
+            transform: scale(0);
+            opacity: 0;
+          }
+          25% {
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
         }
         /* Hover: curl grows to match the expanded peek */
         .peek-container:hover .page-curl {
           width: 300px;
           height: 300px;
+        }
+        /* Suspend the reveal animation on interaction */
+        .peek-container:hover .page-curl,
+        .peek-container.peek-expanded .page-curl {
+          animation: none;
         }
 
         /* Curl hidden instantly when expanded */
@@ -949,6 +989,14 @@ export default function PortfolioApp() {
           opacity: 0 !important;
           pointer-events: none;
           transition: opacity 0.05s linear !important;
+        }
+
+        /* Respect reduced motion: skip the slow reveal */
+        @media (prefers-reduced-motion: reduce) {
+          .peek-desktop,
+          .page-curl {
+            animation: none;
+          }
         }
 
         /* ═══ Hide peel when blackbook is open ═══ */
