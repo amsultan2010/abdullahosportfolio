@@ -1,18 +1,11 @@
-import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { useState, useEffect, useCallback, useRef, createContext, useContext, lazy, Suspense } from 'react';
 
 import ContentViewer from './ContentViewer';
 import type { ContentViewData } from './ContentViewer';
 import { contentMap } from './contentData';
 import Blackbook from './Blackbook';
 
-// NOTE: The "page peel" / RonnielOS launcher overlay used to live here. It
-// rendered a corner clip-path of the desktop shell that the user could click
-// to expand into the full /desktop simulation. It was removed because the
-// hover transition was looping (close → reopen) and felt laggy. The /desktop
-// route still exists as a standalone page if you want to bring it back.
-// To re-enable, restore the AppPhase state machine, the SiteLoader fade-out,
-// and the .peek-container / .page-curl markup + CSS that was here previously
-// (see git history pre this commit).
+const LazyDesktopShell = lazy(() => import('../desktop/DesktopShell'));
 
 /* ══════════════════════════════════════════════════════════
    Theme context — dark/light mode
@@ -707,10 +700,10 @@ function BulletItem({ diamond, children }: { diamond: string; children: React.Re
 }
 
 /* ══════════════════════════════════════════════════════════
-   Site loader
+   Site loader + Page curl / RonnielOS launcher
    ══════════════════════════════════════════════════════════ */
 
-type AppPhase = 'loading' | 'site';
+type AppPhase = 'loading' | 'site' | 'peeling' | 'desktop';
 
 function SiteLoader({ onDone }: { onDone: () => void }) {
   const [progress, setProgress] = useState(0);
@@ -769,23 +762,255 @@ function SiteLoader({ onDone }: { onDone: () => void }) {
   );
 }
 
+/** ryo.lu-style page peel — CSS clip-path + layered gradients + spring transition */
+
+function OSCloseButton({ onClose }: { onClose: () => void }) {
+  return (
+    <button
+      onClick={onClose}
+      className="os-close-btn"
+      aria-label="Close RonnielOS"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+      <style>{`
+        .os-close-btn {
+          position: fixed;
+          top: 36px;
+          right: 16px;
+          z-index: 10002;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: 0.5px solid rgba(0,0,0,0.08);
+          background: rgba(255,255,255,0.55);
+          color: rgba(0,0,0,0.5);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          backdrop-filter: blur(12px);
+          transition: all 0.2s;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .os-close-btn:hover {
+          background: rgba(255,255,255,0.75);
+          color: rgba(0,0,0,0.8);
+          transform: scale(1.1);
+        }
+      `}</style>
+    </button>
+  );
+}
+
 export default function PortfolioApp() {
   const [phase, setPhase] = useState<AppPhase>('loading');
+  const [expanded, setExpanded] = useState(false);
 
   const handleLoaded = useCallback(() => {
     setPhase('site');
   }, []);
 
+  const handleClose = useCallback(() => {
+    setExpanded(false);
+    setPhase('site');
+  }, []);
+
+  // Toggle peek open/close
+  const peelTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const togglePeek = useCallback(() => {
+    if (!expanded) {
+      setExpanded(true);
+      // After the clip-path transition finishes, switch to full desktop mode
+      peelTimer.current = setTimeout(() => setPhase('desktop'), 700);
+    }
+  }, [expanded]);
+
+  // Escape key to close
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && (expanded || phase === 'desktop')) {
+        clearTimeout(peelTimer.current);
+        setExpanded(false);
+        setPhase('site');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [expanded, phase]);
+
   return (
     <ThemeProvider siteReady={phase !== 'loading'}>
-      <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh', background: '#f5f5f4' }}>
+      {/* Portfolio page — the main content (hidden but not unmounted during desktop phase to avoid remount flash) */}
+      <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh', background: '#f5f5f4', display: (phase === 'loading' || phase === 'site') ? undefined : 'none' }}>
         <Inner />
       </div>
+
+      {/* ryo.lu peek container — fixed overlay with clip-path reveal */}
+      {(phase === 'site' || phase === 'desktop') && (
+        <div className={`peek-container ${expanded ? 'peek-expanded' : ''}`}>
+          {/* Desktop content — clipped to corner, expands on click */}
+          <div className="peek-desktop">
+            <Suspense fallback={<div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/backgroundappleuse.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />}>
+              <LazyDesktopShell skipBoot />
+            </Suspense>
+            {phase === 'desktop' && <OSCloseButton onClose={handleClose} />}
+          </div>
+
+          {/* Page curl — the paper fold visual */}
+          <div
+            className={`page-curl ${expanded ? 'curl-hidden' : ''}`}
+            onClick={togglePeek}
+            role="button"
+            aria-label="Open RonnielOS"
+          />
+        </div>
+      )}
 
       {/* Loading overlay */}
       {phase === 'loading' && (
         <SiteLoader onDone={handleLoaded} />
       )}
+
+      <style>{`
+        /* ═══ Peek Container ═══ */
+        .peek-container {
+          position: fixed;
+          top: 0;
+          right: 0;
+          width: 100vw;
+          height: 100vh;
+          pointer-events: none;
+          z-index: 999;
+          overflow: visible;
+        }
+
+        /* ═══ Desktop layer — clipped to corner triangle ═══ */
+        .peek-desktop {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: auto;
+          clip-path: polygon(
+            calc(100% - 200px) 0%,
+            100% 0%,
+            100% 200px,
+            calc(100% - 200px) 0%
+          );
+          transition: clip-path 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+          animation: triangleReveal 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.7s both;
+        }
+        @keyframes triangleReveal {
+          0% {
+            clip-path: polygon(100% 0%, 100% 0%, 100% 0%, 100% 0%);
+          }
+          100% {
+            clip-path: polygon(
+              calc(100% - 200px) 0%,
+              100% 0%,
+              100% 200px,
+              calc(100% - 200px) 0%
+            );
+          }
+        }
+        /* Hover: peel back a bit more to tease the desktop */
+        .peek-container:hover .peek-desktop {
+          clip-path: polygon(
+            calc(100% - 300px) 0%,
+            100% 0%,
+            100% 300px,
+            calc(100% - 300px) 0%
+          );
+        }
+        /* Expanded: full viewport */
+        .peek-expanded .peek-desktop,
+        .peek-expanded:hover .peek-desktop {
+          clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+        }
+        /* Suspend the reveal animation if user interacts during it,
+           so hover/click transitions take effect immediately */
+        .peek-container:hover .peek-desktop,
+        .peek-container.peek-expanded .peek-desktop {
+          animation: none;
+        }
+
+        /* ═══ Page curl — fold line shadow on the diagonal edge ═══ */
+        .page-curl {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 200px;
+          height: 200px;
+          pointer-events: auto;
+          cursor: pointer;
+          z-index: 1001;
+          opacity: 1;
+          transform-origin: 100% 0%;
+          /* Fold line: shadow + highlight along the diagonal */
+          background:
+            linear-gradient(225deg, transparent 48%, rgba(0,0,0,0.06) 49%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.04) 52%, transparent 54%),
+            linear-gradient(225deg, transparent 46%, rgba(255,255,255,0.6) 48%, rgba(240,240,240,0.9) 50%, rgba(220,220,220,0.7) 60%, transparent 62%);
+          transition:
+            width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+            height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+            opacity 0.65s cubic-bezier(0.7, 0, 1, 0.5);
+          animation: curlReveal 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.7s both;
+        }
+        @keyframes curlReveal {
+          0% {
+            transform: scale(0);
+            opacity: 0;
+          }
+          25% {
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+        /* Hover: curl grows to match the expanded peek */
+        .peek-container:hover .page-curl {
+          width: 300px;
+          height: 300px;
+        }
+        /* Suspend the reveal animation on interaction */
+        .peek-container:hover .page-curl,
+        .peek-container.peek-expanded .page-curl {
+          animation: none;
+        }
+
+        /* Curl hidden instantly when expanded */
+        .curl-hidden,
+        .peek-expanded .page-curl {
+          opacity: 0 !important;
+          pointer-events: none;
+          transition: opacity 0.05s linear !important;
+        }
+
+        /* Respect reduced motion: skip the slow reveal */
+        @media (prefers-reduced-motion: reduce) {
+          .peek-desktop,
+          .page-curl {
+            animation: none;
+          }
+        }
+
+        /* ═══ Hide peel when blackbook is open ═══ */
+        body.blackbook-active .peek-container {
+          display: none !important;
+        }
+
+        /* ═══ Mobile — hide peel entirely ═══ */
+        @media (max-width: 768px) {
+          .peek-container {
+            display: none !important;
+          }
+        }
+      `}</style>
     </ThemeProvider>
   );
 }
