@@ -23,8 +23,40 @@ function createWindow(id: WindowId, zIndex: number, titleOverride?: string): Win
   // Clamp window size to fit screen (leave room for dock + menu bar)
   const maxW = screenW - 40;
   const maxH = screenH - 28 - 70;
-  const w = Math.min(defaults.width, maxW);
-  const h = Math.min(defaults.height, maxH);
+  let w = Math.min(defaults.width, maxW);
+  let h = Math.min(defaults.height, maxH);
+
+  // Side windows (education, experience, stocks) dock to the right edge alongside
+  // the terminal. Pre-compute their final position here so they don't briefly
+  // appear center-screen before the layout effect slides them right (which read
+  // as a flicker behind the opening pane).
+  const sideWindowIds = ['education', 'experience', 'stocks'];
+  const isSideWindow = sideWindowIds.includes(id);
+  const wideEnoughForSideLayout = screenW >= 1024;
+  if (isSideWindow && wideEnoughForSideLayout) {
+    const menuBarH = 28;
+    const dockH = 72;
+    const gap = 10;
+    const usableH = screenH - menuBarH - dockH;
+    const is13Inch = screenH < 900 || screenW < 1500;
+    if (is13Inch) {
+      w = Math.min(w, Math.round(screenW * 0.38));
+      h = Math.min(h, usableH - 20);
+    }
+    const x = screenW - gap - w;
+    const y = menuBarH + Math.round((usableH - h) / 2);
+    return {
+      id,
+      title: titleOverride || defaults.title,
+      isOpen: true,
+      isMinimized: false,
+      isFullscreen: false,
+      zIndex,
+      position: { x, y },
+      size: { width: w, height: h },
+    };
+  }
+
   const x = Math.max(0, Math.round((screenW - w) / 2));
   const y = Math.max(28, Math.round((screenH - h) / 2));
   return {
