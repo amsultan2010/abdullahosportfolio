@@ -92,7 +92,7 @@ export default function DesktopMenuBar() {
   const hasFocused = !!state.focusedWindowId;
 
   return (
-    <div ref={barRef} style={{
+    <div ref={barRef} className="desktop-menu-bar" style={{
       position: 'fixed', top: 0, left: 0, right: 0, height: '28px', zIndex: 10010,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px',
       background: '#000000',

@@ -23,10 +23,36 @@ function createWindow(id: WindowId, zIndex: number, titleOverride?: string): Win
   // Clamp window size to fit screen (leave room for dock + menu bar)
   const maxW = screenW - 40;
   const maxH = screenH - 28 - 70;
-  const w = Math.min(defaults.width, maxW);
-  const h = Math.min(defaults.height, maxH);
-  const x = Math.max(0, Math.round((screenW - w) / 2));
-  const y = Math.max(28, Math.round((screenH - h) / 2));
+  let w = Math.min(defaults.width, maxW);
+  let h = Math.min(defaults.height, maxH);
+
+  // Side windows (education/experience/stocks) get pre-positioned at the right
+  // edge to avoid the center→right slide flicker. The DesktopShell layout
+  // effect uses the same math; matching it here means it won't dispatch
+  // MOVE_WINDOW after mount.
+  const isSideWindow = id === 'education' || id === 'experience' || id === 'stocks';
+  const isWideEnoughForSide = screenW >= 1024;
+
+  let x: number;
+  let y: number;
+
+  if (isSideWindow && isWideEnoughForSide) {
+    const menuBarH = 28;
+    const dockH = 72;
+    const gap = 10;
+    const usableH = screenH - menuBarH - dockH;
+    const is13Inch = screenH < 900 || screenW < 1500;
+    if (is13Inch) {
+      w = Math.min(w, Math.round(screenW * 0.38));
+      h = Math.min(h, usableH - 20);
+    }
+    x = screenW - gap - w;
+    y = menuBarH + Math.round((usableH - h) / 2);
+  } else {
+    x = Math.max(0, Math.round((screenW - w) / 2));
+    y = Math.max(28, Math.round((screenH - h) / 2));
+  }
+
   return {
     id,
     title: titleOverride || defaults.title,

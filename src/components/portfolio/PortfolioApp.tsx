@@ -847,18 +847,15 @@ export default function PortfolioApp() {
         <Inner />
       </div>
 
-      {/* ryo.lu peek container — fixed overlay with clip-path reveal */}
+      {/* Corner fold — static, click to expand into RonnielOS */}
       {(phase === 'site' || phase === 'desktop') && (
         <div className={`peek-container ${expanded ? 'peek-expanded' : ''}`}>
-          {/* Desktop content — clipped to corner, expands on click */}
           <div className="peek-desktop">
             <Suspense fallback={<div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/backgroundappleuse.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />}>
               <LazyDesktopShell skipBoot />
             </Suspense>
             {phase === 'desktop' && <OSCloseButton onClose={handleClose} />}
           </div>
-
-          {/* Page curl — the paper fold visual */}
           <div
             className={`page-curl ${expanded ? 'curl-hidden' : ''}`}
             onClick={togglePeek}
@@ -868,13 +865,7 @@ export default function PortfolioApp() {
         </div>
       )}
 
-      {/* Loading overlay */}
-      {phase === 'loading' && (
-        <SiteLoader onDone={handleLoaded} />
-      )}
-
       <style>{`
-        /* ═══ Peek Container ═══ */
         .peek-container {
           position: fixed;
           top: 0;
@@ -885,8 +876,6 @@ export default function PortfolioApp() {
           z-index: 999;
           overflow: visible;
         }
-
-        /* ═══ Desktop layer — clipped to corner triangle ═══ */
         .peek-desktop {
           position: absolute;
           top: 0;
@@ -900,44 +889,11 @@ export default function PortfolioApp() {
             100% 200px,
             calc(100% - 200px) 0%
           );
-          transition: clip-path 0.65s cubic-bezier(0.16, 1, 0.3, 1);
-          animation: triangleReveal 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.7s both;
+          transition: clip-path 0.45s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @keyframes triangleReveal {
-          0% {
-            clip-path: polygon(100% 0%, 100% 0%, 100% 0%, 100% 0%);
-          }
-          100% {
-            clip-path: polygon(
-              calc(100% - 200px) 0%,
-              100% 0%,
-              100% 200px,
-              calc(100% - 200px) 0%
-            );
-          }
-        }
-        /* Hover: peel back a bit more to tease the desktop */
-        .peek-container:hover .peek-desktop {
-          clip-path: polygon(
-            calc(100% - 300px) 0%,
-            100% 0%,
-            100% 300px,
-            calc(100% - 300px) 0%
-          );
-        }
-        /* Expanded: full viewport */
-        .peek-expanded .peek-desktop,
-        .peek-expanded:hover .peek-desktop {
+        .peek-expanded .peek-desktop {
           clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
         }
-        /* Suspend the reveal animation if user interacts during it,
-           so hover/click transitions take effect immediately */
-        .peek-container:hover .peek-desktop,
-        .peek-container.peek-expanded .peek-desktop {
-          animation: none;
-        }
-
-        /* ═══ Page curl — fold line shadow on the diagonal edge ═══ */
         .page-curl {
           position: absolute;
           top: 0;
@@ -947,70 +903,29 @@ export default function PortfolioApp() {
           pointer-events: auto;
           cursor: pointer;
           z-index: 1001;
-          opacity: 1;
-          transform-origin: 100% 0%;
-          /* Fold line: shadow + highlight along the diagonal */
           background:
-            linear-gradient(225deg, transparent 48%, rgba(0,0,0,0.06) 49%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.04) 52%, transparent 54%),
-            linear-gradient(225deg, transparent 46%, rgba(255,255,255,0.6) 48%, rgba(240,240,240,0.9) 50%, rgba(220,220,220,0.7) 60%, transparent 62%);
-          transition:
-            width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-            height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-            opacity 0.65s cubic-bezier(0.7, 0, 1, 0.5);
-          animation: curlReveal 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.7s both;
+            linear-gradient(225deg, transparent 48%, rgba(0,0,0,0.08) 49.5%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.05) 51%, transparent 53%);
+          transition: opacity 0.3s linear;
         }
-        @keyframes curlReveal {
-          0% {
-            transform: scale(0);
-            opacity: 0;
-          }
-          25% {
-            opacity: 1;
-          }
-          100% {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-        /* Hover: curl grows to match the expanded peek */
-        .peek-container:hover .page-curl {
-          width: 300px;
-          height: 300px;
-        }
-        /* Suspend the reveal animation on interaction */
-        .peek-container:hover .page-curl,
-        .peek-container.peek-expanded .page-curl {
-          animation: none;
-        }
-
-        /* Curl hidden instantly when expanded */
-        .curl-hidden,
-        .peek-expanded .page-curl {
+        .curl-hidden {
           opacity: 0 !important;
           pointer-events: none;
-          transition: opacity 0.05s linear !important;
         }
-
-        /* Respect reduced motion: skip the slow reveal */
-        @media (prefers-reduced-motion: reduce) {
-          .peek-desktop,
-          .page-curl {
-            animation: none;
-          }
-        }
-
-        /* ═══ Hide peel when blackbook is open ═══ */
         body.blackbook-active .peek-container {
           display: none !important;
         }
-
-        /* ═══ Mobile — hide peel entirely ═══ */
         @media (max-width: 768px) {
           .peek-container {
             display: none !important;
           }
         }
       `}</style>
+
+      {/* Loading overlay */}
+      {phase === 'loading' && (
+        <SiteLoader onDone={handleLoaded} />
+      )}
+
     </ThemeProvider>
   );
 }

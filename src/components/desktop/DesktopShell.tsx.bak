@@ -8,7 +8,6 @@ import DesktopDock from './DesktopDock';
 import DesktopMenuBar from './DesktopMenuBar';
 import GitHubHeatmap from './GitHubHeatmap';
 import type { WindowId } from './types';
-import { BlackbookDashboard, PasswordGate, hashPass, PASS } from '../portfolio/Blackbook';
 
 // Section content — uses desktop-portfolio (master copies, untouched)
 import Education from '../desktop-portfolio/Education';
@@ -37,7 +36,7 @@ function WindowContent({ id }: { id: WindowId }) {
 
   switch (id) {
     case 'terminal':
-      return <TerminalContent onAuthChange={(window as any).__setBbAuth} />;
+      return <TerminalContent />;
     case 'education':
       return <Education onCardClick={handleCardClick} windowMode />;
     case 'experience':
@@ -229,7 +228,7 @@ function RollingTitles() {
         {displayItems.map((item, i) => (
           <span key={i}>
             <span style={{ color: item.color, fontWeight: 600, fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>{item.text}</span>
-            {i < displayItems.length - 1 && <span style={{ color: 'rgba(0,0,0,0.12)', margin: '0 6px' }}>·</span>}
+            {i < displayItems.length - 1 && <span style={{ color: 'rgba(255,255,255,0.15)', margin: '0 6px' }}>·</span>}
           </span>
         ))}
       </span>
@@ -318,12 +317,12 @@ function RotatingWords() {
 
   return (
     <span style={{ position: 'relative', display: 'inline' }}>
-      <span style={{ color: 'rgba(255,255,255,0.95)', fontWeight: 800, fontSize: '22px', fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+      <span style={{ color, fontWeight: 700, fontSize: '18px' }}>
         {displayText}
       </span>
       <span style={{
-        display: 'inline-block', width: '2.5px', height: '24px',
-        background: 'rgba(255,255,255,0.8)', marginLeft: '2px',
+        display: 'inline-block', width: '2px', height: '1em',
+        background: color, marginLeft: '1px',
         animation: 'blink 1s step-end infinite',
         verticalAlign: 'text-bottom',
       }} />
@@ -370,7 +369,7 @@ function StockTickers() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-      <div style={{ color: 'rgba(0,0,0,0.3)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '4px' }}>
+      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '4px' }}>
         MARKETS
       </div>
       {tickers.map(t => {
@@ -384,10 +383,10 @@ function StockTickers() {
           <div key={t.symbol} style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '3px 0',
-            borderBottom: '0.5px solid rgba(0,0,0,0.04)',
+            borderBottom: '0.5px solid rgba(255,255,255,0.04)',
           }}>
             <span style={{
-              color: 'rgba(0,0,0,0.6)',
+              color: 'rgba(255,255,255,0.7)',
               fontSize: '11px',
               fontWeight: 600,
               fontFamily: "'SF Mono', monospace",
@@ -396,7 +395,7 @@ function StockTickers() {
             <span style={{
               fontFamily: "'SF Mono', monospace",
               fontSize: '11.5px',
-              color: '#1d1d1f',
+              color: '#fff',
               fontWeight: 500,
               flex: 1,
               textAlign: 'right',
@@ -473,10 +472,10 @@ function WorldClock() {
           const isNight = hrs >= 20 || hrs < 6;
           return (
             <div key={city.label} style={{ textAlign: 'center', minWidth: '70px' }}>
-              <div style={{ color: '#1d1d1f', fontSize: '10px', fontWeight: 500, marginBottom: '4px' }}>
+              <div style={{ color: '#fff', fontSize: '10px', fontWeight: 500, marginBottom: '4px' }}>
                 {isNight ? '🌙' : '☀️'} {city.label}
               </div>
-              <div style={{ fontSize: '15px', fontWeight: 300, color: '#1d1d1f', letterSpacing: '-0.3px', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+              <div style={{ fontSize: '15px', fontWeight: 300, color: '#fff', letterSpacing: '-0.3px', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
                 {t}
               </div>
             </div>
@@ -547,7 +546,7 @@ const QUICK_NAV = [
 function QuickStartTiles({ runCommand }: { runCommand: (cmd: string, source?: 'ui' | 'typed') => void }) {
   return (
     <div style={{ marginTop: '20px', fontFamily: "'SF Mono', monospace" }}>
-      <div style={{ color: '#1d1d1f', fontSize: '11px', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '8px' }}>
+      <div style={{ color: '#fff', fontSize: '11px', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '8px' }}>
         QUICK START
       </div>
       <div className="qs-pills" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
@@ -576,83 +575,6 @@ function QuickStartTiles({ runCommand }: { runCommand: (cmd: string, source?: 'u
   );
 }
 
-// ── Animated Explore — Apple-style typing animation ──
-function AnimatedExplore({ runCommand }: { runCommand: (cmd: string, source?: 'ui' | 'typed') => void }) {
-  const commands = [
-    { short: 'exp', cmd: 'experience' },
-    { short: 'edu', cmd: 'education' },
-    { short: 'thoughts', cmd: 'mythoughts' },
-    { short: 'code', cmd: 'projects' },
-    { short: 'meet', cmd: 'calendar' },
-  ];
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-  const [typed, setTyped] = useState('');
-  const targetWord = hoveredIdx !== null ? commands[hoveredIdx].short : '';
-
-  // Type out the hovered word, erase when unhovered
-  useEffect(() => {
-    if (hoveredIdx !== null) {
-      const word = commands[hoveredIdx].short;
-      if (typed.length < word.length) {
-        const t = setTimeout(() => setTyped(word.slice(0, typed.length + 1)), 50);
-        return () => clearTimeout(t);
-      }
-    } else {
-      if (typed.length > 0) {
-        const t = setTimeout(() => setTyped(typed.slice(0, -1)), 30);
-        return () => clearTimeout(t);
-      }
-    }
-  }, [typed, hoveredIdx]);
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', width: '100%' }}>
-      {/* Typed text — shows on hover */}
-      <div style={{ minHeight: '28px', display: 'flex', alignItems: 'baseline', fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-        {typed && (
-          <span style={{ fontSize: '22px', fontWeight: 700, color: '#1d1d1f', letterSpacing: '-0.5px' }}>
-            {typed}
-          </span>
-        )}
-        <span style={{
-          display: 'inline-block', width: '2px', height: '22px',
-          background: '#1d1d1f', marginLeft: '2px',
-          animation: 'blink 1s step-end infinite', verticalAlign: 'text-bottom',
-          opacity: typed ? 0.8 : 0.3,
-        }} />
-      </div>
-
-      {/* Command pills — hover to type, click to open */}
-      <div
-        style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}
-        onMouseLeave={() => setHoveredIdx(null)}
-      >
-        {commands.map((item, i) => {
-          const isHovered = i === hoveredIdx;
-          return (
-            <div
-              key={item.cmd}
-              onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
-              onMouseEnter={() => { setHoveredIdx(i); setTyped(''); }}
-              style={{
-                padding: '5px 14px', borderRadius: '16px', cursor: 'pointer',
-                fontSize: '13px', fontWeight: isHovered ? 700 : 500,
-                fontFamily: "'SF Pro Text', -apple-system, sans-serif",
-                color: isHovered ? '#1d1d1f' : 'rgba(0,0,0,0.4)',
-                background: isHovered ? 'rgba(0,0,0,0.06)' : 'transparent',
-                border: `1px solid ${isHovered ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.08)'}`,
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {item.short}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 // ── Explore Commands (constantly lit, highlight on hover) ──
 function ExploreCommands({ smartCommandLinks, runCommand }: {
   smartCommandLinks: { cmd: string; color: string }[];
@@ -660,7 +582,7 @@ function ExploreCommands({ smartCommandLinks, runCommand }: {
 }) {
   return (
     <div style={{ padding: '8px 14px' }}>
-      <div style={{ color: '#1d1d1f', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', marginBottom: '4px' }}>EXPLORE</div>
+      <div style={{ color: '#fff', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', marginBottom: '4px' }}>EXPLORE</div>
       <div className="explore-list" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
         {smartCommandLinks.map((item) => (
           <div
@@ -691,7 +613,7 @@ function ExploreCommands({ smartCommandLinks, runCommand }: {
         .explore-list:hover .explore-cmd:hover {
           opacity: 1;
           text-shadow: 0 0 8px var(--glow-color, #fff);
-          background: rgba(0,0,0,0.06);
+          background: rgba(255,255,255,0.06);
         }
       `}</style>
     </div>
@@ -880,8 +802,8 @@ function useStockData() {
   return stocks;
 }
 
-function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false, instanceId = 0, onCurrentStock, textColor = '#1d1d1f' }: {
-  stocks?: StockData[]; startOffset?: number; compact?: boolean; instanceId?: number; onCurrentStock?: (stock: StockData) => void; textColor?: string;
+function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false, instanceId = 0, onCurrentStock }: {
+  stocks?: StockData[]; startOffset?: number; compact?: boolean; instanceId?: number; onCurrentStock?: (stock: StockData) => void;
 } = {}) {
   const ownStocks = useStockData();
   const stocks = externalStocks && externalStocks.length > 0 ? externalStocks : ownStocks;
@@ -1020,15 +942,15 @@ function CyclingStock({ stocks: externalStocks, startOffset = 0, compact = false
   return (
     <div>
       <div style={{ fontFamily: "'SF Mono', monospace", minHeight: compact ? '14px' : '18px', marginBottom: '2px' }}>
-        <span style={{ color: textColor, fontWeight: 700, fontSize: compact ? '11px' : '13px' }}>
+        <span style={{ color: '#fff', fontWeight: 700, fontSize: compact ? '11px' : '13px' }}>
           {scrambledText}
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: compact ? '6px' : '8px' }}>
-        <span style={{ fontSize: compact ? '18px' : '26px', fontWeight: 700, color: textColor, fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.5px' }}>
+        <span style={{ fontSize: compact ? '16px' : '22px', fontWeight: 600, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontVariantNumeric: 'tabular-nums' }}>
           {scrambledPrice}
         </span>
-        <span style={{ color, fontSize: compact ? '11px' : '13px', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+        <span style={{ color, fontSize: compact ? '10px' : '12px', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
           {scrambledPct}
         </span>
       </div>
@@ -1091,7 +1013,7 @@ function StockGrid({ onStockClick }: { onStockClick?: (symbol: string, name: str
             background: hovered === i ? 'rgba(255,255,255,0.04)' : 'transparent',
             transition: 'background 0.15s',
           }}>
-          <CyclingStock stocks={stocks} startOffset={i} compact instanceId={i} onCurrentStock={(s) => handleCurrentStock(i, s)} textColor="#fff" />
+          <CyclingStock stocks={stocks} startOffset={i} compact instanceId={i} onCurrentStock={(s) => handleCurrentStock(i, s)} />
         </div>
       ))}
     </div>
@@ -1198,10 +1120,10 @@ function SpotifyWidget() {
 
   if (!track) return (
     <div style={{ padding: '8px 10px' }}>
-      <div style={{ fontSize: '10px', fontWeight: 700, color: '#1d1d1f', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+      <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
         NOW PLAYING
       </div>
-      <div style={{ color: 'rgba(0,0,0,0.25)', fontSize: '11px', fontFamily: "'SF Mono', monospace" }}>Not connected</div>
+      <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '11px', fontFamily: "'SF Mono', monospace" }}>Not connected</div>
     </div>
   );
 
@@ -1209,7 +1131,7 @@ function SpotifyWidget() {
 
   return (
     <div style={{ padding: '8px 10px' }}>
-      <div style={{ fontSize: '10px', fontWeight: 700, color: '#1d1d1f', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+      <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', letterSpacing: '0.1em', marginBottom: '6px', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
         {track.isPlaying ? 'NOW PLAYING' : 'RECENTLY PLAYED'}
       </div>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -1217,17 +1139,17 @@ function SpotifyWidget() {
           <img src={track.albumArt} alt="" style={{ width: 40, height: 40, borderRadius: 4, flexShrink: 0 }} />
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#1d1d1f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
             {track.title}
           </div>
-          <div style={{ fontSize: '11px', color: 'rgba(0,0,0,0.45)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {track.artist}
           </div>
           <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ flex: 1, height: 3, background: 'rgba(0,0,0,0.1)', borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
               <div style={{ width: `${pct}%`, height: '100%', background: '#1db954', borderRadius: 2, transition: 'width 1s linear' }} />
             </div>
-            <span style={{ fontSize: '9px', color: 'rgba(0,0,0,0.3)', fontFamily: "'SF Mono', monospace", flexShrink: 0 }}>
+            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Mono', monospace", flexShrink: 0 }}>
               {fmtTime(progress)}/{fmtTime(track.durationMs)}
             </span>
           </div>
@@ -1320,10 +1242,6 @@ const DEV_PLAYLIST_TRACKS = [
 ];
 
 function NowPlaying() {
-  const titleRef = useRef<HTMLDivElement>(null);
-  const artistRef = useRef<HTMLSpanElement>(null);
-  const [titleOverflow, setTitleOverflow] = useState(false);
-  const [artistOverflow, setArtistOverflow] = useState(false);
   const [track, setTrack] = useState<{ isPlaying: boolean; title: string; artist: string; album: string; albumArt: string; progressMs: number; durationMs: number; isPlaylistFallback?: boolean } | null>(null);
   const [progress, setProgress] = useState(0);
   const [fallback] = useState(() => {
@@ -1367,73 +1285,39 @@ function NowPlaying() {
     return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
   };
 
-  // Check overflow
-  useEffect(() => {
-    const checkOverflow = () => {
-      if (titleRef.current) {
-        const el = titleRef.current;
-        setTitleOverflow(el.scrollWidth > el.clientWidth);
-        if (el.scrollWidth > el.clientWidth) {
-          el.style.setProperty('--np-scroll', `${-(el.scrollWidth - el.clientWidth)}px`);
-        }
-      }
-      if (artistRef.current) {
-        const el = artistRef.current;
-        setArtistOverflow(el.scrollWidth > el.clientWidth);
-        if (el.scrollWidth > el.clientWidth) {
-          el.style.setProperty('--np-scroll', `${-(el.scrollWidth - el.clientWidth)}px`);
-        }
-      }
-    };
-    checkOverflow();
-    const t = setTimeout(checkOverflow, 500);
-    return () => clearTimeout(t);
-  }, [active.title, active.artist]);
-
   const isPlaylistFallback = active.isPlaylistFallback;
   const pct = active.durationMs > 0 ? (progress / active.durationMs) * 100 : 0;
 
   return (
-    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-      {active.albumArt ? (
-        <img src={active.albumArt} alt="" style={{ width: 42, height: 42, borderRadius: 6, flexShrink: 0 }} />
-      ) : (
-        <a href={DEV_PLAYLIST_URL} target="_blank" rel="noopener noreferrer" style={{ width: 42, height: 42, borderRadius: 6, flexShrink: 0, background: 'rgba(29, 185, 84, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-        </a>
-      )}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '15px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
-          {active.title}
-        </div>
-        <div style={{ fontSize: '13px', fontWeight: 400, color: 'rgba(255,255,255,0.55)', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
-          {active.artist}
-        </div>
-        <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <div style={{ flex: 1, height: 2, background: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden' }}>
-            <div style={{ width: `${pct}%`, height: '100%', background: 'rgba(255,255,255,0.5)', borderRadius: 1, transition: 'width 1s linear' }} />
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ color: '#fff', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '8px', fontFamily: "'SF Mono', monospace" }}>
+        {isPlaylistFallback ? '♫ DEV PLAYLIST' : active.isPlaying ? '♫ NOW PLAYING' : '♫ RECENTLY PLAYED'}
+      </div>
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: 1 }}>
+        {active.albumArt ? (
+          <img src={active.albumArt} alt="" style={{ width: 48, height: 48, borderRadius: 6, flexShrink: 0 }} />
+        ) : (
+          <a href={DEV_PLAYLIST_URL} target="_blank" rel="noopener noreferrer" style={{ width: 48, height: 48, borderRadius: 6, flexShrink: 0, background: 'rgba(29, 185, 84, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+          </a>
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Pro Text', -apple-system, sans-serif" }}>
+            {active.title}
           </div>
-          <span style={{ fontSize: '17px', fontWeight: 500, color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Pro Text', -apple-system, sans-serif", flexShrink: 0 }}>
-            {fmtTime(progress)}
-          </span>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'SF Mono', monospace" }}>
+            {active.artist}
+          </div>
+          <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ flex: 1, height: 2, background: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden' }}>
+              <div style={{ width: `${pct}%`, height: '100%', background: '#1DB954', borderRadius: 1, transition: 'width 1s linear' }} />
+            </div>
+            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Mono', monospace", flexShrink: 0 }}>
+              {fmtTime(progress)} / {fmtTime(active.durationMs)}
+            </span>
+          </div>
         </div>
       </div>
-      <style>{`
-        .np-title-scroll { position: relative; overflow: hidden; }
-        .np-title-inner {
-          display: inline-block;
-          white-space: nowrap;
-        }
-        .np-title-scroll.np-overflow .np-title-inner {
-          animation: npMarquee 6s ease-in-out infinite;
-        }
-        .np-title-scroll:hover .np-title-inner { animation-play-state: paused; }
-        @keyframes npMarquee {
-          0%, 20% { transform: translateX(0); }
-          50%, 70% { transform: translateX(var(--np-scroll, -50px)); }
-          100% { transform: translateX(0); }
-        }
-      `}</style>
     </div>
   );
 }
@@ -2780,37 +2664,41 @@ const LEADERBOARD_FUNDS = [
   { name: 'Point72', annualReturn: 16 },
 ];
 
-function BloombergTopBar({ stocks }: { stocks: StockData[]; gameMode: boolean; onToggleGame: () => void }) {
-  // Build a doubled list for seamless loop
-  const tickerItems = stocks.length > 0 ? [...stocks, ...stocks] : [];
+function BloombergTopBar({ stocks, gameMode, onToggleGame }: { stocks: StockData[]; gameMode: boolean; onToggleGame: () => void }) {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const tickerSymbols = ['SPY', 'QQQ', 'DIA', 'BTC'];
+  const tickerStocks = tickerSymbols.map(sym => stocks.find(s => s.symbol === sym)).filter(Boolean) as StockData[];
 
   return (
-    <div className="bloomberg-top-bar" style={{
-      height: '28px', minHeight: '28px', borderBottom: '0.5px solid rgba(255,255,255,0.06)',
-      overflow: 'hidden', position: 'relative',
+    <div style={{
+      height: '32px', minHeight: '32px', background: '#0a0c12', borderBottom: '1px solid rgba(255,255,255,0.06)',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px',
       fontFamily: "'SF Mono', monospace", fontSize: '10px',
     }}>
-      <div className="ticker-scroll" style={{
-        display: 'flex', alignItems: 'center', height: '100%',
-        whiteSpace: 'nowrap', gap: '24px',
-        animation: `tickerRoll ${stocks.length * 3}s linear infinite`,
-      }}>
-        {tickerItems.map((s, i) => (
-          <span key={`${s.symbol}-${i}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-            <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>{s.symbol}</span>
-            <span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>{s.price < 1000 ? s.price.toFixed(2) : s.price.toFixed(0)}</span>
-            <span style={{ color: s.pct >= 0 ? '#4ade80' : '#f87171', fontWeight: 600 }}>
-              {s.pct >= 0 ? '▲' : '▼'}{Math.abs(s.pct).toFixed(2)}%
+      <span style={{ color: '#ff6b35', fontWeight: 700, letterSpacing: '0.15em', fontSize: '11px' }}>BLOOMBERG</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
+        {tickerStocks.map((s, i) => (
+          <React.Fragment key={s.symbol}>
+            {i > 0 && <span style={{ color: 'rgba(255,255,255,0.2)', margin: '0 8px' }}>{'\u2502'}</span>}
+            <span style={{ color: 'rgba(255,255,255,0.8)' }}>{s.symbol}</span>
+            <span style={{ color: 'rgba(255,255,255,0.95)', margin: '0 4px' }}>{s.price < 1000 ? s.price.toFixed(2) : s.price.toFixed(0)}</span>
+            <span style={{ color: s.pct >= 0 ? '#4ade80' : '#f87171' }}>
+              {s.pct >= 0 ? '\u25B2' : '\u25BC'}{Math.abs(s.pct).toFixed(2)}%
             </span>
-          </span>
+          </React.Fragment>
         ))}
       </div>
-      <style>{`
-        @keyframes tickerRoll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Game button hidden for now */}
+        <span style={{ color: 'rgba(255,255,255,0.7)' }}>
+          {time.toLocaleTimeString('en-US', { hour12: false })}
+        </span>
+      </div>
     </div>
   );
 }
@@ -2842,7 +2730,7 @@ function BloombergStockGrid6({ stocks, onStockClick }: { stocks: StockData[]; on
             background: hovered === i ? 'rgba(255,255,255,0.04)' : 'transparent',
             transition: 'background 0.15s',
           }}>
-          <CyclingStock stocks={stocks} startOffset={i * 4} compact instanceId={100 + i} onCurrentStock={(s) => handleCurrentStock(i, s)} textColor="#fff" />
+          <CyclingStock stocks={stocks} startOffset={i * 4} compact instanceId={100 + i} onCurrentStock={(s) => handleCurrentStock(i, s)} />
         </div>
       ))}
     </div>
@@ -3091,7 +2979,7 @@ function BloombergBottomBar() {
 
   return (
     <div style={{
-      height: '32px', minHeight: '32px', background: 'rgba(0,0,0,0.4)', borderTop: '0.5px solid rgba(255,255,255,0.08)',
+      height: '32px', minHeight: '32px', background: '#0a0c12', borderTop: '1px solid rgba(255,255,255,0.08)',
       display: 'flex', alignItems: 'center', padding: '0 12px', gap: '16px',
       fontFamily: "'SF Mono', monospace", fontSize: '10px',
     }}>
@@ -4200,11 +4088,11 @@ function BloombergTerminalView({ drillDown, setDrillDown }: {
   const hasDrillDown = drillDown !== null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: "'SF Mono', monospace", background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#0a0c12', fontFamily: "'SF Mono', monospace" }}>
       <BloombergTopBar stocks={stocks} gameMode={gameMode} onToggleGame={() => {}} />
       <div style={{ flex: 1, overflow: 'hidden', display: hasDrillDown ? 'block' : 'grid', gridTemplateColumns: hasDrillDown ? undefined : '50% 50%' }}>
         {hasDrillDown ? (
-          <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto' }}>
+          <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', background: '#1c1c1e' }}>
             {drillDown.type === 'stock' ? (
               <StockDetailView symbol={drillDown.symbol} name={drillDown.name} onBack={() => setDrillDown(null)} onSectorClick={(name) => setDrillDown({ type: 'sector', name })} />
             ) : (
@@ -4270,10 +4158,17 @@ function StocksApp() {
   }
 
   return (
-    <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', fontFamily: "'SF Mono', monospace", padding: '10px' }}>
-      {drillDown ? (
-        <div style={{ background: 'rgba(0,0,0,0.35)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', overflow: 'hidden' }}>
-          {drillDown.type === 'stock' ? (
+    <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', fontFamily: "'SF Mono', monospace", background: '#1c1c1e' }}>
+      {/* My Watchlist title */}
+      <div style={{ padding: '14px 14px 0' }}>
+        <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '-0.01em' }}>
+          My Watchlist
+        </div>
+      </div>
+
+      <div>
+        {drillDown ? (
+          drillDown.type === 'stock' ? (
             <StockDetailView
               symbol={drillDown.symbol}
               name={drillDown.name}
@@ -4286,44 +4181,32 @@ function StocksApp() {
               onBack={() => setDrillDown(null)}
               onStockClick={(symbol, name) => setDrillDown({ type: 'stock', symbol, name })}
             />
-          )}
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {/* Header card */}
-          <div style={{ background: 'rgba(0,0,0,0.35)', borderRadius: '12px', padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '-0.01em' }}>
-                My Watchlist
+          )
+        ) : (
+          <>
+            {/* LIVE + Date header */}
+            <div style={{ padding: '12px 14px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80', animation: 'livePulse 2s ease-in-out infinite' }} />
+                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '0.02em' }}>LIVE</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#4ade80', animation: 'livePulse 2s ease-in-out infinite' }} />
-                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.05em' }}>LIVE</span>
+              <div style={{ color: '#fff', fontSize: '12px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
               </div>
             </div>
-            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: 500, fontFamily: "'SF Pro Text', -apple-system, sans-serif", marginTop: '2px' }}>
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            </div>
-          </div>
-
-          {/* Stock Grid card */}
-          <div style={{ background: 'rgba(0,0,0,0.35)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', overflow: 'hidden' }}>
+            {/* 2x2 Stock Grid */}
             <StockGrid onStockClick={(symbol, name) => setDrillDown({ type: 'stock', symbol, name })} />
-          </div>
-
-          {/* Sector Sparklines card */}
-          <div style={{ background: 'rgba(0,0,0,0.35)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', overflow: 'hidden' }}>
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 14px' }} />
+            {/* Sector Sparklines */}
             <SectorSparklines onSectorClick={(name) => setDrillDown({ type: 'sector', name })} />
-          </div>
-
-          {/* News + Calendar card */}
-          <div style={{ background: 'rgba(0,0,0,0.35)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', overflow: 'hidden' }}>
+            {/* News Tape */}
             <ScrollingNewsTape />
-            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.1)', margin: '0 10px' }} />
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 14px' }} />
+            {/* Economic Calendar */}
             <EconomicCalendar />
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
       <style>{`@keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 .bloomberg-scroll::-webkit-scrollbar { display: none; }
 .bloomberg-scroll { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
@@ -5252,50 +5135,55 @@ function ChronographWatch() {
   const C = 100; // center
   const toRad = (deg: number) => deg * (Math.PI / 180);
   return (
-    <svg width="200" height="200" viewBox="0 0 200 200" fill="none">
+    <svg width="160" height="160" viewBox="0 0 200 200" fill="none" style={{ filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.1))' }}>
       {/* Outer rings */}
-      <circle cx={C} cy={C} r="94" stroke="rgba(255,255,255,0.6)" strokeWidth="2" fill="none" />
-      <circle cx={C} cy={C} r="90" stroke="rgba(255,255,255,0.3)" strokeWidth="1" fill="none" />
-      <text x={C} y="48" textAnchor="middle" fill="rgba(255,255,255,0.85)" fontSize="8" fontFamily="'SF Pro Display', -apple-system, sans-serif" fontWeight="800" letterSpacing="4">GANDHE</text>
+      <circle cx={C} cy={C} r="94" stroke="rgba(255,255,255,0.6)" strokeWidth="1" fill="none" />
+      <circle cx={C} cy={C} r="90" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" fill="none" />
+      {/* Brand name */}
+      <text x={C} y="48" textAnchor="middle" fill="#fff" fontSize="7" fontFamily="'SF Pro Display', -apple-system, sans-serif" fontWeight="700" letterSpacing="3">GANDHE</text>
+      {/* Hour markers */}
       {Array.from({ length: 12 }).map((_, i) => {
         const a = toRad(i * 30 - 90);
-        const r1 = i % 3 === 0 ? 72 : 78;
+        const r1 = i % 3 === 0 ? 74 : 78;
         const r2 = 86;
-        return <line key={i} x1={C + r1 * Math.cos(a)} y1={C + r1 * Math.sin(a)} x2={C + r2 * Math.cos(a)} y2={C + r2 * Math.sin(a)} stroke="rgba(255,255,255,0.9)" strokeWidth={i % 3 === 0 ? 3.5 : 1.5} strokeLinecap="round" />;
+        return <line key={i} x1={C + r1 * Math.cos(a)} y1={C + r1 * Math.sin(a)} x2={C + r2 * Math.cos(a)} y2={C + r2 * Math.sin(a)} stroke="rgba(255,255,255,0.9)" strokeWidth={i % 3 === 0 ? 2.5 : 1} strokeLinecap="round" />;
       })}
+      {/* Minute ticks */}
       {Array.from({ length: 60 }).map((_, i) => {
         if (i % 5 === 0) return null;
         const a = toRad(i * 6 - 90);
-        return <line key={`t${i}`} x1={C + 83 * Math.cos(a)} y1={C + 83 * Math.sin(a)} x2={C + 86 * Math.cos(a)} y2={C + 86 * Math.sin(a)} stroke="rgba(255,255,255,0.35)" strokeWidth="1" />;
+        return <line key={`t${i}`} x1={C + 83 * Math.cos(a)} y1={C + 83 * Math.sin(a)} x2={C + 86 * Math.cos(a)} y2={C + 86 * Math.sin(a)} stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />;
       })}
-      <circle cx={C} cy={68} r="15" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" />
-      <line x1={C} y1={68} x2={C + 11 * Math.cos(toRad(m * 12 - 90))} y2={68 + 11 * Math.sin(toRad(m * 12 - 90))} stroke="rgba(255,255,255,0.8)" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx={68} cy={C} r="15" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" />
-      <line x1={68} y1={C} x2={68 + 11 * Math.cos(toRad(sAngle))} y2={C + 11 * Math.sin(toRad(sAngle))} stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx={132} cy={C} r="15" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" />
-      <line x1={132} y1={C} x2={132 + 11 * Math.cos(toRad(hAngle))} y2={C + 11 * Math.sin(toRad(hAngle))} stroke="rgba(255,255,255,0.8)" strokeWidth="1.5" strokeLinecap="round" />
-      <line x1={C} y1={C} x2={C + 46 * Math.cos(toRad(hAngle))} y2={C + 46 * Math.sin(toRad(hAngle))} stroke="rgba(255,255,255,0.95)" strokeWidth="4.5" strokeLinecap="round" />
-      <line x1={C} y1={C} x2={C + 64 * Math.cos(toRad(mAngle))} y2={C + 64 * Math.sin(toRad(mAngle))} stroke="rgba(255,255,255,0.9)" strokeWidth="3" strokeLinecap="round" />
-      <line x1={C - 14 * Math.cos(toRad(sAngle))} y1={C - 14 * Math.sin(toRad(sAngle))} x2={C + 78 * Math.cos(toRad(sAngle))} y2={C + 78 * Math.sin(toRad(sAngle))} stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round" />
-      <circle cx={C} cy={C} r="5" fill="rgba(255,255,255,0.7)" />
-      <circle cx={C} cy={C} r="2.5" fill="rgba(255,255,255,0.95)" />
-      <rect x="192" y="96" width="7" height="8" rx="1.5" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" />
+      {/* Sub-dial top — 30min */}
+      <circle cx={C} cy={68} r="15" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" fill="none" />
+      <line x1={C} y1={68} x2={C + 11 * Math.cos(toRad(m * 12 - 90))} y2={68 + 11 * Math.sin(toRad(m * 12 - 90))} stroke="rgba(255,255,255,0.8)" strokeWidth="0.8" strokeLinecap="round" />
+      {/* Sub-dial left — running seconds */}
+      <circle cx={68} cy={C} r="15" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" fill="none" />
+      <line x1={68} y1={C} x2={68 + 11 * Math.cos(toRad(sAngle))} y2={C + 11 * Math.sin(toRad(sAngle))} stroke="rgba(255,255,255,0.9)" strokeWidth="0.8" strokeLinecap="round" />
+      {/* Sub-dial right — 12hr */}
+      <circle cx={132} cy={C} r="15" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" fill="none" />
+      <line x1={132} y1={C} x2={132 + 11 * Math.cos(toRad(hAngle))} y2={C + 11 * Math.sin(toRad(hAngle))} stroke="rgba(255,255,255,0.8)" strokeWidth="0.8" strokeLinecap="round" />
+      {/* Hour hand */}
+      <line x1={C} y1={C} x2={C + 46 * Math.cos(toRad(hAngle))} y2={C + 46 * Math.sin(toRad(hAngle))} stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+      {/* Minute hand */}
+      <line x1={C} y1={C} x2={C + 64 * Math.cos(toRad(mAngle))} y2={C + 64 * Math.sin(toRad(mAngle))} stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+      {/* Second hand — bright white */}
+      <line x1={C - 14 * Math.cos(toRad(sAngle))} y1={C - 14 * Math.sin(toRad(sAngle))} x2={C + 78 * Math.cos(toRad(sAngle))} y2={C + 78 * Math.sin(toRad(sAngle))} stroke="#fff" strokeWidth="0.8" strokeLinecap="round" />
+      {/* Center */}
+      <circle cx={C} cy={C} r="4" fill="rgba(255,255,255,0.8)" />
+      <circle cx={C} cy={C} r="1.8" fill="#fff" />
+      {/* Crown */}
+      <rect x="192" y="96" width="7" height="8" rx="1.5" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" />
       {/* Pushers */}
-      <rect x="190" y="70" width="8" height="4" rx="1" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-      <rect x="190" y="126" width="8" height="4" rx="1" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+      <rect x="190" y="70" width="8" height="4" rx="1" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.6" />
+      <rect x="190" y="126" width="8" height="4" rx="1" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.6" />
     </svg>
   );
 }
 
-function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void } = {}) {
+function TerminalContent() {
   const { state, dispatch } = useDesktop();
   const isFullscreen = state.windows.terminal?.isFullscreen ?? false;
-  const [bbAuth, _setBbAuth] = useState(false);
-  const setBbAuth = (v: boolean) => { _setBbAuth(v); onAuthChange?.(v); };
-  const [bbPassHash, setBbPassHash] = useState('');
-  const [bbPassInput, setBbPassInput] = useState('');
-  const [bbShake, setBbShake] = useState(false);
-  const bbInputRef = useRef<HTMLInputElement>(null);
   const [history, setHistory] = useState<TerminalLine[]>([]);
   const [input, setInput] = useState('');
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
@@ -5307,7 +5195,6 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
   const inputRef = React.useRef<HTMLInputElement>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const isSmallScreen = typeof window !== 'undefined' && window.innerHeight < 850;
-  const isMobileTerminal = typeof window !== 'undefined' && window.innerWidth <= 768;
 
   // Stagger-in elements (text is static, only rotating words animate)
   useEffect(() => {
@@ -5454,7 +5341,7 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
     return parts.map((part, idx) => (
       idx % 2 === 1
         ? <span key={idx} style={{ color: '#60a5fa', fontWeight: 700 }}>{part}</span>
-        : <span key={idx} style={{ color: 'rgba(0,0,0,0.5)' }}>{part}</span>
+        : <span key={idx} style={{ color: 'rgba(255,255,255,0.55)' }}>{part}</span>
     ));
   };
 
@@ -5519,7 +5406,7 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
             transition: 'opacity 3s ease-out, transform 3s ease-out, filter 3s ease-out',
           }}>
             {line.type === 'prompt' ? (
-              <><span style={{ color: '#4ade80', fontWeight: 700 }}>{prompt}</span><span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{line.command}</span></>
+              <><span style={{ color: '#4ade80', fontWeight: 700 }}>{prompt}</span><span style={{ color: '#fff', fontWeight: 500 }}>{line.command}</span></>
             ) : line.text.includes('\x1b[cmd]') ? renderColoredLine(line.text) : line.text}
           </div>
         );
@@ -5529,7 +5416,7 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
           <span style={{ color: '#4ade80', fontWeight: 700, whiteSpace: 'pre', fontFamily: "'SF Mono', monospace", fontSize: compact ? '12.5px' : '13px' }}>{prompt}</span>
           <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown}
             spellCheck={false} autoComplete="off"
-            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontFamily: "'SF Mono', monospace", fontSize: compact ? '12.5px' : '13px', color: 'rgba(255,255,255,0.9)', padding: 0, margin: 0, caretColor: '#4ade80' }} />
+            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontFamily: "'SF Mono', monospace", fontSize: compact ? '12.5px' : '13px', color: '#fff', padding: 0, margin: 0, caretColor: '#4ade80' }} />
         </div>
       )}
       {!introDone && <span style={{ display: 'inline-block', width: '8px', height: '14px', background: '#4ade80', animation: 'blink 1s step-end infinite' }} />}
@@ -5544,11 +5431,11 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
           style={{
             display: 'flex', alignItems: 'center', gap: small ? '6px' : '8px',
             padding: small ? '5px 8px' : '6px 10px', borderRadius: '8px', cursor: 'pointer',
-            background: 'rgba(0,0,0,0.03)', border: '0.5px solid rgba(0,0,0,0.06)',
+            background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)',
             transition: 'all 0.2s ease', fontSize: small ? '11px' : '12px',
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = item.color + '40'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.03)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)'; }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = item.color + '40'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
         >
           <span style={{ fontSize: small ? '12px' : '14px' }}>{item.emoji}</span>
           <span style={{ color: item.color, fontWeight: 600 }}>{item.label}</span>
@@ -5566,38 +5453,38 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
         gridTemplateRows: 'auto 1fr auto',
         height: '100%',
         fontFamily: "'SF Mono', 'JetBrains Mono', 'Menlo', monospace",
-        fontSize: '12.5px', color: '#3a3a3c', lineHeight: 1.6,
+        fontSize: '12.5px', color: '#e0e0e0', lineHeight: 1.6,
         cursor: 'text', overflow: 'hidden',
       }}>
         {/* Hero tile — top left */}
         <div style={{ gridRow: '1', padding: '24px 24px 16px', overflowY: 'auto' }}>
-          <div style={{ fontWeight: 700, fontSize: '22px', color: '#1d1d1f', letterSpacing: '-0.5px', lineHeight: 1.2 }}>Ronniel Gandhe</div>
-          <div style={{ fontSize: '12px', color: 'rgba(0,0,0,0.4)', marginTop: '2px', marginBottom: '14px' }}>Software Engineer</div>
-          <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: '13px', lineHeight: 1.5 }}>
+          <div style={{ fontWeight: 700, fontSize: '22px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.2 }}>Ronniel Gandhe</div>
+          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', marginBottom: '14px' }}>Software Engineer</div>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.5 }}>
             Using <RotatingWords /> to create<br />elegant and scalable solutions<br />to real world problems.
           </div>
         </div>
 
         {/* Right column — clock + contact info */}
-        <div style={{ gridRow: '1 / 3', borderLeft: '1px solid rgba(0,0,0,0.04)', padding: '20px 16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ gridRow: '1 / 3', borderLeft: '1px solid rgba(255,255,255,0.04)', padding: '20px 16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <WorldClock />
-          <div style={{ height: '1px', background: 'rgba(0,0,0,0.04)' }} />
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px' }}>
-            <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>💼 linkedin.com/in/ronniel-gandhe</a>
-            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 github.com/ronnielgandhe</a>
-            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ ronnielgandhe@gmail.com</a>
-            <span style={{ color: '#1d1d1f' }}>📍 Waterloo, ON</span>
+            <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>💼 linkedin.com/in/ronniel-gandhe</a>
+            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 github.com/ronnielgandhe</a>
+            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ ronnielgandhe@gmail.com</a>
+            <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
           </div>
         </div>
 
         {/* Command tiles — middle left */}
         <div style={{ padding: '0 24px 16px' }}>
-          <div style={{ color: 'rgba(0,0,0,0.25)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.1em', marginBottom: '8px' }}>EXPLORE</div>
+          <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.1em', marginBottom: '8px' }}>EXPLORE</div>
           {renderCommandGrid(3, true)}
         </div>
 
         {/* Terminal prompt strip — full bottom */}
-        <div style={{ gridColumn: '1 / -1', borderTop: '1px solid rgba(0,0,0,0.04)', padding: '8px 24px', overflowY: 'auto', maxHeight: '120px' }}>
+        <div style={{ gridColumn: '1 / -1', borderTop: '1px solid rgba(255,255,255,0.04)', padding: '8px 24px', overflowY: 'auto', maxHeight: '120px' }}>
           {renderTerminal(true)}
         </div>
 
@@ -5614,20 +5501,20 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
       }}>
         {/* Hero area — centered, fills most space */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '24px 32px 0', minHeight: 0 }}>
-          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '52px', fontWeight: 800, letterSpacing: '0.12em', color: '#1d1d1f', lineHeight: 1, textTransform: 'uppercase' }}>Ronniel</div>
-          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '52px', fontWeight: 800, letterSpacing: '0.12em', color: '#1d1d1f', lineHeight: 1, textTransform: 'uppercase', marginBottom: '12px' }}>Gandhe</div>
-          <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '14px', color: 'rgba(0,0,0,0.4)', fontWeight: 400, marginBottom: '4px' }}>Software Engineer</div>
+          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '52px', fontWeight: 800, letterSpacing: '0.12em', color: '#fff', lineHeight: 1, textTransform: 'uppercase' }}>Ronniel</div>
+          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '52px', fontWeight: 800, letterSpacing: '0.12em', color: '#fff', lineHeight: 1, textTransform: 'uppercase', marginBottom: '12px' }}>Gandhe</div>
+          <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '14px', color: 'rgba(255,255,255,0.4)', fontWeight: 400, marginBottom: '4px' }}>Software Engineer</div>
           <div style={{ fontFamily: "'SF Mono', monospace", fontSize: '13px', marginBottom: '20px' }}>
             <RotatingWords />
           </div>
-          <div style={{ width: '40px', height: '1px', background: 'rgba(0,0,0,0.08)', marginBottom: '20px' }} />
+          <div style={{ width: '40px', height: '1px', background: 'rgba(255,255,255,0.12)', marginBottom: '20px' }} />
 
           {/* Info row */}
           <div style={{ display: 'flex', gap: '20px', fontSize: '13px', fontFamily: "'SF Mono', monospace", marginBottom: '24px' }}>
-            <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>💼 LinkedIn</a>
-            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
-            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
-            <span style={{ color: '#1d1d1f' }}>📍 Waterloo, ON</span>
+            <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>💼 LinkedIn</a>
+            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
+            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+            <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
           </div>
 
           {/* Command pills — horizontal */}
@@ -5636,11 +5523,11 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
               <div key={item.cmd} onClick={(e) => { e.stopPropagation(); runCommand(item.cmd); }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '20px', cursor: 'pointer',
-                  background: 'rgba(0,0,0,0.04)', border: '0.5px solid rgba(0,0,0,0.08)', transition: 'all 0.2s', fontSize: '12px',
+                  background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.08)', transition: 'all 0.2s', fontSize: '12px',
                   fontFamily: "'SF Mono', monospace",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.1)'; e.currentTarget.style.borderColor = item.color + '50'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.08)'; }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor = item.color + '50'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
               >
                 <span style={{ fontSize: '13px' }}>{item.emoji}</span>
                 <span style={{ color: item.color, fontWeight: 600 }}>{item.label}</span>
@@ -5652,17 +5539,17 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
         {/* Data ticker bar */}
         <div style={{
           display: 'flex', justifyContent: 'center', gap: '20px', padding: '10px 24px',
-          borderTop: '1px solid rgba(0,0,0,0.04)', fontFamily: "'SF Mono', monospace", fontSize: '11px',
-          color: 'rgba(0,0,0,0.35)', flexWrap: 'wrap',
+          borderTop: '1px solid rgba(255,255,255,0.04)', fontFamily: "'SF Mono', monospace", fontSize: '11px',
+          color: 'rgba(255,255,255,0.35)', flexWrap: 'wrap',
         }}>
           <CompactClocks />
-          <span style={{ color: 'rgba(0,0,0,0.08)' }}>│</span>
+          <span style={{ color: 'rgba(255,255,255,0.08)' }}>│</span>
           <CompactTickers />
         </div>
 
         {/* Terminal prompt */}
         <div style={{
-          borderTop: '1px solid rgba(0,0,0,0.04)', padding: '8px 24px', maxHeight: '100px', overflowY: 'auto',
+          borderTop: '1px solid rgba(255,255,255,0.04)', padding: '8px 24px', maxHeight: '100px', overflowY: 'auto',
           fontFamily: "'SF Mono', monospace",
         }}>
           {renderTerminal(true)}
@@ -5682,36 +5569,36 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
       }}>
         {/* Top hero section */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 32px', width: '100%', minHeight: 0, overflowY: 'auto' }}>
-          <img src="/icons/rglogo.png" alt="RG" style={{ width: '44px', opacity: 0.85, marginBottom: '12px' }} />
-          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '26px', fontWeight: 700, color: '#1d1d1f', letterSpacing: '-0.5px' }}>Ronniel Gandhe</div>
-          <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '13px', color: 'rgba(0,0,0,0.4)', marginBottom: '6px' }}>Software Engineer · <RotatingWords /></div>
+          <img src="/icons/rglogo.png" alt="RG" style={{ width: '44px', opacity: 0.7, filter: 'brightness(0) invert(1)', marginBottom: '12px' }} />
+          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '26px', fontWeight: 700, color: '#fff', letterSpacing: '-0.5px' }}>Ronniel Gandhe</div>
+          <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '6px' }}>Software Engineer · <RotatingWords /></div>
           <div style={{ display: 'flex', gap: '16px', fontSize: '13px', fontFamily: "'SF Mono', monospace", marginBottom: '20px' }}>
-            <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>💼 LinkedIn</a>
-            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
-            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
-            <span style={{ color: 'rgba(0,0,0,0.4)' }}>📍 Waterloo</span>
+            <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>💼 LinkedIn</a>
+            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
+            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+            <span style={{ color: 'rgba(255,255,255,0.4)' }}>📍 Waterloo</span>
           </div>
 
           {/* Glass cards row */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', width: '100%', maxWidth: '520px', marginBottom: '16px' }}>
-            <div style={{ background: 'rgba(0,0,0,0.03)', borderRadius: '12px', border: '0.5px solid rgba(0,0,0,0.06)', padding: '14px 16px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.06)', padding: '14px 16px' }}>
               <WorldClock />
             </div>
-            <div style={{ background: 'rgba(0,0,0,0.03)', borderRadius: '12px', border: '0.5px solid rgba(0,0,0,0.06)', padding: '14px 16px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.06)', padding: '14px 16px' }}>
               <StockTickers />
             </div>
           </div>
 
           {/* Explore cards */}
           <div style={{ width: '100%', maxWidth: '520px' }}>
-            <div style={{ color: 'rgba(0,0,0,0.25)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.1em', marginBottom: '8px' }}>EXPLORE</div>
+            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.1em', marginBottom: '8px' }}>EXPLORE</div>
             {renderCommandGrid(3, true)}
           </div>
         </div>
 
         {/* Terminal prompt */}
         <div style={{
-          borderTop: '1px solid rgba(0,0,0,0.04)', padding: '8px 24px', width: '100%',
+          borderTop: '1px solid rgba(255,255,255,0.04)', padding: '8px 24px', width: '100%',
           maxHeight: '100px', overflowY: 'auto', fontFamily: "'SF Mono', monospace",
         }}>
           {renderTerminal(true)}
@@ -5722,44 +5609,15 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
     );
   }
 
-  // ═══════════════ FULLSCREEN: Blackbook Dashboard ═══════════════
-  if (isFullscreen) {
-    if (!bbAuth) {
-      // Show the real Blackbook PasswordGate (fingerprint + input + "press enter")
-      return (
-        <PasswordGate
-          inline
-          onUnlock={async (pw) => {
-            const hash = await hashPass(pw);
-            setBbAuth(true);
-            setBbPassHash(hash);
-          }}
-          onClose={() => dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' })}
-        />
-      );
-    }
-
-    // Authenticated — Blackbook fills entire window
-    return (
-      <div style={{ height: '100%', overflow: 'hidden' }}>
-        <BlackbookDashboard
-          onClose={() => { setBbAuth(false); dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' }); }}
-          passHash={bbPassHash}
-          transparent
-        />
-      </div>
-    );
-  }
-
   // ═══════════════ SPLIT PANELS (default) ═══════════════
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden', position: 'relative' as const }}>
       {/* Left — hero + portfolio (main focus) */}
       <div style={{
-        width: '100%',
-        flex: 1,
+        width: isFullscreen ? '100%' : undefined,
+        flex: isFullscreen ? 'none' : 1,
         display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        padding: isFullscreen ? (isSmallScreen ? '20px 28px 36px 28px' : '28px 48px 50px 48px') : (isMobileTerminal ? '12px 16px 10px 16px' : '20px 24px 16px 24px'),
+        padding: isFullscreen ? (isSmallScreen ? '20px 28px 36px 28px' : '28px 48px 50px 48px') : '28px 20px 14px 28px', borderRight: isFullscreen ? 'none' : '1px solid rgba(255,255,255,0.04)',
         minWidth: 0, flexShrink: 0,
         overflowY: isFullscreen ? 'auto' : 'hidden',
         overflowX: 'hidden',
@@ -5767,35 +5625,35 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
       }}>
         {/* Hero text */}
         <div>
-          <div style={{ fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: isFullscreen ? '15.5px' : '14px', lineHeight: 1.6, color: isFullscreen ? '#1d1d1f' : '#3a3a3c' }}>
+          <div style={{ fontFamily: "'SF Mono', 'JetBrains Mono', monospace", fontSize: isFullscreen ? '15.5px' : '14px', lineHeight: 1.6, color: isFullscreen ? '#f0f0f0' : '#e0e0e0' }}>
             {isFullscreen ? (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
-                  <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: isSmallScreen ? '32px' : '42px', color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
+                  <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: isSmallScreen ? '32px' : '42px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
                     Ronniel Gandhe
                   </div>
                   <div style={{ fontSize: isSmallScreen ? '12px' : '14px', marginBottom: isSmallScreen ? '8px' : '12px', fontFamily: "'SF Pro Text', -apple-system, sans-serif", letterSpacing: '0.3px' }}>
                     <RollingTitles />
                   </div>
                 </div>
-                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', fontWeight: 700, fontFamily: "'SF Pro Display', -apple-system, sans-serif", textAlign: 'right', paddingTop: '8px', flexShrink: 0, marginLeft: '16px' }}>
+                <div style={{ color: '#fff', fontSize: '11px', fontWeight: 700, fontFamily: "'SF Pro Display', -apple-system, sans-serif", textAlign: 'right', paddingTop: '8px', flexShrink: 0, marginLeft: '16px' }}>
                   {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                 </div>
               </div>
             ) : (
               <>
-                <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '36px', color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '2px' }}>
+                <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '34px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
                   Ronniel Gandhe
                 </div>
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '15px', color: 'rgba(255,255,255,0.9)', fontWeight: 700, marginBottom: '14px' }}>
+                <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', fontWeight: 400, marginBottom: '16px' }}>
                   Software Engineer
                 </div>
               </>
             )}
             {isFullscreen ? (() => {
-              const sHead: React.CSSProperties = { color: 'rgba(255,255,255,0.9)', fontSize: isSmallScreen ? '10px' : '11.5px', fontWeight: 700, letterSpacing: '0.12em', marginBottom: isSmallScreen ? '5px' : '8px', fontFamily: "'SF Mono', monospace" };
-              const sPara: React.CSSProperties = { color: 'rgba(255,255,255,0.75)', fontSize: isSmallScreen ? '12px' : '14.5px', lineHeight: isSmallScreen ? 1.5 : 1.65, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 };
-              const sRule: React.CSSProperties = { width: '40px', height: '1px', background: 'rgba(255,255,255,0.12)', margin: isSmallScreen ? '6px 0' : '10px 0' };
+              const sHead: React.CSSProperties = { color: '#fff', fontSize: isSmallScreen ? '10px' : '11.5px', fontWeight: 700, letterSpacing: '0.12em', marginBottom: isSmallScreen ? '5px' : '8px', fontFamily: "'SF Mono', monospace" };
+              const sPara: React.CSSProperties = { color: 'rgba(255,255,255,0.92)', fontSize: isSmallScreen ? '12px' : '14.5px', lineHeight: isSmallScreen ? 1.5 : 1.65, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 };
+              const sRule: React.CSSProperties = { width: '40px', height: '1px', background: 'rgba(255,255,255,0.1)', margin: isSmallScreen ? '6px 0' : '10px 0' };
               return (
               <div style={{ marginTop: '2px', display: 'flex', gap: isSmallScreen ? '24px' : '40px' }}>
                 {/* ── Left Column ── */}
@@ -5845,7 +5703,7 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
                       'The Power Broker — Robert Caro',
                     ].map((book, i) => (
                       <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
-                        <span style={{ color: '#1d1d1f', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>›</span>
+                        <span style={{ color: '#fff', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>›</span>
                         <span style={{ ...sPara }}>{book}</span>
                       </div>
                     ))}
@@ -5870,7 +5728,7 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
                           'Turning ideas into working products quickly',
                         ].map((item, i) => (
                           <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
-                            <span style={{ color: '#1d1d1f', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>›</span>
+                            <span style={{ color: '#fff', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>›</span>
                             <span style={{ ...sPara }}>{item}</span>
                           </div>
                         ))}
@@ -5887,64 +5745,76 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
                 </div>
               </div>
               );
-            })() : !isMobileTerminal ? (
+            })() : (
               <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', fontWeight: 500 }}>
-                    Using {showRotating && <RotatingWords />}
-                  </div>
-                  <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', fontWeight: 500 }}>
-                    to create elegant and scalable
-                  </div>
-                  <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', fontWeight: 500 }}>
-                    solutions to real world problems.
-                  </div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.7 }}>
+                  Using {showRotating && <RotatingWords />}
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.7 }}>
+                  to create elegant and scalable
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.7 }}>
+                  solutions to real world problems.
                 </div>
               </>
-            ) : null}
+            )}
           </div>
+
+          {/* Quick Start — grouped with hero when not fullscreen */}
+          {!isFullscreen && <QuickStartTiles runCommand={runCommand} />}
         </div>
 
-        {/* Clock — centered in remaining space */}
+        {/* Now Playing — shown in non-fullscreen to fill space */}
         {!isFullscreen && (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
-            <ChronographWatch />
+          <div style={{ marginTop: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+            <NowPlaying />
           </div>
         )}
 
-        {/* Bottom row — now playing left, links right */}
-        {!isFullscreen && (
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
-            {/* Bottom left: NowPlaying on desktop, Using text on mobile */}
-            <div style={{ width: '50%', minWidth: 0 }}>
-              {isMobileTerminal ? (
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '15px', lineHeight: 1.6, fontWeight: 500 }}>
-                  <div>Using</div>
-                  <div style={{ minHeight: '30px' }}>{showRotating && <RotatingWords />}</div>
-                  <div>to create elegant and scalable</div>
-                  <div>solutions to real world problems.</div>
-                </div>
-              ) : (
-                <NowPlaying />
-              )}
+
+        {/* Spacer — only in non-fullscreen; in fullscreen space-between handles it */}
+
+        {/* Bottom section: Contact */}
+        <div>
+          {isFullscreen ? (
+            <div style={{
+              display: 'flex', flexDirection: isSmallScreen ? 'column' : 'row',
+              gap: isSmallScreen ? '4px' : '16px', alignItems: isSmallScreen ? 'flex-start' : 'center',
+              fontFamily: "'SF Mono', monospace", fontSize: isSmallScreen ? '12px' : '15px',
+              marginTop: isSmallScreen ? '14px' : '24px', paddingBottom: isSmallScreen ? '20px' : '40px',
+            }}>
+              <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                💼 {isSmallScreen ? 'linkedin.com/in/ronniel-gandhe' : 'linkedin'}
+              </a>
+              {!isSmallScreen && <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>}
+              <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                🐙 {isSmallScreen ? 'github.com/ronnielgandhe' : 'github'}
+              </a>
+              {!isSmallScreen && <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>}
+              <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                ✉️ ronnielgandhe@gmail.com
+              </a>
+              {!isSmallScreen && <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>}
+              <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
             </div>
-            {/* Links — bottom right */}
-            <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '17px', fontWeight: 500, textAlign: 'right', flexShrink: 0, color: 'rgba(255,255,255,0.85)' }}>
-              {[
-                { href: 'https://www.linkedin.com/in/ronniel-gandhe/', text: 'linkedin' },
-                { href: 'https://github.com/ronnielgandhe', text: 'github' },
-                { href: 'mailto:ronnielgandhe@gmail.com', text: 'email' },
-              ].map(link => (
-                <a key={link.href} href={link.href} target="_blank" rel="noopener"
-                  style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none', transition: 'all 0.15s', fontWeight: 500 }}
-                  onClick={e => e.stopPropagation()}
-                  onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.fontWeight = '700'; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.85)'; e.currentTarget.style.fontWeight = '500'; }}
-                >{link.text}</a>
-              ))}
+          ) : (
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', marginTop: '16px' }}>
+              <div style={{ fontFamily: "'SF Mono', monospace", display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '14px' }}>
+                <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                  💼 linkedin.com/in/ronniel-gandhe
+                </a>
+                <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                  🐙 github.com/ronnielgandhe
+                </a>
+                <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fff', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+                  ✉️ ronnielgandhe@gmail.com
+                </a>
+                <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+        {/* Empty space — right whitespace */}
       </div>
 
       {/* Middle — Tech Stack, Certs, GitHub heatmap (fullscreen only) */}
@@ -5953,6 +5823,42 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
           <MiddlePanel runCommand={runCommand} />
         </div>
       )}
+
+      {/* Right panel — hidden in fullscreen */}
+      <div ref={scrollRef} onClick={() => inputRef.current?.focus()} style={{
+        flex: isFullscreen ? 'none' : 1,
+        width: isFullscreen ? 0 : undefined,
+        flexShrink: 0,
+        display: isFullscreen ? 'none' : 'flex', flexDirection: 'column',
+        cursor: 'text', fontFamily: "'SF Mono', monospace", overflow: 'hidden',
+      }}>
+        {isFullscreen ? null : (
+          /* ═══ NORMAL: original layout ═══ */
+          <>
+            <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
+              {/* Date — top right corner */}
+              <div style={{ padding: '8px 14px 0', textAlign: 'right', color: '#fff', fontSize: '11px', fontWeight: 600, fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+              </div>
+              {/* Stock ticker with chart — click to open Stocks app */}
+              <div
+                style={{ padding: '8px 14px 8px', cursor: 'pointer', borderRadius: 6, transition: 'background 0.15s' }}
+                onClick={(e) => { e.stopPropagation(); openWindow('stocks'); }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                <CyclingStock />
+              </div>
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)', margin: '0 14px' }} />
+              <ExploreCommands smartCommandLinks={smartCommandLinks} runCommand={runCommand} />
+            </div>
+            {/* Terminal prompt */}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)', padding: '6px 14px', minHeight: '36px', maxHeight: '140px', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+              {renderTerminal(true)}
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Collapse hint — bottom right, fullscreen only */}
       {isFullscreen && (
@@ -5969,44 +5875,87 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
             gap: '6px',
             padding: '5px 10px 5px 12px',
             borderRadius: '8px',
-            background: 'rgba(0,0,0,0.06)',
-            border: '1px solid rgba(0,0,0,0.1)',
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.1)',
             backdropFilter: 'blur(8px)',
             transition: 'all 0.2s ease',
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.background = 'rgba(0,0,0,0.12)';
-            e.currentTarget.style.borderColor = 'rgba(0,0,0,0.25)';
+            e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.background = 'rgba(0,0,0,0.06)';
-            e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)';
+            e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
           }}
         >
           <span style={{
             fontSize: '11px',
             fontWeight: 500,
-            color: 'rgba(0,0,0,0.6)',
+            color: 'rgba(255,255,255,0.7)',
             fontFamily: "'SF Pro Text', -apple-system, sans-serif",
             letterSpacing: '0.02em',
           }}>Collapse</span>
           <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
-            <path d="M1 17V1h17" fill="none" stroke="rgba(0,0,0,0.75)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M1 17V1h17" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       )}
 
-      {/* (expand hint removed for minimal design) */}
+      {/* Expand hint — bottom right, non-fullscreen only, hidden while typing */}
+      {!isFullscreen && !input && (
+        <div
+          onClick={() => dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' })}
+          style={{
+            position: 'absolute',
+            bottom: 12,
+            right: 12,
+            cursor: 'pointer',
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '5px 10px 5px 12px',
+            borderRadius: '8px',
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(8px)',
+            animation: 'expandHintPulse 3s ease-in-out infinite',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
+            e.currentTarget.style.animation = 'none';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+            e.currentTarget.style.animation = 'expandHintPulse 3s ease-in-out infinite';
+          }}
+        >
+          <span style={{
+            fontSize: '11px',
+            fontWeight: 500,
+            color: 'rgba(255,255,255,0.7)',
+            fontFamily: "'SF Pro Text', -apple-system, sans-serif",
+            letterSpacing: '0.02em',
+          }}>Click to expand</span>
+          <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
+            <path d="M18 1v17H1" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      )}
 
       <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 @keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 @keyframes cornerGlow {
-  0%, 100% { filter: drop-shadow(0 0 2px rgba(0,0,0,0.3)); }
-  50% { filter: drop-shadow(0 0 6px rgba(0,0,0,0.7)); }
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.3)); }
+  50% { filter: drop-shadow(0 0 6px rgba(255,255,255,0.7)); }
 }
 @keyframes cornerPulse {
-  0%, 100% { opacity: 0.25; filter: drop-shadow(0 0 1px rgba(0,0,0,0.2)); }
-  50% { opacity: 0.85; filter: drop-shadow(0 0 8px rgba(0,0,0,0.6)); }
+  0%, 100% { opacity: 0.25; filter: drop-shadow(0 0 1px rgba(255,255,255,0.2)); }
+  50% { opacity: 0.85; filter: drop-shadow(0 0 8px rgba(255,255,255,0.6)); }
 }
 @keyframes expandHintPulse {
   0%, 100% { opacity: 0.5; }
@@ -6026,16 +5975,8 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
 
 function Desktop() {
   const { state, dispatch } = useDesktop();
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
-  const [bbAuthState, setBbAuthState] = useState(false);
-  const [hoveredWindowId, setHoveredWindowId] = useState<string | null>('terminal');
+  const [isMobile, setIsMobile] = useState(false);
   const terminalOrigRef = useRef<{ width: number; height: number } | null>(null);
-
-  // Expose bbAuth setter so TerminalContent can notify us
-  useEffect(() => {
-    (window as any).__setBbAuth = setBbAuthState;
-    return () => { delete (window as any).__setBbAuth; };
-  }, []);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
@@ -6046,10 +5987,10 @@ function Desktop() {
 
   // Open terminal on boot complete
   useEffect(() => {
-    if (state.bootComplete && Object.keys(state.windows).length === 0) {
+    if (state.bootComplete && !isMobile && Object.keys(state.windows).length === 0) {
       dispatch({ type: 'OPEN_WINDOW', id: 'terminal' });
     }
-  }, [state.bootComplete]);
+  }, [state.bootComplete, isMobile]);
 
   // Desktop click — deselect all windows
   const handleDesktopClick = useCallback((e: React.MouseEvent) => {
@@ -6167,16 +6108,16 @@ function Desktop() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [state.focusedWindowId, dispatch]);
 
-  // On mobile, fullscreen non-terminal windows (terminal stays windowed to show hero)
-  useEffect(() => {
-    if (!isMobile) return;
-    const wins = Object.values(state.windows);
-    for (const w of wins) {
-      if (w.id !== 'terminal' && w.isOpen && !w.isFullscreen && !w.isMinimized) {
-        dispatch({ type: 'TOGGLE_FULLSCREEN', id: w.id });
-      }
-    }
-  }, [isMobile, state.windows]);
+  // Mobile — show boot animation, then mobile layout
+  if (isMobile) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0b1220' }}>
+        <Background />
+        <BootScreen />
+        {state.bootComplete && <MobileLayout />}
+      </div>
+    );
+  }
 
   const openWindows = Object.values(state.windows).filter(w => w.isOpen);
 
@@ -6187,11 +6128,11 @@ function Desktop() {
         position: 'fixed',
         inset: 0,
         overflow: 'hidden',
-        background: 'transparent',
+        background: '#1a1a2e',
         cursor: 'default',
       }}
     >
-      <Background overlayOpacity={['stocks', 'education', 'experience', 'terminal'].includes(state.focusedWindowId as string) ? 0.35 : 0.1} />
+      <Background />
       <BootScreen key={state.bootComplete ? 'booted' : 'booting'} />
 
       {state.bootComplete && (
@@ -6201,26 +6142,25 @@ function Desktop() {
           {/* Windows */}
           {openWindows.map(win => {
             // Title bar bg matches each app's content color
-            const isTerminalFullscreen = win.id === 'terminal' && win.isFullscreen;
-            const isTerminalDashboard = isTerminalFullscreen && bbAuthState;
             const titleBarBgMap: Record<string, string> = {
+              terminal: 'rgba(30, 30, 35, 0.95)',
+              stocks: '#1c1c1e',
               projects: '#252526',
-              blog: '#f9f9f8',
+              email: '#ffffff',
+              photos: '#f5f5f7',
+              education: '#f5f5f7',
+              experience: '#f5f5f7',
+              blog: '#f0f0f0',
               calendar: '#ffffff',
-              photos: '#1a1a1f',
-              ...(isTerminalDashboard ? { terminal: 'rgba(0,0,0,0.4)' } : {}),
+              'wifi-settings': '#f5f5f7',
             };
             // Apps with dark content need light title bar text
-            const darkTitleBars = ['projects', 'terminal', 'photos'];
+            const darkTitleBars = ['terminal', 'stocks', 'projects'];
             const titleBarBg = titleBarBgMap[win.id];
             const titleBarDark = darkTitleBars.includes(win.id);
-            const hoverProps = {
-              onMouseEnter: () => setHoveredWindowId(win.id),
-              onMouseLeave: () => setHoveredWindowId(null),
-            };
             if (win.id === 'detail' && state.activeDetail) {
               return (
-                <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark} {...hoverProps}>
+                <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark}>
                   <DetailPanel
                     detail={state.activeDetail}
                     onClose={() => dispatch({ type: 'CLOSE_DETAIL' })}
@@ -6231,7 +6171,7 @@ function Desktop() {
             }
             if (win.id === 'content' && state.activeContent) {
               return (
-                <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark} {...hoverProps}>
+                <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark}>
                   <ContentViewer
                     content={state.activeContent}
                     onClose={() => dispatch({ type: 'CLOSE_CONTENT' })}
@@ -6241,7 +6181,7 @@ function Desktop() {
               );
             }
             return (
-              <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark} {...hoverProps}>
+              <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark}>
                 <WindowContent id={win.id} />
               </AppWindow>
             );
@@ -6287,7 +6227,7 @@ function MobileStocks() {
   const [drillDown, setDrillDown] = useState<{ type: 'stock'; symbol: string; name: string } | { type: 'sector'; name: string } | null>(null);
 
   return (
-    <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', fontFamily: "'SF Mono', monospace" }}>
+    <div className="bloomberg-scroll" style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', fontFamily: "'SF Mono', monospace", background: '#1c1c1e' }}>
       <div style={{ padding: '14px 14px 0' }}>
         <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', fontFamily: "'SF Pro Display', -apple-system, sans-serif", letterSpacing: '-0.01em' }}>
           My Watchlist
@@ -6436,95 +6376,6 @@ function MobileCalendarIcon() {
       </div>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
         <span style={{ fontSize: '13px', fontWeight: 300, color: '#1a1a1a', lineHeight: 1 }}>{day}</span>
-      </div>
-    </div>
-  );
-}
-
-function MobileHero() {
-  const [spotify, setSpotify] = useState<{ isPlaying: boolean; title: string; artist: string; albumArt: string; trackUrl?: string } | null>(null);
-
-  useEffect(() => {
-    const poll = () => {
-      fetch('/api/spotify').then(r => r.json()).then(d => {
-        if (d?.title) setSpotify(d);
-        else setSpotify(null);
-      }).catch(() => {});
-    };
-    poll();
-    const id = setInterval(poll, 15000);
-    return () => clearInterval(id);
-  }, []);
-
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-
-  return (
-    <div style={{
-      position: 'absolute', inset: 0, top: 28, bottom: 60,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      padding: '20px',
-      fontFamily: "'SF Pro Text', -apple-system, sans-serif",
-    }}>
-      {/* Glass card */}
-      <div style={{
-        background: 'rgba(20, 20, 28, 0.75)',
-        backdropFilter: 'saturate(140%) blur(24px)',
-        WebkitBackdropFilter: 'saturate(140%) blur(24px)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: '20px',
-        padding: '32px 24px',
-        width: '100%', maxWidth: '360px',
-        textAlign: 'center',
-      }}>
-        {/* Time */}
-        <div style={{ fontSize: '42px', fontWeight: 200, color: '#fff', fontFamily: "'SF Pro Display', sans-serif", letterSpacing: '-1px', marginBottom: '4px' }}>
-          {timeStr}
-        </div>
-        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginBottom: '24px' }}>
-          {dateStr}
-        </div>
-
-        {/* Name + Title */}
-        <div style={{ fontSize: '22px', fontWeight: 600, color: '#fff', marginBottom: '4px' }}>
-          Ronniel Gandhe
-        </div>
-        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', marginBottom: '16px' }}>
-          Software Engineer
-        </div>
-        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '20px' }}>
-          Building scalable solutions — currently focused on frontend infrastructure and product engineering.
-        </div>
-
-        {/* Spotify */}
-        {spotify && (
-          <a href={spotify.trackUrl} target="_blank" rel="noopener noreferrer" style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            background: 'rgba(255,255,255,0.06)', borderRadius: '10px', padding: '8px 12px',
-            marginBottom: '16px', textDecoration: 'none',
-          }}>
-            <img src={spotify.albumArt} alt="" style={{ width: '36px', height: '36px', borderRadius: '6px', objectFit: 'cover' }} />
-            <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: '12px', color: '#fff', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{spotify.title}</div>
-              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{spotify.artist}</div>
-            </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-          </a>
-        )}
-
-        {/* Links */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-          <a href="https://linkedin.com/in/ronniel-gandhe" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-          </a>
-          <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          </a>
-          <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-          </a>
-        </div>
       </div>
     </div>
   );
