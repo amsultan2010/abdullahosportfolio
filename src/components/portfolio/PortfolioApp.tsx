@@ -112,16 +112,19 @@ function SLink({
   href,
   children,
   icon,
+  iconDark,
   external = true,
 }: {
   href: string;
   children: React.ReactNode;
   icon?: string;
+  iconDark?: string;
   external?: boolean;
 }) {
   const { dark } = useContext(ThemeCtx);
   const fg = dark ? '#d6d3d1' : '#44403c';
   const ul = dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+  const resolvedIcon = dark && iconDark ? iconDark : icon;
   return (
     <a
       href={href}
@@ -130,7 +133,7 @@ function SLink({
       className="rg-slink"
       style={{ color: fg, '--ul': ul, '--fg-hover': dark ? '#d6d3d1' : '#44403c' } as React.CSSProperties}
     >
-      {icon && <Ico src={icon} alt="" />}
+      {resolvedIcon && <Ico src={resolvedIcon} alt="" />}
       {children}
     </a>
   );
@@ -182,13 +185,21 @@ function Inner() {
 
         {/* ── Main bullet list ── */}
         <ul className="rg-list" id="projects">
-          {/* Current: Salesforce Engineering @ CIBC */}
+          {/* Current: Software Engineering Bluejay (YC X25) */}
           <BulletItem diamond={t.diamond}>
             <span style={{ color: t.text }}>
-              Salesforce Engineering{' '}
+              Software Engineering{' '}
               <span className="rg-inline-link-group">
-                <SLink href="https://www.cibc.com" icon="/cibc-dark.svg">CIBC</SLink>
+                <SLink
+                  href="https://bluejay.ai"
+                  icon="/bluejay-mark-black.svg"
+                  iconDark="/bluejay-mark-white.svg"
+                >
+                  Bluejay
+                </SLink>
               </span>
+              {' '}
+              <strong style={{ color: t.textStrong, fontWeight: 700 }}>(YC X25)</strong>
             </span>
           </BulletItem>
 
