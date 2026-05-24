@@ -24,101 +24,79 @@ const Experience = ({ onCardClick, windowMode }: ExperienceProps) => {
     return () => clearTimeout(timer);
   }, [windowMode]);
 
-  // Shared Augmentor detail (both roles link to same detail page)
-  const augmentorDetail: ExperienceDetail = {
-    type: 'experience' as const,
-    id: 0,
-    company: "Augmentor Labs",
-    role: "Software Engineer, Growth Team",
-    logo: "/augmentor-dark.svg",
-    timeline: [],
-    reflection: "",
-    skillsLearned: [],
-    techStack: [],
-    roles: [
-      {
-        role: "Software Engineer, Growth Team",
-        date: "Jan 2026 – Current",
-        location: "New York / Remote",
-        timeline: [
-          { month: "Month 1", description: "Joined the growth team. Ramping up on the product, growth metrics, and experimentation framework. Contributing to user acquisition features." },
-          { month: "Month 2", description: "Building engagement features and running experiments to drive platform adoption and retention." }
-        ],
-        reflection: "",
-        skillsLearned: ["Growth Engineering", "Experimentation", "Product Analytics"],
-        techStack: ["TypeScript", "React", "Python", "FastAPI"]
-      },
-      {
-        role: "Software Engineering Intern, Cloud Infrastructure",
-        date: "Jan – Apr 2025",
-        location: "Palo Alto, CA",
-        timeline: [
-          { month: "Month 1", description: "Onboarded to the cloud infrastructure team. Learned internal tooling, AWS architecture patterns, and the event-driven ingestion pipeline. Set up local development environment and completed first small PRs." },
-          { month: "Month 2", description: "Built webhook integrations for GitHub, Jira, and Salesforce. Designed event schema and implemented validation layer. Integrated with the S3/DynamoDB ingestion pipeline." },
-          { month: "Month 3", description: "Developed observability dashboards and alerting system. Worked on reducing p95 ingestion latency — identified bottlenecks in serialization and batch processing. Achieved 35% reduction." },
-          { month: "Month 4", description: "Focused on reliability improvements and documentation. Reduced mean-time-to-detect by 42% through better alert routing. Presented final project to engineering leadership." }
-        ],
-        reflection: "Augmentor Labs was my first real exposure to startup culture. The core idea behind the company was trying to bring a set of professional tools that usually live in separate platforms into one unified application. Instead of juggling multiple workflows across different software, the goal was to create a system where teams could manage and operate from a single place. Being part of that environment showed me how messy and iterative early stage products actually are. Features change quickly, priorities shift often, and a lot of the work is figuring out what the product should be before worrying about perfect implementation.\n\nMore recently, Augmentor has been exploring investment opportunities and focusing more heavily on growth engineering. That shift has pushed me to spend more time building internal tools, experimenting with lead generation systems, and understanding how startups actually expand in competitive spaces. It has been a good introduction to the operational side of building a company. Instead of just writing code, you start thinking about distribution, product positioning, and what actually moves the needle when you are trying to grow a young technology company.",
-        skillsLearned: ["System Design", "Observability", "Event-Driven Architecture", "Technical Writing", "On-Call Practices"],
-        techStack: ["AWS (S3, DynamoDB, Lambda, CloudWatch)", "Python", "Terraform", "GitHub Actions", "Datadog"]
-      }
-    ]
-  };
-
-  const cibcDetail: ExperienceDetail = {
-    type: 'experience' as const,
-    id: 2,
-    company: "CIBC",
-    role: "Data Scientist Intern, Technology Operations",
-    date: "Jan – Apr 2024",
-    location: "Toronto, ON",
-    logo: "/cibc-dark.svg",
-    timeline: [
-      { month: "Month 1", description: "Onboarded to Technology Operations. Learned internal data platform, CI/CD workflows, and deployment strategies. Began owning data contracts for cross-team pipelines." },
-      { month: "Month 2", description: "Implemented feature flags and blue/green deployment patterns. Built automated rollback triggers based on error rate thresholds." },
-      { month: "Month 3", description: "Created release and SLO dashboards tracking latency, error rate, and CTR impact. Implemented canary rollout workflows with progressive traffic shifting." },
-      { month: "Month 4", description: "Optimized CI/CD pipeline performance. Documented deployment playbooks and trained team members on the new feature flag system." }
-    ],
-    reflection: "CIBC was my first experience working inside a massive corporate environment, and it gave me a clear look at how large institutions actually operate. Banks move very differently from startups or smaller tech companies. Every change touches multiple teams, every system has layers of oversight, and decisions pass through a lot of structure before anything moves forward. It was the first time I really saw how scale, risk management, and bureaucracy shape the way technology gets built inside major organizations.\n\nIt was also where I started to understand the intersection between technology and compliance. In banking, reliability, auditability, and regulatory requirements are just as important as the technical solution itself. That environment showed me why banks rarely jump quickly onto new technology trends. There are too many systems, too many rules, and too much risk involved. Learning how engineers operate within those constraints gave me a much better understanding of how real world systems are built and maintained in highly regulated industries.",
-    skillsLearned: ["CI/CD Design", "Feature Flags", "Release Engineering", "Data Contracts", "Enterprise Workflows"],
-    techStack: ["GitHub Actions", "Python", "SQL", "Grafana", "Docker", "LaunchDarkly"]
-  };
-
-  // Split into 3 entries: reverse chronological (newest first), CIBC between the two Augmentor roles
   const experiences = [
     {
       id: 0,
-      company: "Augmentor Labs",
-      role: "Software Engineer, Growth Team",
-      date: "Jan 2026 – Current",
-      location: "New York / Remote",
-      description: "Building user acquisition and engagement features, running growth experiments, and driving platform adoption and retention metrics.",
-      logo: "/augmentor-dark.svg",
-      isAugmentor: true,
-      detail: augmentorDetail,
-    },
-    {
-      id: 2,
-      company: "CIBC",
-      role: "Data Scientist Intern, Technology Operations",
-      date: "Jan – Apr 2024",
-      location: "Toronto, ON",
-      description: "Owned data contracts and CI/CD pipelines with GitHub Actions. Implemented feature flags, blue/green and canary rollouts. Created release/SLO dashboards for latency, error rate, and CTR impact.",
-      logo: "/cibc-dark.svg",
-      logoSize: 65,
-      detail: cibcDetail,
+      company: "AbdullahOS",
+      role: "Main project shell",
+      date: "Current",
+      location: "Riyadh, Saudi Arabia",
+      description: "Primary Abdullah-focused project shell for this static portfolio stage.",
+      logo: "/terminal.png",
+      detail: {
+        type: 'experience' as const,
+        id: 0,
+        company: "AbdullahOS",
+        role: "Main project shell",
+        date: "Current",
+        location: "Riyadh, Saudi Arabia",
+        logo: "/terminal.png",
+        timeline: [
+          { month: "Stage 1", description: "Static AbdullahOS placeholder shell. Final project details will be added later." }
+        ],
+        reflection: "AbdullahOS is the main custom project/app shell for Abdullah Sultan's portfolio.",
+        skillsLearned: ["AI", "Desktop UI", "Creative hardware", "Product thinking"],
+        techStack: ["Astro", "React", "TypeScript"]
+      } satisfies ExperienceDetail
     },
     {
       id: 1,
-      company: "Augmentor Labs",
-      role: "Software Engineering Intern, Cloud Infrastructure",
-      date: "Jan – Apr 2025",
-      location: "Palo Alto, CA",
-      description: "Built webhook integrations, designed event schemas for the ingestion pipeline, and reduced p95 ingestion latency by 35% through observability and optimization work.",
-      logo: "/augmentor-dark.svg",
-      isAugmentor: true,
-      detail: augmentorDetail,
+      company: "Startup Project Shell",
+      role: "Placeholder experience",
+      date: "TBD",
+      location: "Riyadh, Saudi Arabia",
+      description: "Static placeholder for future startup-related experience or projects.",
+      logo: "/icons/folder.png",
+      detail: {
+        type: 'experience' as const,
+        id: 1,
+        company: "Startup Project Shell",
+        role: "Placeholder experience",
+        date: "TBD",
+        location: "Riyadh, Saudi Arabia",
+        logo: "/icons/folder.png",
+        timeline: [
+          { month: "Placeholder", description: "Future startup experience copy goes here." }
+        ],
+        reflection: "Placeholder copy for Abdullah's future startup-focused work.",
+        skillsLearned: ["Startups", "Product", "Operations"],
+        techStack: ["Placeholder"]
+      } satisfies ExperienceDetail
     },
+    {
+      id: 2,
+      company: "Robotics Project Shell",
+      role: "Placeholder experience",
+      date: "TBD",
+      location: "Riyadh, Saudi Arabia",
+      description: "Static placeholder for future robotics and creative hardware work.",
+      logo: "/icons/folder.png",
+      detail: {
+        type: 'experience' as const,
+        id: 2,
+        company: "Robotics Project Shell",
+        role: "Placeholder experience",
+        date: "TBD",
+        location: "Riyadh, Saudi Arabia",
+        logo: "/icons/folder.png",
+        timeline: [
+          { month: "Placeholder", description: "Future robotics and hardware experience copy goes here." }
+        ],
+        reflection: "Placeholder copy for Abdullah's future robotics and hardware work.",
+        skillsLearned: ["Robotics", "Hardware", "Prototyping"],
+        techStack: ["Placeholder"]
+      } satisfies ExperienceDetail
+    }
   ];
 
   return (
@@ -205,9 +183,9 @@ const Experience = ({ onCardClick, windowMode }: ExperienceProps) => {
                     width: '12px',
                     height: '12px',
                     borderRadius: '50%',
-                    background: (experience as any).isAugmentor ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.35)',
-                    border: `2px solid ${(experience as any).isAugmentor ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.2)'}`,
-                    boxShadow: (experience as any).isAugmentor ? '0 0 10px rgba(255,255,255,0.2), 0 0 4px rgba(255,255,255,0.1)' : '0 0 4px rgba(255,255,255,0.08)',
+                    background: (experience as any).isFeatured ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.35)',
+                    border: `2px solid ${(experience as any).isFeatured ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.2)'}`,
+                    boxShadow: (experience as any).isFeatured ? '0 0 10px rgba(255,255,255,0.2), 0 0 4px rgba(255,255,255,0.1)' : '0 0 4px rgba(255,255,255,0.08)',
                     zIndex: 2,
                     transition: 'all 0.3s ease',
                   }} />
@@ -302,8 +280,8 @@ const Experience = ({ onCardClick, windowMode }: ExperienceProps) => {
                   width: '12px',
                   height: '12px',
                   borderRadius: '50%',
-                  background: (experience as any).isAugmentor ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.25)',
-                  border: `2px solid ${(experience as any).isAugmentor ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.15)'}`,
+                  background: (experience as any).isFeatured ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.25)',
+                  border: `2px solid ${(experience as any).isFeatured ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.15)'}`,
                   zIndex: 2,
                 }} />
                 <ExperienceCard

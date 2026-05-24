@@ -3,14 +3,14 @@ import PageShell, { useTheme, themeColors } from './PageShell';
 
 const POSTS = [
   {
-    slug: 'prestige-is-a-strong-drug',
-    title: 'Prestige Is a Strong Drug',
-    date: '2026-02-20',
+    slug: 'abdullah-notes',
+    title: 'Abdullah Notes',
+    date: '2026-01-01',
   },
   {
-    slug: 'trading-rabbit-hole',
-    title: 'What Going Down the Trading Rabbit Hole Taught Me About Finance',
-    date: '2026-01-28',
+    slug: 'project-log',
+    title: 'Project Log',
+    date: '2026-01-02',
   },
 ];
 

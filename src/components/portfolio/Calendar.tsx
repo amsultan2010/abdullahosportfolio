@@ -89,12 +89,12 @@ const Calendar = ({ windowMode }: CalendarProps) => {
             <span style={{ fontSize: '16px' }}>‹</span> Back to Calendar
           </button>
           <span style={{ flex: 1 }} />
-          <span style={{ fontSize: '13px', color: '#666', fontWeight: 500 }}>Book a Meeting with Ronniel</span>
+          <span style={{ fontSize: '13px', color: '#666', fontWeight: 500 }}>Book a Meeting with Abdullah</span>
           <span style={{ flex: 1 }} />
           <span style={{ width: '120px' }} />
         </div>
         <iframe
-          src="https://calendly.com/ronnielgandhe?hide_gdpr_banner=1"
+          src="https://calendly.com/abdullah-placeholder?hide_gdpr_banner=1"
           style={{ flex: 1, width: '100%', border: 'none', background: '#fff' }}
           title="Book a meeting"
         />

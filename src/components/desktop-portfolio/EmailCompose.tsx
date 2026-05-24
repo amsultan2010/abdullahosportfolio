@@ -21,7 +21,7 @@ const EmailCompose = ({ windowMode }: EmailComposeProps) => {
     // Build mailto link with form fields
     const subjectLine = subject.trim() || `Message from ${name.trim()}`;
     const body = `From: ${name.trim()} (${email.trim()})\n\n${message.trim()}`;
-    const mailtoUrl = `mailto:ronnielgandhe@gmail.com?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(body)}`;
+    const mailtoUrl = `mailto:abdullah@example.com?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(body)}`;
 
     // Open mail client
     window.location.href = mailtoUrl;
@@ -163,7 +163,7 @@ const EmailCompose = ({ windowMode }: EmailComposeProps) => {
           color: 'rgba(255, 255, 255, 0.3)',
           fontFamily: "'SF Pro Text', -apple-system, sans-serif",
         }}>
-          to: ronnielgandhe@gmail.com
+          to: abdullah@example.com
         </span>
       </div>
 
@@ -197,7 +197,7 @@ const EmailCompose = ({ windowMode }: EmailComposeProps) => {
             borderRadius: '12px',
             border: '1px solid rgba(0, 122, 255, 0.25)',
           }}>
-            Ronniel Gandhe
+            Abdullah Sultan
           </span>
         </div>
 

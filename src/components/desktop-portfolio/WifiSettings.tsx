@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
 
 type TestPhase = 'idle' | 'ping' | 'download' | 'upload' | 'complete';
 
@@ -88,7 +88,6 @@ export default function WifiSettings() {
   const [results, setResults] = useState<SpeedResults | null>(null);
   const [gaugeValue, setGaugeValue] = useState(0);
   const [gaugeLabel, setGaugeLabel] = useState('Ready to test');
-  const abortRef = useRef<AbortController | null>(null);
 
   // Animate gauge smoothly toward target
   const animateGauge = useCallback((target: number, duration: number) => {
@@ -105,139 +104,26 @@ export default function WifiSettings() {
   }, []);
 
   const runSpeedTest = useCallback(async () => {
-    setPhase('ping');
+    setPhase("ping");
     setResults(null);
     setGaugeValue(0);
-    setGaugeLabel('Testing ping...');
+    setGaugeLabel("Loading static placeholder...");
 
-    const abort = new AbortController();
-    abortRef.current = abort;
+    await new Promise(r => setTimeout(r, 180));
+    setPhase("download");
+    animateGauge(120, 450);
 
-    // Phase 1: Ping — fetch own favicon, 8 samples, drop worst 2, take median
-    const pings: number[] = [];
-    for (let i = 0; i < 8; i++) {
-      if (abort.signal.aborted) return;
-      const t0 = performance.now();
-      try {
-        await fetch(`/favicon.ico?_p=${Date.now()}_${i}`, { cache: 'no-store', signal: abort.signal });
-      } catch { /* ignore */ }
-      pings.push(performance.now() - t0);
-    }
-    pings.sort((a, b) => a - b);
-    const trimmed = pings.slice(0, -2);
-    const pingResult = Math.round(trimmed[Math.floor(trimmed.length / 2)]);
+    await new Promise(r => setTimeout(r, 450));
+    setPhase("upload");
+    animateGauge(42, 450);
 
-    // Helper: run a single download measurement using parallel connections
-    const measureDownload = async (bytes: number, connections: number): Promise<number> => {
-      const t0 = performance.now();
-      const fetches = Array.from({ length: connections }, (_, i) =>
-        fetch(`https://speed.cloudflare.com/__down?bytes=${bytes}&_=${Date.now()}_${i}`, {
-          cache: 'no-store', signal: abort.signal, mode: 'cors',
-        }).then(r => r.blob())
-      );
-      const blobs = await Promise.all(fetches);
-      const totalBytes = blobs.reduce((s, b) => s + b.size, 0);
-      const elapsed = (performance.now() - t0) / 1000;
-      return elapsed > 0.01 ? (totalBytes * 8) / (elapsed * 1_000_000) : 0;
-    };
-
-    // Helper: run a single upload measurement using parallel connections
-    const measureUpload = async (bytes: number, connections: number): Promise<number> => {
-      const t0 = performance.now();
-      const fetches = Array.from({ length: connections }, (_, i) =>
-        fetch(`https://speed.cloudflare.com/__up?_=${Date.now()}_${i}`, {
-          method: 'POST', body: new Blob([new ArrayBuffer(bytes)]),
-          signal: abort.signal, mode: 'cors',
-        })
-      );
-      await Promise.all(fetches);
-      const totalBytes = bytes * connections;
-      const elapsed = (performance.now() - t0) / 1000;
-      return elapsed > 0.01 ? (totalBytes * 8) / (elapsed * 1_000_000) : 0;
-    };
-
-    // Phase 2: Download — 3 rounds of 4 parallel 2.5MB connections, take median
-    if (abort.signal.aborted) return;
-    setPhase('download');
-    setGaugeLabel('Testing download...');
-    setGaugeValue(0);
-
-    let downloadMbps = 0;
-    const dlSamples: number[] = [];
-    try {
-      for (let round = 0; round < 3; round++) {
-        if (abort.signal.aborted) return;
-        const mbps = await measureDownload(2_500_000, 4);
-        if (mbps > 0) dlSamples.push(mbps);
-        animateGauge(mbps, 400);
-      }
-    } catch {
-      try {
-        const t0 = performance.now();
-        const fetches = Array.from({ length: 8 }, (_, i) =>
-          fetch(`/?_dl=${Date.now()}_${i}`, { cache: 'no-store', signal: abort.signal }).then(r => r.text())
-        );
-        const texts = await Promise.all(fetches);
-        const totalBytes = texts.reduce((s, r) => s + new Blob([r]).size, 0);
-        const elapsed = (performance.now() - t0) / 1000;
-        if (elapsed > 0.01) dlSamples.push((totalBytes * 8) / (elapsed * 1_000_000));
-      } catch { /* ignore */ }
-    }
-
-    if (dlSamples.length > 0) {
-      dlSamples.sort((a, b) => a - b);
-      downloadMbps = dlSamples[Math.floor(dlSamples.length / 2)];
-    }
-    const conn = (navigator as any).connection;
-    if (conn?.downlink && conn.downlink > downloadMbps) {
-      downloadMbps = conn.downlink;
-    }
-
-    animateGauge(downloadMbps, 800);
-    await new Promise(r => setTimeout(r, 800));
-
-    // Phase 3: Upload — 3 rounds of 4 parallel 1MB connections, take median
-    if (abort.signal.aborted) return;
-    setPhase('upload');
-    setGaugeLabel('Testing upload...');
-    setGaugeValue(0);
-
-    let uploadMbps = 0;
-    const ulSamples: number[] = [];
-    try {
-      for (let round = 0; round < 3; round++) {
-        if (abort.signal.aborted) return;
-        const mbps = await measureUpload(1_000_000, 4);
-        if (mbps > 0) ulSamples.push(mbps);
-        animateGauge(mbps, 400);
-      }
-    } catch {
-      if (conn?.downlink) {
-        ulSamples.push(conn.downlink * 0.4);
-      } else if (downloadMbps > 0) {
-        ulSamples.push(downloadMbps * 0.35);
-      }
-    }
-
-    if (ulSamples.length > 0) {
-      ulSamples.sort((a, b) => a - b);
-      uploadMbps = ulSamples[Math.floor(ulSamples.length / 2)];
-    }
-    animateGauge(uploadMbps, 800);
-    await new Promise(r => setTimeout(r, 800));
-
-    // Complete
-    if (abort.signal.aborted) return;
-    setPhase('complete');
-    setGaugeValue(downloadMbps);
-    setGaugeLabel('Test complete');
-    setResults({ ping: pingResult, download: downloadMbps, upload: uploadMbps });
+    await new Promise(r => setTimeout(r, 450));
+    setPhase("complete");
+    setGaugeValue(120);
+    setGaugeLabel("Static placeholder");
+    setResults({ ping: 18, download: 120, upload: 42 });
   }, [animateGauge]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => { abortRef.current?.abort(); };
-  }, []);
 
   const isRunning = phase === 'ping' || phase === 'download' || phase === 'upload';
   const maxGauge = results ? Math.max(results.download, results.upload, 100) : 200;
@@ -264,7 +150,7 @@ export default function WifiSettings() {
           <div>
             <div style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>Wi-Fi</div>
             <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
-              Connected to Ronniel's Network
+              Connected to Abdullah's Network
             </div>
           </div>
           <div style={{ marginLeft: 'auto' }}>

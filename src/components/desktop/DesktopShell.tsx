@@ -6,16 +6,13 @@ import AppWindow from './AppWindow';
 import BootScreen from './BootScreen';
 import DesktopDock from './DesktopDock';
 import DesktopMenuBar from './DesktopMenuBar';
-import GitHubHeatmap from './GitHubHeatmap';
 import type { WindowId } from './types';
-import { BlackbookDashboard, PasswordGate, hashPass, PASS } from '../portfolio/Blackbook';
 
 // Section content — uses desktop-portfolio (master copies, untouched)
 import Education from '../desktop-portfolio/Education';
 import Experience from '../desktop-portfolio/Experience';
 import Projects from '../desktop-portfolio/Projects';
 import Blog from '../desktop-portfolio/Blog';
-import Calendar from '../desktop-portfolio/Calendar';
 import EmailCompose from '../desktop-portfolio/EmailCompose';
 import Photos from '../desktop-portfolio/Photos';
 import WifiSettings from '../desktop-portfolio/WifiSettings';
@@ -37,7 +34,7 @@ function WindowContent({ id }: { id: WindowId }) {
 
   switch (id) {
     case 'terminal':
-      return <TerminalContent onAuthChange={(window as any).__setBbAuth} />;
+      return <TerminalContent />;
     case 'education':
       return <Education onCardClick={handleCardClick} windowMode />;
     case 'experience':
@@ -46,16 +43,12 @@ function WindowContent({ id }: { id: WindowId }) {
       return <Projects onCardClick={handleCardClick} windowMode />;
     case 'blog':
       return <Blog onContentClick={handleContentClick} windowMode />;
-    case 'calendar':
-      return <Calendar windowMode />;
     case 'email':
       return <EmailCompose windowMode />;
     case 'photos':
       return <Photos windowMode />;
     case 'wifi-settings':
       return <WifiSettings />;
-    case 'stocks':
-      return <StocksApp />;
     default:
       return null;
   }
@@ -69,29 +62,30 @@ interface TerminalLine {
 }
 
 const COMMANDS: Record<string, { window: WindowId; desc: string }> = {
-  'education':     { window: 'education',      desc: 'Academic background & coursework' },
-  'experience':    { window: 'experience',      desc: 'Work experience & internships' },
-  'projects':      { window: 'projects',        desc: 'Side projects & builds' },
-  'mythoughts':    { window: 'blog',            desc: 'Blog posts & notes' },
-  'calendar':      { window: 'calendar',        desc: 'Book a meeting with me' },
+  'about':         { window: 'education',      desc: 'About Abdullah' },
+  'projects':      { window: 'projects',        desc: 'Project shells & builds' },
+  'abdullahos':    { window: 'blog',            desc: 'Open AbdullahOS shell' },
+  'contact':       { window: 'email',           desc: 'Static contact window' },
+  'photos':        { window: 'photos',          desc: 'Local photo gallery' },
+  'terminal':      { window: 'terminal',        desc: 'Terminal home' },
+  'experience':    { window: 'experience',      desc: 'Placeholder experience shell' },
 };
 
 const SMART_COMMANDS: Record<string, { window: WindowId; output: string }> = {
-  'npm run experience':    { window: 'experience',    output: '> ronniel@1.0.0 experience\n> Loading professional history...' },
-  'git log --education':   { window: 'education',     output: 'commit a1b2c3d (HEAD → main)\nFetching academic records...' },
-  'brew install projects': { window: 'projects',      output: '==> Fetching ronniel/projects\n==> Pouring projects-1.0.0...' },
-  'cat mythoughts.md':     { window: 'blog',          output: '# My Thoughts\nOpening blog posts...' },
-  'open calendar.app':     { window: 'calendar',      output: 'Opening Calendar.app...' },
+  'npm run about':         { window: 'education',     output: '> abdullah@1.0.0 about\n> Loading static profile shell...' },
+  'git log --projects':    { window: 'projects',      output: 'commit a1b2c3d (HEAD -> main)\nOpening Abdullah project shells...' },
+  'open abdullahos.app':   { window: 'blog',          output: 'Opening AbdullahOS.app...' },
+  'open contact.app':      { window: 'email',         output: 'Opening static contact window...' },
 };
 
 // ── Rolling titles ribbon for fullscreen subtitle ──
 function RollingTitles() {
   const titles = [
-    'Software Engineer', 'Data Scientist', 'Trader', 'Gym Bro',
-    'Growth Engineer', 'Dog Lover', 'Carnivore Diet Enjoyer',
-    'Night Owl', 'Coffee Addict', 'Market Watcher',
-    'System Builder', 'Rabbit Hole Explorer', 'Open Source Fan',
-    'Terminal Dweller', 'Full Stack Dev', 'Quantitative Thinker',
+    'Student Builder', 'Startup Curious', 'Robotics Explorer', 'AI Tinkerer',
+    'Quant Finance Learner', 'Creative Hardware Builder', 'AbdullahOS Maker',
+    'Systems Thinker', 'Prototype Shipper', 'Terminal Dweller',
+    'Product Learner', 'Robotics Builder', 'Market Student',
+    'Hardware Hacker', 'Project Collector', 'Riyadh Based',
   ];
   const colors = [
     '#60a5fa', '#c084fc', '#4ade80', '#fbbf24', '#f472b6',
@@ -537,11 +531,11 @@ function useScrambleText(target: string, trigger: number) {
 
 // ── Quick Start Tiles ──
 const QUICK_NAV = [
-  { label: 'experience', cmd: 'npm run experience', color: '#c084fc', icon: '/icons/folder.png', emoji: '💼' },
-  { label: 'education', cmd: 'git log --education', color: '#60a5fa', icon: '/icons/folder.png' },
-  { label: 'projects', cmd: 'brew install projects', color: '#4ade80', icon: '/vscode.png' },
-  { label: 'notes', cmd: 'cat mythoughts.md', color: '#fbbf24', icon: '/notes.png' },
-  { label: 'calendar', cmd: 'open calendar.app', color: '#22d3ee', icon: '/calandar.png' },
+  { label: 'about', cmd: 'npm run about', color: '#60a5fa', icon: '/icons/folder.png' },
+  { label: 'projects', cmd: 'git log --projects', color: '#4ade80', icon: '/vscode.png' },
+  { label: 'abdullahos', cmd: 'open abdullahos.app', color: '#fbbf24', icon: '/terminal.png' },
+  { label: 'contact', cmd: 'open contact.app', color: '#22d3ee', icon: '/usethismailicon.png' },
+  { label: 'photos', cmd: 'photos', color: '#c084fc', icon: '/icons/photos.png' },
 ];
 
 function QuickStartTiles({ runCommand }: { runCommand: (cmd: string, source?: 'ui' | 'typed') => void }) {
@@ -579,11 +573,11 @@ function QuickStartTiles({ runCommand }: { runCommand: (cmd: string, source?: 'u
 // ── Animated Explore — Apple-style typing animation ──
 function AnimatedExplore({ runCommand }: { runCommand: (cmd: string, source?: 'ui' | 'typed') => void }) {
   const commands = [
-    { short: 'exp', cmd: 'experience' },
-    { short: 'edu', cmd: 'education' },
-    { short: 'thoughts', cmd: 'mythoughts' },
+    { short: 'about', cmd: 'about' },
     { short: 'code', cmd: 'projects' },
-    { short: 'meet', cmd: 'calendar' },
+    { short: 'os', cmd: 'abdullahos' },
+    { short: 'mail', cmd: 'contact' },
+    { short: 'pics', cmd: 'photos' },
   ];
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [typed, setTyped] = useState('');
@@ -749,7 +743,7 @@ const STOCK_NAMES: { symbol: string; name: string }[] = [
   { symbol: 'NFLX', name: 'Netflix' }, { symbol: 'UBER', name: 'Uber' },
   { symbol: 'SHOP', name: 'Shopify' }, { symbol: 'SQ', name: 'Block' },
   { symbol: 'SNAP', name: 'Snap' }, { symbol: 'RBLX', name: 'Roblox' },
-  { symbol: 'PINS', name: 'Pinterest' }, { symbol: 'SPOT', name: 'Spotify' },
+  { symbol: 'PINS', name: 'Pinterest' }, { symbol: 'SPOT', name: 'Streaming Co.' },
   { symbol: 'DASH', name: 'DoorDash' }, { symbol: 'ABNB', name: 'Airbnb' },
   { symbol: 'BKNG', name: 'Booking Holdings' }, { symbol: 'PYPL', name: 'PayPal' },
   { symbol: 'ROKU', name: 'Roku' }, { symbol: 'TTD', name: 'Trade Desk' },
@@ -828,7 +822,7 @@ const STOCK_NAMES: { symbol: string; name: string }[] = [
   { symbol: 'SNPS', name: 'Synopsys' }, { symbol: 'CDNS', name: 'Cadence Design' },
 ];
 
-// Shared stock data fetcher — avoids multiple API calls
+// Legacy market widgets now use local placeholder data only.
 function useStockData() {
   const [stocks, setStocks] = useState<StockData[]>([]);
   useEffect(() => {
@@ -869,13 +863,7 @@ function useStockData() {
       }
       return result;
     };
-    fetch('/api/stocks')
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then((data: StockData[]) => {
-        if (Array.isArray(data) && data.length > 0) setStocks(interleaveMovers(data));
-        else setStocks(interleaveMovers(generateFallback()));
-      })
-      .catch(() => setStocks(interleaveMovers(generateFallback())));
+    setStocks(interleaveMovers(generateFallback()));
   }, []);
   return stocks;
 }
@@ -1102,13 +1090,11 @@ function StockGrid({ onStockClick }: { onStockClick?: (symbol: string, name: str
 interface NewsItem { title: string; source: string; url: string; pubDate: string; }
 
 function BloombergNewsFeed() {
-  const [news, setNews] = useState<NewsItem[]>([]);
-  useEffect(() => {
-    fetch('/api/news')
-      .then(r => r.ok ? r.json() : [])
-      .then(d => { if (Array.isArray(d)) setNews(d); })
-      .catch(() => {});
-  }, []);
+  const [news] = useState<NewsItem[]>([
+    { title: 'Static placeholder: AbdullahOS project notes', source: 'Local', url: '#', pubDate: new Date().toISOString() },
+    { title: 'Static placeholder: robotics shell waiting for details', source: 'Local', url: '#', pubDate: new Date().toISOString() },
+    { title: 'Static placeholder: quant finance shell waiting for details', source: 'Local', url: '#', pubDate: new Date().toISOString() },
+  ]);
 
   const timeAgo = (dateStr: string) => {
     try {
@@ -1169,20 +1155,18 @@ function BloombergNewsFeed() {
   );
 }
 
-// ── Widget 1: GitHub Contribution Heatmap ──
-// GitHubHeatmap moved to ./GitHubHeatmap.tsx
-
-// ── Widget 2: Spotify Now Playing ──
-function SpotifyWidget() {
-  const [track, setTrack] = useState<{ isPlaying: boolean; title: string; artist: string; album: string; albumArt: string; progressMs: number; durationMs: number } | null>(null);
+// ── Widget 2: Static music launcher ──
+function MusicWidget() {
+  const [track] = useState<{ isPlaying: boolean; title: string; artist: string; album: string; albumArt: string; progressMs: number; durationMs: number } | null>({
+    isPlaying: false,
+    title: 'YouTube Music',
+    artist: 'Static launcher',
+    album: 'AbdullahOS',
+    albumArt: '',
+    progressMs: 0,
+    durationMs: 180000,
+  });
   const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    fetch('/api/spotify')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) { setTrack(d); setProgress(d.progressMs || 0); } })
-      .catch(() => {});
-  }, []);
 
   // Animate progress bar
   useEffect(() => {
@@ -1299,8 +1283,8 @@ function SectorHeatmap() {
   );
 }
 
-// ── Now Playing (Spotify) ──
-const DEV_PLAYLIST_URL = 'https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8';
+// ── Static music launcher ──
+const DEV_PLAYLIST_URL = 'https://music.youtube.com/';
 const DEV_PLAYLIST_TRACKS = [
   { title: 'fiano', artist: 'the wine is ok', durationMs: 163000 },
   { title: 'The Way Things Go', artist: 'chromas', durationMs: 185000 },
@@ -1324,29 +1308,12 @@ function NowPlaying() {
   const artistRef = useRef<HTMLSpanElement>(null);
   const [titleOverflow, setTitleOverflow] = useState(false);
   const [artistOverflow, setArtistOverflow] = useState(false);
-  const [track, setTrack] = useState<{ isPlaying: boolean; title: string; artist: string; album: string; albumArt: string; progressMs: number; durationMs: number; isPlaylistFallback?: boolean } | null>(null);
+  const [track] = useState<{ isPlaying: boolean; title: string; artist: string; album: string; albumArt: string; progressMs: number; durationMs: number; isPlaylistFallback?: boolean } | null>(null);
   const [progress, setProgress] = useState(0);
   const [fallback] = useState(() => {
     const t = DEV_PLAYLIST_TRACKS[Math.floor(Math.random() * DEV_PLAYLIST_TRACKS.length)];
     return { isPlaying: true, title: t.title, artist: t.artist, album: 'session', albumArt: '', progressMs: Math.floor(Math.random() * 0.6 * t.durationMs), durationMs: t.durationMs, isPlaylistFallback: true };
   });
-
-  useEffect(() => {
-    const fetchTrack = () => {
-      fetch('/api/spotify')
-        .then(r => r.ok ? r.json() : null)
-        .then(d => {
-          if (d && d.title) {
-            setTrack(d);
-            setProgress(d.progressMs || 0);
-          }
-        })
-        .catch(() => {});
-    };
-    fetchTrack();
-    const id = setInterval(fetchTrack, 30000);
-    return () => clearInterval(id);
-  }, []);
 
   const active = track || fallback;
 
@@ -2254,11 +2221,11 @@ function BloombergBackButton({ onClick }: { onClick: () => void }) {
 // ── Middle Panel: Site Guide + Tech Stack + Stats + Certs ──
 
 const SITE_GUIDE = [
-  { label: 'Experience', desc: 'Work history & internships', cmd: 'npm run experience', icon: '💼' },
-  { label: 'Education', desc: 'Academic background & coursework', cmd: 'git log --education', icon: '🎓' },
-  { label: 'Projects', desc: 'Side projects & builds', cmd: 'brew install projects', icon: '🔨' },
-  { label: 'Notes', desc: 'Blog posts & thoughts', cmd: 'cat mythoughts.md', icon: '📝' },
-  { label: 'Calendar', desc: 'Book a meeting with me', cmd: 'open calendar.app', icon: '📅' },
+  { label: 'About', desc: 'Static Abdullah profile shell', cmd: 'npm run about', icon: '👋' },
+  { label: 'Projects', desc: 'Project shells & builds', cmd: 'git log --projects', icon: '🔨' },
+  { label: 'AbdullahOS', desc: 'Main custom project shell', cmd: 'open abdullahos.app', icon: '▣' },
+  { label: 'Contact', desc: 'Static contact window', cmd: 'open contact.app', icon: '✉' },
+  { label: 'Photos', desc: 'Local photo gallery', cmd: 'photos', icon: '◈' },
 ];
 
 // Category color themes — one gradient color per category
@@ -2427,7 +2394,7 @@ function ChronographClock() {
 
         {/* Brand text */}
         <text x={cx} y={cy - 20} textAnchor="middle" style={{ fontSize: '6px', fill: 'rgba(255,255,255,0.2)', fontFamily: "'SF Mono', monospace", letterSpacing: '0.15em', fontWeight: 500 }}>
-          GANDHE
+          SULTAN
         </text>
       </svg>
 
@@ -3253,44 +3220,24 @@ function StockPickerGame({ stocks }: { stocks: StockData[] }) {
     setTimeout(() => setXpPopups(prev => prev.filter(p => p.id !== id)), 1500);
   }, []);
 
-  // ── Fetch historical data ──
+  // ── Local placeholder historical data ──
   useEffect(() => {
     const syms = TRADE_SYMBOLS.split(',');
-    fetch(`/api/stock-history?symbols=${syms.join(',')}&range=3mo`)
-      .then(r => r.json())
-      .then(json => {
-        const map: Record<string, HistData> = {};
-        for (const sym of syms) {
-          if (json.data?.[sym]) {
-            map[sym] = {
-              symbol: sym,
-              name: getName(sym),
-              closes: json.data[sym].closes,
-              timestamps: json.data[sym].timestamps,
-            };
-          }
-        }
-        setHistDataMap(map);
-        setLoading(false);
-      })
-      .catch(() => {
-        // Generate fallback data
-        const map: Record<string, HistData> = {};
-        const rng = seededRandom(99);
-        for (const sym of syms) {
-          let p = 100 + rng() * 400;
-          const closes: number[] = [];
-          const timestamps: number[] = [];
-          for (let i = 0; i < 70; i++) {
-            p *= 0.97 + rng() * 0.06;
-            closes.push(Math.round(p * 100) / 100);
-            timestamps.push(Date.now() - (70 - i) * 86400000);
-          }
-          map[sym] = { symbol: sym, name: getName(sym), closes, timestamps };
-        }
-        setHistDataMap(map);
-        setLoading(false);
-      });
+    const map: Record<string, HistData> = {};
+    const rng = seededRandom(99);
+    for (const sym of syms) {
+      let p = 100 + rng() * 400;
+      const closes: number[] = [];
+      const timestamps: number[] = [];
+      for (let i = 0; i < 70; i++) {
+        p *= 0.97 + rng() * 0.06;
+        closes.push(Math.round(p * 100) / 100);
+        timestamps.push(Date.now() - (70 - i) * 86400000);
+      }
+      map[sym] = { symbol: sym, name: getName(sym), closes, timestamps };
+    }
+    setHistDataMap(map);
+    setLoading(false);
   }, []);
 
   // ── Pick random stock for round ──
@@ -4374,10 +4321,12 @@ function StockDetailView({ symbol, name, onBack, onSectorClick }: { symbol: stri
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/stock-detail?symbol=${symbol}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { setDetail(d); setLoading(false); })
-      .catch(() => setLoading(false));
+    setDetail({
+      summary: { name, exchange: 'Static', currency: 'USD' },
+      chart: { closes: currentStock?.history || [] },
+      news: [],
+    });
+    setLoading(false);
   }, [symbol]);
 
   // Find which sector this stock belongs to
@@ -4543,16 +4492,14 @@ function SectorDetailView({ sectorName, onBack, onStockClick }: { sectorName: st
   const stocks = useStockData();
   const sector = SECTORS.find(s => s.name === sectorName);
   const [news, setNews] = useState<{ title: string; source: string; url: string; pubDate: string }[]>([]);
-  const [newsLoading, setNewsLoading] = useState(true);
+  const [newsLoading, setNewsLoading] = useState(false);
 
   useEffect(() => {
     if (!sectorName) return;
-    setNewsLoading(true);
-    fetch(`/api/sector-news?sector=${encodeURIComponent(sectorName)}`)
-      .then(r => r.ok ? r.json() : [])
-      .then(d => { if (Array.isArray(d)) setNews(d); })
-      .catch(() => {})
-      .finally(() => setNewsLoading(false));
+    setNews([
+      { title: `${sectorName} placeholder note`, source: 'Local', url: '#', pubDate: new Date().toISOString() },
+    ]);
+    setNewsLoading(false);
   }, [sectorName]);
 
   if (!sector) return null;
@@ -4811,13 +4758,10 @@ function SectorDetailView({ sectorName, onBack, onStockClick }: { sectorName: st
 
 // ── Bloomberg Option 1: Scrolling News Tape ──
 function ScrollingNewsTape() {
-  const [news, setNews] = useState<{ title: string; source: string; url: string }[]>([]);
-  useEffect(() => {
-    fetch('/api/market-news')
-      .then(r => r.ok ? r.json() : [])
-      .then(d => { if (Array.isArray(d)) setNews(d); })
-      .catch(() => {});
-  }, []);
+  const [news] = useState<{ title: string; source: string; url: string }[]>([
+    { title: 'AbdullahOS placeholder feed', source: 'Local', url: '#' },
+    { title: 'Robotics project shell waiting for details', source: 'Local', url: '#' },
+  ]);
 
   if (!news.length) return null;
 
@@ -4871,13 +4815,10 @@ function ScrollingNewsTape() {
 
 // ── Bloomberg Option 2: Live News Feed ──
 function LiveNewsFeed() {
-  const [news, setNews] = useState<{ title: string; source: string; url: string; pubDate: string }[]>([]);
-  useEffect(() => {
-    fetch('/api/news')
-      .then(r => r.ok ? r.json() : [])
-      .then(d => { if (Array.isArray(d)) setNews(d); })
-      .catch(() => {});
-  }, []);
+  const [news] = useState<{ title: string; source: string; url: string; pubDate: string }[]>([
+    { title: 'Static update: Abdullah project shell ready for content', source: 'Local', url: '#', pubDate: new Date().toISOString() },
+    { title: 'Static update: live feeds disabled for this portfolio stage', source: 'Local', url: '#', pubDate: new Date().toISOString() },
+  ]);
 
   const timeAgo = (dateStr: string) => {
     try {
@@ -5256,7 +5197,7 @@ function ChronographWatch() {
       {/* Outer rings */}
       <circle cx={C} cy={C} r="94" stroke="rgba(255,255,255,0.6)" strokeWidth="2" fill="none" />
       <circle cx={C} cy={C} r="90" stroke="rgba(255,255,255,0.3)" strokeWidth="1" fill="none" />
-      <text x={C} y="48" textAnchor="middle" fill="rgba(255,255,255,0.85)" fontSize="8" fontFamily="'SF Pro Display', -apple-system, sans-serif" fontWeight="800" letterSpacing="4">GANDHE</text>
+      <text x={C} y="48" textAnchor="middle" fill="rgba(255,255,255,0.85)" fontSize="8" fontFamily="'SF Pro Display', -apple-system, sans-serif" fontWeight="800" letterSpacing="4">SULTAN</text>
       {Array.from({ length: 12 }).map((_, i) => {
         const a = toRad(i * 30 - 90);
         const r1 = i % 3 === 0 ? 72 : 78;
@@ -5287,15 +5228,9 @@ function ChronographWatch() {
   );
 }
 
-function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void } = {}) {
+function TerminalContent() {
   const { state, dispatch } = useDesktop();
   const isFullscreen = state.windows.terminal?.isFullscreen ?? false;
-  const [bbAuth, _setBbAuth] = useState(false);
-  const setBbAuth = (v: boolean) => { _setBbAuth(v); onAuthChange?.(v); };
-  const [bbPassHash, setBbPassHash] = useState('');
-  const [bbPassInput, setBbPassInput] = useState('');
-  const [bbShake, setBbShake] = useState(false);
-  const bbInputRef = useRef<HTMLInputElement>(null);
   const [history, setHistory] = useState<TerminalLine[]>([]);
   const [input, setInput] = useState('');
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
@@ -5328,7 +5263,7 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
     }
   }, [history]);
 
-  const prompt = 'ronniel@MacBookPro ~ % ';
+  const prompt = 'abdullah@MacBookPro ~ % ';
 
   // Exit fullscreen before opening a window so the terminal shrinks back first
   const openWindow = (id: string) => {
@@ -5394,9 +5329,9 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
         newLines.push({ type: 'output', text: `  📁 ${name}/` });
       });
     } else if (cmd === 'whoami') {
-      newLines.push({ type: 'output', text: 'ronniel' });
+      newLines.push({ type: 'output', text: 'abdullah' });
     } else if (cmd === 'pwd') {
-      newLines.push({ type: 'output', text: '/Users/ronniel/portfolio' });
+      newLines.push({ type: 'output', text: '/Users/abdullah/portfolio' });
     } else if (cmd.startsWith('echo ')) {
       newLines.push({ type: 'output', text: raw.replace(/^echo\s+/i, '').replace(/^["']|["']$/g, '') });
     } else {
@@ -5469,25 +5404,24 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
   };
 
   const cmdColors: Record<string, string> = {
-    education: '#60a5fa', experience: '#c084fc', projects: '#4ade80',
-    mythoughts: '#fbbf24', calendar: '#22d3ee',
+    about: '#60a5fa', experience: '#c084fc', projects: '#4ade80',
+    abdullahos: '#fbbf24', contact: '#22d3ee', photos: '#c084fc',
     help: '#94a3b8', clear: '#94a3b8',
   };
 
   const commandLinks = [
-    { cmd: 'education', emoji: '🎓', label: 'Education', color: '#60a5fa' },
-    { cmd: 'experience', emoji: '💼', label: 'Experience', color: '#c084fc' },
+    { cmd: 'about', emoji: '👋', label: 'About', color: '#60a5fa' },
     { cmd: 'projects', emoji: '⚡', label: 'Projects', color: '#4ade80' },
-    { cmd: 'mythoughts', emoji: '✍️', label: 'My Thoughts', color: '#fbbf24' },
-    { cmd: 'calendar', emoji: '📅', label: 'Book a Meeting', color: '#22d3ee' },
+    { cmd: 'abdullahos', emoji: '▣', label: 'AbdullahOS', color: '#fbbf24' },
+    { cmd: 'contact', emoji: '✉', label: 'Contact', color: '#22d3ee' },
+    { cmd: 'photos', emoji: '◈', label: 'Photos', color: '#c084fc' },
   ];
 
   const smartCommandLinks = [
-    { cmd: 'npm run experience', color: '#c084fc' },
-    { cmd: 'git log --education', color: '#60a5fa' },
-    { cmd: 'brew install projects', color: '#4ade80' },
-    { cmd: 'cat mythoughts.md', color: '#fbbf24' },
-    { cmd: 'open calendar.app', color: '#22d3ee' },
+    { cmd: 'npm run about', color: '#60a5fa' },
+    { cmd: 'git log --projects', color: '#4ade80' },
+    { cmd: 'open abdullahos.app', color: '#fbbf24' },
+    { cmd: 'open contact.app', color: '#22d3ee' },
   ];
 
   // ============= DESIGN MODE =============
@@ -5571,8 +5505,8 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
       }}>
         {/* Hero tile — top left */}
         <div style={{ gridRow: '1', padding: '24px 24px 16px', overflowY: 'auto' }}>
-          <div style={{ fontWeight: 700, fontSize: '22px', color: '#1d1d1f', letterSpacing: '-0.5px', lineHeight: 1.2 }}>Ronniel Gandhe</div>
-          <div style={{ fontSize: '12px', color: 'rgba(0,0,0,0.4)', marginTop: '2px', marginBottom: '14px' }}>Software Engineer</div>
+          <div style={{ fontWeight: 700, fontSize: '22px', color: '#1d1d1f', letterSpacing: '-0.5px', lineHeight: 1.2 }}>Abdullah Sultan</div>
+          <div style={{ fontSize: '12px', color: 'rgba(0,0,0,0.4)', marginTop: '2px', marginBottom: '14px' }}>Student builder</div>
           <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: '13px', lineHeight: 1.5 }}>
             Using <RotatingWords /> to create<br />elegant and scalable solutions<br />to real world problems.
           </div>
@@ -5583,10 +5517,10 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
           <WorldClock />
           <div style={{ height: '1px', background: 'rgba(0,0,0,0.04)' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px' }}>
-            <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>💼 linkedin.com/in/ronniel-gandhe</a>
-            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 github.com/ronnielgandhe</a>
-            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ ronnielgandhe@gmail.com</a>
-            <span style={{ color: '#1d1d1f' }}>📍 Waterloo, ON</span>
+            <a href="https://music.youtube.com/" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>♫ music.youtube.com</a>
+            <a href="https://github.com/abdullah-placeholder" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 github.com/abdullah-placeholder</a>
+            <a href="mailto:abdullah@example.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ abdullah@example.com</a>
+            <span style={{ color: '#1d1d1f' }}>📍 Riyadh, Saudi Arabia</span>
           </div>
         </div>
 
@@ -5614,9 +5548,9 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
       }}>
         {/* Hero area — centered, fills most space */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '24px 32px 0', minHeight: 0 }}>
-          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '52px', fontWeight: 800, letterSpacing: '0.12em', color: '#1d1d1f', lineHeight: 1, textTransform: 'uppercase' }}>Ronniel</div>
-          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '52px', fontWeight: 800, letterSpacing: '0.12em', color: '#1d1d1f', lineHeight: 1, textTransform: 'uppercase', marginBottom: '12px' }}>Gandhe</div>
-          <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '14px', color: 'rgba(0,0,0,0.4)', fontWeight: 400, marginBottom: '4px' }}>Software Engineer</div>
+          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '52px', fontWeight: 800, letterSpacing: '0.12em', color: '#1d1d1f', lineHeight: 1, textTransform: 'uppercase' }}>Abdullah</div>
+          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '52px', fontWeight: 800, letterSpacing: '0.12em', color: '#1d1d1f', lineHeight: 1, textTransform: 'uppercase', marginBottom: '12px' }}>Sultan</div>
+          <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '14px', color: 'rgba(0,0,0,0.4)', fontWeight: 400, marginBottom: '4px' }}>Student builder</div>
           <div style={{ fontFamily: "'SF Mono', monospace", fontSize: '13px', marginBottom: '20px' }}>
             <RotatingWords />
           </div>
@@ -5624,10 +5558,10 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
 
           {/* Info row */}
           <div style={{ display: 'flex', gap: '20px', fontSize: '13px', fontFamily: "'SF Mono', monospace", marginBottom: '24px' }}>
-            <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>💼 LinkedIn</a>
-            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
-            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
-            <span style={{ color: '#1d1d1f' }}>📍 Waterloo, ON</span>
+            <a href="https://music.youtube.com/" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>♫ YouTube Music</a>
+            <a href="https://github.com/abdullah-placeholder" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
+            <a href="mailto:abdullah@example.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+            <span style={{ color: '#1d1d1f' }}>📍 Riyadh, Saudi Arabia</span>
           </div>
 
           {/* Command pills — horizontal */}
@@ -5683,13 +5617,13 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
         {/* Top hero section */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 32px', width: '100%', minHeight: 0, overflowY: 'auto' }}>
           <img src="/icons/rglogo.png" alt="RG" style={{ width: '44px', opacity: 0.85, marginBottom: '12px' }} />
-          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '26px', fontWeight: 700, color: '#1d1d1f', letterSpacing: '-0.5px' }}>Ronniel Gandhe</div>
-          <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '13px', color: 'rgba(0,0,0,0.4)', marginBottom: '6px' }}>Software Engineer · <RotatingWords /></div>
+          <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '26px', fontWeight: 700, color: '#1d1d1f', letterSpacing: '-0.5px' }}>Abdullah Sultan</div>
+          <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '13px', color: 'rgba(0,0,0,0.4)', marginBottom: '6px' }}>Student builder · <RotatingWords /></div>
           <div style={{ display: 'flex', gap: '16px', fontSize: '13px', fontFamily: "'SF Mono', monospace", marginBottom: '20px' }}>
-            <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>💼 LinkedIn</a>
-            <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
-            <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
-            <span style={{ color: 'rgba(0,0,0,0.4)' }}>📍 Waterloo</span>
+            <a href="https://music.youtube.com/" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>♫ YouTube Music</a>
+            <a href="https://github.com/abdullah-placeholder" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
+            <a href="mailto:abdullah@example.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+            <span style={{ color: 'rgba(0,0,0,0.4)' }}>📍 Riyadh</span>
           </div>
 
           {/* Glass cards row */}
@@ -5722,33 +5656,9 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
     );
   }
 
-  // ═══════════════ FULLSCREEN: Blackbook Dashboard ═══════════════
+  // ═══════════════ FULLSCREEN: Abdullah static dashboard ═══════════════
   if (isFullscreen) {
-    if (!bbAuth) {
-      // Show the real Blackbook PasswordGate (fingerprint + input + "press enter")
-      return (
-        <PasswordGate
-          inline
-          onUnlock={async (pw) => {
-            const hash = await hashPass(pw);
-            setBbAuth(true);
-            setBbPassHash(hash);
-          }}
-          onClose={() => dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' })}
-        />
-      );
-    }
-
-    // Authenticated — Blackbook fills entire window
-    return (
-      <div style={{ height: '100%', overflow: 'hidden' }}>
-        <BlackbookDashboard
-          onClose={() => { setBbAuth(false); dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' }); }}
-          passHash={bbPassHash}
-          transparent
-        />
-      </div>
-    );
+    // Keep the same fullscreen terminal surface, but make it static and local-only.
   }
 
   // ═══════════════ SPLIT PANELS (default) ═══════════════
@@ -5772,7 +5682,7 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
                   <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: isSmallScreen ? '32px' : '42px', color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
-                    Ronniel Gandhe
+                    Abdullah Sultan
                   </div>
                   <div style={{ fontSize: isSmallScreen ? '12px' : '14px', marginBottom: isSmallScreen ? '8px' : '12px', fontFamily: "'SF Pro Text', -apple-system, sans-serif", letterSpacing: '0.3px' }}>
                     <RollingTitles />
@@ -5785,10 +5695,10 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
             ) : (
               <>
                 <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '36px', color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '2px' }}>
-                  Ronniel Gandhe
+                  Abdullah Sultan
                 </div>
                 <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '15px', color: 'rgba(255,255,255,0.9)', fontWeight: 700, marginBottom: '14px' }}>
-                  Software Engineer
+                  Student builder
                 </div>
               </>
             )}
@@ -5803,10 +5713,10 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
                   {/* About */}
                   <div style={sHead}>ABOUT</div>
                   <div style={sPara}>
-                    Currently based in Waterloo, Canada. Waterloo is a weird place. Half the people here are trying to build startups, the other half are trying to get into big tech, and the rest end up falling into strange rabbit holes like trading, crypto, or building random tools at 2AM. I fall somewhere in that third group.
+                    Currently based in Riyadh, Saudi Arabia. This is a static placeholder profile for Abdullah Sultan.
                   </div>
                   <div style={{ ...sPara, marginTop: '6px' }}>
-                    Most of my time is spent building software, studying markets, and trying to understand systems that actually move money and incentives in the real world. Over the last few years I have moved between software engineering, data science, and financial markets. Some of that was intentional. Some of it was just curiosity turning into a rabbit hole that got deeper than expected. Recently I have also gotten into growth engineering.
+                    Abdullah is a student builder interested in startups, quant finance, robotics, AI, and creative hardware projects. Final copy will be written later.
                   </div>
                   <div style={{ ...sPara, marginTop: '6px' }}>
                   </div>
@@ -5816,10 +5726,10 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
                   {/* Software */}
                   <div style={sHead}>SOFTWARE</div>
                   <div style={sPara}>
-                    Software is probably the most powerful skill you can have right now. If you know how to code, you can build almost anything. You do not need permission from anyone, you just sit down and make it.
+                    AbdullahOS is the main project shell for this version of the portfolio.
                   </div>
                   <div style={{ ...sPara, marginTop: '6px' }}>
-                    Most of the things I build end up somewhere between software engineering, data systems, and financial markets. I like tools that interact with real incentives. Things where the outcome actually matters and you can see the result of what you built.
+                    Other project cards are placeholders for robotics, quant finance, startups, and creative hardware experiments.
                   </div>
 
                   {/* Chronograph Watch */}
@@ -5853,10 +5763,10 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
 
                   <div style={sRule} />
 
-                  {/* Health */}
-                  <div style={sHead}>HEALTH</div>
+                  {/* Hardware */}
+                  <div style={sHead}>HARDWARE</div>
                   <div style={sPara}>
-                    Coding and trading are both very good ways to destroy your body if you are not careful. I try to keep some structure around it. I lift about four times a week, try to get around ten thousand steps a day, and my diet is almost carnivore at this point. It keeps me sharp and offsets the reality of staring at screens most of the day.
+                    Placeholder space for robotics builds, creative hardware notes, prototypes, and lab-style experiments.
                   </div>
 
                   {/* Current Focus + Online (left) | Markets (right) */}
@@ -5865,9 +5775,9 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
                       <div style={sHead}>CURRENT FOCUS</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {[
-                          'Building software and internal tools',
-                          'Studying financial markets and trading systems',
-                          'Turning ideas into working products quickly',
+                          'Building AbdullahOS',
+                          'Collecting robotics and hardware project shells',
+                          'Exploring quant finance and startup ideas',
                         ].map((item, i) => (
                           <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
                             <span style={{ color: '#1d1d1f', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>›</span>
@@ -5879,7 +5789,7 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={sHead}>MARKETS</div>
                       <div style={sPara}>
-                        Markets are one of the most honest systems in the world. They do not care where you went to school or about your opinions. They only care about decisions and consequences. At first I thought markets were about intelligence. Then I realized they are mostly about self-control.
+                        Placeholder copy for Abdullah's future quant finance notes and market projects.
                       </div>
                     </div>
                   </div>
@@ -5931,9 +5841,9 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
             {/* Links — bottom right */}
             <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '17px', fontWeight: 500, textAlign: 'right', flexShrink: 0, color: 'rgba(255,255,255,0.85)' }}>
               {[
-                { href: 'https://www.linkedin.com/in/ronniel-gandhe/', text: 'linkedin' },
-                { href: 'https://github.com/ronnielgandhe', text: 'github' },
-                { href: 'mailto:ronnielgandhe@gmail.com', text: 'email' },
+                { href: 'https://music.youtube.com/', text: 'music' },
+                { href: 'https://github.com/abdullah-placeholder', text: 'github' },
+                { href: 'mailto:abdullah@example.com', text: 'email' },
               ].map(link => (
                 <a key={link.href} href={link.href} target="_blank" rel="noopener"
                   style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none', transition: 'all 0.15s', fontWeight: 500 }}
@@ -6027,15 +5937,8 @@ function TerminalContent({ onAuthChange }: { onAuthChange?: (v: boolean) => void
 function Desktop() {
   const { state, dispatch } = useDesktop();
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
-  const [bbAuthState, setBbAuthState] = useState(false);
   const [hoveredWindowId, setHoveredWindowId] = useState<string | null>('terminal');
   const terminalOrigRef = useRef<{ width: number; height: number } | null>(null);
-
-  // Expose bbAuth setter so TerminalContent can notify us
-  useEffect(() => {
-    (window as any).__setBbAuth = setBbAuthState;
-    return () => { delete (window as any).__setBbAuth; };
-  }, []);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
@@ -6201,14 +6104,11 @@ function Desktop() {
           {/* Windows */}
           {openWindows.map(win => {
             // Title bar bg matches each app's content color
-            const isTerminalFullscreen = win.id === 'terminal' && win.isFullscreen;
-            const isTerminalDashboard = isTerminalFullscreen && bbAuthState;
             const titleBarBgMap: Record<string, string> = {
               projects: '#252526',
               blog: '#f9f9f8',
               calendar: '#ffffff',
               photos: '#1a1a1f',
-              ...(isTerminalDashboard ? { terminal: 'rgba(0,0,0,0.4)' } : {}),
             };
             // Apps with dark content need light title bar text
             const darkTitleBars = ['projects', 'terminal', 'photos'];
@@ -6280,7 +6180,7 @@ function Desktop() {
 }
 
 type MobileTab = 'home' | 'work' | 'projects' | 'research' | 'more';
-type MobileSection = 'education' | 'experience' | 'blog' | 'calendar' | 'stocks' | null;
+type MobileSection = 'education' | 'experience' | 'projects' | 'blog' | null;
 
 // ── MobileStocks: Bloomberg terminal experience for mobile ──
 function MobileStocks() {
@@ -6340,36 +6240,36 @@ function MobileProjects({ onCardClick }: { onCardClick: (detail: DetailContent) 
   // Import project data from Projects component — these are the same projects
   const mobileProjects = [
     {
-      title: 'QuantZoo',
-      desc: 'Production-grade Python framework for systematic quantitative trading research with backtesting, walk-forward validation, and live paper trading.',
+      title: 'AbdullahOS',
+      desc: 'Main Abdullah-focused OS project shell for this static portfolio stage.',
+      coverImage: '/terminal.png',
+      gradient: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)',
+      tech: ['Astro', 'React', 'TypeScript'],
+      repoUrl: 'https://github.com/abdullah-placeholder',
+    },
+    {
+      title: 'Project Shell 01',
+      desc: 'Static placeholder project card. Final project copy will be added later.',
+      coverImage: '/icons/folder.png',
+      gradient: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)',
+      tech: ['Placeholder'],
+      repoUrl: 'https://github.com/abdullah-placeholder',
+    },
+    {
+      title: 'Robotics Project Shell',
+      desc: 'Static placeholder for future robotics and creative hardware work.',
+      coverImage: '/icons/folder.png',
+      gradient: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)',
+      tech: ['Robotics', 'Hardware'],
+      repoUrl: 'https://github.com/abdullah-placeholder',
+    },
+    {
+      title: 'Quant Project Shell',
+      desc: 'Static placeholder for future quant finance work.',
       coverImage: '/trading.png',
-      gradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-      tech: ['Python', 'PyTorch', 'FastAPI', 'NumPy'],
-      repoUrl: 'https://github.com/ronnielgandhe/quantzoo',
-    },
-    {
-      title: 'CreatorScope',
-      desc: 'Go-to-market automation tool for brands to discover and evaluate TikTok creators for partnerships at scale with a proprietary Creator Intent Score.',
-      coverImage: '/cover.png',
-      gradient: 'linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%)',
-      tech: ['Python', 'FastAPI', 'SQLAlchemy'],
-      repoUrl: 'https://github.com/ronnielgandhe/creatorscope',
-    },
-    {
-      title: 'YourNews',
-      desc: 'AI-powered personalized news aggregator that learns reading preferences and ranks articles using TF-IDF, BM25, and GPT-4 summarization.',
-      coverImage: '/yournews-cover.png',
-      gradient: 'linear-gradient(135deg, #1a1a1a 0%, #2d1f3d 50%, #1a1a2e 100%)',
-      tech: ['Python', 'GPT-4 API', 'React', 'FastAPI'],
-      repoUrl: 'https://github.com/ronnielgandhe/yournews',
-    },
-    {
-      title: 'How Many Clicks',
-      desc: 'A Wikipedia racing game — navigate between two random articles using only hyperlinks. Features BFS pathfinding and competitive leaderboards.',
-      coverImage: '/howmanyclicks-cover.png',
-      gradient: 'linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 50%, #1a1a2e 100%)',
-      tech: ['React', 'JavaScript', 'Wikipedia API'],
-      repoUrl: 'https://github.com/ronnielgandhe/howmanyclicks',
+      gradient: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)',
+      tech: ['Python', 'Finance'],
+      repoUrl: 'https://github.com/abdullah-placeholder',
     },
   ];
 
@@ -6442,20 +6342,6 @@ function MobileCalendarIcon() {
 }
 
 function MobileHero() {
-  const [spotify, setSpotify] = useState<{ isPlaying: boolean; title: string; artist: string; albumArt: string; trackUrl?: string } | null>(null);
-
-  useEffect(() => {
-    const poll = () => {
-      fetch('/api/spotify').then(r => r.json()).then(d => {
-        if (d?.title) setSpotify(d);
-        else setSpotify(null);
-      }).catch(() => {});
-    };
-    poll();
-    const id = setInterval(poll, 15000);
-    return () => clearInterval(id);
-  }, []);
-
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -6488,40 +6374,38 @@ function MobileHero() {
 
         {/* Name + Title */}
         <div style={{ fontSize: '22px', fontWeight: 600, color: '#fff', marginBottom: '4px' }}>
-          Ronniel Gandhe
+          Abdullah Sultan
         </div>
         <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', marginBottom: '16px' }}>
-          Software Engineer
+          Student builder
         </div>
         <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '20px' }}>
-          Building scalable solutions — currently focused on frontend infrastructure and product engineering.
+          Interested in startups, quant finance, robotics, AI, and creative hardware projects.
         </div>
 
-        {/* Spotify */}
-        {spotify && (
-          <a href={spotify.trackUrl} target="_blank" rel="noopener noreferrer" style={{
+        <a href="https://music.youtube.com/" target="_blank" rel="noopener noreferrer" style={{
             display: 'flex', alignItems: 'center', gap: '10px',
             background: 'rgba(255,255,255,0.06)', borderRadius: '10px', padding: '8px 12px',
             marginBottom: '16px', textDecoration: 'none',
           }}>
-            <img src={spotify.albumArt} alt="" style={{ width: '36px', height: '36px', borderRadius: '6px', objectFit: 'cover' }} />
-            <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: '12px', color: '#fff', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{spotify.title}</div>
-              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{spotify.artist}</div>
+            <div style={{ width: '36px', height: '36px', borderRadius: '6px', background: '#ff0033', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10 8l6 4-6 4z" /></svg>
             </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+            <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: '12px', color: '#fff', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>YouTube Music</div>
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>Static launcher</div>
+            </div>
           </a>
-        )}
 
         {/* Links */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-          <a href="https://linkedin.com/in/ronniel-gandhe" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
+          <a href="https://music.youtube.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
           </a>
-          <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
+          <a href="https://github.com/abdullah-placeholder" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
           </a>
-          <a href="mailto:ronnielgandhe@gmail.com" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
+          <a href="mailto:abdullah@example.com" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
           </a>
         </div>
@@ -6537,26 +6421,6 @@ function MobileLayout() {
   const [slideIndex, setSlideIndex] = useState(0);
   const [cardFlipped, setCardFlipped] = useState(false);
   const [expandedPanel, setExpandedPanel] = useState<'sound' | 'wifi' | 'notif' | null>(null);
-  const [mobileSpotify, setMobileSpotify] = useState<{ isPlaying: boolean; title: string; artist: string; albumArt: string; progressMs: number; durationMs: number; trackUrl?: string; fetchedAt?: number } | null>(null);
-  const [mobileLocation, setMobileLocation] = useState<{ city: string; region: string } | null>(null);
-
-  // Spotify polling for mobile control center
-  useEffect(() => {
-    const poll = () => {
-      fetch('/api/spotify').then(r => r.json()).then(d => {
-        if (d?.title) setMobileSpotify({ ...d, fetchedAt: Date.now() });
-        else setMobileSpotify(null);
-      }).catch(() => {});
-    };
-    poll();
-    const id = setInterval(poll, 15000);
-    return () => clearInterval(id);
-  }, []);
-
-  // Location for WiFi panel
-  useEffect(() => {
-    fetch('https://ipapi.co/json/').then(r => r.json()).then(d => setMobileLocation({ city: d.city, region: d.region_code || d.region })).catch(() => setMobileLocation({ city: 'Toronto', region: 'ON' }));
-  }, []);
 
   const handleCardClick = (detail: DetailContent) => setActiveDetail(detail);
   const handleContentClick = (content: ContentViewData) => setActiveContent(content);
@@ -6584,29 +6448,13 @@ function MobileLayout() {
   );
 
   const APP_GRID: { label: string; icon: React.ReactNode; action: () => void }[] = [
-    { label: 'VS Code', icon: mIcon('/vscode.png', 'VS Code'), action: () => setActiveSection('experience') },
-    { label: 'My Thoughts', icon: mIcon('/notes.png', 'My Thoughts'), action: () => setActiveSection('blog') },
-    { label: 'Stocks', icon: mIcon('/usethisonestocks1111.png', 'Stocks'), action: () => setActiveSection('stocks') },
+    { label: 'About', icon: mIcon('/vscode.png', 'About'), action: () => setActiveSection('experience') },
+    { label: 'Projects', icon: mIcon('/notes.png', 'Projects'), action: () => setActiveSection('projects') },
+    { label: 'AbdullahOS', icon: mIcon('/terminal.png', 'AbdullahOS'), action: () => setActiveSection('blog') },
     { label: 'Photos', icon: mIcon('/icons/photos.png', 'Photos'), action: () => setActiveSection('education') },
-    { label: 'Calendar', icon: (() => {
-      const now = new Date();
-      const monthStr = now.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-      const dayNum = now.getDate();
-      return (
-        <div style={{ width: '56px', height: '56px', borderRadius: '14px', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: '#fff' }}>
-          <div style={{ height: '18px', background: '#ea4335', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: '9px', fontWeight: 800, color: 'white', letterSpacing: '0.5px' }}>{monthStr}</span>
-          </div>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
-            <span style={{ fontSize: '22px', fontWeight: 300, color: '#1a1a1a', lineHeight: 1 }}>{dayNum}</span>
-          </div>
-        </div>
-      );
-    })(), action: () => setActiveSection('calendar') },
-    { label: 'GitHub', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'linear-gradient(135deg, #2d2d2d, #434343)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>, action: () => window.open('https://github.com/ronnielgandhe', '_blank') },
-    { label: 'Mail', icon: mIcon('/usethismailicon.png', 'Mail', 1.25), action: () => { window.location.href = 'mailto:ronnielgandhe@gmail.com'; } },
-    { label: 'Spotify', icon: mIcon('/spotify.png', 'Spotify'), action: () => window.open('https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8', '_blank') },
-    { label: 'LinkedIn', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: '#0A66C2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></div>, action: () => window.open('https://linkedin.com/in/ronniel-gandhe', '_blank') },
+    { label: 'Contact', icon: mIcon('/usethismailicon.png', 'Contact', 1.25), action: () => { window.location.href = 'mailto:abdullah@example.com'; } },
+    { label: 'GitHub', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'linear-gradient(135deg, #2d2d2d, #434343)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>, action: () => window.open('https://github.com/abdullah-placeholder', '_blank') },
+    { label: 'YouTube Music', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: '#ff0033', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M10 8l6 4-6 4z" /></svg></div>, action: () => window.open('https://music.youtube.com/', '_blank') },
   ];
 
   return (
@@ -6667,19 +6515,19 @@ function MobileLayout() {
                     <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#28c840' }} />
                   </div>
                   <span style={{ flex: 1, textAlign: 'center', fontFamily: "'SF Mono', monospace", fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
-                    ronnielgandhe.tech — zsh
+                    abdullah-placeholder.tech — zsh
                   </span>
                   <div style={{ width: '42px' }} />
                 </div>
                 <div style={{ padding: '20px 18px 24px' }}>
                   <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '28px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
-                    Ronniel Gandhe
+                    Abdullah Sultan
                   </div>
                   <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Pro Text', sans-serif", marginBottom: '12px' }}>
-                    Software Engineer
+                    Student builder
                   </div>
                   <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.5, fontFamily: "'SF Mono', monospace" }}>
-                    Using <RotatingWords /> to create<br />elegant and scalable solutions<br />to real world problems.
+                    Building AbdullahOS and placeholder shells<br />for startups, quant finance,<br />robotics, AI, and hardware.
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
                     <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Pro Text', sans-serif" }}>
@@ -6711,16 +6559,16 @@ function MobileLayout() {
                   {slideIndex === 0 && (
                     <div>
                       <div style={sPara}>
-                        Currently based in Waterloo, Canada. Most of my time is spent building software, studying markets, and trying to understand systems that actually move money and incentives in the real world.
+                        Currently based in Riyadh, Saudi Arabia. Abdullah is a student builder interested in startups, quant finance, robotics, AI, and creative hardware projects.
                       </div>
                       <div style={{ ...sPara, marginTop: '8px' }}>
-                        Over the last few years I have moved between software engineering, data science, and financial markets. Some of that was intentional. Some of it was just curiosity turning into a rabbit hole that got deeper than expected.
+                        This is placeholder copy for Abdullah's static portfolio shell. Final writing will be added later.
                       </div>
                     </div>
                   )}
                   {slideIndex === 1 && (
                     <div style={sPara}>
-                      Software is probably the most powerful skill you can have right now. If you know how to code, you can build almost anything. You do not need permission from anyone, you just sit down and make it.
+                      AbdullahOS is the main custom project app for this stage. The rest of the project slots are static placeholders.
                     </div>
                   )}
                   {slideIndex === 2 && (
@@ -6735,7 +6583,7 @@ function MobileLayout() {
                   )}
                   {slideIndex === 3 && (
                     <div>
-                      {['Building software & internal tools', 'Studying financial markets', 'Turning ideas into products'].map((item, i) => (
+                      {['Building AbdullahOS', 'Project Shell 01 through 03 placeholders', 'Robotics, quant, startup, and hardware shells'].map((item, i) => (
                         <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginBottom: '3px' }}>
                           <span style={{ color: '#fff', fontSize: '8px', fontFamily: "'SF Mono', monospace" }}>›</span>
                           <span style={{ ...sPara, fontSize: '12px', lineHeight: 1.45 }}>{item}</span>
@@ -6795,7 +6643,7 @@ function MobileLayout() {
 
           {/* Control Center: Sound, WiFi, Notifications */}
           <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
-            {/* Sound / Spotify */}
+            {/* Sound / Music */}
             <button onClick={() => setExpandedPanel(expandedPanel === 'sound' ? null : 'sound')} style={{
               ...glass, flex: 1, padding: '14px', border: expandedPanel === 'sound' ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.08)',
               cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
@@ -6840,28 +6688,16 @@ function MobileLayout() {
           {/* Expanded Panel */}
           {expandedPanel === 'sound' && (
             <div style={{ ...glass, padding: '16px', marginBottom: '14px', animation: 'mobileFadeIn 0.2s ease-out' }}>
-              <div style={{ ...sHead, marginBottom: '10px' }}>{mobileSpotify?.isPlaying ? '♫ NOW PLAYING' : '♫ SPOTIFY'}</div>
-              {mobileSpotify ? (
-                <div>
-                  <a href={mobileSpotify.trackUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', gap: '12px', alignItems: 'center', textDecoration: 'none', color: 'inherit', marginBottom: '12px' }}>
-                    {mobileSpotify.albumArt && <img src={mobileSpotify.albumArt} alt="" style={{ width: '52px', height: '52px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />}
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mobileSpotify.title}</div>
-                      <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mobileSpotify.artist}</div>
-                      <div style={{ fontSize: '10px', color: '#1DB954', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-                        Spotify
-                      </div>
-                    </div>
-                  </a>
-                  {/* Progress bar */}
-                  <div style={{ height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${mobileSpotify.durationMs > 0 ? (mobileSpotify.progressMs / mobileSpotify.durationMs) * 100 : 0}%`, background: '#1DB954', borderRadius: '2px' }} />
-                  </div>
+              <div style={{ ...sHead, marginBottom: '10px' }}>♫ YOUTUBE MUSIC</div>
+              <a href="https://music.youtube.com/" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', gap: '12px', alignItems: 'center', textDecoration: 'none', color: 'inherit', marginBottom: '12px' }}>
+                <div style={{ width: '52px', height: '52px', borderRadius: '8px', background: '#ff0033', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M10 8l6 4-6 4z" /></svg>
                 </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '12px 0', color: 'rgba(255,255,255,0.4)', fontSize: '13px' }}>Not currently playing</div>
-              )}
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>YouTube Music</div>
+                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>Static launcher</div>
+                </div>
+              </a>
               {/* Volume slider */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '14px' }}>
                 <svg width="12" height="10" viewBox="0 0 16 14" fill="none" style={{ opacity: 0.45, flexShrink: 0 }}>
@@ -6888,7 +6724,8 @@ function MobileLayout() {
 
           {expandedPanel === 'notif' && (
             <div style={{ ...glass, padding: '14px', marginBottom: '14px', animation: 'mobileFadeIn 0.2s ease-out' }}>
-              <GitHubHeatmap />
+              <div style={sHead}>STATIC ACTIVITY</div>
+              <div style={sPara}>AbdullahOS placeholder ready. Project shells are static and local-only.</div>
             </div>
           )}
 
@@ -6896,10 +6733,10 @@ function MobileLayout() {
           <div style={{ ...glass, padding: '16px', marginBottom: '20px' }}>
             <div style={sHead}>CONTACT</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontFamily: "'SF Mono', monospace", fontSize: '12px' }}>
-              <a href="https://www.linkedin.com/in/ronniel-gandhe/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>💼 linkedin.com/in/ronniel-gandhe</a>
-              <a href="https://github.com/ronnielgandhe" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>🐙 github.com/ronnielgandhe</a>
-              <a href="mailto:ronnielgandhe@gmail.com" style={{ color: '#fff', textDecoration: 'none' }}>✉️ ronnielgandhe@gmail.com</a>
-              <span style={{ color: '#fff' }}>📍 Waterloo, ON</span>
+              <a href="https://music.youtube.com/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>♫ music.youtube.com</a>
+              <a href="https://github.com/abdullah-placeholder" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>🐙 github.com/abdullah-placeholder</a>
+              <a href="mailto:abdullah@example.com" style={{ color: '#fff', textDecoration: 'none' }}>✉ abdullah@example.com</a>
+              <span style={{ color: '#fff' }}>📍 Riyadh, Saudi Arabia</span>
             </div>
           </div>
         </div>
@@ -6934,7 +6771,7 @@ function MobileLayout() {
               ← Back
             </button>
             <span style={{ fontFamily: "'SF Mono', monospace", fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>
-              {activeSection === 'education' ? 'Photos' : activeSection === 'experience' ? 'Experience' : activeSection === 'blog' ? 'My Thoughts' : activeSection === 'stocks' ? 'Stocks' : 'Calendar'}
+              {activeSection === 'education' ? 'Photos' : activeSection === 'experience' ? 'About' : activeSection === 'projects' ? 'Projects' : 'AbdullahOS'}
             </span>
             <div style={{ width: '50px' }} />
           </div>
@@ -6942,9 +6779,8 @@ function MobileLayout() {
           <div style={{ flex: 1, paddingBottom: '40px' }}>
             {activeSection === 'education' && <Education onCardClick={handleCardClick} windowMode />}
             {activeSection === 'experience' && <Experience onCardClick={handleCardClick} windowMode />}
+            {activeSection === 'projects' && <Projects onCardClick={handleCardClick} windowMode />}
             {activeSection === 'blog' && <Blog onContentClick={handleContentClick} windowMode />}
-            {activeSection === 'stocks' && <MobileStocks />}
-            {activeSection === 'calendar' && <Calendar windowMode />}
           </div>
         </div>
       )}

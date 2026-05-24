@@ -1,21 +1,14 @@
-import { useState, useEffect } from 'react';
-
 export default function GitHubHeatmap() {
-  const [weeks, setWeeks] = useState<number[][]>([]);
-  const [total, setTotal] = useState(0);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  useEffect(() => {
-    fetch('/api/github-contributions')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        if (d?.weeks) {
-          setWeeks(d.weeks);
-          setTotal(d.totalContributions);
-          if (d.lastUpdated) setLastUpdated(d.lastUpdated);
-        }
-      })
-      .catch(() => {});
-  }, []);
+  const weeks = Array.from({ length: 26 }, (_, week) =>
+    Array.from({ length: 7 }, (_, day) => {
+      const seed = (week * 7 + day) % 11;
+      if (seed === 0 || seed === 5) return 4;
+      if (seed === 2 || seed === 8) return 2;
+      if (seed === 3) return 1;
+      return 0;
+    })
+  );
+  const total = weeks.flat().reduce((sum, count) => sum + count, 0);
 
   const getColor = (count: number) => {
     if (count === 0) return 'rgba(255,255,255,0.04)';
@@ -37,7 +30,7 @@ export default function GitHubHeatmap() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.85)', fontFamily: "'SF Mono', monospace" }}>
           <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'livePulse 2s ease-in-out infinite' }} />
-          LIVE
+          STATIC
         </div>
       </div>
       <div style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1, display: 'flex', alignItems: 'center' }}>
@@ -59,11 +52,7 @@ export default function GitHubHeatmap() {
       </div>
       <div style={{ marginTop: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', fontFamily: "'SF Mono', monospace" }}>
         <span style={{ color: '#fff' }}>{total} contributions</span>
-        {lastUpdated && (
-          <span style={{ color: 'rgba(255,255,255,0.5)' }}>
-            Last updated {new Date(lastUpdated + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </span>
-        )}
+        <span style={{ color: 'rgba(255,255,255,0.5)' }}>Placeholder activity</span>
       </div>
     </div>
   );

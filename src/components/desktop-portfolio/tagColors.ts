@@ -95,7 +95,7 @@ export function getTagColor(tag: string): TagColor {
 export const companyBrands: Record<string, { color: string; bgColor: string }> = {
   'Netflix': { color: '#E50914', bgColor: 'rgba(229, 9, 20, 0.12)' },
   'Uber': { color: '#FFFFFF', bgColor: 'rgba(255, 255, 255, 0.08)' },
-  'Spotify': { color: '#1DB954', bgColor: 'rgba(29, 185, 84, 0.12)' },
+  'YouTube Music': { color: '#1DB954', bgColor: 'rgba(29, 185, 84, 0.12)' },
   'NDX': { color: '#4FC3F7', bgColor: 'rgba(79, 195, 247, 0.12)' },
   'IKIGAI': { color: '#FB923C', bgColor: 'rgba(251, 146, 60, 0.12)' },
   'SAP': { color: '#4ade80', bgColor: 'rgba(74, 222, 128, 0.12)' },

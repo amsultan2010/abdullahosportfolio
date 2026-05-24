@@ -50,150 +50,195 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
   const projects = [
     {
       id: 0,
-      title: "RonnielOS",
-      description: "My portfolio reimagined as a fully interactive macOS desktop environment. Draggable windows, a working terminal, stock tracker, notification center, Spotify integration — all running in your browser.",
-      gradient: "#000000",
-      coverImage: "/icons/rglogo.png",
-      repoUrl: "https://github.com/ronnielgandhe/rg-portfolio",
+      title: "AbdullahOS",
+      description: "Main Abdullah-focused OS project shell for this static portfolio stage.",
+      gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
+      coverImage: "/terminal.png",
+      repoUrl: "https://github.com/abdullah-placeholder",
       detail: {
         type: 'project' as const,
         id: 0,
-        title: "RonnielOS",
-        gradient: "#000000",
-        coverImage: "/icons/rglogo.png",
+        title: "AbdullahOS",
+        gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
+        coverImage: "/terminal.png",
         liveUrl: "/desktop",
-        architecture: "Full macOS desktop in React + Astro. Reducer-based window management, spring-physics dock, live Spotify menu bar, OpenAI terminal.",
+        architecture: "Main Abdullah-focused OS project shell for this static portfolio stage. This is placeholder architecture copy for Abdullah Sultan.",
         technicalChallenges: [
-          "Window management with focus stacking and z-index tracking in React",
-          "Real-time Spotify integration with graceful fallbacks",
-          "Dual desktop + iOS mobile experience from shared components"
+          "Placeholder technical challenge",
+          "Placeholder implementation note",
+          "Placeholder future detail"
         ],
         lessonsLearned: [
-          "Reducer-based state scales better than useState for coordinating windows",
-          "Dock magnification needs cosine falloff for natural feel",
-          "Abstracting interaction patterns enables desktop + mobile from one codebase"
+          "Placeholder lesson",
+          "Final writing will be added later"
         ],
-        techStack: ["React", "TypeScript", "Astro", "Three.js", "Framer Motion", "OpenAI"],
-        repoUrl: "https://github.com/ronnielgandhe/rg-portfolio"
+        techStack: ["Astro","React","TypeScript"],
+        repoUrl: "https://github.com/abdullah-placeholder"
       } satisfies ProjectDetail
     },
     {
       id: 1,
-      title: "QuantZoo",
-      description: "Production-grade Python framework for systematic strategy research, backtesting, walk-forward validation, real-time streaming, and risk analytics. Built with PyTorch, Hugging Face, and FastAPI.",
-      gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
-      coverImage: "/trading.png",
-      repoUrl: "https://github.com/ronnielgandhe/quantzoo",
+      title: "Project Shell 01",
+      description: "Static placeholder project card. Final project copy will be added later.",
+      gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
+      coverImage: "/icons/folder.png",
+      repoUrl: "https://github.com/abdullah-placeholder",
       detail: {
         type: 'project' as const,
         id: 1,
-        title: "QuantZoo",
-        gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
-        coverImage: "/trading.png",
-        architecture: "Modular Python framework with a plugin-based strategy engine. Backtesting core uses vectorized operations for performance. Walk-forward validation with configurable rolling windows. Real-time streaming via WebSocket connections with FastAPI backend.",
+        title: "Project Shell 01",
+        gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
+        coverImage: "/icons/folder.png",
+        architecture: "Static placeholder project card. Final project copy will be added later. This is placeholder architecture copy for Abdullah Sultan.",
         technicalChallenges: [
-          "Implementing walk-forward validation without look-ahead bias",
-          "Building a real-time streaming pipeline that handles market data at sub-second latency",
-          "Designing a plugin architecture flexible enough for diverse strategy types"
+          "Placeholder technical challenge",
+          "Placeholder implementation note",
+          "Placeholder future detail"
         ],
         lessonsLearned: [
-          "Vectorized operations in NumPy/Pandas dramatically outperform loop-based approaches for backtesting",
-          "Proper data alignment and timezone handling is critical for financial data",
-          "Walk-forward validation is essential to avoid overfitting in strategy research"
+          "Placeholder lesson",
+          "Final writing will be added later"
         ],
-        techStack: ["Python", "PyTorch", "Hugging Face", "FastAPI", "NumPy", "Pandas", "WebSocket"],
-        repoUrl: "https://github.com/ronnielgandhe/quantzoo"
+        techStack: ["Placeholder"],
+        repoUrl: "https://github.com/abdullah-placeholder"
       } satisfies ProjectDetail
     },
     {
       id: 2,
-      title: "CreatorScope",
-      description: "Go-to-market automation tool for sourcing TikTok creators for brand partnerships. Multi-source discovery, three-tier classification, and Creator Intent Scoring (0-100). Built with FastAPI, SQLAlchemy, and RapidAPI.",
-      gradient: "linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%)",
-      coverImage: "/cover.png",
-      repoUrl: "https://github.com/ronnielgandhe/creatorscope",
+      title: "Project Shell 02",
+      description: "Static placeholder project card. Final project copy will be added later.",
+      gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
+      coverImage: "/vscode.png",
+      repoUrl: "https://github.com/abdullah-placeholder",
       detail: {
         type: 'project' as const,
         id: 2,
-        title: "CreatorScope",
-        gradient: "linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%)",
-        coverImage: "/cover.png",
-        demoVideo: "/creatorscope-demo.mov",
-        architecture: "FastAPI backend with SQLAlchemy ORM and SQLite. Background task workers handle async scraping via RapidAPI's TikTok scraper. Single-page frontend with real-time dashboard polling. Three-tier classification pipeline with configurable thresholds.",
+        title: "Project Shell 02",
+        gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
+        coverImage: "/vscode.png",
+        architecture: "Static placeholder project card. Final project copy will be added later. This is placeholder architecture copy for Abdullah Sultan.",
         technicalChallenges: [
-          "Managing API rate limits and budgets (50-400 calls) while maximizing discovery coverage",
-          "Building a scoring algorithm that accurately predicts creator openness to brand deals",
-          "Handling async scraping with proper error recovery and retry logic"
+          "Placeholder technical challenge",
+          "Placeholder implementation note",
+          "Placeholder future detail"
         ],
         lessonsLearned: [
-          "API budget management is crucial when working with paid external APIs",
-          "A three-tier classification (Pass/Review/Filter) is more practical than binary classification",
-          "Pre-built niche presets dramatically improve user experience for non-technical users"
+          "Placeholder lesson",
+          "Final writing will be added later"
         ],
-        techStack: ["Python", "FastAPI", "SQLAlchemy", "SQLite", "RapidAPI", "HTML/CSS/JS"],
-        repoUrl: "https://github.com/ronnielgandhe/creatorscope"
+        techStack: ["Placeholder"],
+        repoUrl: "https://github.com/abdullah-placeholder"
       } satisfies ProjectDetail
     },
     {
       id: 3,
-      title: "YourNews",
-      description: "AI-powered personalized news aggregator using TF-IDF/BM25 ranking and GPT-4 summaries. Profile-aware ranking with smart query classification and click-feedback personalization.",
-      gradient: "linear-gradient(135deg, #1a1a1a 0%, #2d1f3d 50%, #1a1a2e 100%)",
-      coverImage: "/yournews-cover.png",
-      repoUrl: "https://github.com/ronnielgandhe/yournews",
+      title: "Project Shell 03",
+      description: "Static placeholder project card. Final project copy will be added later.",
+      gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
+      coverImage: "/notes.png",
+      repoUrl: "https://github.com/abdullah-placeholder",
       detail: {
         type: 'project' as const,
         id: 3,
-        title: "YourNews",
-        gradient: "linear-gradient(135deg, #1a1a1a 0%, #2d1f3d 50%, #1a1a2e 100%)",
-        coverImage: "/yournews-cover.png",
-        demoVideo: "/yournews-demo.mp4",
-        architecture: "Hybrid ranking pipeline combining TF-IDF and BM25 for relevance scoring. GPT-4 integration for article summarization. User profile system tracks reading preferences via click-feedback loops. Smart query classifier routes searches to appropriate ranking strategy.",
+        title: "Project Shell 03",
+        gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
+        coverImage: "/notes.png",
+        architecture: "Static placeholder project card. Final project copy will be added later. This is placeholder architecture copy for Abdullah Sultan.",
         technicalChallenges: [
-          "Balancing relevance scoring between TF-IDF and BM25 for different query types",
-          "Implementing real-time click-feedback personalization without cold-start problems",
-          "Managing GPT-4 API costs while providing useful summaries"
+          "Placeholder technical challenge",
+          "Placeholder implementation note",
+          "Placeholder future detail"
         ],
         lessonsLearned: [
-          "Hybrid ranking approaches outperform single-method approaches for diverse content",
-          "Click-feedback personalization needs careful dampening to avoid filter bubbles",
-          "Smart query classification (navigational vs informational) improves ranking quality"
+          "Placeholder lesson",
+          "Final writing will be added later"
         ],
-        techStack: ["Python", "GPT-4 API", "TF-IDF", "BM25", "FastAPI", "React"],
-        repoUrl: "https://github.com/ronnielgandhe/yournews"
+        techStack: ["Placeholder"],
+        repoUrl: "https://github.com/abdullah-placeholder"
       } satisfies ProjectDetail
     },
     {
       id: 4,
-      title: "How Many Clicks",
-      description: "Wikipedia connection game where an AI pathfinding algorithm races to link two articles, then users compete to beat it. Real-time beam search with semantic scoring, hub recognition, and journey visualization.",
-      gradient: "linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 50%, #1a1a2e 100%)",
-      coverImage: "/howmanyclicks-cover.png",
-      repoUrl: "https://github.com/ronnielgandhe/how-many-clicks",
+      title: "Robotics Project Shell",
+      description: "Static placeholder for future robotics and creative hardware work.",
+      gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
+      coverImage: "/icons/folder.png",
+      repoUrl: "https://github.com/abdullah-placeholder",
       detail: {
         type: 'project' as const,
         id: 4,
-        title: "How Many Clicks",
-        gradient: "linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 50%, #1a1a2e 100%)",
-        coverImage: "/howmanyclicks-cover.png",
-        demoVideo: "/howmanyclicks-demo.mp4",
-        architecture: "Entirely browser-based React + Vite app with no backend. Uses the Wikipedia MediaWiki API for article data and link traversal. Beam search pathfinding evaluates links based on semantic similarity to the target while penalizing topic clustering and recognizing bridging hub pages. Dual modes: Normal (exploratory beam search) and God Mode (wider search, faster results).",
+        title: "Robotics Project Shell",
+        gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
+        coverImage: "/icons/folder.png",
+        architecture: "Static placeholder for future robotics and creative hardware work. This is placeholder architecture copy for Abdullah Sultan.",
         technicalChallenges: [
-          "Building a real-time pathfinding algorithm that balances exploration breadth with semantic relevance scoring",
-          "Implementing hub article recognition and diversity penalties to avoid getting stuck in topic clusters",
-          "Visualizing the AI's journey in real-time with article snapshots and reasoning commentary"
+          "Placeholder technical challenge",
+          "Placeholder implementation note",
+          "Placeholder future detail"
         ],
         lessonsLearned: [
-          "Beam search with semantic scoring outperforms naive BFS for Wikipedia navigation",
-          "Related term expansion and bridging hub recognition are key to finding non-obvious paths",
-          "Entirely client-side apps can still deliver rich interactive experiences without a backend"
+          "Placeholder lesson",
+          "Final writing will be added later"
         ],
-        techStack: ["React", "Vite", "JavaScript", "Wikipedia API", "CSS Animations"],
-        repoUrl: "https://github.com/ronnielgandhe/how-many-clicks"
+        techStack: ["Robotics","Hardware","Prototype"],
+        repoUrl: "https://github.com/abdullah-placeholder"
+      } satisfies ProjectDetail
+    },
+    {
+      id: 5,
+      title: "Quant Project Shell",
+      description: "Static placeholder for future quant finance work.",
+      gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
+      coverImage: "/trading.png",
+      repoUrl: "https://github.com/abdullah-placeholder",
+      detail: {
+        type: 'project' as const,
+        id: 5,
+        title: "Quant Project Shell",
+        gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
+        coverImage: "/trading.png",
+        architecture: "Static placeholder for future quant finance work. This is placeholder architecture copy for Abdullah Sultan.",
+        technicalChallenges: [
+          "Placeholder technical challenge",
+          "Placeholder implementation note",
+          "Placeholder future detail"
+        ],
+        lessonsLearned: [
+          "Placeholder lesson",
+          "Final writing will be added later"
+        ],
+        techStack: ["Python","Finance","Research"],
+        repoUrl: "https://github.com/abdullah-placeholder"
+      } satisfies ProjectDetail
+    },
+    {
+      id: 6,
+      title: "Startup Project Shell",
+      description: "Static placeholder for future startup-focused work.",
+      gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
+      coverImage: "/cover.png",
+      repoUrl: "https://github.com/abdullah-placeholder",
+      detail: {
+        type: 'project' as const,
+        id: 6,
+        title: "Startup Project Shell",
+        gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
+        coverImage: "/cover.png",
+        architecture: "Static placeholder for future startup-focused work. This is placeholder architecture copy for Abdullah Sultan.",
+        technicalChallenges: [
+          "Placeholder technical challenge",
+          "Placeholder implementation note",
+          "Placeholder future detail"
+        ],
+        lessonsLearned: [
+          "Placeholder lesson",
+          "Final writing will be added later"
+        ],
+        techStack: ["Product","Startup","AI"],
+        repoUrl: "https://github.com/abdullah-placeholder"
       } satisfies ProjectDetail
     }
   ];
-
   const effectivePerPage = isMobile ? 1 : perPage;
   const totalPages = Math.ceil(projects.length / effectivePerPage);
   const safePageIndex = Math.min(pageIndex, totalPages - 1);

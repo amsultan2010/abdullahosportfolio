@@ -29,30 +29,31 @@ interface NotificationCenterProps {
 /* ── Main — Floating Widgets (no panel, no background) ── */
 
 export default function NotificationCenter({ open, onClose, location }: NotificationCenterProps) {
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [news, setNews] = useState<NewsItem[]>([]);
+  const [weather] = useState<WeatherData | null>({
+    temp: 26,
+    feelsLike: 26,
+    description: 'Static Riyadh placeholder',
+    icon: '☀️',
+    humidity: 20,
+    windSpeed: 8,
+    high: 30,
+    low: 20,
+  });
+  const [news] = useState<NewsItem[]>([
+    {
+      title: 'AbdullahOS placeholder shell is ready',
+      source: 'Portfolio',
+      url: '#',
+      pubDate: 'Static',
+    },
+    {
+      title: 'Project shells are local-only for Stage 1',
+      source: 'Portfolio',
+      url: '#',
+      pubDate: 'Static',
+    },
+  ]);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Fetch weather with real geolocation
-  useEffect(() => {
-    if (!open) return;
-    const params = location?.lat && location?.lon
-      ? `?lat=${location.lat}&lon=${location.lon}`
-      : '';
-    fetch(`/api/weather${params}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d && !d.error) setWeather(d); })
-      .catch(() => {});
-  }, [open, location?.lat, location?.lon]);
-
-  // Fetch news
-  useEffect(() => {
-    if (!open) return;
-    fetch('/api/news')
-      .then(r => r.ok ? r.json() : [])
-      .then(d => { if (Array.isArray(d)) setNews(d); })
-      .catch(() => {});
-  }, [open]);
 
   // Close on outside click
   useEffect(() => {
@@ -93,7 +94,7 @@ export default function NotificationCenter({ open, onClose, location }: Notifica
       <AnalogClock />
 
       {/* ── Weather ── */}
-      <WeatherText weather={weather} city={location?.city || 'Toronto'} />
+      <WeatherText weather={weather} city={location?.city || 'Riyadh'} />
 
       {/* ── News ── */}
       <NewsList news={news} />

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BsGithub, BsSpotify, BsTerminal } from 'react-icons/bs';
+import { BsGithub, BsYoutube } from 'react-icons/bs';
 import { VscVscode } from 'react-icons/vsc';
 import { RiTerminalFill } from 'react-icons/ri';
 
@@ -7,19 +7,19 @@ export default function DesktopDock() {
   const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
 
   const handleEmailClick = () => {
-    window.location.href = 'mailto:ronnielgandhe@gmail.com';
+    window.location.href = 'mailto:abdullah@example.com';
   };
 
   const handleGithubClick = () => {
-    window.open('https://github.com/ronnielgandhe', '_blank');
+    window.open('https://github.com/abdullah-placeholder', '_blank');
   };
 
-  const handleCalendarClick = () => {
+  const handleContactClick = () => {
     window.location.href = '/contact';
   };
 
-  const handleSpotifyClick = () => {
-    window.open('https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8?trackId=294pxweq9pggAO32OQVgYw', '_blank');
+  const handleMusicClick = () => {
+    window.open('https://music.youtube.com/', '_blank');
   };
 
   const handleVSCodeClick = () => {
@@ -127,10 +127,10 @@ export default function DesktopDock() {
             {hoveredIcon === 'github' && <Tooltip text='My GitHub' />}
           </button>
 
-          {/* Calendar */}
+          {/* Contact */}
           <button
-            onClick={handleCalendarClick}
-            onMouseEnter={() => setHoveredIcon('calendar')}
+            onClick={handleContactClick}
+            onMouseEnter={() => setHoveredIcon('contact')}
             onMouseLeave={() => setHoveredIcon(null)}
             className='relative transition-transform duration-200 ease-out hover:scale-110'
           >
@@ -149,20 +149,20 @@ export default function DesktopDock() {
                 </span>
               </div>
             </div>
-            {hoveredIcon === 'calendar' && <Tooltip text='Book a Call' />}
+            {hoveredIcon === 'contact' && <Tooltip text='Contact' />}
           </button>
 
-          {/* Spotify */}
+          {/* YouTube Music */}
           <button
-            onClick={handleSpotifyClick}
-            onMouseEnter={() => setHoveredIcon('spotify')}
+            onClick={handleMusicClick}
+            onMouseEnter={() => setHoveredIcon('music')}
             onMouseLeave={() => setHoveredIcon(null)}
             className='relative transition-transform duration-200 ease-out hover:scale-110'
           >
             <div className='w-14 h-14 bg-gradient-to-t from-black to-black/60 rounded-xl flex items-center justify-center shadow-lg'>
-              <BsSpotify size={45} className='text-[#1ED760]' />
+              <BsYoutube size={45} className='text-[#ff0033]' />
             </div>
-            {hoveredIcon === 'spotify' && <Tooltip text='My Dev Playlist' />}
+            {hoveredIcon === 'music' && <Tooltip text='YouTube Music' />}
           </button>
 
           {/* Divider */}

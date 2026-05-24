@@ -187,7 +187,7 @@ const DetailPanel = ({ detail, onClose, windowMode }: DetailPanelProps) => {
     );
   }
 
-  // ── Video split layout (CreatorScope) ──
+  // ── Video split layout (project shell) ──
   if (hasVideo) {
     const projectDetail = detail as ProjectDetail;
     return (

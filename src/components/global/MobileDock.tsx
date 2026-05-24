@@ -1,17 +1,17 @@
-import { BsGithub, BsSpotify } from 'react-icons/bs';
+import { BsGithub, BsYoutube } from 'react-icons/bs';
 import { IoIosCall } from 'react-icons/io';
 
 export default function MobileDock() {
   const handleEmailClick = () => {
-    window.location.href = 'mailto:ronnielgandhe@gmail.com';
+    window.location.href = 'mailto:abdullah@example.com';
   };
 
   const handleGithubClick = () => {
-    window.open('https://github.com/ronnielgandhe', '_blank');
+    window.open('https://github.com/abdullah-placeholder', '_blank');
   };
 
-  const handleSpotifyClick = () => {
-    window.open('https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8?trackId=294pxweq9pggAO32OQVgYw', '_blank');
+  const handleMusicClick = () => {
+    window.open('https://music.youtube.com/', '_blank');
   };
 
   const handleProjectsClick = () => {
@@ -83,11 +83,11 @@ export default function MobileDock() {
         </button>
 
         <button
-          onClick={handleSpotifyClick}
+          onClick={handleMusicClick}
           className='flex flex-col items-center cursor-pointer'
         >
           <div className='w-12 h-12 bg-gradient-to-t from-black to-black/60 rounded-xl flex items-center justify-center'>
-            <BsSpotify size={24} className='text-[#1ED760]' />
+            <BsYoutube size={24} className='text-[#ff0033]' />
           </div>
         </button>
       </div>

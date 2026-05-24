@@ -8,7 +8,7 @@ import ContentViewer from '../desktop-portfolio/ContentViewer';
 import type { DetailContent } from '../desktop-portfolio/DetailPanel';
 import type { ContentViewData } from '../desktop-portfolio/ContentViewer';
 import { HiAcademicCap } from 'react-icons/hi2';
-import { BsBriefcaseFill, BsGithub, BsSpotify } from 'react-icons/bs';
+import { BsBriefcaseFill, BsGithub, BsYoutube } from 'react-icons/bs';
 import { FaCode } from 'react-icons/fa6';
 import { HiPencilSquare } from 'react-icons/hi2';
 
@@ -91,7 +91,7 @@ export default function MobileShell() {
               fontSize: '12px',
               color: 'rgba(255,255,255,0.5)',
             }}>
-              ronnielgandhe.com — zsh
+              abdullah-placeholder.com — zsh
             </span>
             <div style={{ width: '42px' }} />
           </div>
@@ -105,16 +105,16 @@ export default function MobileShell() {
             color: '#e6e9ef',
           }}>
             <div style={{ fontWeight: 'bold', fontSize: '15px', color: 'white', marginBottom: '10px' }}>
-              Ronniel Gandhe — Software Engineer
+              Abdullah Sultan — Student builder
             </div>
             <div style={{ marginBottom: '2px' }}>
-              <span style={{ color: '#ff79c6' }}>Location:</span> Waterloo, ON
+              <span style={{ color: '#ff79c6' }}>Location:</span> Riyadh, Saudi Arabia
             </div>
             <div style={{ marginBottom: '2px' }}>
-              <span style={{ color: '#f1fa8c' }}>Email:</span> ronnielgandhe@gmail.com
+              <span style={{ color: '#f1fa8c' }}>Email:</span> abdullah@example.com
             </div>
             <div style={{ marginBottom: '12px' }}>
-              <span style={{ color: '#8be9fd' }}>GitHub:</span> github.com/ronnielgandhe
+              <span style={{ color: '#8be9fd' }}>GitHub:</span> github.com/abdullah-placeholder
             </div>
             <div style={{ color: 'rgba(255,255,255,0.55)', fontStyle: 'italic', fontSize: '12px' }}>
               I build systems that think, design that feels, and code that connects ideas to impact.
@@ -172,9 +172,9 @@ export default function MobileShell() {
 
         {/* External links */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '8px' }}>
-          <ExternalLink href="https://github.com/ronnielgandhe" icon={<BsGithub size={20} />} label="GitHub" />
-          <ExternalLink href="mailto:ronnielgandhe@gmail.com" icon={<span style={{ fontSize: '18px' }}>✉</span>} label="Email" />
-          <ExternalLink href="https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8" icon={<BsSpotify size={20} />} label="Playlist" />
+          <ExternalLink href="https://github.com/abdullah-placeholder" icon={<BsGithub size={20} />} label="GitHub" />
+          <ExternalLink href="mailto:abdullah@example.com" icon={<span style={{ fontSize: '18px' }}>✉</span>} label="Email" />
+          <ExternalLink href="https://music.youtube.com/" icon={<BsYoutube size={20} />} label="YouTube Music" />
         </div>
       </div>
 

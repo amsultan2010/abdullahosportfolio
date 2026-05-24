@@ -1,8 +1,8 @@
-# ronnielgandhe.com
+# abdullah-placeholder.com
 
 my portfolio site. it's gone through a few lives.
 
-**[live site](https://www.ronnielgandhe.com/)** · **[desktop mode](https://www.ronnielgandhe.com/desktop)**
+**[live site](https://www.abdullah-placeholder.com/)** · **[desktop mode](https://www.abdullah-placeholder.com/desktop)**
 
 ![desktop mode](public/readme/portfolio-desktop.png)
 
@@ -33,7 +33,7 @@ the lesson was that a portfolio should make the work easy to find, not be the wo
 
 **blog + writing** - long-form posts on engineering, markets, and building
 
-**api routes** - server-side endpoints for github stats, spotify, weather, stocks, and news
+**api routes** - static placeholder endpoints
 
 ---
 
@@ -45,15 +45,15 @@ the lesson was that a portfolio should make the work easy to find, not be the wo
 - three.js + react three fiber
 - framer motion
 - vercel deployment
-- supabase integration
+- static placeholder data
 
 ---
 
 ## run locally
 
 ```bash
-git clone https://github.com/ronnielgandhe/rg-portfolio.git
-cd rg-portfolio
+git clone https://github.com/abdullah-placeholder/abdullah-os.git
+cd abdullah-os
 npm install
 npm run dev
 ```

@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback, useRef, createContext, useContext, la
 import ContentViewer from './ContentViewer';
 import type { ContentViewData } from './ContentViewer';
 import { contentMap } from './contentData';
-import Blackbook from './Blackbook';
 
 const LazyDesktopShell = lazy(() => import('../desktop/DesktopShell'));
 
@@ -37,43 +36,43 @@ function ThemeProvider({ children, siteReady = false }: { children: React.ReactN
 
 const BUILDING = [
   {
-    label: 'LeanFetch',
-    href: 'https://github.com/ronnielgandhe/leanfetch',
-    cover: '/leanfetch-cover.png',
-    desc: 'a tool that stops 90% of startups from losing 90% of their cash to unnecessary api calls',
-    tech: ['Node', 'Anthropic SDK'],
+    label: 'AbdullahOS',
+    href: '/desktop',
+    cover: '/readme/portfolio-desktop.png',
+    desc: 'a personal desktop-inspired portfolio shell for experiments, writing, and project notes.',
+    tech: ['Astro', 'React', 'TypeScript'],
   },
   {
-    label: 'QuantZoo',
-    href: 'https://github.com/ronnielgandhe/quantzoo',
+    label: 'Quant Project Shell',
+    href: 'https://github.com/abdullah-placeholder',
     cover: '/trading.png',
-    desc: 'Python framework for systematic strategy research, backtesting, and real-time streaming.',
-    tech: ['Python', 'FastAPI', 'WebSocket'],
+    desc: 'placeholder for future quant finance research, simulations, and market tooling.',
+    tech: ['Python', 'Data', 'Research'],
   },
 ];
 
 const PREVIOUSLY = [
-  { role: 'Growth + Software Engineering', company: 'Augmentor Labs', icon: '/augmentor-dark.svg', href: 'https://augmentorlabs.com' },
-  { role: 'Data Science', company: 'CIBC', icon: '/cibc-dark.svg', href: 'https://www.cibc.com' },
+  { role: 'Robotics and hardware experiments', company: 'Project Shell 01', icon: '/icons/folder.png', href: 'https://github.com/abdullah-placeholder' },
+  { role: 'Startup and AI prototypes', company: 'Project Shell 02', icon: '/icons/folder.png', href: 'https://github.com/abdullah-placeholder' },
 ];
 
 const WRITING = [
   {
-    slug: 'prestige-is-a-strong-drug',
-    title: 'Prestige Is a Strong Drug',
-    desc: "What dropping out of one of Canada's best programs taught me about borrowed momentum.",
+    slug: 'abdullah-notes',
+    title: 'Abdullah Notes',
+    desc: 'Placeholder notes on startups, quant finance, robotics, AI, and creative hardware.',
   },
   {
-    slug: 'trading-rabbit-hole',
-    title: 'What Going Down the Trading Rabbit Hole Taught Me About Finance',
-    desc: 'Anyone who gets interested in markets eventually falls into the same rabbit hole.',
+    slug: 'project-log',
+    title: 'Project Log',
+    desc: 'A temporary writing shell for build logs and experiments.',
   },
 ];
 
 const SOCIALS = [
-  { label: 'github', href: 'https://github.com/ronnielgandhe' },
-  { label: 'linkedin', href: 'https://www.linkedin.com/in/ronniel-gandhe/' },
-  { label: 'email', href: 'mailto:ronnielgandhe@gmail.com' },
+  { label: 'github', href: 'https://github.com/abdullah-placeholder' },
+  { label: 'youtube music', href: 'https://music.youtube.com/' },
+  { label: 'email', href: 'mailto:abdullah@example.com' },
 ];
 
 /* ══════════════════════════════════════════════════════════
@@ -170,7 +169,7 @@ function Inner() {
       <div className="rg-container">
         {/* ── Header ── */}
         <header className="rg-header">
-          <h1 className="rg-name" style={{ color: t.textStrong }}>ronniel gandhe</h1>
+          <h1 className="rg-name" style={{ color: t.textStrong }}>abdullah sultan</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <nav className="rg-nav">
               <a href="/" className="rg-nav-link" style={{ color: t.textStrong }}>about</a>
@@ -185,32 +184,29 @@ function Inner() {
 
         {/* ── Main bullet list ── */}
         <ul className="rg-list" id="projects">
-          {/* Current: Software Engineering Bluejay (YC X25) */}
           <BulletItem diamond={t.diamond}>
             <span style={{ color: t.text }}>
-              Software Engineering{' '}
+              Student builder{' '}
               <span className="rg-inline-link-group">
                 <SLink
-                  href="https://bluejay.ai"
-                  icon="/bluejay-mark-black.svg"
-                  iconDark="/bluejay-mark-white.svg"
+                  href="https://github.com/abdullah-placeholder"
+                  icon="/icons/folder.png"
                 >
-                  Bluejay
+                  AbdullahOS
                 </SLink>
               </span>
-              {' '}
-              <strong style={{ color: t.textStrong, fontWeight: 700 }}>(YC X25)</strong>
             </span>
           </BulletItem>
 
-          {/* Previously: Waterloo CS + Laurier BBA */}
           <BulletItem diamond={t.diamond}>
             <span style={{ color: t.text }}>
-              previously{' '}
+              interested in{' '}
               <span className="rg-inline-link-group">
-                <SLink href="https://uwaterloo.ca" icon="/waterloo-logo.png">Waterloo CS</SLink>
+                <SLink href="https://github.com/abdullah-placeholder" icon="/icons/folder.png">startups</SLink>
                 {' + '}
-                <SLink href="https://www.wlu.ca" icon="/laurier-seal.png">Laurier BBA</SLink>
+                <SLink href="https://github.com/abdullah-placeholder" icon="/icons/folder.png">quant finance</SLink>
+                {' + '}
+                <SLink href="https://github.com/abdullah-placeholder" icon="/icons/folder.png">robotics</SLink>
               </span>
             </span>
           </BulletItem>
@@ -262,9 +258,9 @@ function Inner() {
           {/* Previously */}
           <li className="rg-item rg-item-nested" style={{ marginTop: 8 }}>
             <div className="rg-diamond" style={{ background: t.diamond }} />
-            <span className="rg-section-label" style={{ color: t.text }}>previously:</span>
+            <span className="rg-section-label" style={{ color: t.text }}>exploring:</span>
             <ul className="rg-sublist">
-              {/* Removed — now on the Laurier line above */}
+               
               {PREVIOUSLY.map((p, i) => (
                 <li key={i} className="rg-subitem">
                   <span className="rg-arrow" style={{ color: t.textMuted }}>↳</span>
@@ -281,27 +277,26 @@ function Inner() {
         </ul>
 
 
-        {/* ── Signature (animated GIF, plays once, replay button) ── */}
-        <SignatureReveal dark={dark} />
+        <div className="rg-signature" style={{ color: t.textStrong }}>Abdullah</div>
 
         {/* ── Footer (Martin-style: icon + label expands on hover) ── */}
         <footer className="rg-footer">
           <div style={{ height: 1, background: t.footerLine }} />
           <div className="rg-socials">
-            <FooterIcon href="https://github.com/ronnielgandhe" label="github" dark={dark}>
+            <FooterIcon href="https://github.com/abdullah-placeholder" label="github" dark={dark}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
             </FooterIcon>
-            <FooterIcon href="https://www.linkedin.com/in/ronniel-gandhe/" label="linkedin" dark={dark}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            <FooterIcon href="https://music.youtube.com/" label="music" dark={dark}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M10 8l6 4-6 4z"/></svg>
             </FooterIcon>
-            <FooterIcon href="mailto:ronnielgandhe@gmail.com" label="email" dark={dark} external={false}>
+            <FooterIcon href="mailto:abdullah@example.com" label="email" dark={dark} external={false}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
             </FooterIcon>
-            <FooterIcon href="/Ronniel_Gandhe_Resume.pdf" label="resume" dark={dark}>
+            <FooterIcon href="https://github.com/abdullah-placeholder" label="projects" dark={dark}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             </FooterIcon>
           </div>
-          <p style={{ fontSize: 13, color: t.textMuted, marginTop: 4 }}>2026 &copy; Ronniel Gandhe</p>
+          <p style={{ fontSize: 13, color: t.textMuted, marginTop: 4 }}>2026 &copy; Abdullah Sultan</p>
         </footer>
       </div>
 
@@ -309,9 +304,6 @@ function Inner() {
       {activeContent && (
         <ContentViewer content={activeContent} onClose={() => setActiveContent(null)} />
       )}
-
-      {/* Hidden dashboard — gray themed, separate from /desktop version */}
-      <Blackbook />
 
       <style>{`
         :root {
@@ -617,47 +609,6 @@ function Inner() {
   );
 }
 
-function SignatureReveal({ dark }: { dark: boolean }) {
-  const { siteReady } = useContext(ThemeCtx);
-  const [key, setKey] = useState(0);
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const animate = imgLoaded && siteReady;
-
-  const replay = () => { setImgLoaded(false); requestAnimationFrame(() => { setKey(k => k + 1); setImgLoaded(true); }); };
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, marginTop: 16 }}>
-      <img
-        key={key}
-        src="/ronniel_signature_transparent_clean.png"
-        alt="R Gandhe signature"
-        className={`rg-signature-img${animate ? ' rg-sig-animate' : ''}`}
-        onLoad={() => setImgLoaded(true)}
-        style={{
-          filter: dark ? 'invert(1) contrast(2) brightness(2)' : 'contrast(2) brightness(0.1)',
-        }}
-      />
-      <button
-        onClick={replay}
-        aria-label="Replay signature"
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          color: dark ? '#78716c' : '#78716c',
-          fontSize: 16,
-          padding: 0,
-          transition: 'color 0.2s',
-        }}
-        onMouseEnter={e => (e.currentTarget.style.color = dark ? '#d6d3d1' : '#44403c')}
-        onMouseLeave={e => (e.currentTarget.style.color = dark ? '#78716c' : '#78716c')}
-      >
-        ↻
-      </button>
-    </div>
-  );
-}
-
 /* Footer icon with label that expands on hover (like Martin's) */
 function FooterIcon({ href, label, dark, children, external = true }: {
   href: string; label: string; dark: boolean; children: React.ReactNode; external?: boolean;
@@ -711,7 +662,7 @@ function BulletItem({ diamond, children }: { diamond: string; children: React.Re
 }
 
 /* ══════════════════════════════════════════════════════════
-   Site loader + Page curl / RonnielOS launcher
+   Site loader + Page curl / AbdullahOS launcher
    ══════════════════════════════════════════════════════════ */
 
 type AppPhase = 'loading' | 'site' | 'peeling' | 'desktop';
@@ -780,7 +731,7 @@ function OSCloseButton({ onClose }: { onClose: () => void }) {
     <button
       onClick={onClose}
       className="os-close-btn"
-      aria-label="Close RonnielOS"
+      aria-label="Close AbdullahOS"
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -858,7 +809,7 @@ export default function PortfolioApp() {
         <Inner />
       </div>
 
-      {/* Corner fold — static, click to expand into RonnielOS */}
+      {/* Corner fold — static, click to expand into AbdullahOS */}
       {(phase === 'site' || phase === 'desktop') && (
         <div className={`peek-container ${expanded ? 'peek-expanded' : ''}`}>
           <div className="peek-desktop">
@@ -871,7 +822,7 @@ export default function PortfolioApp() {
             className={`page-curl ${expanded ? 'curl-hidden' : ''}`}
             onClick={togglePeek}
             role="button"
-            aria-label="Open RonnielOS"
+            aria-label="Open AbdullahOS"
           />
         </div>
       )}

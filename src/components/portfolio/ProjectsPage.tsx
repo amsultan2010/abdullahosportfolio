@@ -3,52 +3,48 @@ import PageShell, { useTheme, themeColors, SLink } from './PageShell';
 
 const PROJECTS = [
   {
-    title: 'LinkedIn Games Solver',
-    cover: '/linkdensolver.png',
-    repo: 'https://github.com/ronnielgandhe/linkedin-games-solver',
-    desc: 'Chrome extension that instantly solves all 5 LinkedIn games. Backtracking solvers, React fiber traversal, and Chrome Debugger Protocol for trusted input — no AI, no server.',
-    tech: ['JavaScript', 'Chrome Extension API', 'Chrome Debugger Protocol', 'Manifest V3'],
-  },
-  {
-    title: 'QuantZoo',
-    cover: '/trading.png',
-    repo: 'https://github.com/ronnielgandhe/quantzoo',
-    desc: 'Production-grade Python framework for systematic strategy research, backtesting, walk-forward validation, real-time streaming, and risk analytics.',
-    tech: ['Python', 'PyTorch', 'FastAPI', 'NumPy', 'Pandas', 'WebSocket'],
-  },
-  {
-    title: 'CreatorScope',
-    cover: '/cover.png',
-    repo: 'https://github.com/ronnielgandhe/creatorscope',
-    demoVideo: '/creatorscope-demo.mov',
-    desc: 'Go-to-market automation tool for sourcing TikTok creators. Multi-source discovery, three-tier classification, Creator Intent Scoring.',
-    tech: ['Python', 'FastAPI', 'SQLAlchemy', 'SQLite', 'RapidAPI'],
-  },
-  {
-    title: 'RonnielOS',
-    cover: '/icons/rglogo.png',
-    repo: 'https://github.com/ronnielgandhe/rg-portfolio',
+    title: 'AbdullahOS',
+    cover: '/readme/portfolio-desktop.png',
+    repo: 'https://github.com/abdullah-placeholder',
     demo: '/desktop',
     demoNewTab: true,
-    desc: 'My portfolio reimagined as a fully interactive macOS desktop. Draggable windows, working terminal, stock tracker, Spotify integration — all in the browser.',
-    tech: ['React', 'TypeScript', 'Astro', 'Three.js'],
-    coverStyle: { objectFit: 'contain' as const, background: '#111', padding: '40px' },
+    desc: 'Static desktop-inspired portfolio shell for Abdullah Sultan. Placeholder for future personal apps, project notes, and experiments.',
+    tech: ['Astro', 'React', 'TypeScript'],
   },
   {
-    title: 'YourNews',
-    cover: '/yournews-cover.png',
-    repo: 'https://github.com/ronnielgandhe/yournews',
-    demoVideo: '/yournews-demo.mp4',
-    desc: 'AI-powered personalized news aggregator using TF-IDF/BM25 ranking and GPT-4 summaries.',
-    tech: ['Python', 'GPT-4 API', 'TF-IDF', 'BM25', 'FastAPI', 'React'],
+    title: 'Project Shell 01',
+    cover: '/trading.png',
+    repo: 'https://github.com/abdullah-placeholder',
+    desc: 'Placeholder for a future software project. Final scope, stack, and writeup will be added later.',
+    tech: ['Placeholder', 'Build Log'],
   },
   {
-    title: 'How Many Clicks',
+    title: 'Robotics Project Shell',
+    cover: '/cover.png',
+    repo: 'https://github.com/abdullah-placeholder',
+    desc: 'Placeholder for robotics experiments, controls, sensors, and creative hardware builds.',
+    tech: ['Robotics', 'Hardware', 'Prototype'],
+  },
+  {
+    title: 'Quant Project Shell',
+    cover: '/terminal.png',
+    repo: 'https://github.com/abdullah-placeholder',
+    desc: 'Placeholder for quant finance research, backtests, simulations, and market notes.',
+    tech: ['Quant', 'Python', 'Research'],
+  },
+  {
+    title: 'Startup Project Shell',
+    cover: '/placeholder-cover.png',
+    repo: 'https://github.com/abdullah-placeholder',
+    desc: 'Placeholder for startup ideas, product experiments, and business model sketches.',
+    tech: ['Startup', 'Product', 'AI'],
+  },
+  {
+    title: 'Project Shell 03',
     cover: '/howmanyclicks-cover.png',
-    repo: 'https://github.com/ronnielgandhe/how-many-clicks',
-    demoVideo: '/howmanyclicks-demo.mp4',
-    desc: 'Wikipedia connection game — AI pathfinding races users. Real-time beam search with semantic scoring.',
-    tech: ['React', 'Vite', 'JavaScript', 'Wikipedia API'],
+    repo: 'https://github.com/abdullah-placeholder',
+    desc: 'Placeholder for a future creative hardware or AI-assisted tool.',
+    tech: ['Prototype', 'Notes'],
   },
 ];
 
@@ -163,8 +159,8 @@ function ProjectsContent() {
       ))}
 
       <p style={{ fontSize: 14, color: t.text, marginTop: 8 }}>
-        you can check out the rest of my projects{' '}
-        <SLink href="https://github.com/ronnielgandhe">here</SLink>
+        more Abdullah project shells will live{' '}
+        <SLink href="https://github.com/abdullah-placeholder">here</SLink>
       </p>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 const NameHeader = () => {
-  const fullName = "Ronniel Gandhe";
+  const fullName = "Abdullah Sultan";
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {

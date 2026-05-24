@@ -5,18 +5,6 @@ import GitHubHeatmap from './GitHubHeatmap';
 
 /* ── Types ─────────────────────────────────────────── */
 
-interface SpotifyData {
-  isPlaying: boolean;
-  title: string;
-  artist: string;
-  album: string;
-  albumArt: string;
-  progressMs: number;
-  durationMs: number;
-  trackUrl: string;
-  fetchedAt: number;
-}
-
 interface LocationData {
   city: string;
   region: string;
@@ -33,8 +21,7 @@ export default function DesktopMenuBar() {
   const [date, setDate] = useState('');
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [spotify, setSpotify] = useState<SpotifyData | null>(null);
-  const [location, setLocation] = useState<LocationData | null>(null);
+  const location: LocationData = { city: 'Riyadh', region: 'Riyadh', country: 'Saudi Arabia', lat: 24.7136, lon: 46.6753 };
   const barRef = useRef<HTMLDivElement>(null);
 
   // Clock
@@ -46,33 +33,6 @@ export default function DesktopMenuBar() {
     };
     tick();
     const id = setInterval(tick, 30_000);
-    return () => clearInterval(id);
-  }, []);
-
-  // Geolocation via IP
-  useEffect(() => {
-    fetch('https://ipapi.co/json/')
-      .then(r => r.json())
-      .then(d => setLocation({ city: d.city, region: d.region_code || d.region, country: d.country_name, lat: d.latitude, lon: d.longitude }))
-      .catch(() => setLocation({ city: 'Toronto', region: 'ON', country: 'Canada', lat: 43.65, lon: -79.38 }));
-  }, []);
-
-  // Spotify polling
-  useEffect(() => {
-    const poll = () => {
-      fetch('/api/spotify')
-        .then(r => r.json())
-        .then(d => {
-          if (d.title) {
-            setSpotify({ ...d, fetchedAt: Date.now() });
-          } else {
-            setSpotify(null);
-          }
-        })
-        .catch(() => {});
-    };
-    poll();
-    const id = setInterval(poll, 15_000);
     return () => clearInterval(id);
   }, []);
 
@@ -117,7 +77,7 @@ export default function DesktopMenuBar() {
           </div>
           {activeMenu === 'apple' && (
             <div style={{ ...panelStyle, left: 0, minWidth: '240px' }}>
-              <DropItem label="About Ronniel Gandhe" onClick={() => { dispatch({ type: 'OPEN_WINDOW', id: 'terminal' }); close(); }} />
+              <DropItem label="About Abdullah Sultan" onClick={() => { dispatch({ type: 'OPEN_WINDOW', id: 'terminal' }); close(); }} />
               <DropDivider />
               <DropItem label="System Settings..." disabled />
               <DropItem label="App Store..." disabled />
@@ -134,12 +94,12 @@ export default function DesktopMenuBar() {
               <DropItem label="Shut Down..." disabled />
               <DropDivider />
               <DropItem label="Lock Screen" shortcut="⌃⌘Q" onClick={() => { dispatch({ type: 'LOCK_SCREEN' }); close(); }} />
-              <DropItem label="Log Out Ronniel Gandhe..." shortcut="⇧⌘Q" onClick={() => { window.location.reload(); }} />
+              <DropItem label="Log Out Abdullah Sultan..." shortcut="⇧⌘Q" onClick={() => { window.location.reload(); }} />
             </div>
           )}
         </div>
 
-        {!isMobile && <div style={{ ...barItem, fontWeight: 600, padding: '0 14px 0 0' }}>Ronniel Gandhe</div>}
+        {!isMobile && <div style={{ ...barItem, fontWeight: 600, padding: '0 14px 0 0' }}>Abdullah Sultan</div>}
 
         <div
           onMouseDown={() => {
@@ -154,7 +114,7 @@ export default function DesktopMenuBar() {
           }}
           onMouseEnter={() => hover('_edu')}
           style={{ ...barItem, padding: '0 10px' }}
-        >Education</div>
+        >About</div>
 
         <div
           onMouseDown={() => {
@@ -169,13 +129,13 @@ export default function DesktopMenuBar() {
           }}
           onMouseEnter={() => hover('_exp')}
           style={{ ...barItem, padding: '0 10px' }}
-        >Experience</div>
+        >Projects</div>
 
         <div
-          onMouseDown={() => window.open('/Ronniel_Gandhe_Resume.pdf', '_blank')}
+          onMouseDown={() => window.open('https://github.com/abdullah-placeholder', '_blank')}
           onMouseEnter={() => hover('_resume')}
           style={{ ...barItem, padding: '0 10px' }}
-        >Resume</div>
+        >GitHub</div>
 
         {!isMobile && (
           <BarDropdown label="Window" id="window" active={activeMenu} toggle={toggle} hover={hover}>
@@ -201,7 +161,7 @@ export default function DesktopMenuBar() {
         </TrayDropdown>
 
         <TrayDropdown id="sound" active={activeMenu} toggle={toggle} icon={<SpeakerIcon />} align="right">
-          <SoundPanel spotify={spotify} />
+          <SoundPanel />
         </TrayDropdown>
 
         <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}>
@@ -368,7 +328,7 @@ function WifiPanel({ location, onOpenSettings }: { location: LocationData | null
               <path d="M2.93 4.93a7 7 0 0110.14 0" stroke="white" strokeWidth="1.3" strokeLinecap="round" fill="none" />
             </svg>
           </div>
-          <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(0,0,0,0.85)', flex: 1 }}>Ronniel's Network</span>
+          <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(0,0,0,0.85)', flex: 1 }}>Abdullah's Network</span>
           {/* Lock icon */}
           <svg width="12" height="14" viewBox="0 0 12 16" fill="none" style={{ opacity: 0.35, flexShrink: 0 }}>
             <rect x="1" y="7" width="10" height="8" rx="2" fill="rgba(0,0,0,0.65)" />
@@ -433,103 +393,33 @@ function WifiPanel({ location, onOpenSettings }: { location: LocationData | null
   );
 }
 
-/* ── Sound / Spotify Panel ─────────────────────────── */
+/* ── Sound / Music Panel ─────────────────────────── */
 
-function SoundPanel({ spotify }: { spotify: SpotifyData | null }) {
-  const [now, setNow] = useState(Date.now());
-
-  useEffect(() => {
-    if (!spotify?.isPlaying) return;
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, [spotify?.isPlaying, spotify?.fetchedAt]);
-
-  const fmt = (ms: number) => {
-    const m = Math.floor(ms / 60000);
-    const s = Math.floor((ms % 60000) / 1000);
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  };
-
-  const elapsed = spotify?.isPlaying ? Math.max(0, now - (spotify.fetchedAt || now)) : 0;
-  const displayProgress = spotify ? Math.min(spotify.progressMs + elapsed, spotify.durationMs) : 0;
-  const pct = spotify ? (displayProgress / spotify.durationMs) * 100 : 0;
-
+function SoundPanel() {
   return (
     <div style={{ padding: '8px 0', minWidth: '290px' }}>
       <div style={{ padding: '0 14px 6px', fontSize: '11px', color: 'rgba(0,0,0,0.4)', fontWeight: 600, letterSpacing: '0.05em' }}>
-        NOW PLAYING
+        AUDIO
       </div>
 
-      {spotify ? (
-        <>
-          <a
-            href={spotify.trackUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ display: 'flex', gap: '12px', padding: '6px 14px 12px', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}
-          >
-            <img src={spotify.albumArt} alt="" style={{
-              width: '52px', height: '52px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0,
-            }} />
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{
-                fontSize: '13px', fontWeight: 600, color: 'rgba(0,0,0,0.85)',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {spotify.title}
-              </div>
-              <div style={{
-                fontSize: '12px', color: 'rgba(0,0,0,0.5)', marginTop: '2px',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {spotify.artist}
-              </div>
-              <div style={{ fontSize: '11px', color: 'rgba(0,0,0,0.35)', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="#1DB954">
-                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
-                </svg>
-                <span>Spotify</span>
-              </div>
-            </div>
-          </a>
-
-          <div style={{ padding: '0 14px 6px' }}>
-            <div style={{ height: '3px', borderRadius: '2px', background: 'rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${pct}%`, background: 'rgba(0,0,0,0.45)', borderRadius: '2px', transition: 'width 1s linear' }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'rgba(0,0,0,0.35)', marginTop: '4px' }}>
-              <span>{fmt(displayProgress)}</span>
-              <span>{fmt(spotify.durationMs)}</span>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', padding: '4px 14px 4px', alignItems: 'center' }}>
-            <CtrlBtn>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="rgba(0,0,0,0.55)">
-                <path d="M3.5 3h1.5v10H3.5V3zM13 8L6.5 13V3L13 8z" />
-              </svg>
-            </CtrlBtn>
-            <CtrlBtn size={34}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="rgba(0,0,0,0.75)">
-                {spotify.isPlaying
-                  ? <path d="M4.5 2.5h2.5v11H4.5v-11zm4.5 0h2.5v11H9v-11z" />
-                  : <path d="M4.5 2L13 8l-8.5 6V2z" />
-                }
-              </svg>
-            </CtrlBtn>
-            <CtrlBtn>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="rgba(0,0,0,0.55)">
-                <path d="M11 3h1.5v10H11V3zM3 8l6.5-5v10L3 8z" />
-              </svg>
-            </CtrlBtn>
-          </div>
-        </>
-      ) : (
-        <div style={{ padding: '16px 14px', textAlign: 'center' }}>
-          <div style={{ fontSize: '20px', marginBottom: '6px', opacity: 0.4 }}>♪</div>
-          <div style={{ fontSize: '13px', color: 'rgba(0,0,0,0.35)' }}>Not Playing</div>
+      <a
+        href="https://music.youtube.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ display: 'flex', gap: '12px', padding: '8px 14px 12px', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}
+      >
+        <div style={{ width: '52px', height: '52px', borderRadius: '8px', background: '#ff0033', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M10 8l6 4-6 4z" /></svg>
         </div>
-      )}
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(0,0,0,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            YouTube Music
+          </div>
+          <div style={{ fontSize: '12px', color: 'rgba(0,0,0,0.5)', marginTop: '2px' }}>
+            Static launcher
+          </div>
+        </div>
+      </a>
 
       <DropDivider />
 

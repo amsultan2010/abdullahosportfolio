@@ -150,7 +150,7 @@ const DetailPanel = ({ detail, onClose }: DetailPanelProps) => {
     panelRef.current?.focus();
   }, []);
 
-  // ── Video split layout (CreatorScope) ──
+  // ── Video split layout (project shell) ──
   if (hasVideo) {
     const projectDetail = detail as ProjectDetail;
     return (
@@ -281,7 +281,7 @@ const DetailPanel = ({ detail, onClose }: DetailPanelProps) => {
     );
   }
 
-  // ── Live URL split layout (RonnielOS) ──
+  // ── Live URL split layout (AbdullahOS) ──
   if (hasLiveUrl) {
     const projectDetail = detail as ProjectDetail;
     return (

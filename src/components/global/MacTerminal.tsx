@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { FaRegFolderClosed } from 'react-icons/fa6';
 
 export default function MacTerminal() {
-  const welcomeMessage = `Ronniel Gandhe — Software Engineer
+  const welcomeMessage = `Abdullah Sultan — student builder
 
-LinkedIn: linkedin.com/in/ronniel-gandhe
-GitHub: github.com/ronnielgandhe
-Email: ronnielgandhe@gmail.com
-Location: Waterloo, ON
+LinkedIn: music.youtube.com
+GitHub: github.com/abdullah-placeholder
+Email: abdullah@example.com
+Location: Riyadh, Saudi Arabia
 
 
 I build systems that think, design that feels, and code that connects ideas to impact.
@@ -22,7 +22,6 @@ I build systems that think, design that feels, and code that connects ideas to i
     return initial;
   });
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -32,49 +31,25 @@ I build systems that think, design that feels, and code that connects ideas to i
     }
   }, [lines]);
 
-  const submit = async () => {
+  const submit = () => {
     const trimmed = input.trim();
     if (!trimmed) return;
 
-    // append user input to lines
     setLines((prev) => [...prev, `> ${trimmed}`]);
     setInput('');
-    setLoading(true);
 
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [{ role: 'user', content: trimmed }] }),
-      });
-
-      // Safely attempt JSON parse
-      let data: any = null;
-      const text = await res.text();
-      try {
-        data = text ? JSON.parse(text) : null;
-      } catch (parseErr) {
-        setLines((prev) => [
-          ...prev,
-          'Error: Response was not valid JSON',
-          text ? `Raw: ${text.substring(0, 200)}...` : 'Raw: <empty>',
-        ]);
-        return;
-      }
-
-      if (!res.ok) {
-        const errMsg = data?.details || data?.error || `HTTP ${res.status}`;
-        setLines((prev) => [...prev, `Error: ${errMsg}`]);
-      } else {
-        const msg = data?.message ?? data?.error ?? JSON.stringify(data);
-        const msgLines = String(msg).split('\n');
-        setLines((prev) => [...prev, ...msgLines]);
-      }
-    } catch (err: any) {
-      setLines((prev) => [...prev, `Network error: ${err?.message || String(err)}`]);
-    } finally {
-      setLoading(false);
-    }
+    const lower = trimmed.toLowerCase();
+    const response =
+      lower === 'help'
+        ? 'Static commands: help, about, projects, contact'
+        : lower === 'about'
+          ? 'Abdullah Sultan — student builder interested in startups, quant finance, robotics, AI, and creative hardware.'
+          : lower === 'projects'
+            ? 'Project shells: AbdullahOS, Project Shell 01, Project Shell 02, Project Shell 03, Robotics Project Shell, Quant Project Shell, Startup Project Shell.'
+            : lower === 'contact'
+              ? 'Email: abdullah@example.com'
+              : 'Static AbdullahOS terminal placeholder. Type help for commands.';
+    setLines((prev) => [...prev, response]);
   };
 
   const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
@@ -92,7 +67,7 @@ I build systems that think, design that feels, and code that connects ideas to i
         <div className='w-3 h-3 rounded-full bg-green-500'></div>
         <span className='text-sm text-gray-200 flex-grow text-center font-semibold flex items-center justify-center gap-2'>
           <FaRegFolderClosed size={14} className='text-gray-200' />
-          ronnielgandhe.com — zsh
+          abdullah-placeholder.com — zsh
         </span>
       </div>
       <div className='p-6 text-gray-100 font-mono text-base h-[calc(500px-1.5rem)] flex flex-col'>
@@ -168,15 +143,15 @@ I build systems that think, design that feels, and code that connects ideas to i
 
         <div className='mt-4 pt-4 border-t border-white/10'>
           <div className='flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2'>
-            <span className='whitespace-nowrap text-green-400 font-semibold'>ronnielgandhe.tech root %</span>
+            <span className='whitespace-nowrap text-green-400 font-semibold'>abdullah-placeholder.tech root %</span>
             <input
               type='text'
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
-              disabled={loading}
+              disabled={false}
               className='w-full sm:flex-1 bg-transparent outline-none text-white placeholder-gray-400'
-              placeholder={loading ? 'Waiting for response...' : 'Type a command or message and press Enter'}
+              placeholder='Type a command and press Enter'
             />
           </div>
         </div>

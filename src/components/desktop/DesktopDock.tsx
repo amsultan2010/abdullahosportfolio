@@ -4,7 +4,7 @@ import type { WindowId } from './types';
 import { BsGithub } from 'react-icons/bs';
 
 interface DockItem {
-  id: WindowId | 'github' | 'email' | 'spotify';
+  id: WindowId | 'github' | 'email' | 'music';
   label: string;
   icon: React.ReactNode;
   isExternal?: boolean;
@@ -23,17 +23,16 @@ export default function DesktopDock() {
 
   const windowItems: DockItem[] = [
     { id: 'terminal', label: 'Terminal', icon: <DockImage src="/usethisTERMIANL.png" alt="Terminal" cropScale={1.15} /> },
+    { id: 'education', label: 'About', icon: <DockImage src="/icons/folder.png" alt="About" /> },
     { id: 'projects', label: 'Projects', icon: <DockImage src="/vscode.png" alt="VS Code" /> },
-    { id: 'blog', label: 'My Thoughts', icon: <DockImage src="/notes.png" alt="Notes" /> },
-    { id: 'stocks', label: 'Stocks', icon: <DockImage src="/usethisonestocks1111.png" alt="Stocks" /> },
+    { id: 'blog', label: 'AbdullahOS', icon: <DockImage src="/icons/rglogo.png" alt="AbdullahOS" /> },
     { id: 'photos', label: 'Photos', icon: <DockImage src="/icons/photos.png" alt="Photos" /> },
-    { id: 'calendar', label: 'Book a Meeting', icon: <CalendarIcon /> },
+    { id: 'email' as any, label: 'Contact', icon: <DockImage src="/usethismailicon.png" alt="Mail" cropScale={1.2} /> },
   ];
 
   const externalItems: DockItem[] = [
-    { id: 'github', label: 'GitHub', icon: <AppIcon gradient="linear-gradient(135deg, #2d2d2d 0%, #434343 100%)" iconEl={<BsGithub size={24} color="white" />} />, isExternal: true, href: 'https://github.com/ronnielgandhe' },
-    { id: 'email' as any, label: 'Email Me', icon: <DockImage src="/usethismailicon.png" alt="Mail" cropScale={1.2} /> },
-    { id: 'spotify', label: 'Dev Playlist', icon: <DockImage src="/spotify_logo_icon_189218.png" alt="Spotify" cropScale={1.45} />, isExternal: true, href: 'https://open.spotify.com/playlist/2uud5zGJZf3U98FlTnQip8' },
+    { id: 'github', label: 'GitHub', icon: <AppIcon gradient="linear-gradient(135deg, #2d2d2d 0%, #434343 100%)" iconEl={<BsGithub size={24} color="white" />} />, isExternal: true, href: 'https://github.com/abdullah-placeholder' },
+    { id: 'music', label: 'YouTube Music', icon: <DockImage src="/notes.png" alt="YouTube Music" cropScale={1.1} />, isExternal: true, href: 'https://music.youtube.com/' },
   ];
 
   const allItems = [...windowItems, { id: 'divider' as any, label: '', icon: null }, ...externalItems];

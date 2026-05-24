@@ -54,7 +54,7 @@ const NameFlash = () => {
         opacity: textOpacity,
         transition: 'opacity 0.8s ease-out'
       }}>
-        Ronniel Gandhe
+        Abdullah Sultan
       </h1>
 
       <style>{`

@@ -10,22 +10,22 @@ interface BlogProps {
 
 const blogPosts = [
   {
-    slug: "prestige-is-a-strong-drug",
-    title: "Prestige Is a Strong Drug",
-    summary: "What dropping out of one of Canada's best programs taught me about borrowed momentum and real growth.",
-    tags: ["Personal", "Career", "Psychology"],
-    readingTime: 5,
-    publishedAt: "2026-02-20",
-    folder: "Personal"
+    slug: "abdullah-notes",
+    title: "Abdullah Notes",
+    summary: "Placeholder notes for Abdullah Sultan's future writing.",
+    tags: ["Placeholder", "Ideas"],
+    readingTime: 2,
+    publishedAt: "2026-01-01",
+    folder: "Ideas"
   },
   {
-    slug: "trading-rabbit-hole",
-    title: "What Going Down the Trading Rabbit Hole Taught Me About Finance",
-    summary: "Anyone who gets interested in markets eventually falls into the same rabbit hole. Here is what I found at the bottom.",
-    tags: ["Finance", "Markets", "Learning"],
-    readingTime: 6,
-    publishedAt: "2026-01-28",
-    folder: "Finance"
+    slug: "project-log",
+    title: "Project Log",
+    summary: "Static build-log shell for AbdullahOS and future project notes.",
+    tags: ["Placeholder", "Builds"],
+    readingTime: 2,
+    publishedAt: "2026-01-02",
+    folder: "Builds"
   },
 ];
 
@@ -60,9 +60,8 @@ function groupByDate(posts: typeof blogPosts) {
 
 const folders = [
   { name: 'All Notes', icon: '📓', count: blogPosts.length },
-  { name: 'Personal', icon: '💭', count: blogPosts.filter(p => p.folder === 'Personal').length },
-  { name: 'Finance', icon: '📈', count: blogPosts.filter(p => p.folder === 'Finance').length },
-  { name: 'Tech', icon: '💻', count: blogPosts.filter(p => p.folder === 'Tech').length },
+  { name: 'Ideas', icon: '💡', count: blogPosts.filter(p => p.folder === 'Ideas').length },
+  { name: 'Builds', icon: '▣', count: blogPosts.filter(p => p.folder === 'Builds').length },
 ];
 
 type FontSize = 'small' | 'medium' | 'large';
@@ -74,7 +73,7 @@ const fontSizes: Record<FontSize, { body: string; title: string; label: string }
 const fontSizeOrder: FontSize[] = ['small', 'medium', 'large'];
 
 const Blog = ({ onContentClick, windowMode }: BlogProps) => {
-  const [selectedSlug, setSelectedSlug] = useState<string>('preface');
+  const [selectedSlug, setSelectedSlug] = useState<string>('abdullah-notes');
   const [activeFolder, setActiveFolder] = useState('All Notes');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSidebar, setShowSidebar] = useState(true);
@@ -96,8 +95,8 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
   });
 
   const grouped = groupByDate(sortedPosts);
-  const isPreface = selectedSlug === 'preface';
-  const prefaceContent = contentMap['preface'];
+  const isPreface = false;
+  const prefaceContent = null;
   const selectedPost = blogPosts.find(p => p.slug === selectedSlug);
   const selectedContent = selectedPost ? contentMap[selectedPost.slug] : null;
 

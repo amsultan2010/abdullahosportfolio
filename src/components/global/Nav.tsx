@@ -210,16 +210,16 @@ export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
       ];
 
   const projectItems = [
-    { label: 'QuantZoo', href: '/projects/quantzoo', sublabel: 'Strategy Backtesting Library' },
-    { label: 'QuantTerminal', href: '/projects/quantterminal', sublabel: 'Live Trading Platform' },
-    { label: 'YourNews', href: '/projects/yournews', sublabel: 'Personalized News Feed' },
+    { label: 'Project Shell 01', href: '/projects/quantzoo', sublabel: 'Placeholder project' },
+    { label: 'Quant Project Shell', href: '/projects/quantterminal', sublabel: 'Quant placeholder' },
+    { label: 'Project Shell 02', href: '/projects/placeholder', sublabel: 'Placeholder project' },
     { label: 'All Projects', href: '/projects', sublabel: 'View all projects', divider: true },
   ];
 
   const caseStudyItems = [
-    { label: 'Netflix', href: '/case-studies/netflix', sublabel: 'Microservices at Scale' },
-    { label: 'Uber', href: '/case-studies/uber', sublabel: 'API Architecture Evolution' },
-    { label: 'Spotify', href: '/case-studies/spotify', sublabel: 'Scaling Agile Teams' },
+    { label: 'AbdullahOS', href: '/case-studies/netflix', sublabel: 'Main project shell' },
+    { label: 'Startup Project Shell', href: '/case-studies/uber', sublabel: 'Startup placeholder' },
+    { label: 'YouTube Music', href: '/case-studies/spotify', sublabel: 'Music placeholder' },
     { label: 'All Case Studies', href: '/case-studies', sublabel: 'View all cases', divider: true },
   ];
 
@@ -239,8 +239,8 @@ export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
             alt="RG Logo" 
             className="h-6 w-auto object-contain"
           />
-          <span className="whitespace-nowrap hidden md:inline">Ronniel Gandhe</span>
-          <span className="whitespace-nowrap md:hidden">Ronniel</span>
+          <span className="whitespace-nowrap hidden md:inline">Abdullah Sultan</span>
+          <span className="whitespace-nowrap md:hidden">Abdullah</span>
         </a>
 
         {/* Blog Block */}
@@ -281,7 +281,7 @@ export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
         </a>
         
         <a 
-          href="/Ronniel_Gandhe_Resume.pdf" 
+          href="/Abdullah_Sultan_Resume.pdf" 
           target="_blank" 
           rel="noopener noreferrer"
           className="text-white hover:text-white/80 transition-colors text-sm font-normal whitespace-nowrap flex-shrink-0"
