@@ -254,7 +254,7 @@ function Inner() {
           <li className="rg-item rg-item-nested" style={{ marginTop: 8 }}>
             <div className="rg-diamond" style={{ background: t.diamond }} />
             <span className="rg-section-label" style={{ color: t.text }}>what i've been building:</span>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 4, width: '100%' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 6, width: '100%' }}>
               {BUILDING.map((b, i) => (
                 <a key={i} href={b.href} target="_blank" rel="noopener noreferrer" className="rg-build-card" style={{
                   background: t.cardBg,
@@ -264,8 +264,8 @@ function Inner() {
                     aspectRatio: '16 / 10',
                     overflow: 'hidden',
                     borderRadius: '8px 8px 0 0',
-                    margin: '-16px -16px 12px -16px',
-                    width: 'calc(100% + 32px)',
+                    margin: '-20px -20px 14px -20px',
+                    width: 'calc(100% + 40px)',
                   }}>
                     <img src={b.cover} alt={b.label} className="rg-build-cover" style={{
                       width: '100%', height: '100%', objectFit: 'cover', display: 'block',
@@ -277,7 +277,7 @@ function Inner() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 8 }}>
                     {b.tech.map((tag, j) => (
                       <span key={j} style={{
-                        fontSize: 11, padding: '2px 8px', borderRadius: 99,
+                        fontSize: 12, padding: '3px 9px', borderRadius: 99,
                         background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
                         color: t.textMuted,
                       }}>{tag}</span>
@@ -413,11 +413,11 @@ function Inner() {
           z-index: 1;
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 20px;
           width: 100%;
-          max-width: 500px;
+          max-width: 640px;
           margin-left: clamp(48px, 15vw, 196px);
-          padding: 60px 24px 40px 0;
+          padding: 64px 24px 48px 0;
         }
 
         /* Header */
@@ -425,13 +425,13 @@ function Inner() {
         .rg-name {
           font-family: 'NeueMontreal-Medium', -apple-system, sans-serif;
           font-weight: 600;
-          font-size: 16px;
+          font-size: 20px;
           margin: 0;
           letter-spacing: -0.01em;
         }
-        .rg-nav { display: flex; gap: 16px; }
+        .rg-nav { display: flex; gap: 18px; }
         .rg-nav-link {
-          font-size: 14px;
+          font-size: 16px;
           text-decoration: none;
           position: relative;
           transition: color 0.2s, opacity 0.2s;
@@ -464,14 +464,14 @@ function Inner() {
           padding: 0; margin: 0;
           display: flex;
           flex-direction: column;
-          gap: 4px;
-          font-size: 16px;
+          gap: 8px;
+          font-size: 19px;
         }
         .rg-item {
           display: flex;
           align-items: flex-start;
-          gap: 16px;
-          padding-left: 16px;
+          gap: 18px;
+          padding-left: 18px;
           position: relative;
           transition: transform 0.2s;
         }
@@ -483,8 +483,8 @@ function Inner() {
         }
         .rg-diamond {
           position: absolute;
-          left: 0; top: 10px;
-          width: 6px; height: 6px;
+          left: 0; top: 12px;
+          width: 7px; height: 7px;
           transform: rotate(45deg);
           flex-shrink: 0;
           transition: transform 0.3s;
@@ -503,8 +503,8 @@ function Inner() {
         .rg-build-card {
           display: flex;
           flex-direction: column;
-          gap: 4px;
-          padding: 16px;
+          gap: 6px;
+          padding: 20px;
           border-radius: 10px;
           border: 1px solid;
           text-decoration: none;
@@ -519,10 +519,10 @@ function Inner() {
         .rg-build-label {
           font-family: 'NeueMontreal-Medium', sans-serif;
           font-weight: 600;
-          font-size: 14px;
+          font-size: 17px;
         }
         .rg-build-desc {
-          font-size: 13px;
+          font-size: 15px;
           line-height: 1.5;
         }
 
@@ -608,17 +608,17 @@ function Inner() {
         .rg-education {
           display: flex;
           flex-direction: column;
-          gap: 8px;
-          margin-top: 8px;
+          gap: 10px;
+          margin-top: 10px;
           width: 100%;
         }
         .rg-education-card {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 14px;
           border: 1px solid;
           border-radius: 8px;
-          padding: 12px 14px;
+          padding: 15px 17px;
           text-align: left;
           transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
           font-family: inherit;
@@ -629,8 +629,8 @@ function Inner() {
           box-shadow: 0 2px 12px rgba(0,0,0,0.2);
         }
         .rg-education-logo {
-          width: 36px;
-          height: 36px;
+          width: 44px;
+          height: 44px;
           object-fit: contain;
           border-radius: 6px;
           flex-shrink: 0;
@@ -638,19 +638,19 @@ function Inner() {
         .rg-education-title {
           font-family: 'NeueMontreal-Medium', sans-serif;
           font-weight: 500;
-          font-size: 15px;
+          font-size: 17px;
         }
         .rg-education-years {
-          font-size: 12px;
+          font-size: 13px;
           line-height: 1.4;
         }
         .rg-education-details {
-          font-size: 14px;
+          font-size: 16px;
           line-height: 1.5;
         }
 
         /* CTA */
-        .rg-cta { font-size: 14px; margin: 8px 0 0; }
+        .rg-cta { font-size: 16px; margin: 10px 0 0; }
         .rg-cta-link {
           text-decoration: none;
           border-bottom: 1px solid currentColor;
@@ -686,8 +686,19 @@ function Inner() {
         @media (max-width: 500px) {
           .rg-container {
             margin-left: 36px;
+            max-width: calc(100vw - 56px);
             padding: 40px 20px 32px 0;
           }
+          .rg-header {
+            align-items: flex-start;
+            gap: 12px;
+          }
+          .rg-nav {
+            gap: 12px;
+            flex-wrap: wrap;
+          }
+          .rg-list { font-size: 17px; }
+          .rg-build-card { padding: 16px; }
           .rg-ascii-backdrop {
             width: 72vw;
             transform: translate3d(10vw, 0, 0);
