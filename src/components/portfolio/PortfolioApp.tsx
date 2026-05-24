@@ -86,10 +86,10 @@ function MainAsciiBackdrop({ dark }: { dark: boolean }) {
       const vw = window.innerWidth;
       const mobile = vw <= 500;
       const tablet = vw <= 900 && !mobile;
-      const asciiFraction = mobile ? 0.4 : tablet ? 0.42 : 0.5;
+      const asciiFraction = mobile ? 0.78 : tablet ? 0.42 : 0.5;
       setSize({
-        width: Math.max(mobile ? 160 : 480, Math.round(vw * asciiFraction)),
-        height: Math.max(mobile ? 240 : 600, Math.round(mobile ? window.innerHeight * 0.32 : window.innerHeight)),
+        width: Math.max(mobile ? 280 : 480, Math.round(vw * asciiFraction)),
+        height: Math.max(mobile ? 360 : 600, Math.round(mobile ? window.innerHeight * 0.5 : window.innerHeight)),
         mobile,
       });
     };
@@ -105,7 +105,7 @@ function MainAsciiBackdrop({ dark }: { dark: boolean }) {
         width={size.width}
         height={size.height}
         color={dark ? '#f5f5f4' : '#1c1917'}
-        opacity={dark ? (size.mobile ? 0.1 : 0.36) : (size.mobile ? 0.07 : 0.32)}
+        opacity={dark ? (size.mobile ? 0.22 : 0.36) : (size.mobile ? 0.18 : 0.32)}
         fontWeight={900}
         scale={size.mobile ? 1 : 1.1}
         lineHeight={1.02}
@@ -721,8 +721,8 @@ function Inner() {
           .rg-ascii-backdrop {
             top: auto;
             bottom: 0;
-            width: 40vw;
-            height: 32vh;
+            width: 82vw;
+            height: 52vh;
             opacity: 1;
           }
           .rg-ascii-backdrop-mobile {
@@ -946,7 +946,9 @@ export default function PortfolioApp() {
             onClick={togglePeek}
             role="button"
             aria-label="Open AbdullahOS"
-          />
+          >
+            <span className="page-curl-chip">abdullahos →</span>
+          </div>
         </div>
       )}
 
@@ -992,6 +994,7 @@ export default function PortfolioApp() {
             linear-gradient(225deg, transparent 48%, rgba(0,0,0,0.08) 49.5%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.05) 51%, transparent 53%);
           transition: opacity 0.3s linear;
         }
+        .page-curl-chip { display: none; }
         .curl-hidden {
           opacity: 0 !important;
           pointer-events: none;
@@ -1000,8 +1003,42 @@ export default function PortfolioApp() {
           display: none !important;
         }
         @media (max-width: 768px) {
-          .peek-container {
-            display: none !important;
+          .peek-desktop {
+            clip-path: polygon(
+              calc(100% - 130px) 0%,
+              100% 0%,
+              100% 130px,
+              calc(100% - 130px) 0%
+            );
+          }
+          .page-curl {
+            width: 150px;
+            height: 60px;
+            background: none;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+            padding: 14px 14px 0 0;
+          }
+          .page-curl-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 13px;
+            border-radius: 999px;
+            background: rgba(20, 20, 20, 0.88);
+            color: #f5f5f4;
+            font-family: 'SF Mono', 'Menlo', monospace;
+            font-size: 11px;
+            letter-spacing: 0.02em;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+            pointer-events: none;
+          }
+          .os-close-btn {
+            top: 14px;
+            right: 14px;
           }
         }
       `}</style>
