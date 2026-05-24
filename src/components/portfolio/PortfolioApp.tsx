@@ -78,6 +78,34 @@ const SOCIALS = [
   { label: 'email', href: 'mailto:abdullahmsultan1@gmail.com' },
 ];
 
+function MainAsciiBackdrop({ dark }: { dark: boolean }) {
+  const [size, setSize] = useState({ width: 1180, height: 820 });
+
+  useEffect(() => {
+    const setViewportSize = () => {
+      setSize({
+        width: Math.max(760, Math.round(window.innerWidth * 1.12)),
+        height: Math.max(560, Math.round(window.innerHeight * 0.9)),
+      });
+    };
+
+    setViewportSize();
+    window.addEventListener('resize', setViewportSize);
+    return () => window.removeEventListener('resize', setViewportSize);
+  }, []);
+
+  return (
+    <div className="rg-ascii-backdrop" aria-hidden="true">
+      <AbdullahAsciiLogo
+        width={size.width}
+        height={size.height}
+        color={dark ? '#f5f5f4' : '#1c1917'}
+        opacity={dark ? 0.075 : 0.065}
+      />
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════════════════
    Inline icon helper
    ══════════════════════════════════════════════════════════ */
@@ -168,6 +196,7 @@ function Inner() {
 
   return (
     <div className="rg-root" style={{ background: t.bg, color: t.text }}>
+      <MainAsciiBackdrop dark={dark} />
 
       <div className="rg-container">
         {/* ── Header ── */}
@@ -353,7 +382,22 @@ function Inner() {
           font-family: 'NeueMontreal-Regular', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
           font-weight: 300;
           line-height: 1.6;
+          overflow: hidden;
           transition: background 0.3s, color 0.3s;
+        }
+
+        .rg-ascii-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          pointer-events: none;
+          overflow: hidden;
+          transform: translate3d(12vw, 2vh, 0) rotate(-2deg);
+          transition: opacity 0.3s ease;
+          user-select: none;
         }
 
         .rg-root ::selection {
@@ -636,6 +680,9 @@ function Inner() {
 
         @media (max-width: 500px) {
           .rg-container { padding: 40px 20px 32px; }
+          .rg-ascii-backdrop {
+            transform: translate3d(18vw, 0, 0) rotate(-2deg);
+          }
         }
       `}</style>
     </div>
