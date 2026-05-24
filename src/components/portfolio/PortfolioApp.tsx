@@ -84,8 +84,8 @@ function MainAsciiBackdrop({ dark }: { dark: boolean }) {
   useEffect(() => {
     const setViewportSize = () => {
       setSize({
-        width: Math.max(1360, Math.round(window.innerWidth * 1.75)),
-        height: Math.max(900, Math.round(window.innerHeight * 1.35)),
+        width: Math.max(760, Math.round(window.innerWidth * 0.62)),
+        height: Math.max(860, Math.round(window.innerHeight * 1.18)),
       });
     };
 
@@ -378,7 +378,7 @@ function Inner() {
           min-height: 100vh;
           width: 100%;
           display: flex;
-          justify-content: center;
+          justify-content: flex-start;
           align-items: flex-start;
           font-family: 'NeueMontreal-Regular', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
           font-weight: 300;
@@ -389,14 +389,17 @@ function Inner() {
 
         .rg-ascii-backdrop {
           position: fixed;
-          inset: 0;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          width: min(62vw, 920px);
           z-index: 0;
           display: flex;
           align-items: center;
-          justify-content: center;
+          justify-content: flex-end;
           pointer-events: none;
           overflow: hidden;
-          transform: translate3d(4vw, -2vh, 0) rotate(-2deg);
+          transform: translate3d(7vw, -1vh, 0);
           transition: opacity 0.3s ease;
           user-select: none;
         }
@@ -413,7 +416,8 @@ function Inner() {
           gap: 16px;
           width: 100%;
           max-width: 500px;
-          padding: 60px 24px 40px;
+          margin-left: clamp(24px, 8vw, 112px);
+          padding: 60px 24px 40px 0;
         }
 
         /* Header */
@@ -680,9 +684,13 @@ function Inner() {
         .rg-socials { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
 
         @media (max-width: 500px) {
-          .rg-container { padding: 40px 20px 32px; }
+          .rg-container {
+            margin-left: 20px;
+            padding: 40px 20px 32px 0;
+          }
           .rg-ascii-backdrop {
-            transform: translate3d(6vw, -1vh, 0) rotate(-2deg);
+            width: 72vw;
+            transform: translate3d(22vw, 0, 0);
           }
         }
       `}</style>
