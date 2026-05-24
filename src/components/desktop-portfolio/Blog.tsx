@@ -10,22 +10,22 @@ interface BlogProps {
 
 const blogPosts = [
   {
-    slug: "abdullah-notes",
-    title: "Abdullah Notes",
-    summary: "Placeholder notes for Abdullah Sultan's future writing.",
-    tags: ["Placeholder", "Ideas"],
+    slug: "abdullahos-overview",
+    title: "abdullahos overview",
+    summary: "desktop-style portfolio w/ draggable windows, app interactions, photos, projects, and static links.",
+    tags: ["Astro", "React"],
     readingTime: 2,
     publishedAt: "2026-01-01",
-    folder: "Ideas"
+    folder: "overview"
   },
   {
-    slug: "project-log",
-    title: "Project Log",
-    summary: "Static build-log shell for AbdullahOS and future project notes.",
-    tags: ["Placeholder", "Builds"],
+    slug: "abdullahos-parts",
+    title: "app map",
+    summary: "about, projects, photos, contact, github, youtube music, terminal, and abdullahos.",
+    tags: ["desktop", "apps"],
     readingTime: 2,
     publishedAt: "2026-01-02",
-    folder: "Builds"
+    folder: "apps"
   },
 ];
 
@@ -59,9 +59,9 @@ function groupByDate(posts: typeof blogPosts) {
 }
 
 const folders = [
-  { name: 'All Notes', icon: '📓', count: blogPosts.length },
-  { name: 'Ideas', icon: '💡', count: blogPosts.filter(p => p.folder === 'Ideas').length },
-  { name: 'Builds', icon: '▣', count: blogPosts.filter(p => p.folder === 'Builds').length },
+  { name: 'all', icon: '▣', count: blogPosts.length },
+  { name: 'overview', icon: '⌘', count: blogPosts.filter(p => p.folder === 'overview').length },
+  { name: 'apps', icon: '□', count: blogPosts.filter(p => p.folder === 'apps').length },
 ];
 
 type FontSize = 'small' | 'medium' | 'large';
@@ -73,8 +73,8 @@ const fontSizes: Record<FontSize, { body: string; title: string; label: string }
 const fontSizeOrder: FontSize[] = ['small', 'medium', 'large'];
 
 const Blog = ({ onContentClick, windowMode }: BlogProps) => {
-  const [selectedSlug, setSelectedSlug] = useState<string>('abdullah-notes');
-  const [activeFolder, setActiveFolder] = useState('All Notes');
+  const [selectedSlug, setSelectedSlug] = useState<string>('abdullahos-overview');
+  const [activeFolder, setActiveFolder] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSidebar, setShowSidebar] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -83,7 +83,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
   const searchRef = useRef<HTMLInputElement>(null);
 
   const filteredPosts = blogPosts.filter(p => {
-    const matchFolder = activeFolder === 'All Notes' || p.folder === activeFolder;
+    const matchFolder = activeFolder === 'all' || p.folder === activeFolder;
     const matchSearch = !searchQuery || p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.summary.toLowerCase().includes(searchQuery.toLowerCase());
     return matchFolder && matchSearch;
   });
@@ -131,7 +131,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
       color: 'rgba(0,0,0,0.85)',
       fontSize: '13px',
     }}>
-      {/* ── Notes Toolbar ── */}
+      {/* ── App Toolbar ── */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -483,7 +483,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
                     color: isSelected ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.25)',
                     display: 'flex', alignItems: 'center', gap: '3px', marginTop: '2px',
                   }}>
-                    <span>📓</span> {post.folder}
+                    <span>▣</span> {post.folder}
                   </div>
                 </div>
               );
@@ -520,9 +520,9 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
                 margin: '0 0 20px',
                 fontFamily: 'NeueMontreal-Medium, -apple-system, BlinkMacSystemFont, sans-serif',
               }}>
-                My Notes
+                abdullahos
               </h1>
-              <div className="notes-content" style={{
+              <div className="app-content" style={{
                 fontSize: fs.body,
                 lineHeight: 1.8,
                 color: 'rgba(0,0,0,0.65)',
@@ -538,7 +538,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
                 fontSize: '12px',
                 color: 'rgba(0,0,0,0.3)',
               }}>
-                {blogPosts.length} notes &middot; Select one from the list to start reading
+                {blogPosts.length} sections &middot; select one from the list
               </div>
             </div>
           </>
@@ -580,7 +580,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
             </p>
 
             {/* Markdown content */}
-            <div className="notes-content" style={{
+            <div className="app-content" style={{
               fontSize: fs.body,
               lineHeight: 1.7,
               color: 'rgba(0,0,0,0.8)',
@@ -598,7 +598,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
             color: 'rgba(0,0,0,0.25)',
             fontSize: '15px',
           }}>
-            Select a note to read
+            select a section
           </div>
         )}
       </div>
@@ -606,8 +606,8 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
       </div>{/* close three-panel layout */}
 
       <style>{`
-        /* Override MarkdownRenderer dark-theme inline styles for Notes light theme */
-        .notes-content h2 {
+        /* Override MarkdownRenderer dark-theme inline styles for this light window */
+        .app-content h2 {
           font-family: NeueMontreal-Medium, -apple-system, BlinkMacSystemFont, sans-serif !important;
           font-size: 1.2em !important;
           font-weight: 500 !important;
@@ -617,7 +617,7 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
           border-bottom: 1px solid rgba(0,0,0,0.08) !important;
           line-height: 1.35 !important;
         }
-        .notes-content h3 {
+        .app-content h3 {
           font-family: NeueMontreal-Medium, -apple-system, BlinkMacSystemFont, sans-serif !important;
           font-size: 1.05em !important;
           font-weight: 500 !important;
@@ -627,22 +627,22 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
           border-bottom: none !important;
           padding-bottom: 0 !important;
         }
-        .notes-content p {
+        .app-content p {
           font-family: NeueMontreal-Light, -apple-system, BlinkMacSystemFont, sans-serif !important;
           margin: 0 0 1em !important;
           color: rgba(0,0,0,0.7) !important;
           line-height: 1.8 !important;
           font-weight: normal !important;
         }
-        .notes-content strong {
+        .app-content strong {
           font-family: NeueMontreal-Medium, -apple-system, BlinkMacSystemFont, sans-serif !important;
           font-weight: 500 !important;
           color: rgba(0,0,0,0.85) !important;
         }
-        .notes-content em {
+        .app-content em {
           color: rgba(0,0,0,0.75) !important;
         }
-        .notes-content blockquote {
+        .app-content blockquote {
           font-family: NeueMontreal-Light, -apple-system, BlinkMacSystemFont, sans-serif !important;
           border-left: 3px solid rgba(0,0,0,0.15) !important;
           padding-left: 16px !important;
@@ -651,14 +651,14 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
           font-style: italic;
           line-height: 1.7 !important;
         }
-        .notes-content code {
+        .app-content code {
           background: rgba(0,0,0,0.06) !important;
           color: rgba(0,0,0,0.8) !important;
           padding: 2px 6px !important;
           border-radius: 4px !important;
           font-size: 0.88em !important;
         }
-        .notes-content pre {
+        .app-content pre {
           background: rgba(0,0,0,0.04) !important;
           border: 0.5px solid rgba(0,0,0,0.08) !important;
           border-radius: 8px !important;
@@ -666,39 +666,39 @@ const Blog = ({ onContentClick, windowMode }: BlogProps) => {
           overflow-x: auto;
           margin: 1.2em 0 !important;
         }
-        .notes-content pre code {
+        .app-content pre code {
           background: none !important;
           padding: 0 !important;
         }
-        .notes-content hr {
+        .app-content hr {
           border: none !important;
           border-top: 1px solid rgba(0,0,0,0.1) !important;
           margin: 1.5em 0 !important;
         }
-        .notes-content a {
+        .app-content a {
           color: #007AFF !important;
           text-decoration-color: rgba(0,122,255,0.3) !important;
         }
-        .notes-content ul,
-        .notes-content ol {
+        .app-content ul,
+        .app-content ol {
           font-family: NeueMontreal-Light, -apple-system, BlinkMacSystemFont, sans-serif !important;
           color: rgba(0,0,0,0.7) !important;
           line-height: 1.8 !important;
           margin: 0.8em 0 !important;
         }
-        .notes-content li {
+        .app-content li {
           color: rgba(0,0,0,0.7) !important;
           margin-bottom: 0.3em !important;
         }
-        .notes-content table {
+        .app-content table {
           font-family: NeueMontreal-Light, -apple-system, BlinkMacSystemFont, sans-serif !important;
         }
-        .notes-content table th {
+        .app-content table th {
           font-family: NeueMontreal-Medium, -apple-system, BlinkMacSystemFont, sans-serif !important;
           color: rgba(0,0,0,0.85) !important;
           border-bottom-color: rgba(0,0,0,0.15) !important;
         }
-        .notes-content table td {
+        .app-content table td {
           color: rgba(0,0,0,0.7) !important;
           border-bottom-color: rgba(0,0,0,0.06) !important;
         }

@@ -5,8 +5,8 @@ export default function MacTerminal() {
   const welcomeMessage = `Abdullah Sultan — student builder
 
 LinkedIn: music.youtube.com
-GitHub: github.com/abdullah-placeholder
-Email: abdullah@example.com
+GitHub: github.com/amsultan2010
+Email: abdullahmsultan1@gmail.com
 Location: Riyadh, Saudi Arabia
 
 
@@ -43,12 +43,12 @@ I build systems that think, design that feels, and code that connects ideas to i
       lower === 'help'
         ? 'Static commands: help, about, projects, contact'
         : lower === 'about'
-          ? 'Abdullah Sultan — student builder interested in startups, quant finance, robotics, AI, and creative hardware.'
+          ? 'Abdullah Sultan — student builder interested in startups, vertical ai, robotics, education, and automation.'
           : lower === 'projects'
-            ? 'Project shells: AbdullahOS, Project Shell 01, Project Shell 02, Project Shell 03, Robotics Project Shell, Quant Project Shell, Startup Project Shell.'
+            ? 'projects: abdullahos, tutoringbyabdullah, quantbacktesterpy, quantportfoliopy, quantoptionspy.'
             : lower === 'contact'
-              ? 'Email: abdullah@example.com'
-              : 'Static AbdullahOS terminal placeholder. Type help for commands.';
+              ? 'Email: abdullahmsultan1@gmail.com'
+              : 'static abdullahos terminal. type help for commands.';
     setLines((prev) => [...prev, response]);
   };
 
@@ -67,7 +67,7 @@ I build systems that think, design that feels, and code that connects ideas to i
         <div className='w-3 h-3 rounded-full bg-green-500'></div>
         <span className='text-sm text-gray-200 flex-grow text-center font-semibold flex items-center justify-center gap-2'>
           <FaRegFolderClosed size={14} className='text-gray-200' />
-          abdullah-placeholder.com — zsh
+          github.com/amsultan2010 — zsh
         </span>
       </div>
       <div className='p-6 text-gray-100 font-mono text-base h-[calc(500px-1.5rem)] flex flex-col'>
@@ -143,7 +143,7 @@ I build systems that think, design that feels, and code that connects ideas to i
 
         <div className='mt-4 pt-4 border-t border-white/10'>
           <div className='flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2'>
-            <span className='whitespace-nowrap text-green-400 font-semibold'>abdullah-placeholder.tech root %</span>
+            <span className='whitespace-nowrap text-green-400 font-semibold'>abdullah.tech root %</span>
             <input
               type='text'
               value={input}

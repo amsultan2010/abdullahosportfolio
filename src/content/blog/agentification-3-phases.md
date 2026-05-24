@@ -1,12 +1,12 @@
 ---
-title: "Abdullah Notes"
+title: "american international school in riyadh"
 slug: agentification-3-phases
 publishedAt: "2026-01-01"
-tags: ["Placeholder"]
-summary: "Static Abdullah writing placeholder."
+tags: ["education"]
+summary: "current school chapter in riyadh."
 readingTime: 2
 ---
 
-# Abdullah Notes
+# american international school in riyadh
 
-Static placeholder writing for Abdullah Sultan. Final copy will be added later.
+2025-present. self-studying ap precalc, ap psych, and ap compsci a while building products and robotics projects.

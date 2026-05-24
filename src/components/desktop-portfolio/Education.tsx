@@ -28,34 +28,31 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
   const currentEducation = [
     {
       id: 1,
-      company: "Abdullah Education Placeholder",
-      role: "Student builder",
-      location: "Riyadh, Saudi Arabia",
-      description: "Static education placeholder for Abdullah Sultan. Final education details will be added later.",
-      logo: "/icons/folder.png",
-      logoRound: true,
+      company: "american international school in riyadh",
+      role: "2025-present",
+      location: "riyadh, saudi arabia",
+      description: "self-studying ap precalc, ap psych, and ap compsci a while building across robotics, ai, and products.",
+      logo: "/images/logosicons/aisr.png",
+      logoRound: false,
       logoSize: 55,
       detail: {
         type: 'education' as const,
         id: 1,
-        institution: "Abdullah Education Placeholder",
-        logo: "/icons/folder.png",
+        institution: "american international school in riyadh",
+        logo: "/images/logosicons/aisr.png",
         gpa: "",
-        courses: [
-          { code: "AI 101", name: "AI project exploration" },
-          { code: "ROB 101", name: "Robotics project exploration" },
-          { code: "QF 101", name: "Quant finance project exploration" },
-          { code: "HW 101", name: "Creative hardware prototyping" }
-        ],
+        academics: [],
         activities: [
-          "Startup idea exploration",
-          "Robotics and hardware experiments",
-          "AbdullahOS planning"
+          "self-studying ap precalc, ap psych, and ap compsci a",
+          "highest achievable level of maths; one year of aa sl in 10th grade, 1 of 4 students in grade level",
+          "aspiring doctors' club: promoted to leader within first year; 14 recurring members",
+          "jv boys' badminton",
+          "#2 seed on varsity boys' tennis; season cancelled due to geopolitical conflict"
         ],
         achievements: [
-          "Placeholder achievement"
+          "building products while keeping school as the operating base"
         ],
-        reflection: "Placeholder education copy for Abdullah Sultan. This will be replaced with real education details in a later stage."
+        reflection: "current school chapter: harder academics, more responsibility, and more room to build."
       } satisfies EducationDetail
     }
   ];
@@ -63,34 +60,33 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
   const pastEducation = [
     {
       id: 2,
-      company: "Learning Track Placeholder",
-      role: "Startups, robotics, AI, and quant finance",
-      location: "Riyadh, Saudi Arabia",
-      description: "Static learning-history placeholder for Abdullah's portfolio shell.",
-      logo: "/icons/folder.png",
-      logoRound: true,
+      company: "the pingry school",
+      role: "2021-2025",
+      location: "basking ridge, nj",
+      description: "debate, engineering, affinity leadership, tennis, swim, and early cs self-study.",
+      logo: "/images/logosicons/pingry.png",
+      logoRound: false,
       logoSize: 55,
       detail: {
         type: 'education' as const,
         id: 2,
-        institution: "Learning Track Placeholder",
-        logo: "/icons/folder.png",
+        institution: "the pingry school",
+        logo: "/images/logosicons/pingry.png",
         gpa: "",
-        courses: [
-          { code: "STARTUP", name: "Startup project shell" },
-          { code: "QUANT", name: "Quant project shell" },
-          { code: "ROBOT", name: "Robotics project shell" },
-          { code: "HARDWARE", name: "Creative hardware project shell" }
-        ],
+        academics: [],
         activities: [
-          "Project Shell 01",
-          "Project Shell 02",
-          "Project Shell 03"
+          "self-studied ap compsci principles; scored 5/5",
+          "public forum debate club: 1st place w/ undefeated 5-0 record at horace mann juniors invitational",
+          "muslim affinity group: leader; 8 recurring members; weekly meetings",
+          "pingry research and innovation in modern engineering: 12 recurring members; 2 speaker sessions w/ local engineering professors",
+          "f1 club",
+          "jv boys' tennis",
+          "jv boys' swim: 1st place in exhibition 50 at lawrenceville state championships"
         ],
         achievements: [
-          "Placeholder milestone"
+          "built the habit of joining technical, academic, and community work early"
         ],
-        reflection: "Placeholder learning copy for Abdullah Sultan. Final writing will be added later."
+        reflection: "pingry was where school became more than classes: debate, engineering, community, and competition."
       } satisfies EducationDetail
     }
   ];
@@ -141,7 +137,7 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
               margin: '0 0 0.75rem 0',
               fontWeight: '600'
             }}>
-              Education
+              education
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
@@ -182,73 +178,6 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
               ))}
             </div>
 
-            {/* ── Certifications ── */}
-            <h3 style={{
-              fontSize: '1.2rem',
-              color: 'rgba(255, 255, 255, 0.9)',
-              fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-MediumItalic, sans-serif',
-              fontStyle: 'italic',
-              margin: '1.25rem 0 0.75rem 0',
-              fontWeight: '600',
-            }}>
-              Certifications
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
-              {[
-                {
-                  title: 'Machine Learning for Trading Specialization',
-                  issuer: 'Google Cloud Skills Boost',
-                  date: 'Dec 2024',
-                  credentialId: 'ERAU8H0QLX7N',
-                  pdfUrl: '/google trading cloud .pdf',
-                  logo: '/google_cloud_logo_icon_171058-1.png',
-                  reflection: 'This specialization deepened my understanding of applying ML models to financial markets — from time series forecasting to reinforcement learning for portfolio optimization. It bridged the gap between my CS fundamentals and my interest in quantitative finance.',
-                },
-                {
-                  title: 'Finance & Quantitative Modeling for Analysts',
-                  issuer: 'Wharton Online',
-                  date: 'Dec 2024',
-                  credentialId: 'S2XHA24WPFWY',
-                  pdfUrl: '/wharton certicate.pdf',
-                  logo: '/wharton-shield.png',
-                  reflection: 'Wharton\'s quantitative modeling program gave me a rigorous foundation in financial analysis — from valuation frameworks to risk modeling. It reinforced how to think about markets systematically, which directly informs how I build data-driven tools.',
-                },
-              ].map((cert) => (
-                <div
-                  key={cert.credentialId}
-                  onClick={() => {
-                    setSelectedCert(cert);
-                    setSelectedDetail(null);
-                    setViewState('fading-out');
-                    setTimeout(() => {
-                      setViewState('detail');
-                      scrollRef.current?.scrollTo({ top: 0 });
-                    }, 300);
-                  }}
-                  className="dark-experience-card"
-                  style={{
-                    width: '100%',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                    <img
-                      src={cert.logo}
-                      alt={cert.issuer}
-                      style={{ width: 55, height: 55, objectFit: 'contain', borderRadius: 8, flexShrink: 0 }}
-                    />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 'clamp(1rem, 2.5vw, 1.3rem)', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Medium, sans-serif', lineHeight: 1.3 }}>
-                        {cert.title}
-                      </div>
-                      <div style={{ fontSize: 'clamp(0.9rem, 2.2vw, 1rem)', color: 'rgba(255,255,255,0.7)', fontFamily: '-apple-system, BlinkMacSystemFont, NeueMontreal-Light, sans-serif', marginTop: '4px' }}>
-                        {cert.issuer} · {cert.date}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* ── DETAIL VIEW ── */}
@@ -283,7 +212,7 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="15 18 9 12 15 6" />
                 </svg>
-                Education
+                education
               </button>
 
               {selectedDetail ? (
@@ -354,7 +283,7 @@ const Education = ({ onCardClick, windowMode }: EducationProps) => {
             margin: '0 0 1rem 0',
             fontWeight: '600'
           }}>
-            Education
+            education
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>

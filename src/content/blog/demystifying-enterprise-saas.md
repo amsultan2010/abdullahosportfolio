@@ -1,12 +1,12 @@
 ---
-title: "Project Log Placeholder 01"
+title: "the pingry school"
 slug: demystifying-enterprise-saas
 publishedAt: "2026-01-02"
-tags: ["Placeholder"]
-summary: "Static Abdullah writing placeholder."
+tags: ["education"]
+summary: "school, engineering, debate, and community."
 readingTime: 2
 ---
 
-# Project Log Placeholder 01
+# the pingry school
 
-Static placeholder writing for Abdullah Sultan. Final copy will be added later.
+2021-2025. debate, engineering, muslim affinity group leadership, tennis, swim, and early cs self-study.

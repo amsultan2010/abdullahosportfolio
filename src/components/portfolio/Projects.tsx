@@ -50,192 +50,139 @@ const Projects = ({ onCardClick }: ProjectsProps) => {
   const projects = [
     {
       id: 0,
-      title: "AbdullahOS",
-      description: "Main Abdullah-focused OS project shell for this static portfolio stage.",
+      title: "abdullahos",
+      description: "desktop-style personal portfolio built w/ astro, react, and a macos-inspired ui.",
       gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
-      coverImage: "/terminal.png",
-      repoUrl: "https://github.com/abdullah-placeholder",
+      coverImage: "/readme/portfolio-desktop.png",
+      repoUrl: "/desktop",
       detail: {
         type: 'project' as const,
         id: 0,
-        title: "AbdullahOS",
+        title: "abdullahos",
         gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
-        coverImage: "/terminal.png",
+        coverImage: "/readme/portfolio-desktop.png",
         liveUrl: "/desktop",
-        architecture: "Main Abdullah-focused OS project shell for this static portfolio stage. This is placeholder architecture copy for Abdullah Sultan.",
+        architecture: "a desktop-style personal portfolio built w/ astro, react, and a macos-inspired ui. includes draggable windows, app interactions, photos, projects, links, and custom static apps.",
         technicalChallenges: [
-          "Placeholder technical challenge",
-          "Placeholder implementation note",
-          "Placeholder future detail"
+          "draggable window state",
+          "dock + menu bar interactions",
+          "static app content without live apis"
         ],
         lessonsLearned: [
-          "Placeholder lesson",
-          "Final writing will be added later"
+          "interfaces feel better when small details stay consistent",
+          "static systems can still feel alive"
         ],
         techStack: ["Astro","React","TypeScript"],
-        repoUrl: "https://github.com/abdullah-placeholder"
+        repoUrl: "/desktop"
       } satisfies ProjectDetail
     },
     {
       id: 1,
-      title: "Project Shell 01",
-      description: "Static placeholder project card. Final project copy will be added later.",
+      title: "tutoringbyabdullah",
+      description: "a tutoring platform focused on teaching style, recommendations, and real understanding.",
       gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
-      coverImage: "/icons/folder.png",
-      repoUrl: "https://github.com/abdullah-placeholder",
+      coverImage: "/images/projects/tutoringpreview.png",
+      repoUrl: "https://tutoringbyabdullah.xyz",
       detail: {
         type: 'project' as const,
         id: 1,
-        title: "Project Shell 01",
+        title: "tutoringbyabdullah",
         gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
-        coverImage: "/icons/folder.png",
-        architecture: "Static placeholder project card. Final project copy will be added later. This is placeholder architecture copy for Abdullah Sultan.",
+        coverImage: "/images/projects/tutoringpreview.png",
+        liveUrl: "https://tutoringbyabdullah.xyz",
+        architecture: "a tutoring platform focused on teaching style, recommendations, and helping students actually understand concepts instead of memorizing steps.",
         technicalChallenges: [
-          "Placeholder technical challenge",
-          "Placeholder implementation note",
-          "Placeholder future detail"
+          "clear service flow",
+          "education-focused copy",
+          "fast static site delivery"
         ],
         lessonsLearned: [
-          "Placeholder lesson",
-          "Final writing will be added later"
+          "education products need clarity first",
+          "good tutoring starts with diagnosis"
         ],
-        techStack: ["Placeholder"],
-        repoUrl: "https://github.com/abdullah-placeholder"
+        techStack: ["Education","Website","Product"],
+        repoUrl: "https://tutoringbyabdullah.xyz"
       } satisfies ProjectDetail
     },
     {
       id: 2,
-      title: "Project Shell 02",
-      description: "Static placeholder project card. Final project copy will be added later.",
+      title: "quantbacktesterpy",
+      description: "single-stock sma crossover backtester w/ parameter heatmaps.",
       gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
-      coverImage: "/vscode.png",
-      repoUrl: "https://github.com/abdullah-placeholder",
+      coverImage: "/images/projects/quantbacktesterpy.png",
+      repoUrl: "https://github.com/amsultan2010",
       detail: {
         type: 'project' as const,
         id: 2,
-        title: "Project Shell 02",
+        title: "quantbacktesterpy",
         gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
-        coverImage: "/vscode.png",
-        architecture: "Static placeholder project card. Final project copy will be added later. This is placeholder architecture copy for Abdullah Sultan.",
+        coverImage: "/images/projects/quantbacktesterpy.png",
+        architecture: "a single-stock sma crossover backtester w/ parameter heatmaps for testing trading strategies and visualizing behavior.",
         technicalChallenges: [
-          "Placeholder technical challenge",
-          "Placeholder implementation note",
-          "Placeholder future detail"
+          "parameter sweeps",
+          "return + drawdown plots",
+          "strategy behavior visualization"
         ],
         lessonsLearned: [
-          "Placeholder lesson",
-          "Final writing will be added later"
+          "visual checks catch fragile strategies",
+          "backtests need assumptions in the open"
         ],
-        techStack: ["Placeholder"],
-        repoUrl: "https://github.com/abdullah-placeholder"
+        techStack: ["Python","Pandas","Matplotlib"],
+        repoUrl: "https://github.com/amsultan2010"
       } satisfies ProjectDetail
     },
     {
       id: 3,
-      title: "Project Shell 03",
-      description: "Static placeholder project card. Final project copy will be added later.",
+      title: "quantportfoliopy",
+      description: "multi-asset risk parity portfolio backtester.",
       gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
-      coverImage: "/notes.png",
-      repoUrl: "https://github.com/abdullah-placeholder",
+      coverImage: "/images/projects/quantportfoliopy.png",
+      repoUrl: "https://github.com/amsultan2010",
       detail: {
         type: 'project' as const,
         id: 3,
-        title: "Project Shell 03",
+        title: "quantportfoliopy",
         gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
-        coverImage: "/notes.png",
-        architecture: "Static placeholder project card. Final project copy will be added later. This is placeholder architecture copy for Abdullah Sultan.",
+        coverImage: "/images/projects/quantportfoliopy.png",
+        architecture: "a multi-asset risk parity portfolio backtester focused on allocation, volatility, and portfolio construction.",
         technicalChallenges: [
-          "Placeholder technical challenge",
-          "Placeholder implementation note",
-          "Placeholder future detail"
+          "risk contribution math",
+          "portfolio rebalancing",
+          "volatility-aware allocation"
         ],
         lessonsLearned: [
-          "Placeholder lesson",
-          "Final writing will be added later"
+          "portfolio behavior matters more than one clean metric",
+          "allocation logic needs readable outputs"
         ],
-        techStack: ["Placeholder"],
-        repoUrl: "https://github.com/abdullah-placeholder"
+        techStack: ["Python","Finance","Research"],
+        repoUrl: "https://github.com/amsultan2010"
       } satisfies ProjectDetail
     },
     {
       id: 4,
-      title: "Robotics Project Shell",
-      description: "Static placeholder for future robotics and creative hardware work.",
+      title: "quantoptionspy",
+      description: "black-scholes + monte carlo options pricer w/ greeks.",
       gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
-      coverImage: "/icons/folder.png",
-      repoUrl: "https://github.com/abdullah-placeholder",
+      coverImage: "/images/projects/quantoptionspy.png",
+      repoUrl: "https://github.com/amsultan2010",
       detail: {
         type: 'project' as const,
         id: 4,
-        title: "Robotics Project Shell",
+        title: "quantoptionspy",
         gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
-        coverImage: "/icons/folder.png",
-        architecture: "Static placeholder for future robotics and creative hardware work. This is placeholder architecture copy for Abdullah Sultan.",
+        coverImage: "/images/projects/quantoptionspy.png",
+        architecture: "a black-scholes + monte carlo options pricer w/ greeks and exotic derivative support.",
         technicalChallenges: [
-          "Placeholder technical challenge",
-          "Placeholder implementation note",
-          "Placeholder future detail"
+          "pricing model comparison",
+          "greeks calculation",
+          "monte carlo simulation"
         ],
         lessonsLearned: [
-          "Placeholder lesson",
-          "Final writing will be added later"
+          "pricing code needs traceable assumptions",
+          "numerical methods are easier to trust when visualized"
         ],
-        techStack: ["Robotics","Hardware","Prototype"],
-        repoUrl: "https://github.com/abdullah-placeholder"
-      } satisfies ProjectDetail
-    },
-    {
-      id: 5,
-      title: "Quant Project Shell",
-      description: "Static placeholder for future quant finance work.",
-      gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
-      coverImage: "/trading.png",
-      repoUrl: "https://github.com/abdullah-placeholder",
-      detail: {
-        type: 'project' as const,
-        id: 5,
-        title: "Quant Project Shell",
-        gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
-        coverImage: "/trading.png",
-        architecture: "Static placeholder for future quant finance work. This is placeholder architecture copy for Abdullah Sultan.",
-        technicalChallenges: [
-          "Placeholder technical challenge",
-          "Placeholder implementation note",
-          "Placeholder future detail"
-        ],
-        lessonsLearned: [
-          "Placeholder lesson",
-          "Final writing will be added later"
-        ],
-        techStack: ["Python","Finance","Research"],
-        repoUrl: "https://github.com/abdullah-placeholder"
-      } satisfies ProjectDetail
-    },
-    {
-      id: 6,
-      title: "Startup Project Shell",
-      description: "Static placeholder for future startup-focused work.",
-      gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
-      coverImage: "/cover.png",
-      repoUrl: "https://github.com/abdullah-placeholder",
-      detail: {
-        type: 'project' as const,
-        id: 6,
-        title: "Startup Project Shell",
-        gradient: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)",
-        coverImage: "/cover.png",
-        architecture: "Static placeholder for future startup-focused work. This is placeholder architecture copy for Abdullah Sultan.",
-        technicalChallenges: [
-          "Placeholder technical challenge",
-          "Placeholder implementation note",
-          "Placeholder future detail"
-        ],
-        lessonsLearned: [
-          "Placeholder lesson",
-          "Final writing will be added later"
-        ],
-        techStack: ["Product","Startup","AI"],
-        repoUrl: "https://github.com/abdullah-placeholder"
+        techStack: ["Python","Options","Monte Carlo"],
+        repoUrl: "https://github.com/amsultan2010"
       } satisfies ProjectDetail
     }
   ];

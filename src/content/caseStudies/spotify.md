@@ -1,13 +1,13 @@
 ---
-title: "Startup Project Shell: Placeholder Case Study"
+title: "vertical ai"
 slug: spotify
-company: "Startup Project Shell"
+company: "automation"
 publishedAt: "2026-02-02"
-tags: ["Placeholder"]
-summary: "Static placeholder case study for Abdullah Sultan."
+tags: ["AI","Automation","Robotics"]
+summary: "vertical ai direction for automation, enterprise software, robotics, productivity, and education."
 readingTime: 2
 ---
 
-# Startup Project Shell: Placeholder Case Study
+# vertical ai
 
-Static placeholder case-study content. Final writing will be added later.
+interested in vertical ai applications that make real workflows easier: automation, enterprise software, robotics, productivity, and education.

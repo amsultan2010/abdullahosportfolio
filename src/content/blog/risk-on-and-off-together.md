@@ -1,12 +1,12 @@
 ---
-title: "Project Log Placeholder 03"
+title: "academics"
 slug: risk-on-and-off-together
 publishedAt: "2026-01-04"
-tags: ["Placeholder"]
-summary: "Static Abdullah writing placeholder."
+tags: ["school"]
+summary: "self-study and math track."
 readingTime: 2
 ---
 
-# Project Log Placeholder 03
+# academics
 
-Static placeholder writing for Abdullah Sultan. Final copy will be added later.
+self-studied ap compsci principles for a 5/5, now self-studying ap precalc, ap psych, and ap compsci a.

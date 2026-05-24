@@ -1,16 +1,16 @@
 ---
-title: "Startup Project Shell"
-slug: startup-project-shell
+title: "tutoringbyabdullah"
+slug: tutoringbyabdullah
 year: 2026
-tech: ["Startup","Placeholder"]
-summary: "Static placeholder for a future startup project."
-repoUrl: "https://github.com/abdullah-placeholder"
+tech: ["Education","Product","Website"]
+summary: "tutoring platform focused on teaching style, recommendations, and real understanding."
+repoUrl: "https://tutoringbyabdullah.xyz"
 highlights:
-  - "Placeholder highlight"
+  - "education product"
+  - "teaching style"
+  - "student understanding"
 ---
 
-# Startup Project Shell
+# tutoringbyabdullah
 
-Static placeholder for a future startup project.
-
-Final project writing will be added later.
+a tutoring platform focused on teaching style, recommendations, and helping students actually understand concepts instead of memorizing steps.

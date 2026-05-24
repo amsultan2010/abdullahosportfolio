@@ -1,12 +1,12 @@
 ---
-title: "Project Log Placeholder 04"
-slug: waterloo-notes-coops-ai-wave
+title: "school leadership"
+slug: school-leadership
 publishedAt: "2026-01-05"
-tags: ["Placeholder"]
-summary: "Static Abdullah writing placeholder."
+tags: ["leadership"]
+summary: "small groups, recurring meetings, and practical responsibility."
 readingTime: 2
 ---
 
-# Project Log Placeholder 04
+# school leadership
 
-Static placeholder writing for Abdullah Sultan. Final copy will be added later.
+aspiring doctors club, muslim affinity group, and pingry research and innovation in modern engineering.

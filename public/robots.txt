@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://YOUR_WEBSITE_URL/sitemap-index.xml
+Sitemap: https://github.com/amsultan2010/sitemap-index.xml
 
 # Avoid API routes
 Disallow: /api/

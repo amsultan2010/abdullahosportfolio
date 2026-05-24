@@ -1,31 +1,29 @@
 import type { ContentViewData } from './ContentViewer';
 
 export const contentMap: Record<string, ContentViewData> = {
-  'abdullah-notes': {
+  'abdullahos-overview': {
     type: 'blog',
-    slug: 'abdullah-notes',
-    title: 'Abdullah Notes',
+    slug: 'abdullahos-overview',
+    title: 'abdullahos overview',
     publishedAt: '2026-01-01',
-    tags: ['Placeholder', 'Ideas'],
+    tags: ['astro', 'react'],
     readingTime: 2,
-    summary: 'Placeholder notes for Abdullah Sultan.',
-    markdown: `This is a static placeholder for Abdullah Sultan's future writing.
+    summary: 'desktop-style portfolio w/ draggable windows, app interactions, photos, projects, and static links.',
+    markdown: `abdullahos is the desktop-style shell for this portfolio.
 
-Topics may include startups, quant finance, robotics, AI, and creative hardware projects.
-
-Final writing will be added in a later stage.`
+it keeps the macos-inspired interface, draggable windows, dock apps, local photos, projects, contact, and terminal-style details in one static site.`
   },
 
-  'project-log': {
+  'abdullahos-parts': {
     type: 'blog',
-    slug: 'project-log',
-    title: 'Project Log',
+    slug: 'abdullahos-parts',
+    title: 'app map',
     publishedAt: '2026-01-02',
-    tags: ['Placeholder', 'Builds'],
+    tags: ['desktop', 'apps'],
     readingTime: 2,
-    summary: 'A temporary build-log shell.',
-    markdown: `This is a placeholder project log.
+    summary: 'about, projects, photos, contact, github, youtube music, terminal, and abdullahos.',
+    markdown: `the app set is intentionally simple: about, projects, photos, contact, github, youtube music, terminal, and abdullahos.
 
-It will eventually hold short notes about experiments, prototypes, and AbdullahOS updates.`
+everything is static for now so the portfolio stays easy to customize.`
   },
 };

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef, createContext, useContext, la
 import ContentViewer from './ContentViewer';
 import type { ContentViewData } from './ContentViewer';
 import { contentMap } from './contentData';
+import AbdullahAsciiLogo from '../desktop/AbdullahAsciiLogo';
 
 const LazyDesktopShell = lazy(() => import('../desktop/DesktopShell'));
 
@@ -36,43 +37,45 @@ function ThemeProvider({ children, siteReady = false }: { children: React.ReactN
 
 const BUILDING = [
   {
-    label: 'AbdullahOS',
+    label: 'abdullahos',
     href: '/desktop',
     cover: '/readme/portfolio-desktop.png',
-    desc: 'a personal desktop-inspired portfolio shell for experiments, writing, and project notes.',
+    desc: 'desktop-style portfolio w/ draggable windows and static apps.',
     tech: ['Astro', 'React', 'TypeScript'],
   },
   {
-    label: 'Quant Project Shell',
-    href: 'https://github.com/abdullah-placeholder',
-    cover: '/trading.png',
-    desc: 'placeholder for future quant finance research, simulations, and market tooling.',
-    tech: ['Python', 'Data', 'Research'],
+    label: 'tutoringbyabdullah',
+    href: 'https://tutoringbyabdullah.xyz',
+    cover: '/images/projects/tutoringpreview.png',
+    desc: 'education product focused on understanding, not memorizing.',
+    tech: ['Education', 'Product', 'Website'],
   },
 ];
 
 const PREVIOUSLY = [
-  { role: 'Robotics and hardware experiments', company: 'Project Shell 01', icon: '/icons/folder.png', href: 'https://github.com/abdullah-placeholder' },
-  { role: 'Startup and AI prototypes', company: 'Project Shell 02', icon: '/icons/folder.png', href: 'https://github.com/abdullah-placeholder' },
+  { role: 'vertical ai for automation, enterprise software, productivity, education', company: 'projects', icon: '/icons/folder.png', href: '/projects' },
+  { role: 'robotics + automation systems, with quant as technical proof', company: 'builds', icon: '/icons/folder.png', href: '/projects' },
 ];
 
-const WRITING = [
+const EDUCATION = [
   {
-    slug: 'abdullah-notes',
-    title: 'Abdullah Notes',
-    desc: 'Placeholder notes on startups, quant finance, robotics, AI, and creative hardware.',
+    school: 'american international school in riyadh',
+    years: '2025-present',
+    logo: '/images/logosicons/aisr.png',
+    details: ['ap precalc, ap psych, ap compsci a', 'aspiring doctors club lead', '#2 varsity tennis seed'],
   },
   {
-    slug: 'project-log',
-    title: 'Project Log',
-    desc: 'A temporary writing shell for build logs and experiments.',
+    school: 'the pingry school',
+    years: '2021-2025',
+    logo: '/images/logosicons/pingry.png',
+    details: ['ap compsci principles 5/5', 'public forum debate', 'engineering + affinity leadership'],
   },
 ];
 
 const SOCIALS = [
-  { label: 'github', href: 'https://github.com/abdullah-placeholder' },
-  { label: 'youtube music', href: 'https://music.youtube.com/' },
-  { label: 'email', href: 'mailto:abdullah@example.com' },
+  { label: 'github', href: 'https://github.com/amsultan2010' },
+  { label: 'youtube music', href: 'https://music.youtube.com/@amsultan303' },
+  { label: 'email', href: 'mailto:abdullahmsultan1@gmail.com' },
 ];
 
 /* ══════════════════════════════════════════════════════════
@@ -174,7 +177,7 @@ function Inner() {
             <nav className="rg-nav">
               <a href="/" className="rg-nav-link" style={{ color: t.textStrong }}>about</a>
               <a href="/projects" className="rg-nav-link" style={{ color: t.text }}>projects</a>
-              <a href="/writing" className="rg-nav-link" style={{ color: t.text }}>writing</a>
+              <a href="#education" className="rg-nav-link" style={{ color: t.text }}>education</a>
             </nav>
             <button onClick={toggle} className="rg-theme-btn" style={{ color: t.text, border: `1px solid ${t.border}`, background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }} aria-label="Toggle theme">
               {dark ? (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>) : (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>)}
@@ -189,10 +192,10 @@ function Inner() {
               Student builder{' '}
               <span className="rg-inline-link-group">
                 <SLink
-                  href="https://github.com/abdullah-placeholder"
+                  href="/desktop"
                   icon="/icons/folder.png"
                 >
-                  AbdullahOS
+                  abdullahos
                 </SLink>
               </span>
             </span>
@@ -202,12 +205,18 @@ function Inner() {
             <span style={{ color: t.text }}>
               interested in{' '}
               <span className="rg-inline-link-group">
-                <SLink href="https://github.com/abdullah-placeholder" icon="/icons/folder.png">startups</SLink>
+                <SLink href="/projects" icon="/icons/folder.png">startups</SLink>
                 {' + '}
-                <SLink href="https://github.com/abdullah-placeholder" icon="/icons/folder.png">quant finance</SLink>
+                <SLink href="/projects" icon="/icons/folder.png">vertical ai</SLink>
                 {' + '}
-                <SLink href="https://github.com/abdullah-placeholder" icon="/icons/folder.png">robotics</SLink>
+                <SLink href="/projects" icon="/icons/folder.png">robotics</SLink>
               </span>
+            </span>
+          </BulletItem>
+
+          <BulletItem diamond={t.diamond}>
+            <span style={{ color: t.text }}>
+              aiming to become the cto of a yc-funded startup that actually does something meaningful
             </span>
           </BulletItem>
 
@@ -255,6 +264,26 @@ function Inner() {
             </div>
           </li>
 
+          {/* Education */}
+          <li id="education" className="rg-item rg-item-nested" style={{ marginTop: 8 }}>
+            <div className="rg-diamond" style={{ background: t.diamond }} />
+            <span className="rg-section-label" style={{ color: t.text }}>education:</span>
+            <div className="rg-education">
+              {EDUCATION.map((edu, i) => (
+                <div key={i} className="rg-education-card" style={{ borderColor: t.border, background: dark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
+                  <img src={edu.logo} alt="" className="rg-education-logo" />
+                  <div style={{ minWidth: 0 }}>
+                    <div className="rg-education-title" style={{ color: t.textStrong }}>{edu.school}</div>
+                    <div className="rg-education-years" style={{ color: t.textMuted }}>{edu.years}</div>
+                    <div className="rg-education-details" style={{ color: t.text }}>
+                      {edu.details.join(' · ')}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </li>
+
           {/* Previously */}
           <li className="rg-item rg-item-nested" style={{ marginTop: 8 }}>
             <div className="rg-diamond" style={{ background: t.diamond }} />
@@ -283,16 +312,16 @@ function Inner() {
         <footer className="rg-footer">
           <div style={{ height: 1, background: t.footerLine }} />
           <div className="rg-socials">
-            <FooterIcon href="https://github.com/abdullah-placeholder" label="github" dark={dark}>
+            <FooterIcon href="https://github.com/amsultan2010" label="github" dark={dark}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
             </FooterIcon>
-            <FooterIcon href="https://music.youtube.com/" label="music" dark={dark}>
+            <FooterIcon href="https://music.youtube.com/@amsultan303" label="music" dark={dark}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M10 8l6 4-6 4z"/></svg>
             </FooterIcon>
-            <FooterIcon href="mailto:abdullah@example.com" label="email" dark={dark} external={false}>
+            <FooterIcon href="mailto:abdullahmsultan1@gmail.com" label="email" dark={dark} external={false}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
             </FooterIcon>
-            <FooterIcon href="https://github.com/abdullah-placeholder" label="projects" dark={dark}>
+            <FooterIcon href="https://github.com/amsultan2010" label="projects" dark={dark}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             </FooterIcon>
           </div>
@@ -526,46 +555,50 @@ function Inner() {
         }
         .rg-projects-link:active { transform: scale(0.98); }
 
-        /* Writing */
-        .rg-writing {
+        /* Education */
+        .rg-education {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 8px;
           margin-top: 8px;
+          width: 100%;
         }
-        .rg-writing-card {
+        .rg-education-card {
           display: flex;
-          flex-direction: column;
-          gap: 2px;
-          background: none;
+          align-items: center;
+          gap: 12px;
           border: 1px solid;
           border-radius: 8px;
-          padding: 16px 20px;
-          cursor: pointer;
+          padding: 12px 14px;
           text-align: left;
           transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
           font-family: inherit;
           font-size: inherit;
         }
-        .rg-writing-card:hover {
-          transform: scale(1.02);
+        .rg-education-card:hover {
+          transform: translateY(-1px);
           box-shadow: 0 2px 12px rgba(0,0,0,0.2);
         }
-        .rg-writing-card:active { transform: scale(0.98); }
-        .rg-writing-title {
+        .rg-education-logo {
+          width: 36px;
+          height: 36px;
+          object-fit: contain;
+          border-radius: 6px;
+          flex-shrink: 0;
+        }
+        .rg-education-title {
           font-family: 'NeueMontreal-Medium', sans-serif;
           font-weight: 500;
           font-size: 15px;
         }
-        .rg-writing-desc {
+        .rg-education-years {
+          font-size: 12px;
+          line-height: 1.4;
+        }
+        .rg-education-details {
           font-size: 14px;
           line-height: 1.5;
         }
-        .rg-writing-arrow {
-          opacity: 0.4;
-          transition: opacity 0.2s;
-        }
-        .rg-writing-card:hover .rg-writing-arrow { opacity: 1; }
 
         /* CTA */
         .rg-cta { font-size: 14px; margin: 8px 0 0; }
@@ -698,11 +731,9 @@ function SiteLoader({ onDone }: { onDone: () => void }) {
       opacity: phase === 'fade' ? 0 : 1,
       transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
     }}>
-      <img src="/icons/rglogo.png" alt="RG" style={{
-        width: 56, height: 56, objectFit: 'contain',
-        filter: 'brightness(0.3)',
-        animation: 'siteLoad 0.6s ease-out',
-      }} />
+      <div style={{ width: 56, height: 56, animation: 'siteLoad 0.6s ease-out' }}>
+        <AbdullahAsciiLogo width={56} height={56} color="#57534e" opacity={0.95} />
+      </div>
       <div style={{
         marginTop: 24, width: 180, height: 3, borderRadius: 2,
         background: 'rgba(0,0,0,0.08)', overflow: 'hidden',
@@ -813,7 +844,7 @@ export default function PortfolioApp() {
       {(phase === 'site' || phase === 'desktop') && (
         <div className={`peek-container ${expanded ? 'peek-expanded' : ''}`}>
           <div className="peek-desktop">
-            <Suspense fallback={<div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/backgroundappleuse.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />}>
+            <Suspense fallback={<div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/images/wallpaper/wallpaper.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />}>
               <LazyDesktopShell skipBoot />
             </Suspense>
             {phase === 'desktop' && <OSCloseButton onClose={handleClose} />}

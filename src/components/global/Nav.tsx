@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, type ReactNode } from 'react';
+import AbdullahAsciiLogo from '../desktop/AbdullahAsciiLogo';
 
 interface NavProps {
   currentPath: string;
@@ -201,26 +202,26 @@ export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
           href: `/blog/${post.slug}`,
           sublabel: `${post.readingTime} min read`
         })),
-        { label: 'All Posts', href: '/blog', sublabel: 'View all articles', divider: true },
+        { label: 'all education', href: '/blog', sublabel: 'view all items', divider: true },
       ]
     : [
-        { label: 'Building Terminal Portfolio', href: '/blog/building-terminal-portfolio', sublabel: '5 min read' },
-        { label: 'Sharpe Without Illusions', href: '/blog/sharpe-without-illusions', sublabel: '8 min read' },
-        { label: 'All Posts', href: '/blog', sublabel: 'View all articles', divider: true },
+        { label: 'american international school in riyadh', href: '/blog/agentification-3-phases', sublabel: 'current school' },
+        { label: 'the pingry school', href: '/blog/demystifying-enterprise-saas', sublabel: '2021-2025' },
+        { label: 'all education', href: '/blog', sublabel: 'view all items', divider: true },
       ];
 
   const projectItems = [
-    { label: 'Project Shell 01', href: '/projects/quantzoo', sublabel: 'Placeholder project' },
-    { label: 'Quant Project Shell', href: '/projects/quantterminal', sublabel: 'Quant placeholder' },
-    { label: 'Project Shell 02', href: '/projects/placeholder', sublabel: 'Placeholder project' },
-    { label: 'All Projects', href: '/projects', sublabel: 'View all projects', divider: true },
+    { label: 'abdullahos', href: '/desktop', sublabel: 'featured project' },
+    { label: 'tutoringbyabdullah', href: 'https://tutoringbyabdullah.xyz', sublabel: 'education product' },
+    { label: 'quantbacktesterpy', href: '/projects/quantterminal', sublabel: 'python backtester' },
+    { label: 'all projects', href: '/projects', sublabel: 'view all projects', divider: true },
   ];
 
   const caseStudyItems = [
-    { label: 'AbdullahOS', href: '/case-studies/netflix', sublabel: 'Main project shell' },
-    { label: 'Startup Project Shell', href: '/case-studies/uber', sublabel: 'Startup placeholder' },
-    { label: 'YouTube Music', href: '/case-studies/spotify', sublabel: 'Music placeholder' },
-    { label: 'All Case Studies', href: '/case-studies', sublabel: 'View all cases', divider: true },
+    { label: 'abdullahos', href: '/case-studies/netflix', sublabel: 'desktop portfolio' },
+    { label: 'tutoringbyabdullah', href: '/case-studies/uber', sublabel: 'education product' },
+    { label: 'vertical ai', href: '/case-studies/spotify', sublabel: 'automation + robotics' },
+    { label: 'all case studies', href: '/case-studies', sublabel: 'view all cases', divider: true },
   ];
 
   return (
@@ -229,23 +230,21 @@ export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
       className="fixed top-0 left-0 right-0 z-50 h-6 backdrop-blur-xl bg-slate-900/50 border-b border-white/5"
     >
       <div className="flex items-center h-full px-4 space-x-6 overflow-x-auto md:overflow-x-visible scrollbar-hide">
-        {/* RG Logo + Name Block */}
+        {/* Logo + Name Block */}
         <a 
           href="/" 
           className="flex items-center space-x-2 text-white hover:text-white/80 transition-colors text-sm font-semibold flex-shrink-0"
         >
-          <img 
-            src="/icons/rglogo.png" 
-            alt="RG Logo" 
-            className="h-6 w-auto object-contain"
-          />
-          <span className="whitespace-nowrap hidden md:inline">Abdullah Sultan</span>
-          <span className="whitespace-nowrap md:hidden">Abdullah</span>
+          <div className="h-6 w-6">
+            <AbdullahAsciiLogo width={24} height={24} color="#fff" opacity={0.95} />
+          </div>
+          <span className="whitespace-nowrap hidden md:inline">abdullah sultan</span>
+          <span className="whitespace-nowrap md:hidden">abdullah</span>
         </a>
 
-        {/* Blog Block */}
+        {/* Education Block */}
         <MenuBlock
-          trigger="Blog"
+          trigger="education"
           triggerHref="/blog"
           items={blogItems}
           isOpen={openMenu === 'blog'}

@@ -1,8 +1,8 @@
-# abdullah-placeholder.com
+# abdullah portfolio
 
 my portfolio site. it's gone through a few lives.
 
-**[live site](https://www.abdullah-placeholder.com/)** · **[desktop mode](https://www.abdullah-placeholder.com/desktop)**
+**[github](https://github.com/amsultan2010)** · **[youtube music](https://music.youtube.com/@amsultan303)**
 
 ![desktop mode](public/readme/portfolio-desktop.png)
 
@@ -52,7 +52,7 @@ the lesson was that a portfolio should make the work easy to find, not be the wo
 ## run locally
 
 ```bash
-git clone https://github.com/abdullah-placeholder/abdullah-os.git
+git clone https://github.com/amsultan2010/abdullah-os.git
 cd abdullah-os
 npm install
 npm run dev

@@ -6,6 +6,7 @@ import AppWindow from './AppWindow';
 import BootScreen from './BootScreen';
 import DesktopDock from './DesktopDock';
 import DesktopMenuBar from './DesktopMenuBar';
+import AbdullahAsciiLogo from './AbdullahAsciiLogo';
 import type { WindowId } from './types';
 
 // Section content — uses desktop-portfolio (master copies, untouched)
@@ -47,8 +48,6 @@ function WindowContent({ id }: { id: WindowId }) {
       return <EmailCompose windowMode />;
     case 'photos':
       return <Photos windowMode />;
-    case 'wifi-settings':
-      return <WifiSettings />;
     default:
       return null;
   }
@@ -63,17 +62,17 @@ interface TerminalLine {
 
 const COMMANDS: Record<string, { window: WindowId; desc: string }> = {
   'about':         { window: 'education',      desc: 'About Abdullah' },
-  'projects':      { window: 'projects',        desc: 'Project shells & builds' },
-  'abdullahos':    { window: 'blog',            desc: 'Open AbdullahOS shell' },
+  'projects':      { window: 'projects',        desc: 'projects & builds' },
+  'abdullahos':    { window: 'blog',            desc: 'open abdullahos' },
   'contact':       { window: 'email',           desc: 'Static contact window' },
   'photos':        { window: 'photos',          desc: 'Local photo gallery' },
   'terminal':      { window: 'terminal',        desc: 'Terminal home' },
-  'experience':    { window: 'experience',      desc: 'Placeholder experience shell' },
+  'experience':    { window: 'experience',      desc: 'experience' },
 };
 
 const SMART_COMMANDS: Record<string, { window: WindowId; output: string }> = {
   'npm run about':         { window: 'education',     output: '> abdullah@1.0.0 about\n> Loading static profile shell...' },
-  'git log --projects':    { window: 'projects',      output: 'commit a1b2c3d (HEAD -> main)\nOpening Abdullah project shells...' },
+  'git log --projects':    { window: 'projects',      output: 'commit a1b2c3d (HEAD -> main)\nopening abdullah projects...' },
   'open abdullahos.app':   { window: 'blog',          output: 'Opening AbdullahOS.app...' },
   'open contact.app':      { window: 'email',         output: 'Opening static contact window...' },
 };
@@ -326,56 +325,20 @@ function RotatingWords() {
 }
 
 // ── Stock Ticker component ──
-function StockTickers() {
-  const [tickers, setTickers] = useState<{ symbol: string; price: number; change: number; pct: number }[]>([]);
-
-  useEffect(() => {
-    // Base prices for simulation
-    const bases: { symbol: string; base: number }[] = [
-      { symbol: 'SPY', base: 590.32 },
-      { symbol: 'QQQ', base: 512.18 },
-      { symbol: 'BTC', base: 87245 },
-      { symbol: 'AAPL', base: 228.54 },
-      { symbol: 'NVDA', base: 118.72 },
-      { symbol: 'TSLA', base: 272.64 },
-    ];
-
-    // Initialize with random offsets
-    const initial = bases.map(b => {
-      const change = (Math.random() - 0.45) * b.base * 0.015;
-      return { symbol: b.symbol, price: b.base + change, change, pct: (change / b.base) * 100 };
-    });
-    setTickers(initial);
-
-    // Simulate small live movements
-    const id = setInterval(() => {
-      setTickers(prev => prev.map((t, i) => {
-        const tick = (Math.random() - 0.5) * bases[i].base * 0.0003;
-        const newPrice = t.price + tick;
-        const totalChange = newPrice - bases[i].base;
-        return { ...t, price: newPrice, change: totalChange, pct: (totalChange / bases[i].base) * 100 };
-      }));
-    }, 2000);
-
-    return () => clearInterval(id);
-  }, []);
-
-  if (tickers.length === 0) return null;
-
+function FocusStack() {
+  const focus = [
+    ['STARTUP', 'x-combinator from ais-r'],
+    ['VERTICAL AI', 'automation + enterprise software'],
+    ['ROBOTICS', 'hardware, sensors, prototypes'],
+    ['EDUCATION', 'tutoringbyabdullah'],
+  ];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
       <div style={{ color: 'rgba(0,0,0,0.3)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '4px' }}>
-        MARKETS
+        FOCUS
       </div>
-      {tickers.map(t => {
-        const isUp = t.change >= 0;
-        const color = isUp ? '#4ade80' : '#f87171';
-        const arrow = isUp ? '▲' : '▼';
-        const fmt = t.symbol === 'BTC'
-          ? t.price.toLocaleString('en-US', { maximumFractionDigits: 0 })
-          : t.price.toFixed(2);
-        return (
-          <div key={t.symbol} style={{
+      {focus.map(([label, detail]) => (
+          <div key={label} style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '3px 0',
             borderBottom: '0.5px solid rgba(0,0,0,0.04)',
@@ -386,29 +349,19 @@ function StockTickers() {
               fontWeight: 600,
               fontFamily: "'SF Mono', monospace",
               width: '40px',
-            }}>{t.symbol}</span>
-            <span style={{
-              fontFamily: "'SF Mono', monospace",
-              fontSize: '11.5px',
-              color: '#1d1d1f',
-              fontWeight: 500,
-              flex: 1,
-              textAlign: 'right',
-              marginRight: '8px',
-            }}>{fmt}</span>
+            }}>{label}</span>
             <span style={{
               fontFamily: "'SF Mono', monospace",
               fontSize: '10.5px',
-              color,
+              color: '#4ade80',
               fontWeight: 500,
-              minWidth: '55px',
+              flex: 1,
               textAlign: 'right',
             }}>
-              {arrow} {Math.abs(t.pct).toFixed(2)}%
+              {detail}
             </span>
           </div>
-        );
-      })}
+      ))}
     </div>
   );
 }
@@ -822,7 +775,7 @@ const STOCK_NAMES: { symbol: string; name: string }[] = [
   { symbol: 'SNPS', name: 'Synopsys' }, { symbol: 'CDNS', name: 'Cadence Design' },
 ];
 
-// Legacy market widgets now use local placeholder data only.
+// Legacy market widgets now use local static data only.
 function useStockData() {
   const [stocks, setStocks] = useState<StockData[]>([]);
   useEffect(() => {
@@ -1091,9 +1044,9 @@ interface NewsItem { title: string; source: string; url: string; pubDate: string
 
 function BloombergNewsFeed() {
   const [news] = useState<NewsItem[]>([
-    { title: 'Static placeholder: AbdullahOS project notes', source: 'Local', url: '#', pubDate: new Date().toISOString() },
-    { title: 'Static placeholder: robotics shell waiting for details', source: 'Local', url: '#', pubDate: new Date().toISOString() },
-    { title: 'Static placeholder: quant finance shell waiting for details', source: 'Local', url: '#', pubDate: new Date().toISOString() },
+    { title: 'static update: abdullahos project shell', source: 'Local', url: '#', pubDate: new Date().toISOString() },
+    { title: 'robotics automation ideas', source: 'Local', url: '#', pubDate: new Date().toISOString() },
+    { title: 'quant finance tools are local-only', source: 'Local', url: '#', pubDate: new Date().toISOString() },
   ]);
 
   const timeAgo = (dateStr: string) => {
@@ -1284,7 +1237,7 @@ function SectorHeatmap() {
 }
 
 // ── Static music launcher ──
-const DEV_PLAYLIST_URL = 'https://music.youtube.com/';
+const DEV_PLAYLIST_URL = 'https://music.youtube.com/@amsultan303';
 const DEV_PLAYLIST_TRACKS = [
   { title: 'fiano', artist: 'the wine is ok', durationMs: 163000 },
   { title: 'The Way Things Go', artist: 'chromas', durationMs: 185000 },
@@ -2222,8 +2175,8 @@ function BloombergBackButton({ onClick }: { onClick: () => void }) {
 
 const SITE_GUIDE = [
   { label: 'About', desc: 'Static Abdullah profile shell', cmd: 'npm run about', icon: '👋' },
-  { label: 'Projects', desc: 'Project shells & builds', cmd: 'git log --projects', icon: '🔨' },
-  { label: 'AbdullahOS', desc: 'Main custom project shell', cmd: 'open abdullahos.app', icon: '▣' },
+  { label: 'Projects', desc: 'projects & builds', cmd: 'git log --projects', icon: '🔨' },
+  { label: 'abdullahos', desc: 'custom desktop project', cmd: 'open abdullahos.app', icon: '▣' },
   { label: 'Contact', desc: 'Static contact window', cmd: 'open contact.app', icon: '✉' },
   { label: 'Photos', desc: 'Local photo gallery', cmd: 'photos', icon: '◈' },
 ];
@@ -3220,7 +3173,7 @@ function StockPickerGame({ stocks }: { stocks: StockData[] }) {
     setTimeout(() => setXpPopups(prev => prev.filter(p => p.id !== id)), 1500);
   }, []);
 
-  // ── Local placeholder historical data ──
+  // ── Local static historical data ──
   useEffect(() => {
     const syms = TRADE_SYMBOLS.split(',');
     const map: Record<string, HistData> = {};
@@ -4497,7 +4450,7 @@ function SectorDetailView({ sectorName, onBack, onStockClick }: { sectorName: st
   useEffect(() => {
     if (!sectorName) return;
     setNews([
-      { title: `${sectorName} placeholder note`, source: 'Local', url: '#', pubDate: new Date().toISOString() },
+      { title: `${sectorName} static note`, source: 'Local', url: '#', pubDate: new Date().toISOString() },
     ]);
     setNewsLoading(false);
   }, [sectorName]);
@@ -4759,8 +4712,8 @@ function SectorDetailView({ sectorName, onBack, onStockClick }: { sectorName: st
 // ── Bloomberg Option 1: Scrolling News Tape ──
 function ScrollingNewsTape() {
   const [news] = useState<{ title: string; source: string; url: string }[]>([
-    { title: 'AbdullahOS placeholder feed', source: 'Local', url: '#' },
-    { title: 'Robotics project shell waiting for details', source: 'Local', url: '#' },
+    { title: 'abdullahos local feed', source: 'Local', url: '#' },
+    { title: 'robotics automation ideas', source: 'Local', url: '#' },
   ]);
 
   if (!news.length) return null;
@@ -4816,7 +4769,7 @@ function ScrollingNewsTape() {
 // ── Bloomberg Option 2: Live News Feed ──
 function LiveNewsFeed() {
   const [news] = useState<{ title: string; source: string; url: string; pubDate: string }[]>([
-    { title: 'Static update: Abdullah project shell ready for content', source: 'Local', url: '#', pubDate: new Date().toISOString() },
+    { title: 'static update: abdullah projects are local-only', source: 'Local', url: '#', pubDate: new Date().toISOString() },
     { title: 'Static update: live feeds disabled for this portfolio stage', source: 'Local', url: '#', pubDate: new Date().toISOString() },
   ]);
 
@@ -5155,22 +5108,14 @@ function CompactClocks() {
   );
 }
 
-// ── Compact inline tickers (for Big Type ticker bar) ──
-function CompactTickers() {
-  const [tickers, setTickers] = useState<{ symbol: string; pct: number }[]>([]);
-  useEffect(() => {
-    const bases = [{ symbol: 'SPY', base: 590 }, { symbol: 'BTC', base: 87245 }, { symbol: 'AAPL', base: 228 }, { symbol: 'NVDA', base: 118 }];
-    const init = bases.map(b => ({ symbol: b.symbol, pct: (Math.random() - 0.45) * 1.5 }));
-    setTickers(init);
-    const id = setInterval(() => setTickers(prev => prev.map(t => ({ ...t, pct: t.pct + (Math.random() - 0.5) * 0.05 }))), 2000);
-    return () => clearInterval(id);
-  }, []);
+function CompactFocus() {
+  const focus = ['startup', 'vertical ai', 'robotics', 'automation', 'education', 'productivity'];
   return (
     <span style={{ display: 'inline-flex', gap: '10px' }}>
-      {tickers.map(t => (
-        <span key={t.symbol}>
-          <span style={{ color: 'rgba(255,255,255,0.3)' }}>{t.symbol}</span>{' '}
-          <span style={{ color: t.pct >= 0 ? '#4ade80' : '#f87171' }}>{t.pct >= 0 ? '▲' : '▼'}{Math.abs(t.pct).toFixed(2)}%</span>
+      {focus.map(item => (
+        <span key={item}>
+          <span style={{ color: 'rgba(255,255,255,0.3)' }}>{item}</span>{' '}
+          <span style={{ color: '#4ade80' }}>●</span>
         </span>
       ))}
     </span>
@@ -5517,9 +5462,9 @@ function TerminalContent() {
           <WorldClock />
           <div style={{ height: '1px', background: 'rgba(0,0,0,0.04)' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px' }}>
-            <a href="https://music.youtube.com/" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>♫ music.youtube.com</a>
-            <a href="https://github.com/abdullah-placeholder" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 github.com/abdullah-placeholder</a>
-            <a href="mailto:abdullah@example.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ abdullah@example.com</a>
+            <a href="https://music.youtube.com/@amsultan303" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>♫ music.youtube.com</a>
+            <a href="https://github.com/amsultan2010" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 github.com/amsultan2010</a>
+            <a href="mailto:abdullahmsultan1@gmail.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ abdullahmsultan1@gmail.com</a>
             <span style={{ color: '#1d1d1f' }}>📍 Riyadh, Saudi Arabia</span>
           </div>
         </div>
@@ -5558,9 +5503,9 @@ function TerminalContent() {
 
           {/* Info row */}
           <div style={{ display: 'flex', gap: '20px', fontSize: '13px', fontFamily: "'SF Mono', monospace", marginBottom: '24px' }}>
-            <a href="https://music.youtube.com/" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>♫ YouTube Music</a>
-            <a href="https://github.com/abdullah-placeholder" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
-            <a href="mailto:abdullah@example.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+            <a href="https://music.youtube.com/@amsultan303" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>♫ YouTube Music</a>
+            <a href="https://github.com/amsultan2010" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
+            <a href="mailto:abdullahmsultan1@gmail.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
             <span style={{ color: '#1d1d1f' }}>📍 Riyadh, Saudi Arabia</span>
           </div>
 
@@ -5591,7 +5536,7 @@ function TerminalContent() {
         }}>
           <CompactClocks />
           <span style={{ color: 'rgba(0,0,0,0.08)' }}>│</span>
-          <CompactTickers />
+          <CompactFocus />
         </div>
 
         {/* Terminal prompt */}
@@ -5616,13 +5561,15 @@ function TerminalContent() {
       }}>
         {/* Top hero section */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 32px', width: '100%', minHeight: 0, overflowY: 'auto' }}>
-          <img src="/icons/rglogo.png" alt="RG" style={{ width: '44px', opacity: 0.85, marginBottom: '12px' }} />
+          <div style={{ width: '44px', height: '44px', marginBottom: '12px' }}>
+            <AbdullahAsciiLogo width={44} height={44} color="#1d1d1f" opacity={0.85} />
+          </div>
           <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontSize: '26px', fontWeight: 700, color: '#1d1d1f', letterSpacing: '-0.5px' }}>Abdullah Sultan</div>
           <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontSize: '13px', color: 'rgba(0,0,0,0.4)', marginBottom: '6px' }}>Student builder · <RotatingWords /></div>
           <div style={{ display: 'flex', gap: '16px', fontSize: '13px', fontFamily: "'SF Mono', monospace", marginBottom: '20px' }}>
-            <a href="https://music.youtube.com/" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>♫ YouTube Music</a>
-            <a href="https://github.com/abdullah-placeholder" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
-            <a href="mailto:abdullah@example.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
+            <a href="https://music.youtube.com/@amsultan303" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>♫ YouTube Music</a>
+            <a href="https://github.com/amsultan2010" target="_blank" rel="noopener" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>🐙 GitHub</a>
+            <a href="mailto:abdullahmsultan1@gmail.com" style={{ color: 'rgba(0,0,0,0.75)', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>✉️ Email</a>
             <span style={{ color: 'rgba(0,0,0,0.4)' }}>📍 Riyadh</span>
           </div>
 
@@ -5632,7 +5579,7 @@ function TerminalContent() {
               <WorldClock />
             </div>
             <div style={{ background: 'rgba(0,0,0,0.03)', borderRadius: '12px', border: '0.5px solid rgba(0,0,0,0.06)', padding: '14px 16px' }}>
-              <StockTickers />
+              <FocusStack />
             </div>
           </div>
 
@@ -5713,10 +5660,10 @@ function TerminalContent() {
                   {/* About */}
                   <div style={sHead}>ABOUT</div>
                   <div style={sPara}>
-                    Currently based in Riyadh, Saudi Arabia. This is a static placeholder profile for Abdullah Sultan.
+                    currently based in Riyadh, Saudi Arabia. student builder focused on products, automation, robotics, and vertical ai.
                   </div>
                   <div style={{ ...sPara, marginTop: '6px' }}>
-                    Abdullah is a student builder interested in startups, quant finance, robotics, AI, and creative hardware projects. Final copy will be written later.
+                    long term: become the cto of a yc-funded startup that actually does something meaningful.
                   </div>
                   <div style={{ ...sPara, marginTop: '6px' }}>
                   </div>
@@ -5726,10 +5673,10 @@ function TerminalContent() {
                   {/* Software */}
                   <div style={sHead}>SOFTWARE</div>
                   <div style={sPara}>
-                    AbdullahOS is the main project shell for this version of the portfolio.
+                    abdullahos is the main desktop-style portfolio project.
                   </div>
                   <div style={{ ...sPara, marginTop: '6px' }}>
-                    Other project cards are placeholders for robotics, quant finance, startups, and creative hardware experiments.
+                    tutoringbyabdullah is the first education product; quant tools sit underneath as technical proof.
                   </div>
 
                   {/* Chronograph Watch */}
@@ -5766,7 +5713,7 @@ function TerminalContent() {
                   {/* Hardware */}
                   <div style={sHead}>HARDWARE</div>
                   <div style={sPara}>
-                    Placeholder space for robotics builds, creative hardware notes, prototypes, and lab-style experiments.
+                    robotics, automation, sensors, prototypes, and lab-style experiments.
                   </div>
 
                   {/* Current Focus + Online (left) | Markets (right) */}
@@ -5775,9 +5722,9 @@ function TerminalContent() {
                       <div style={sHead}>CURRENT FOCUS</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {[
-                          'Building AbdullahOS',
-                          'Collecting robotics and hardware project shells',
-                          'Exploring quant finance and startup ideas',
+                          'abdullahos interface',
+                          'vertical ai for education and productivity',
+                          'robotics, automation, and quant tools',
                         ].map((item, i) => (
                           <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
                             <span style={{ color: '#1d1d1f', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>›</span>
@@ -5787,9 +5734,9 @@ function TerminalContent() {
                       </div>
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={sHead}>MARKETS</div>
+                      <div style={sHead}>TECHNICAL PROOF</div>
                       <div style={sPara}>
-                        Placeholder copy for Abdullah's future quant finance notes and market projects.
+                        quant tools are supporting technical proof, not the whole identity.
                       </div>
                     </div>
                   </div>
@@ -5841,9 +5788,9 @@ function TerminalContent() {
             {/* Links — bottom right */}
             <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '17px', fontWeight: 500, textAlign: 'right', flexShrink: 0, color: 'rgba(255,255,255,0.85)' }}>
               {[
-                { href: 'https://music.youtube.com/', text: 'music' },
-                { href: 'https://github.com/abdullah-placeholder', text: 'github' },
-                { href: 'mailto:abdullah@example.com', text: 'email' },
+                { href: 'https://music.youtube.com/@amsultan303', text: 'music' },
+                { href: 'https://github.com/amsultan2010', text: 'github' },
+                { href: 'mailto:abdullahmsultan1@gmail.com', text: 'email' },
               ].map(link => (
                 <a key={link.href} href={link.href} target="_blank" rel="noopener"
                   style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none', transition: 'all 0.15s', fontWeight: 500 }}
@@ -5972,7 +5919,7 @@ function Desktop() {
     const MIN_WIDTH_FOR_SLIDE = 1024;
     if (window.innerWidth < MIN_WIDTH_FOR_SLIDE) return;
 
-    const sideWindows = ['education', 'experience', 'stocks'] as const;
+    const sideWindows = ['education', 'experience'] as const;
     const openSideWindow = sideWindows.find(id => {
       const w = state.windows[id];
       return w && w.isOpen && !w.isMinimized;
@@ -6044,7 +5991,7 @@ function Desktop() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     // Stable dependency: only re-run when the set of open side windows changes
-    ['education', 'experience', 'stocks'].filter(id => state.windows[id]?.isOpen && !state.windows[id]?.isMinimized).join(','),
+    ['education', 'experience'].filter(id => state.windows[id]?.isOpen && !state.windows[id]?.isMinimized).join(','),
     state.windows['terminal']?.isOpen,
   ]);
 
@@ -6094,7 +6041,7 @@ function Desktop() {
         cursor: 'default',
       }}
     >
-      <Background overlayOpacity={['stocks', 'education', 'experience', 'terminal'].includes(state.focusedWindowId as string) ? 0.35 : 0.1} />
+      <Background overlayOpacity={['education', 'experience', 'terminal'].includes(state.focusedWindowId as string) ? 0.35 : 0.1} />
       <BootScreen key={state.bootComplete ? 'booted' : 'booting'} />
 
       {state.bootComplete && (
@@ -6107,7 +6054,7 @@ function Desktop() {
             const titleBarBgMap: Record<string, string> = {
               projects: '#252526',
               blog: '#f9f9f8',
-              calendar: '#ffffff',
+              email: '#ffffff',
               photos: '#1a1a1f',
             };
             // Apps with dark content need light title bar text
@@ -6180,7 +6127,7 @@ function Desktop() {
 }
 
 type MobileTab = 'home' | 'work' | 'projects' | 'research' | 'more';
-type MobileSection = 'education' | 'experience' | 'projects' | 'blog' | null;
+type MobileSection = 'education' | 'experience' | 'projects' | 'blog' | 'photos' | null;
 
 // ── MobileStocks: Bloomberg terminal experience for mobile ──
 function MobileStocks() {
@@ -6240,36 +6187,36 @@ function MobileProjects({ onCardClick }: { onCardClick: (detail: DetailContent) 
   // Import project data from Projects component — these are the same projects
   const mobileProjects = [
     {
-      title: 'AbdullahOS',
-      desc: 'Main Abdullah-focused OS project shell for this static portfolio stage.',
-      coverImage: '/terminal.png',
+      title: 'abdullahos',
+      desc: 'desktop-style personal portfolio built w/ astro, react, and a macos-inspired ui.',
+      coverImage: '/readme/portfolio-desktop.png',
       gradient: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)',
       tech: ['Astro', 'React', 'TypeScript'],
-      repoUrl: 'https://github.com/abdullah-placeholder',
+      repoUrl: '/desktop',
     },
     {
-      title: 'Project Shell 01',
-      desc: 'Static placeholder project card. Final project copy will be added later.',
-      coverImage: '/icons/folder.png',
+      title: 'tutoringbyabdullah',
+      desc: 'tutoring platform focused on teaching style, recommendations, and real understanding.',
+      coverImage: '/images/projects/tutoringpreview.png',
       gradient: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)',
-      tech: ['Placeholder'],
-      repoUrl: 'https://github.com/abdullah-placeholder',
+      tech: ['Education', 'Product'],
+      repoUrl: 'https://tutoringbyabdullah.xyz',
     },
     {
-      title: 'Robotics Project Shell',
-      desc: 'Static placeholder for future robotics and creative hardware work.',
-      coverImage: '/icons/folder.png',
+      title: 'quantbacktesterpy',
+      desc: 'single-stock sma crossover backtester w/ parameter heatmaps.',
+      coverImage: '/images/projects/quantbacktesterpy.png',
       gradient: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)',
-      tech: ['Robotics', 'Hardware'],
-      repoUrl: 'https://github.com/abdullah-placeholder',
+      tech: ['Python', 'Backtesting'],
+      repoUrl: 'https://github.com/amsultan2010',
     },
     {
-      title: 'Quant Project Shell',
-      desc: 'Static placeholder for future quant finance work.',
-      coverImage: '/trading.png',
+      title: 'quantoptionspy',
+      desc: 'black-scholes + monte carlo options pricer w/ greeks.',
+      coverImage: '/images/projects/quantoptionspy.png',
       gradient: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)',
-      tech: ['Python', 'Finance'],
-      repoUrl: 'https://github.com/abdullah-placeholder',
+      tech: ['Python', 'Options'],
+      repoUrl: 'https://github.com/amsultan2010',
     },
   ];
 
@@ -6383,7 +6330,7 @@ function MobileHero() {
           Interested in startups, quant finance, robotics, AI, and creative hardware projects.
         </div>
 
-        <a href="https://music.youtube.com/" target="_blank" rel="noopener noreferrer" style={{
+        <a href="https://music.youtube.com/@amsultan303" target="_blank" rel="noopener noreferrer" style={{
             display: 'flex', alignItems: 'center', gap: '10px',
             background: 'rgba(255,255,255,0.06)', borderRadius: '10px', padding: '8px 12px',
             marginBottom: '16px', textDecoration: 'none',
@@ -6399,13 +6346,13 @@ function MobileHero() {
 
         {/* Links */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-          <a href="https://music.youtube.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
+          <a href="https://music.youtube.com/@amsultan303" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
           </a>
-          <a href="https://github.com/abdullah-placeholder" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
+          <a href="https://github.com/amsultan2010" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
           </a>
-          <a href="mailto:abdullah@example.com" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
+          <a href="mailto:abdullahmsultan1@gmail.com" style={{ color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
           </a>
         </div>
@@ -6448,13 +6395,13 @@ function MobileLayout() {
   );
 
   const APP_GRID: { label: string; icon: React.ReactNode; action: () => void }[] = [
-    { label: 'About', icon: mIcon('/vscode.png', 'About'), action: () => setActiveSection('experience') },
-    { label: 'Projects', icon: mIcon('/notes.png', 'Projects'), action: () => setActiveSection('projects') },
-    { label: 'AbdullahOS', icon: mIcon('/terminal.png', 'AbdullahOS'), action: () => setActiveSection('blog') },
-    { label: 'Photos', icon: mIcon('/icons/photos.png', 'Photos'), action: () => setActiveSection('education') },
-    { label: 'Contact', icon: mIcon('/usethismailicon.png', 'Contact', 1.25), action: () => { window.location.href = 'mailto:abdullah@example.com'; } },
-    { label: 'GitHub', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'linear-gradient(135deg, #2d2d2d, #434343)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>, action: () => window.open('https://github.com/abdullah-placeholder', '_blank') },
-    { label: 'YouTube Music', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: '#ff0033', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M10 8l6 4-6 4z" /></svg></div>, action: () => window.open('https://music.youtube.com/', '_blank') },
+    { label: 'about', icon: mIcon('/images/logosicons/codex.png', 'about', 1), action: () => setActiveSection('experience') },
+    { label: 'projects', icon: mIcon('/icons/folder.png', 'projects'), action: () => setActiveSection('projects') },
+    { label: 'abdullahos', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: '#050505', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><AbdullahAsciiLogo width={48} height={48} color="#fff" opacity={0.9} /></div>, action: () => setActiveSection('blog') },
+    { label: 'photos', icon: mIcon('/icons/photos.png', 'photos'), action: () => setActiveSection('photos') },
+    { label: 'gmail', icon: mIcon('/images/logosicons/gmail.png', 'gmail', 1), action: () => { window.location.href = 'mailto:abdullahmsultan1@gmail.com'; } },
+    { label: 'github', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'linear-gradient(135deg, #2d2d2d, #434343)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>, action: () => window.open('https://github.com/amsultan2010', '_blank') },
+    { label: 'youtube music', icon: mIcon('/images/logosicons/youtubemusic.png', 'youtube music', 1), action: () => window.open('https://music.youtube.com/@amsultan303', '_blank') },
   ];
 
   return (
@@ -6481,9 +6428,9 @@ function MobileLayout() {
               animation: 'tickerScroll 20s linear infinite',
               paddingLeft: '20px',
             }}>
-              <CompactTickers /><span style={{ color: 'rgba(255,255,255,0.1)' }}>│</span>
-              <CompactTickers /><span style={{ color: 'rgba(255,255,255,0.1)' }}>│</span>
-              <CompactTickers />
+              <CompactFocus /><span style={{ color: 'rgba(255,255,255,0.1)' }}>│</span>
+              <CompactFocus /><span style={{ color: 'rgba(255,255,255,0.1)' }}>│</span>
+              <CompactFocus />
             </div>
           </div>
 
@@ -6515,7 +6462,7 @@ function MobileLayout() {
                     <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#28c840' }} />
                   </div>
                   <span style={{ flex: 1, textAlign: 'center', fontFamily: "'SF Mono', monospace", fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
-                    abdullah-placeholder.tech — zsh
+                    abdullah.tech — zsh
                   </span>
                   <div style={{ width: '42px' }} />
                 </div>
@@ -6527,7 +6474,7 @@ function MobileLayout() {
                     Student builder
                   </div>
                   <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.5, fontFamily: "'SF Mono', monospace" }}>
-                    Building AbdullahOS and placeholder shells<br />for startups, quant finance,<br />robotics, AI, and hardware.
+                    building products for startups,<br />vertical ai, robotics,<br />education, and automation.
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
                     <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Pro Text', sans-serif" }}>
@@ -6559,16 +6506,16 @@ function MobileLayout() {
                   {slideIndex === 0 && (
                     <div>
                       <div style={sPara}>
-                        Currently based in Riyadh, Saudi Arabia. Abdullah is a student builder interested in startups, quant finance, robotics, AI, and creative hardware projects.
+                        currently based in Riyadh, Saudi Arabia. abdullah is a student builder interested in startups, vertical ai, robotics, education, and automation.
                       </div>
                       <div style={{ ...sPara, marginTop: '8px' }}>
-                        This is placeholder copy for Abdullah's static portfolio shell. Final writing will be added later.
+                        long term: become the cto of a yc-funded startup that actually does something meaningful.
                       </div>
                     </div>
                   )}
                   {slideIndex === 1 && (
                     <div style={sPara}>
-                      AbdullahOS is the main custom project app for this stage. The rest of the project slots are static placeholders.
+                      abdullahos is the main custom project app. tutoringbyabdullah and the quant tools show product + technical range.
                     </div>
                   )}
                   {slideIndex === 2 && (
@@ -6583,7 +6530,7 @@ function MobileLayout() {
                   )}
                   {slideIndex === 3 && (
                     <div>
-                      {['Building AbdullahOS', 'Project Shell 01 through 03 placeholders', 'Robotics, quant, startup, and hardware shells'].map((item, i) => (
+                      {['abdullahos interface', 'shipping tutoringbyabdullah', 'robotics, automation, vertical ai, and quant tools'].map((item, i) => (
                         <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginBottom: '3px' }}>
                           <span style={{ color: '#fff', fontSize: '8px', fontFamily: "'SF Mono', monospace" }}>›</span>
                           <span style={{ ...sPara, fontSize: '12px', lineHeight: 1.45 }}>{item}</span>
@@ -6689,7 +6636,7 @@ function MobileLayout() {
           {expandedPanel === 'sound' && (
             <div style={{ ...glass, padding: '16px', marginBottom: '14px', animation: 'mobileFadeIn 0.2s ease-out' }}>
               <div style={{ ...sHead, marginBottom: '10px' }}>♫ YOUTUBE MUSIC</div>
-              <a href="https://music.youtube.com/" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', gap: '12px', alignItems: 'center', textDecoration: 'none', color: 'inherit', marginBottom: '12px' }}>
+              <a href="https://music.youtube.com/@amsultan303" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', gap: '12px', alignItems: 'center', textDecoration: 'none', color: 'inherit', marginBottom: '12px' }}>
                 <div style={{ width: '52px', height: '52px', borderRadius: '8px', background: '#ff0033', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M10 8l6 4-6 4z" /></svg>
                 </div>
@@ -6725,7 +6672,7 @@ function MobileLayout() {
           {expandedPanel === 'notif' && (
             <div style={{ ...glass, padding: '14px', marginBottom: '14px', animation: 'mobileFadeIn 0.2s ease-out' }}>
               <div style={sHead}>STATIC ACTIVITY</div>
-              <div style={sPara}>AbdullahOS placeholder ready. Project shells are static and local-only.</div>
+              <div style={sPara}>abdullahos ready. projects are static and local-only.</div>
             </div>
           )}
 
@@ -6733,9 +6680,9 @@ function MobileLayout() {
           <div style={{ ...glass, padding: '16px', marginBottom: '20px' }}>
             <div style={sHead}>CONTACT</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontFamily: "'SF Mono', monospace", fontSize: '12px' }}>
-              <a href="https://music.youtube.com/" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>♫ music.youtube.com</a>
-              <a href="https://github.com/abdullah-placeholder" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>🐙 github.com/abdullah-placeholder</a>
-              <a href="mailto:abdullah@example.com" style={{ color: '#fff', textDecoration: 'none' }}>✉ abdullah@example.com</a>
+              <a href="https://music.youtube.com/@amsultan303" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>♫ music.youtube.com</a>
+              <a href="https://github.com/amsultan2010" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>🐙 github.com/amsultan2010</a>
+              <a href="mailto:abdullahmsultan1@gmail.com" style={{ color: '#fff', textDecoration: 'none' }}>✉ abdullahmsultan1@gmail.com</a>
               <span style={{ color: '#fff' }}>📍 Riyadh, Saudi Arabia</span>
             </div>
           </div>
@@ -6768,10 +6715,10 @@ function MobileLayout() {
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              ← Back
+              ← back
             </button>
             <span style={{ fontFamily: "'SF Mono', monospace", fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>
-              {activeSection === 'education' ? 'Photos' : activeSection === 'experience' ? 'About' : activeSection === 'projects' ? 'Projects' : 'AbdullahOS'}
+              {activeSection === 'education' ? 'education' : activeSection === 'experience' ? 'about' : activeSection === 'projects' ? 'projects' : activeSection === 'photos' ? 'photos' : 'abdullahos'}
             </span>
             <div style={{ width: '50px' }} />
           </div>
@@ -6780,6 +6727,7 @@ function MobileLayout() {
             {activeSection === 'education' && <Education onCardClick={handleCardClick} windowMode />}
             {activeSection === 'experience' && <Experience onCardClick={handleCardClick} windowMode />}
             {activeSection === 'projects' && <Projects onCardClick={handleCardClick} windowMode />}
+            {activeSection === 'photos' && <Photos windowMode />}
             {activeSection === 'blog' && <Blog onContentClick={handleContentClick} windowMode />}
           </div>
         </div>

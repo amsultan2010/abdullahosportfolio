@@ -5,6 +5,6 @@ export function getFixedBackgroundKey() {
 
 export async function getOptimizedBackgrounds(getImage: any) {
   return {
-    'bg-1': '/background.png',
+    'bg-1': '/images/wallpaper/wallpaper.png',
   };
 }

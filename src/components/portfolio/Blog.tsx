@@ -16,18 +16,18 @@ const Blog = ({ onContentClick }: BlogProps) => {
 
   const blogPosts = [
     {
-      slug: "abdullah-notes",
-      title: "Abdullah Notes",
-      summary: "Placeholder notes for Abdullah Sultan's future writing.",
-      tags: ["Placeholder", "Ideas"],
+      slug: "abdullahos-overview",
+      title: "abdullahos overview",
+      summary: "desktop-style portfolio w/ draggable windows, app interactions, photos, projects, and static links.",
+      tags: ["Astro", "React"],
       readingTime: 2,
       publishedAt: "2026-01-01"
     },
     {
-      slug: "project-log",
-      title: "Project Log",
-      summary: "Static build-log shell for AbdullahOS and future project notes.",
-      tags: ["Placeholder", "Builds"],
+      slug: "abdullahos-parts",
+      title: "app map",
+      summary: "about, projects, photos, contact, github, youtube music, terminal, and abdullahos.",
+      tags: ["desktop", "apps"],
       readingTime: 2,
       publishedAt: "2026-01-02"
     },

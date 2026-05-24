@@ -133,7 +133,7 @@ function PostContent({ slug }: { slug: string }) {
 
 export default function WritingPostPage({ slug }: { slug: string }) {
   return (
-    <PageShell activePage="writing">
+    <PageShell activePage="education">
       <PostContent slug={slug} />
     </PageShell>
   );

@@ -27,7 +27,7 @@ export interface EducationDetail {
   logo?: string;
   logo2?: string;
   gpa?: string;
-  courses: DetailCourse[];
+  academics: DetailCourse[];
   activities: string[];
   achievements: string[];
   pitchDeck?: PitchDeck;
@@ -187,7 +187,7 @@ const DetailPanel = ({ detail, onClose, windowMode }: DetailPanelProps) => {
     );
   }
 
-  // ── Video split layout (project shell) ──
+  // ── Video split layout ──
   if (hasVideo) {
     const projectDetail = detail as ProjectDetail;
     return (
@@ -584,34 +584,12 @@ const PitchDeckViewer = ({ deck, animDelay }: { deck: PitchDeck; animDelay: numb
 // ─── Education Detail ───────────────────────────────────────
 
 export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
-  const totalCourses = detail.courses.length;
-  // Time (s) when the last course finishes its animation
-  const cascadeEnd = 0.3 + totalCourses * 0.055 + 0.5; // start delay + stagger + animation duration
+  const cascadeEnd = 0.3;
 
   return (
     <div>
       {/* Keyframes for pure-CSS cascade */}
       <style>{`
-        @keyframes courseLightUp {
-          0% {
-            background: rgba(255, 255, 255, 0.02);
-            border-color: rgba(255, 255, 255, 0.05);
-            box-shadow: none;
-          }
-          100% {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.18);
-            box-shadow: 0 0 12px rgba(255, 255, 255, 0.04), inset 0 0 8px rgba(255, 255, 255, 0.02);
-          }
-        }
-        @keyframes courseTextLightUp {
-          0% { color: rgba(255, 255, 255, 0.2); }
-          100% { color: rgba(255, 255, 255, 1); }
-        }
-        @keyframes courseSubTextLightUp {
-          0% { color: rgba(255, 255, 255, 0.1); }
-          100% { color: rgba(255, 255, 255, 0.95); }
-        }
         @keyframes sectionFadeIn {
           0% { opacity: 0.1; transform: translateY(8px); }
           100% { opacity: 1; transform: translateY(0); }
@@ -638,79 +616,28 @@ export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
         </div>
       </div>
 
-      {/* Courses — pure CSS cascade */}
-      {detail.courses.length > 0 && (
-        <div style={{ marginBottom: '2rem' }}>
-          <h3 style={sectionTitleStyle}>Courses</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '0.75rem' }}>
-            {detail.courses.map((c, i) => {
-              const delay = `${0.3 + i * 0.055}s`;
-              return (
-                <div
-                  key={i}
-                  style={{
-                    ...pillCardStyle,
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    borderColor: 'rgba(255, 255, 255, 0.05)',
-                    animation: `courseLightUp 0.5s ease ${delay} forwards`,
-                  }}
-                >
-                  <span style={{
-                    fontFamily: 'NeueMontreal-Medium, sans-serif',
-                    color: 'rgba(255,255,255,0.2)',
-                    fontSize: '0.9rem',
-                    animation: `courseTextLightUp 0.5s ease ${delay} forwards`,
-                  }}>
-                    {c.code}
-                  </span>
-                  <span style={{
-                    fontFamily: 'NeueMontreal-Medium, sans-serif',
-                    color: 'rgba(255,255,255,0.1)',
-                    fontSize: '0.85rem',
-                    animation: `courseSubTextLightUp 0.5s ease ${delay} forwards`,
-                  }}>
-                    {c.name}
-                  </span>
-                  {c.grade && (
-                    <span style={{
-                      fontFamily: 'NeueMontreal-Medium, sans-serif',
-                      color: 'rgba(255,255,255,0.1)',
-                      fontSize: '0.75rem',
-                      marginLeft: 'auto',
-                      animation: `courseSubTextLightUp 0.5s ease ${delay} forwards`,
-                    }}>
-                      {c.grade}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Activities — fades in after courses finish */}
+      {/* Activities */}
       {detail.activities.length > 0 && (
         <div style={{
           marginBottom: '2rem',
           opacity: 0.1,
           animation: `sectionFadeIn 0.6s ease ${cascadeEnd}s forwards`,
         }}>
-          <h3 style={sectionTitleStyle}>Activities</h3>
+          <h3 style={sectionTitleStyle}>activities + academics</h3>
           <ul style={listStyle}>
             {detail.activities.map((a, i) => <li key={i} style={listItemStyle}>{a}</li>)}
           </ul>
         </div>
       )}
 
-      {/* Achievements — fades in slightly after activities */}
+      {/* Achievements */}
       {detail.achievements.length > 0 && (
         <div style={{
           marginBottom: '2rem',
           opacity: 0.1,
           animation: `sectionFadeIn 0.6s ease ${cascadeEnd + 0.15}s forwards`,
         }}>
-          <h3 style={sectionTitleStyle}>Achievements</h3>
+          <h3 style={sectionTitleStyle}>highlights</h3>
           <ul style={listStyle}>
             {detail.achievements.map((a, i) => <li key={i} style={listItemStyle}>{a}</li>)}
           </ul>
@@ -724,14 +651,14 @@ export const EducationContent = ({ detail }: { detail: EducationDetail }) => {
         </div>
       )}
 
-      {/* Reflection / Notes — fades in last */}
+      {/* Reflection */}
       {detail.reflection && (
         <div style={{
           marginBottom: '2rem',
           opacity: 0.1,
           animation: `sectionFadeIn 0.6s ease ${cascadeEnd + 0.4}s forwards`,
         }}>
-          <h3 style={sectionTitleStyle}>Reflection</h3>
+          <h3 style={sectionTitleStyle}>reflection</h3>
           {detail.reflection.split('\n\n').map((para, i) => (
             <p key={i} style={{
               fontFamily: 'NeueMontreal-Medium, sans-serif',

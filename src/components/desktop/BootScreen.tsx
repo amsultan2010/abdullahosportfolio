@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDesktop } from './DesktopContext';
+import AbdullahAsciiLogo from './AbdullahAsciiLogo';
 
 type Phase = 'loading' | 'fade' | 'done';
 
@@ -15,7 +16,7 @@ export default function BootScreen() {
     }
 
     // Timeline:
-    // 0.0s — RG logo fades in + progress bar starts filling
+    // 0.0s — logo fades in + progress bar starts filling
     // ~2.5s — Progress bar reaches 100%
     // 2.6s — Fade out to desktop
     // 3.4s — Done
@@ -59,18 +60,9 @@ export default function BootScreen() {
       transition: 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
       pointerEvents: 'all',
     }}>
-      {/* RG Logo */}
-      <img
-        src="/icons/rglogo.png"
-        alt="RG"
-        style={{
-          width: '72px',
-          height: '72px',
-          objectFit: 'contain',
-          filter: 'brightness(0) invert(1)',
-          animation: 'bootFadeIn 0.8s ease-out',
-        }}
-      />
+      <div style={{ width: 84, height: 84, animation: 'bootFadeIn 0.8s ease-out' }}>
+        <AbdullahAsciiLogo width={84} height={84} color="#fff" opacity={0.95} />
+      </div>
 
       {/* Progress bar */}
       <div style={{

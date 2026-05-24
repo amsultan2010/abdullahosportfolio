@@ -1,10 +1,11 @@
 import { useState, useRef, useCallback } from 'react';
 import { useDesktop } from './DesktopContext';
 import type { WindowId } from './types';
-import { BsGithub } from 'react-icons/bs';
+import { BsGithub, BsInstagram, BsLinkedin } from 'react-icons/bs';
+import AbdullahAsciiLogo from './AbdullahAsciiLogo';
 
 interface DockItem {
-  id: WindowId | 'github' | 'email' | 'music';
+  id: WindowId | 'github' | 'email' | 'music' | 'linkedin' | 'instagram';
   label: string;
   icon: React.ReactNode;
   isExternal?: boolean;
@@ -22,17 +23,19 @@ export default function DesktopDock() {
   const dockRef = useRef<HTMLDivElement>(null);
 
   const windowItems: DockItem[] = [
-    { id: 'terminal', label: 'Terminal', icon: <DockImage src="/usethisTERMIANL.png" alt="Terminal" cropScale={1.15} /> },
-    { id: 'education', label: 'About', icon: <DockImage src="/icons/folder.png" alt="About" /> },
-    { id: 'projects', label: 'Projects', icon: <DockImage src="/vscode.png" alt="VS Code" /> },
-    { id: 'blog', label: 'AbdullahOS', icon: <DockImage src="/icons/rglogo.png" alt="AbdullahOS" /> },
-    { id: 'photos', label: 'Photos', icon: <DockImage src="/icons/photos.png" alt="Photos" /> },
-    { id: 'email' as any, label: 'Contact', icon: <DockImage src="/usethismailicon.png" alt="Mail" cropScale={1.2} /> },
+    { id: 'terminal', label: 'terminal', icon: <DockImage src="/usethisTERMIANL.png" alt="terminal" cropScale={1.15} /> },
+    { id: 'education', label: 'about', icon: <DockImage src="/icons/folder.png" alt="about" /> },
+    { id: 'projects', label: 'codex', icon: <DockImage src="/images/logosicons/codex.png" alt="codex" cropScale={1} contain /> },
+    { id: 'blog', label: 'abdullahos', icon: <DockAsciiLogo /> },
+    { id: 'photos', label: 'photos', icon: <DockImage src="/icons/photos.png" alt="photos" /> },
+    { id: 'email' as any, label: 'gmail', icon: <DockImage src="/images/logosicons/gmail.png" alt="gmail" cropScale={1} contain /> },
   ];
 
   const externalItems: DockItem[] = [
-    { id: 'github', label: 'GitHub', icon: <AppIcon gradient="linear-gradient(135deg, #2d2d2d 0%, #434343 100%)" iconEl={<BsGithub size={24} color="white" />} />, isExternal: true, href: 'https://github.com/abdullah-placeholder' },
-    { id: 'music', label: 'YouTube Music', icon: <DockImage src="/notes.png" alt="YouTube Music" cropScale={1.1} />, isExternal: true, href: 'https://music.youtube.com/' },
+    { id: 'github', label: 'github', icon: <AppIcon gradient="linear-gradient(135deg, #2d2d2d 0%, #434343 100%)" iconEl={<BsGithub size={24} color="white" />} />, isExternal: true, href: 'https://github.com/amsultan2010' },
+    { id: 'music', label: 'youtube music', icon: <DockImage src="/images/logosicons/youtubemusic.png" alt="youtube music" cropScale={1} contain />, isExternal: true, href: 'https://music.youtube.com/@amsultan303' },
+    { id: 'linkedin', label: 'linkedin', icon: <AppIcon gradient="linear-gradient(135deg, #0a66c2 0%, #004182 100%)" iconEl={<BsLinkedin size={24} color="white" />} />, isExternal: true, href: 'https://www.linkedin.com/in/abdullah-sultan-4a264939a/' },
+    { id: 'instagram', label: 'instagram', icon: <AppIcon gradient="linear-gradient(135deg, #833ab4 0%, #fd1d1d 55%, #fcb045 100%)" iconEl={<BsInstagram size={24} color="white" />} />, isExternal: true, href: 'https://www.instagram.com/a.m.sultan_/' },
   ];
 
   const allItems = [...windowItems, { id: 'divider' as any, label: '', icon: null }, ...externalItems];
@@ -270,7 +273,7 @@ function DockButton({ item, scale, isOpen, onClick }: {
 
 // ── Icon Components ────────────────────────────────────────────
 
-function DockImage({ src, alt, cropScale = 1.12 }: { src: string; alt: string; contain?: boolean; cropScale?: number }) {
+function DockImage({ src, alt, cropScale = 1.12, contain = false }: { src: string; alt: string; contain?: boolean; cropScale?: number }) {
   const s = BASE_SIZE - 6;
   return (
     <div style={{
@@ -290,10 +293,30 @@ function DockImage({ src, alt, cropScale = 1.12 }: { src: string; alt: string; c
         style={{
           width: `${s * cropScale}px`,
           height: `${s * cropScale}px`,
-          objectFit: 'cover',
+          objectFit: contain ? 'contain' : 'cover',
           pointerEvents: 'none',
         }}
       />
+    </div>
+  );
+}
+
+function DockAsciiLogo() {
+  const s = BASE_SIZE - 6;
+  return (
+    <div style={{
+      width: `${s}px`,
+      height: `${s}px`,
+      borderRadius: '11px',
+      overflow: 'hidden',
+      pointerEvents: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#050505',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.1) inset',
+    }}>
+      <AbdullahAsciiLogo width={s - 6} height={s - 6} color="#fff" opacity={0.9} />
     </div>
   );
 }

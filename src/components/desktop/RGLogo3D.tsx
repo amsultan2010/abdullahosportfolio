@@ -51,7 +51,7 @@ function useLogoVolume(url: string, layers = 14, perLayer = 700) {
 // ── Main particle cloud ──
 function ParticleCloud() {
   const ref = useRef<THREE.Points>(null);
-  const logo = useLogoVolume('/icons/rglogo.png', 14, 700);
+  const logo = useLogoVolume('/images/profile/profilepicture.png', 14, 700);
 
   const drift = useMemo(() => {
     if (!logo) return null;
@@ -178,7 +178,7 @@ export default function RGLogo3D() {
   if (!mounted) {
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <img src="/icons/rglogo.png" alt="RG" style={{ width: '80px', height: '80px', opacity: 0.5, filter: 'brightness(0) invert(1)' }} />
+        <img src="/images/profile/profilepicture.png" alt="abdullah" style={{ width: '80px', height: '80px', opacity: 0.5, filter: 'brightness(0) invert(1)' }} />
       </div>
     );
   }

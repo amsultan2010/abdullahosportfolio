@@ -3,14 +3,14 @@ import PageShell, { useTheme, themeColors } from './PageShell';
 
 const POSTS = [
   {
-    slug: 'abdullah-notes',
-    title: 'Abdullah Notes',
-    date: '2026-01-01',
+    slug: 'education',
+    title: 'american international school in riyadh',
+    date: '2025-01-01',
   },
   {
-    slug: 'project-log',
-    title: 'Project Log',
-    date: '2026-01-02',
+    slug: 'pingry',
+    title: 'the pingry school',
+    date: '2021-01-01',
   },
 ];
 
@@ -28,7 +28,7 @@ function WritingContent() {
       {POSTS.map(post => (
         <a
           key={post.slug}
-          href={`/writing/${post.slug}`}
+          href="/#education"
           style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -70,7 +70,7 @@ function WritingContent() {
 
 export default function WritingPage() {
   return (
-    <PageShell activePage="writing">
+    <PageShell activePage="education">
       <WritingContent />
     </PageShell>
   );

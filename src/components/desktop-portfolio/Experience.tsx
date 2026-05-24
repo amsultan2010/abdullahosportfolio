@@ -27,74 +27,74 @@ const Experience = ({ onCardClick, windowMode }: ExperienceProps) => {
   const experiences = [
     {
       id: 0,
-      company: "AbdullahOS",
-      role: "Main project shell",
+      company: "abdullahos",
+      role: "featured project",
       date: "Current",
       location: "Riyadh, Saudi Arabia",
-      description: "Primary Abdullah-focused project shell for this static portfolio stage.",
+      description: "desktop-style personal portfolio built w/ astro, react, and a macos-inspired ui.",
       logo: "/terminal.png",
       detail: {
         type: 'experience' as const,
         id: 0,
-        company: "AbdullahOS",
-        role: "Main project shell",
+        company: "abdullahos",
+        role: "featured project",
         date: "Current",
         location: "Riyadh, Saudi Arabia",
         logo: "/terminal.png",
         timeline: [
-          { month: "Stage 1", description: "Static AbdullahOS placeholder shell. Final project details will be added later." }
+          { month: "Stage 1", description: "Static abdullahos future shell. Final project details will be added later." }
         ],
-        reflection: "AbdullahOS is the main custom project/app shell for Abdullah Sultan's portfolio.",
+        reflection: "abdullahos is the main custom project app for Abdullah Sultan's portfolio.",
         skillsLearned: ["AI", "Desktop UI", "Creative hardware", "Product thinking"],
         techStack: ["Astro", "React", "TypeScript"]
       } satisfies ExperienceDetail
     },
     {
       id: 1,
-      company: "Startup Project Shell",
-      role: "Placeholder experience",
+      company: "vertical ai",
+      role: "product track",
       date: "TBD",
       location: "Riyadh, Saudi Arabia",
-      description: "Static placeholder for future startup-related experience or projects.",
+      description: "startup and vertical ai product interests across education, automation, and enterprise software.",
       logo: "/icons/folder.png",
       detail: {
         type: 'experience' as const,
         id: 1,
-        company: "Startup Project Shell",
-        role: "Placeholder experience",
+        company: "vertical ai",
+        role: "product track",
         date: "TBD",
         location: "Riyadh, Saudi Arabia",
         logo: "/icons/folder.png",
         timeline: [
-          { month: "Placeholder", description: "Future startup experience copy goes here." }
+          { month: "Future", description: "Future startup experience copy goes here." }
         ],
-        reflection: "Placeholder copy for Abdullah's future startup-focused work.",
+        reflection: "focused on building useful vertical products, not pitch-deck theater.",
         skillsLearned: ["Startups", "Product", "Operations"],
-        techStack: ["Placeholder"]
+        techStack: ["Future"]
       } satisfies ExperienceDetail
     },
     {
       id: 2,
-      company: "Robotics Project Shell",
-      role: "Placeholder experience",
+      company: "robotics automation",
+      role: "product track",
       date: "TBD",
       location: "Riyadh, Saudi Arabia",
-      description: "Static placeholder for future robotics and creative hardware work.",
+      description: "robotics, automation, sensors, and creative hardware experiments.",
       logo: "/icons/folder.png",
       detail: {
         type: 'experience' as const,
         id: 2,
-        company: "Robotics Project Shell",
-        role: "Placeholder experience",
+        company: "robotics automation",
+        role: "product track",
         date: "TBD",
         location: "Riyadh, Saudi Arabia",
         logo: "/icons/folder.png",
         timeline: [
-          { month: "Placeholder", description: "Future robotics and hardware experience copy goes here." }
+          { month: "Future", description: "Future robotics and hardware experience copy goes here." }
         ],
-        reflection: "Placeholder copy for Abdullah's future robotics and hardware work.",
+        reflection: "hands-on systems work across hardware and software.",
         skillsLearned: ["Robotics", "Hardware", "Prototyping"],
-        techStack: ["Placeholder"]
+        techStack: ["Future"]
       } satisfies ExperienceDetail
     }
   ];

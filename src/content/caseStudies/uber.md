@@ -1,13 +1,13 @@
 ---
-title: "Project Shell 03: Placeholder Case Study"
+title: "tutoringbyabdullah"
 slug: uber
-company: "Project Shell 03"
+company: "tutoringbyabdullah"
 publishedAt: "2026-02-03"
-tags: ["Placeholder"]
-summary: "Static placeholder case study for Abdullah Sultan."
+tags: ["Education","Product","Website"]
+summary: "tutoring platform focused on teaching style, recommendations, and real understanding."
 readingTime: 2
 ---
 
-# Project Shell 03: Placeholder Case Study
+# tutoringbyabdullah
 
-Static placeholder case-study content. Final writing will be added later.
+a tutoring platform focused on teaching style, recommendations, and helping students actually understand concepts instead of memorizing steps.

@@ -15,10 +15,10 @@ import { HiPencilSquare } from 'react-icons/hi2';
 type SectionId = 'education' | 'experience' | 'projects' | 'blog' | null;
 
 const SECTIONS = [
-  { id: 'education' as const, label: 'Education', icon: <HiAcademicCap size={20} />, color: '#667eea' },
+  { id: 'education' as const, label: 'education', icon: <HiAcademicCap size={20} />, color: '#667eea' },
   { id: 'experience' as const, label: 'Experience', icon: <BsBriefcaseFill size={18} />, color: '#f5576c' },
   { id: 'projects' as const, label: 'Projects', icon: <FaCode size={18} />, color: '#4facfe' },
-  { id: 'blog' as const, label: 'Thoughts', icon: <HiPencilSquare size={18} />, color: '#fa709a' },
+  { id: 'blog' as const, label: 'abdullahos', icon: <HiPencilSquare size={18} />, color: '#fa709a' },
 ];
 
 export default function MobileShell() {
@@ -43,7 +43,7 @@ export default function MobileShell() {
       <div style={{
         position: 'fixed',
         inset: 0,
-        backgroundImage: `url(/background.png)`,
+        backgroundImage: `url(/images/wallpaper/wallpaper.png)`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         zIndex: 0,
@@ -91,7 +91,7 @@ export default function MobileShell() {
               fontSize: '12px',
               color: 'rgba(255,255,255,0.5)',
             }}>
-              abdullah-placeholder.com — zsh
+              github.com/amsultan2010 — zsh
             </span>
             <div style={{ width: '42px' }} />
           </div>
@@ -111,10 +111,10 @@ export default function MobileShell() {
               <span style={{ color: '#ff79c6' }}>Location:</span> Riyadh, Saudi Arabia
             </div>
             <div style={{ marginBottom: '2px' }}>
-              <span style={{ color: '#f1fa8c' }}>Email:</span> abdullah@example.com
+              <span style={{ color: '#f1fa8c' }}>Email:</span> abdullahmsultan1@gmail.com
             </div>
             <div style={{ marginBottom: '12px' }}>
-              <span style={{ color: '#8be9fd' }}>GitHub:</span> github.com/abdullah-placeholder
+              <span style={{ color: '#8be9fd' }}>GitHub:</span> github.com/amsultan2010
             </div>
             <div style={{ color: 'rgba(255,255,255,0.55)', fontStyle: 'italic', fontSize: '12px' }}>
               I build systems that think, design that feels, and code that connects ideas to impact.
@@ -172,9 +172,9 @@ export default function MobileShell() {
 
         {/* External links */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '8px' }}>
-          <ExternalLink href="https://github.com/abdullah-placeholder" icon={<BsGithub size={20} />} label="GitHub" />
-          <ExternalLink href="mailto:abdullah@example.com" icon={<span style={{ fontSize: '18px' }}>✉</span>} label="Email" />
-          <ExternalLink href="https://music.youtube.com/" icon={<BsYoutube size={20} />} label="YouTube Music" />
+          <ExternalLink href="https://github.com/amsultan2010" icon={<BsGithub size={20} />} label="GitHub" />
+          <ExternalLink href="mailto:abdullahmsultan1@gmail.com" icon={<span style={{ fontSize: '18px' }}>✉</span>} label="Email" />
+          <ExternalLink href="https://music.youtube.com/@amsultan303" icon={<BsYoutube size={20} />} label="YouTube Music" />
         </div>
       </div>
 
@@ -216,7 +216,7 @@ export default function MobileShell() {
                 padding: '4px 0',
               }}
             >
-              ← Back
+              ← back
             </button>
             <span style={{
               fontFamily: "'SF Mono', monospace",

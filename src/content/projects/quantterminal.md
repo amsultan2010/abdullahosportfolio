@@ -1,16 +1,16 @@
 ---
-title: "Quant Project Shell"
-slug: quant-project-shell
+title: "quantbacktesterpy"
+slug: quantbacktesterpy
 year: 2026
-tech: ["Quant","Placeholder"]
-summary: "Static placeholder for a future quant finance project."
-repoUrl: "https://github.com/abdullah-placeholder"
+tech: ["Python","Pandas","Matplotlib"]
+summary: "single-stock sma crossover backtester w/ parameter heatmaps."
+repoUrl: "https://github.com/amsultan2010"
 highlights:
-  - "Placeholder highlight"
+  - "parameter sweeps"
+  - "heatmap output"
+  - "strategy behavior plots"
 ---
 
-# Quant Project Shell
+# quantbacktesterpy
 
-Static placeholder for a future quant finance project.
-
-Final project writing will be added later.
+a single-stock sma crossover backtester w/ parameter heatmaps for testing trading strategies and visualizing behavior.

@@ -1,12 +1,12 @@
 ---
-title: "Project Log Placeholder 02"
+title: "school activities"
 slug: gold-vs-nasdaq
 publishedAt: "2026-01-03"
-tags: ["Placeholder"]
-summary: "Static Abdullah writing placeholder."
+tags: ["activities"]
+summary: "clubs, sports, and school projects."
 readingTime: 2
 ---
 
-# Project Log Placeholder 02
+# school activities
 
-Static placeholder writing for Abdullah Sultan. Final copy will be added later.
+activities across doctors club, debate, engineering, affinity work, tennis, swim, badminton, and f1 club.

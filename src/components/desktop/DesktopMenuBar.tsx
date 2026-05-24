@@ -1,6 +1,7 @@
 import { useDesktop } from './DesktopContext';
 import { useState, useEffect, useRef } from 'react';
 import GitHubHeatmap from './GitHubHeatmap';
+import AbdullahAsciiLogo from './AbdullahAsciiLogo';
 
 
 /* ── Types ─────────────────────────────────────────── */
@@ -63,7 +64,7 @@ export default function DesktopMenuBar() {
     }}>
       {/* ── Left: Logo + Menus ── */}
       <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-        {/* Apple-menu-style RG logo dropdown */}
+        {/* Apple-menu-style logo dropdown */}
         <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}>
           <div
             onMouseDown={() => toggle('apple')}
@@ -73,7 +74,7 @@ export default function DesktopMenuBar() {
               background: activeMenu === 'apple' ? 'rgba(255,255,255,0.15)' : 'transparent',
             }}
           >
-            <img src="/icons/rglogo.png" alt="RG" style={{ height: '20px', opacity: 1, filter: 'brightness(0) saturate(0) invert(1)' }} />
+            <AbdullahAsciiLogo width={22} height={20} color="#fff" opacity={1} />
           </div>
           {activeMenu === 'apple' && (
             <div style={{ ...panelStyle, left: 0, minWidth: '240px' }}>
@@ -99,7 +100,7 @@ export default function DesktopMenuBar() {
           )}
         </div>
 
-        {!isMobile && <div style={{ ...barItem, fontWeight: 600, padding: '0 14px 0 0' }}>Abdullah Sultan</div>}
+        {!isMobile && <div style={{ ...barItem, fontWeight: 600, padding: '0 14px 0 0' }}>abdullah sultan</div>}
 
         <div
           onMouseDown={() => {
@@ -132,7 +133,7 @@ export default function DesktopMenuBar() {
         >Projects</div>
 
         <div
-          onMouseDown={() => window.open('https://github.com/abdullah-placeholder', '_blank')}
+          onMouseDown={() => window.open('https://github.com/amsultan2010', '_blank')}
           onMouseEnter={() => hover('_resume')}
           style={{ ...barItem, padding: '0 10px' }}
         >GitHub</div>
@@ -157,7 +158,7 @@ export default function DesktopMenuBar() {
         <BatteryIcon />
 
         <TrayDropdown id="wifi" active={activeMenu} toggle={toggle} icon={<WifiIcon />} align="right">
-          <WifiPanel location={location} onOpenSettings={() => { dispatch({ type: 'OPEN_WINDOW', id: 'wifi-settings' }); close(); }} />
+          <WifiPanel location={location} />
         </TrayDropdown>
 
         <TrayDropdown id="sound" active={activeMenu} toggle={toggle} icon={<SpeakerIcon />} align="right">
@@ -293,7 +294,7 @@ function DropDivider() {
 
 /* ── WiFi Panel ────────────────────────────────────── */
 
-function WifiPanel({ location, onOpenSettings }: { location: LocationData | null; onOpenSettings: () => void }) {
+function WifiPanel({ location }: { location: LocationData | null }) {
   return (
     <div style={{ padding: '4px 0', minWidth: '280px' }}>
       {/* Wi-Fi header with blue toggle */}
@@ -387,8 +388,6 @@ function WifiPanel({ location, onOpenSettings }: { location: LocationData | null
 
       <DropDivider />
 
-      {/* Wi-Fi Settings */}
-      <DropItem label="Wi-Fi Settings..." onClick={onOpenSettings} />
     </div>
   );
 }
@@ -403,7 +402,7 @@ function SoundPanel() {
       </div>
 
       <a
-        href="https://music.youtube.com/"
+        href="https://music.youtube.com/@amsultan303"
         target="_blank"
         rel="noopener noreferrer"
         style={{ display: 'flex', gap: '12px', padding: '8px 14px 12px', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}

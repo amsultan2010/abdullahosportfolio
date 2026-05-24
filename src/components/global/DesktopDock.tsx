@@ -7,11 +7,11 @@ export default function DesktopDock() {
   const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
 
   const handleEmailClick = () => {
-    window.location.href = 'mailto:abdullah@example.com';
+    window.location.href = 'mailto:abdullahmsultan1@gmail.com';
   };
 
   const handleGithubClick = () => {
-    window.open('https://github.com/abdullah-placeholder', '_blank');
+    window.open('https://github.com/amsultan2010', '_blank');
   };
 
   const handleContactClick = () => {
@@ -19,7 +19,7 @@ export default function DesktopDock() {
   };
 
   const handleMusicClick = () => {
-    window.open('https://music.youtube.com/', '_blank');
+    window.open('https://music.youtube.com/@amsultan303', '_blank');
   };
 
   const handleVSCodeClick = () => {

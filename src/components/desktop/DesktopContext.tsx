@@ -26,11 +26,11 @@ function createWindow(id: WindowId, zIndex: number, titleOverride?: string): Win
   let w = Math.min(defaults.width, maxW);
   let h = Math.min(defaults.height, maxH);
 
-  // Side windows (education/experience/stocks) get pre-positioned at the right
+  // Side windows (education/experience) get pre-positioned at the right
   // edge to avoid the center→right slide flicker. The DesktopShell layout
   // effect uses the same math; matching it here means it won't dispatch
   // MOVE_WINDOW after mount.
-  const isSideWindow = id === 'education' || id === 'experience' || id === 'stocks';
+  const isSideWindow = id === 'education' || id === 'experience';
   const isWideEnoughForSide = screenW >= 1024;
 
   let x: number;

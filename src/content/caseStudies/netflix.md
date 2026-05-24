@@ -1,13 +1,13 @@
 ---
-title: "AbdullahOS: Placeholder Case Study"
+title: "abdullahos"
 slug: netflix
-company: "AbdullahOS"
+company: "abdullahos"
 publishedAt: "2026-02-01"
-tags: ["Placeholder"]
-summary: "Static placeholder case study for Abdullah Sultan."
+tags: ["Astro","React","TypeScript"]
+summary: "desktop-style personal portfolio built w/ astro, react, and a macos-inspired ui."
 readingTime: 2
 ---
 
-# AbdullahOS: Placeholder Case Study
+# abdullahos
 
-Static placeholder case-study content. Final writing will be added later.
+a desktop-style personal portfolio built w/ astro, react, and a macos-inspired ui. includes draggable windows, app interactions, photos, projects, links, and custom static apps.

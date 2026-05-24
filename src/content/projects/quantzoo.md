@@ -1,16 +1,16 @@
 ---
-title: "Project Shell 01"
-slug: project-shell-01
+title: "quantportfoliopy"
+slug: quantportfoliopy
 year: 2026
-tech: ["Placeholder"]
-summary: "Static placeholder project shell for Abdullah Sultan."
-repoUrl: "https://github.com/abdullah-placeholder"
+tech: ["Python","Finance","Research"]
+summary: "multi-asset risk parity portfolio backtester."
+repoUrl: "https://github.com/amsultan2010"
 highlights:
-  - "Placeholder highlight"
+  - "risk parity allocation"
+  - "volatility-aware weights"
+  - "portfolio construction"
 ---
 
-# Project Shell 01
+# quantportfoliopy
 
-Static placeholder project shell for Abdullah Sultan.
-
-Final project writing will be added later.
+a multi-asset risk parity portfolio backtester focused on allocation, volatility, and portfolio construction.

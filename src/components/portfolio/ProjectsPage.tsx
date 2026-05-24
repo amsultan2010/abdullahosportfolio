@@ -1,50 +1,43 @@
 import { useState } from 'react';
-import PageShell, { useTheme, themeColors, SLink } from './PageShell';
+import PageShell, { useTheme, themeColors } from './PageShell';
 
 const PROJECTS = [
   {
-    title: 'AbdullahOS',
+    title: 'abdullahos',
     cover: '/readme/portfolio-desktop.png',
-    repo: 'https://github.com/abdullah-placeholder',
+    repo: '/desktop',
     demo: '/desktop',
     demoNewTab: true,
-    desc: 'Static desktop-inspired portfolio shell for Abdullah Sultan. Placeholder for future personal apps, project notes, and experiments.',
+    desc: 'desktop-style personal portfolio built w/ astro, react, and a macos-inspired ui.',
     tech: ['Astro', 'React', 'TypeScript'],
   },
   {
-    title: 'Project Shell 01',
-    cover: '/trading.png',
-    repo: 'https://github.com/abdullah-placeholder',
-    desc: 'Placeholder for a future software project. Final scope, stack, and writeup will be added later.',
-    tech: ['Placeholder', 'Build Log'],
+    title: 'tutoringbyabdullah',
+    cover: '/images/projects/tutoringpreview.png',
+    repo: 'https://tutoringbyabdullah.xyz',
+    desc: 'tutoring platform focused on teaching style, recommendations, and real understanding.',
+    tech: ['Education', 'Product', 'Website'],
   },
   {
-    title: 'Robotics Project Shell',
-    cover: '/cover.png',
-    repo: 'https://github.com/abdullah-placeholder',
-    desc: 'Placeholder for robotics experiments, controls, sensors, and creative hardware builds.',
-    tech: ['Robotics', 'Hardware', 'Prototype'],
+    title: 'quantbacktesterpy',
+    cover: '/images/projects/quantbacktesterpy.png',
+    repo: 'https://github.com/amsultan2010',
+    desc: 'single-stock sma crossover backtester w/ parameter heatmaps.',
+    tech: ['Python', 'Pandas', 'Backtesting'],
   },
   {
-    title: 'Quant Project Shell',
-    cover: '/terminal.png',
-    repo: 'https://github.com/abdullah-placeholder',
-    desc: 'Placeholder for quant finance research, backtests, simulations, and market notes.',
-    tech: ['Quant', 'Python', 'Research'],
+    title: 'quantportfoliopy',
+    cover: '/images/projects/quantportfoliopy.png',
+    repo: 'https://github.com/amsultan2010',
+    desc: 'multi-asset risk parity portfolio backtester.',
+    tech: ['Python', 'Finance', 'Research'],
   },
   {
-    title: 'Startup Project Shell',
-    cover: '/placeholder-cover.png',
-    repo: 'https://github.com/abdullah-placeholder',
-    desc: 'Placeholder for startup ideas, product experiments, and business model sketches.',
-    tech: ['Startup', 'Product', 'AI'],
-  },
-  {
-    title: 'Project Shell 03',
-    cover: '/howmanyclicks-cover.png',
-    repo: 'https://github.com/abdullah-placeholder',
-    desc: 'Placeholder for a future creative hardware or AI-assisted tool.',
-    tech: ['Prototype', 'Notes'],
+    title: 'quantoptionspy',
+    cover: '/images/projects/quantoptionspy.png',
+    repo: 'https://github.com/amsultan2010',
+    desc: 'black-scholes + monte carlo options pricer w/ greeks.',
+    tech: ['Python', 'Options', 'Monte Carlo'],
   },
 ];
 
@@ -158,9 +151,9 @@ function ProjectsContent() {
         <ProjectCard key={p.title} project={p} dark={dark} />
       ))}
 
-      <p style={{ fontSize: 14, color: t.text, marginTop: 8 }}>
-        more Abdullah project shells will live{' '}
-        <SLink href="https://github.com/abdullah-placeholder">here</SLink>
+      <p style={{ fontSize: 14, color: t.text, marginTop: 8, lineHeight: 1.6 }}>
+        i am most interested in vertical ai for automation, enterprise software, robotics, productivity, and education.
+        long term, i want to help build a yc-funded startup that actually does something meaningful.
       </p>
     </div>
   );
