@@ -25,7 +25,7 @@ export default function DesktopDock() {
   const windowItems: DockItem[] = [
     { id: 'terminal', label: 'terminal', icon: <DockImage src="/usethisTERMIANL.png" alt="terminal" cropScale={1.15} /> },
     { id: 'education', label: 'about', icon: <DockImage src="/icons/folder.png" alt="about" /> },
-    { id: 'projects', label: 'codex', icon: <DockImage src="/images/logosicons/codex.png" alt="codex" cropScale={1} contain /> },
+    { id: 'projects', label: 'vscode', icon: <DockImage src="/vscode.png" alt="vscode" cropScale={1} contain /> },
     { id: 'blog', label: 'abdullahos', icon: <DockAsciiLogo /> },
     { id: 'photos', label: 'photos', icon: <DockImage src="/icons/photos.png" alt="photos" /> },
     { id: 'email' as any, label: 'gmail', icon: <DockImage src="/images/logosicons/gmail.png" alt="gmail" cropScale={1} contain /> },

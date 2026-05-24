@@ -6396,7 +6396,7 @@ function MobileLayout() {
 
   const APP_GRID: { label: string; icon: React.ReactNode; action: () => void }[] = [
     { label: 'about', icon: mIcon('/images/logosicons/codex.png', 'about', 1), action: () => setActiveSection('experience') },
-    { label: 'projects', icon: mIcon('/icons/folder.png', 'projects'), action: () => setActiveSection('projects') },
+    { label: 'projects', icon: mIcon('/vscode.png', 'vscode', 1), action: () => setActiveSection('projects') },
     { label: 'abdullahos', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: '#050505', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><AbdullahAsciiLogo width={48} height={48} color="#fff" opacity={0.9} /></div>, action: () => setActiveSection('blog') },
     { label: 'photos', icon: mIcon('/icons/photos.png', 'photos'), action: () => setActiveSection('photos') },
     { label: 'gmail', icon: mIcon('/images/logosicons/gmail.png', 'gmail', 1), action: () => { window.location.href = 'mailto:abdullahmsultan1@gmail.com'; } },
