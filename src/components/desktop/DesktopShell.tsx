@@ -1238,6 +1238,17 @@ const DEV_PLAYLIST_TRACKS = [
   { title: 'Favorite Lie', artist: 'Lil Tecca', durationMs: 174000 },
   { title: 'Sucka Free', artist: 'Tyler, The Creator', durationMs: 192000 },
   { title: "Wanna Be Startin' Somethin'", artist: 'Michael Jackson', durationMs: 244000 },
+  { title: 'GEMSTONE', artist: 'Don Toliver', durationMs: 201000 },
+  { title: 'Roses', artist: 'Kanye West', durationMs: 239000 },
+  { title: 'Whiplash', artist: 'Hank Levy', durationMs: 412000 },
+  { title: 'Caravan', artist: 'Hank Levy', durationMs: 387000 },
+  { title: 'Human Nature', artist: 'Michael Jackson', durationMs: 246000 },
+  { title: 'Rapp Snitch Knishes', artist: 'MF DOOM', durationMs: 244000 },
+  { title: 'Dark Thoughts', artist: 'Lil Tecca', durationMs: 169000 },
+  { title: "What's the Use?", artist: 'Mac Miller', durationMs: 287000 },
+  { title: 'In the Dark', artist: 'Swae Lee, Jhene Aiko', durationMs: 212000 },
+  { title: "You Know It's Okay", artist: 'Ellzo', durationMs: 198000 },
+  { title: 'TIRAMISU', artist: 'Don Toliver', durationMs: 207000 },
 ];
 
 function NowPlaying() {
