@@ -5,6 +5,7 @@ interface AbdullahAsciiLogoProps {
   height: number;
   color?: string;
   opacity?: number;
+  fontWeight?: number;
 }
 
 export default function AbdullahAsciiLogo({
@@ -12,6 +13,7 @@ export default function AbdullahAsciiLogo({
   height,
   color = '#fff',
   opacity = 1,
+  fontWeight = 400,
 }: AbdullahAsciiLogoProps) {
   const [ascii, setAscii] = useState('');
 
@@ -60,6 +62,7 @@ export default function AbdullahAsciiLogo({
           color,
           opacity,
           fontFamily: "'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace",
+          fontWeight,
           fontSize: `${metrics.fontSize}px`,
           lineHeight: 1.08,
           letterSpacing: 0,
