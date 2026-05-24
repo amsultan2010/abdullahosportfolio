@@ -9,6 +9,7 @@ export type WindowId =
   | 'blog'
   | 'email'
   | 'photos'
+  | 'watchlist'
   | 'detail'
   | 'content';
 
@@ -61,6 +62,7 @@ export const WINDOW_DEFAULTS: Record<WindowId, { title: string; width: number; h
   blog:            { title: 'abdullahos',                   width: 900, height: 620, x: 110, y: 60 },
   email:           { title: 'new message',                   width: 640, height: 520, x: 180, y: 80 },
   photos:          { title: 'photos',                        width: 900, height: 640, x: 100, y: 50 },
+  watchlist:       { title: 'watchlist — Netflix',          width: 1040, height: 680, x: 90, y: 40 },
   detail:          { title: 'detail',                       width: 650, height: 600, x: 200, y: 80 },
   content:         { title: 'reader',                       width: 900, height: 700, x: 150, y: 40 },
 };

@@ -16,6 +16,7 @@ import Projects from '../desktop-portfolio/Projects';
 import Blog from '../desktop-portfolio/Blog';
 import EmailCompose from '../desktop-portfolio/EmailCompose';
 import Photos from '../desktop-portfolio/Photos';
+import Watchlist from '../desktop-portfolio/Watchlist';
 import WifiSettings from '../desktop-portfolio/WifiSettings';
 import DetailPanel from '../desktop-portfolio/DetailPanel';
 import ContentViewer from '../desktop-portfolio/ContentViewer';
@@ -48,6 +49,8 @@ function WindowContent({ id }: { id: WindowId }) {
       return <EmailCompose windowMode />;
     case 'photos':
       return <Photos windowMode />;
+    case 'watchlist':
+      return <Watchlist windowMode />;
     default:
       return null;
   }
@@ -68,6 +71,7 @@ const COMMANDS: Record<string, { window: WindowId; desc: string }> = {
   'photos':        { window: 'photos',          desc: 'Local photo gallery' },
   'terminal':      { window: 'terminal',        desc: 'Terminal home' },
   'experience':    { window: 'experience',      desc: 'experience' },
+  'watchlist':     { window: 'watchlist',       desc: 'favorite books, movies, shows' },
 };
 
 const SMART_COMMANDS: Record<string, { window: WindowId; output: string }> = {
@@ -75,6 +79,7 @@ const SMART_COMMANDS: Record<string, { window: WindowId; output: string }> = {
   'git log --projects':    { window: 'projects',      output: 'commit a1b2c3d (HEAD -> main)\nopening abdullah projects...' },
   'open abdullahos.app':   { window: 'blog',          output: 'Opening AbdullahOS.app...' },
   'open contact.app':      { window: 'email',         output: 'Opening static contact window...' },
+  'open watchlist.app':    { window: 'watchlist',     output: 'Opening Watchlist...' },
 };
 
 // ── Rolling titles ribbon for fullscreen subtitle ──
@@ -480,6 +485,7 @@ const QUICK_NAV = [
   { label: 'abdullahos', cmd: 'open abdullahos.app', color: '#fbbf24', icon: '/terminal.png' },
   { label: 'contact', cmd: 'open contact.app', color: '#22d3ee', icon: '/usethismailicon.png' },
   { label: 'photos', cmd: 'photos', color: '#c084fc', icon: '/icons/photos.png' },
+  { label: 'watchlist', cmd: 'watchlist', color: '#e50914', icon: '/images/logosicons/netflix.png' },
 ];
 
 function QuickStartTiles({ runCommand }: { runCommand: (cmd: string, source?: 'ui' | 'typed') => void }) {
@@ -6068,9 +6074,10 @@ function Desktop() {
               blog: '#f9f9f8',
               email: '#ffffff',
               photos: '#1a1a1f',
+              watchlist: '#141414',
             };
             // Apps with dark content need light title bar text
-            const darkTitleBars = ['projects', 'terminal', 'photos'];
+            const darkTitleBars = ['projects', 'terminal', 'photos', 'watchlist'];
             const titleBarBg = titleBarBgMap[win.id];
             const titleBarDark = darkTitleBars.includes(win.id);
             const hoverProps = {
@@ -6139,7 +6146,7 @@ function Desktop() {
 }
 
 type MobileTab = 'home' | 'work' | 'projects' | 'research' | 'more';
-type MobileSection = 'education' | 'experience' | 'projects' | 'blog' | 'photos' | null;
+type MobileSection = 'education' | 'experience' | 'projects' | 'blog' | 'photos' | 'watchlist' | null;
 
 // ── MobileStocks: Bloomberg terminal experience for mobile ──
 function MobileStocks() {
@@ -6412,6 +6419,7 @@ function MobileLayout() {
     { label: 'abdullahos', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: '#050505', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><AbdullahAsciiLogo width={48} height={48} color="#fff" opacity={0.9} /></div>, action: () => setActiveSection('blog') },
     { label: 'photos', icon: mIcon('/icons/photos.png', 'photos'), action: () => setActiveSection('photos') },
     { label: 'gmail', icon: mIcon('/images/logosicons/gmail.png', 'gmail', 1), action: () => { window.location.href = 'mailto:abdullahmsultan1@gmail.com'; } },
+    { label: 'watchlist', icon: mIcon('/images/logosicons/netflix.png', 'watchlist', 1), action: () => setActiveSection('watchlist') },
     { label: 'github', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'linear-gradient(135deg, #2d2d2d, #434343)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>, action: () => window.open('https://github.com/amsultan2010', '_blank') },
     { label: 'youtube music', icon: mIcon('/images/logosicons/youtubemusic.png', 'youtube music', 1), action: () => window.open('https://music.youtube.com/@amsultan303', '_blank') },
   ];
@@ -6730,7 +6738,7 @@ function MobileLayout() {
               ← back
             </button>
             <span style={{ fontFamily: "'SF Mono', monospace", fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>
-              {activeSection === 'education' ? 'education' : activeSection === 'experience' ? 'about' : activeSection === 'projects' ? 'projects' : activeSection === 'photos' ? 'photos' : 'abdullahos'}
+              {activeSection === 'education' ? 'education' : activeSection === 'experience' ? 'about' : activeSection === 'projects' ? 'projects' : activeSection === 'photos' ? 'photos' : activeSection === 'watchlist' ? 'watchlist' : 'abdullahos'}
             </span>
             <div style={{ width: '50px' }} />
           </div>
@@ -6741,6 +6749,7 @@ function MobileLayout() {
             {activeSection === 'projects' && <Projects onCardClick={handleCardClick} windowMode />}
             {activeSection === 'photos' && <Photos windowMode />}
             {activeSection === 'blog' && <Blog onContentClick={handleContentClick} windowMode />}
+            {activeSection === 'watchlist' && <Watchlist windowMode />}
           </div>
         </div>
       )}
