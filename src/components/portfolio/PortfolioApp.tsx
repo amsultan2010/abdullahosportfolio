@@ -399,7 +399,7 @@ function Inner() {
           justify-content: flex-end;
           pointer-events: none;
           overflow: hidden;
-          transform: translate3d(1.5vw, -1vh, 0);
+          transform: translate3d(-4vw, -1vh, 0);
           transition: opacity 0.3s ease;
           user-select: none;
         }
@@ -416,7 +416,7 @@ function Inner() {
           gap: 16px;
           width: 100%;
           max-width: 500px;
-          margin-left: clamp(36px, 11vw, 150px);
+          margin-left: clamp(48px, 15vw, 196px);
           padding: 60px 24px 40px 0;
         }
 
@@ -685,12 +685,12 @@ function Inner() {
 
         @media (max-width: 500px) {
           .rg-container {
-            margin-left: 28px;
+            margin-left: 36px;
             padding: 40px 20px 32px 0;
           }
           .rg-ascii-backdrop {
             width: 72vw;
-            transform: translate3d(16vw, 0, 0);
+            transform: translate3d(10vw, 0, 0);
           }
         }
       `}</style>
