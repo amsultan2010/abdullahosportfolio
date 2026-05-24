@@ -239,28 +239,19 @@ function RollingTitles() {
 // ── Rotating words component (character-by-character typing) ──
 function RotatingWords() {
   const words = [
-    'deep learning', 'fullstack development',
-    'systems engineering', 'quantitative finance',
-    'product design', 'cloud infrastructure',
-    'data science', 'too much caffeine',
-    'sheer willpower', 'duct tape and dreams',
-    'late nights and vibes', 'raw ambition',
-    'Python and prayers', 'Stack Overflow wisdom',
-    '47 open browser tabs', 'one more quick fix',
-    'too many JIRA tickets', 'ChatGPT and hope',
-    'zero sleep', 'rogue microservices',
-    'Lambda functions', 'distributed sleep',
-    'git commits and coffee', 'caffeine and chaos',
-    'good intentions', 'pure stubbornness',
+    'homemade matcha',
+    'Cursor and caffeine',
+    'music in my ears',
+    'Don Toliver hype',
+    'Cinematic OSTs',
+    'procrastination and progress',
+    'larping on LinkedIn',
+    'sending cold emails',
   ];
 
   const wordColors = [
-    '#60a5fa', '#c084fc', '#4ade80', '#fbbf24', '#f472b6',
-    '#22d3ee', '#fb923c', '#a78bfa', '#34d399', '#f87171',
-    '#38bdf8', '#e879f9', '#86efac', '#fcd34d', '#fb7185',
-    '#67e8f9', '#fdba74', '#c4b5fd', '#6ee7b7', '#fca5a5',
-    '#7dd3fc', '#d946ef', '#4ade80', '#facc15', '#f472b6',
-    '#2dd4bf',
+    '#60a5fa', '#c084fc', '#4ade80', '#fbbf24',
+    '#f472b6', '#22d3ee', '#fb923c', '#a78bfa',
   ];
 
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -1239,21 +1230,14 @@ function SectorHeatmap() {
 // ── Static music launcher ──
 const DEV_PLAYLIST_URL = 'https://music.youtube.com/@amsultan303';
 const DEV_PLAYLIST_TRACKS = [
-  { title: 'fiano', artist: 'the wine is ok', durationMs: 163000 },
-  { title: 'The Way Things Go', artist: 'chromas', durationMs: 185000 },
-  { title: 'a good man with a broken heart', artist: 'LoVibe.', durationMs: 142000 },
-  { title: 'astrophilia.', artist: 'Ok Pretty Boy', durationMs: 174000 },
-  { title: 'merlot', artist: 'the wine is ok', durationMs: 156000 },
-  { title: 'reading in berlin', artist: 'the wine is ok', durationMs: 189000 },
-  { title: 'Mar', artist: 'QUANT, Constança Quinteiro', durationMs: 198000 },
-  { title: 'Night of Arará', artist: 'Miki Ikhifa, Nubalix', durationMs: 210000 },
-  { title: 'Fascination', artist: 'Gaston', durationMs: 176000 },
-  { title: 'reading in london', artist: 'the wine is ok', durationMs: 168000 },
-  { title: 'Take Four.', artist: 'Bolden.', durationMs: 152000 },
-  { title: 'RDV (Late Nite Edit)', artist: 'Teuteu', durationMs: 195000 },
-  { title: 'Elevator Vibes', artist: 'The Brothers Nylon', durationMs: 144000 },
-  { title: 'saWasdee', artist: 'wza', durationMs: 160000 },
-  { title: 'Dawn in LA.', artist: 'Bolden.', durationMs: 183000 },
+  { title: 'EXCAVATOR', artist: 'Don Toliver', durationMs: 198000 },
+  { title: 'Through The Wire', artist: 'Kanye West', durationMs: 221000 },
+  { title: 'MUTT', artist: 'Leon Thomas', durationMs: 186000 },
+  { title: 'BLACK BALLOONS', artist: 'Denzel Curry', durationMs: 203000 },
+  { title: 'In Your Eyes', artist: 'The Weeknd', durationMs: 237000 },
+  { title: 'Favorite Lie', artist: 'Lil Tecca', durationMs: 174000 },
+  { title: 'Sucka Free', artist: 'Tyler, The Creator', durationMs: 192000 },
+  { title: "Wanna Be Startin' Somethin'", artist: 'Michael Jackson', durationMs: 244000 },
 ];
 
 function NowPlaying() {
@@ -1263,10 +1247,26 @@ function NowPlaying() {
   const [artistOverflow, setArtistOverflow] = useState(false);
   const [track] = useState<{ isPlaying: boolean; title: string; artist: string; album: string; albumArt: string; progressMs: number; durationMs: number; isPlaylistFallback?: boolean } | null>(null);
   const [progress, setProgress] = useState(0);
-  const [fallback] = useState(() => {
+  const [fallback, setFallback] = useState(() => {
     const t = DEV_PLAYLIST_TRACKS[Math.floor(Math.random() * DEV_PLAYLIST_TRACKS.length)];
     return { isPlaying: true, title: t.title, artist: t.artist, album: 'session', albumArt: '', progressMs: Math.floor(Math.random() * 0.6 * t.durationMs), durationMs: t.durationMs, isPlaylistFallback: true };
   });
+
+  const pickRandomTrack = useCallback(() => {
+    const t = DEV_PLAYLIST_TRACKS[Math.floor(Math.random() * DEV_PLAYLIST_TRACKS.length)];
+    const progressMs = Math.floor(Math.random() * 0.35 * t.durationMs);
+    setFallback({
+      isPlaying: true,
+      title: t.title,
+      artist: t.artist,
+      album: 'session',
+      albumArt: '',
+      progressMs,
+      durationMs: t.durationMs,
+      isPlaylistFallback: true,
+    });
+    setProgress(progressMs);
+  }, []);
 
   const active = track || fallback;
 
@@ -1277,10 +1277,14 @@ function NowPlaying() {
   useEffect(() => {
     const id = setInterval(() => setProgress(p => {
       const next = p + 1000;
-      return next >= active.durationMs ? (active.isPlaylistFallback ? 0 : active.durationMs) : next;
+      if (next >= active.durationMs) {
+        if (active.isPlaylistFallback) pickRandomTrack();
+        return active.durationMs;
+      }
+      return next;
     }), 1000);
     return () => clearInterval(id);
-  }, [active]);
+  }, [active.durationMs, active.isPlaylistFallback, pickRandomTrack]);
 
   const fmtTime = (ms: number) => {
     const s = Math.floor(ms / 1000);
@@ -1318,8 +1322,8 @@ function NowPlaying() {
       {active.albumArt ? (
         <img src={active.albumArt} alt="" style={{ width: 42, height: 42, borderRadius: 6, flexShrink: 0 }} />
       ) : (
-        <a href={DEV_PLAYLIST_URL} target="_blank" rel="noopener noreferrer" style={{ width: 42, height: 42, borderRadius: 6, flexShrink: 0, background: 'rgba(29, 185, 84, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        <a href={DEV_PLAYLIST_URL} target="_blank" rel="noopener noreferrer" style={{ width: 42, height: 42, borderRadius: 6, flexShrink: 0, background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', overflow: 'hidden' }}>
+          <img src="/images/logosicons/youtubemusic.png" alt="YouTube Music" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </a>
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -5744,17 +5748,14 @@ function TerminalContent() {
                 </div>
               </div>
               );
-            })() : !isMobileTerminal ? (
+            })(            ) : !isMobileTerminal ? (
               <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', fontWeight: 500 }}>
                     Using {showRotating && <RotatingWords />}
                   </div>
-                  <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', fontWeight: 500 }}>
-                    to create elegant and scalable
-                  </div>
-                  <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', fontWeight: 500 }}>
-                    solutions to real world problems.
+                  <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', fontWeight: 500, width: '100%', lineHeight: 1.45 }}>
+                    become a man who knows tech like he does all 1,025 Pokémon and transform AI automation to reshape society.
                   </div>
                 </div>
               </>
@@ -5775,11 +5776,10 @@ function TerminalContent() {
             {/* Bottom left: NowPlaying on desktop, Using text on mobile */}
             <div style={{ width: '50%', minWidth: 0 }}>
               {isMobileTerminal ? (
-                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '15px', lineHeight: 1.6, fontWeight: 500 }}>
+                <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '15px', lineHeight: 1.6, fontWeight: 500, width: '100%' }}>
                   <div>Using</div>
                   <div style={{ minHeight: '30px' }}>{showRotating && <RotatingWords />}</div>
-                  <div>to create elegant and scalable</div>
-                  <div>solutions to real world problems.</div>
+                  <div>become a man who knows tech like he does all 1,025 Pokémon and transform AI automation to reshape society.</div>
                 </div>
               ) : (
                 <NowPlaying />
@@ -5790,6 +5790,7 @@ function TerminalContent() {
               {[
                 { href: 'https://music.youtube.com/@amsultan303', text: 'music' },
                 { href: 'https://github.com/amsultan2010', text: 'github' },
+                { href: 'https://www.linkedin.com/in/abdullah-sultan-4a264939a/', text: 'linkedin' },
                 { href: 'mailto:abdullahmsultan1@gmail.com', text: 'email' },
               ].map(link => (
                 <a key={link.href} href={link.href} target="_blank" rel="noopener"
