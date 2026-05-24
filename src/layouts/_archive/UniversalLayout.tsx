@@ -8,12 +8,6 @@ interface UniversalLayoutProps {
   children: ReactNode;
   initialBg: string;
   backgroundMap: Record<string, string>;
-  recentPosts?: Array<{
-    title: string;
-    slug: string;
-    publishedAt: string;
-    readingTime: number;
-  }>;
 }
 
 export default function UniversalLayout({
@@ -21,7 +15,6 @@ export default function UniversalLayout({
   children,
   initialBg,
   backgroundMap,
-  recentPosts,
 }: UniversalLayoutProps) {
   // Always use bg-1 (the sand/mountain background)
   const currentBg = 'bg-1';
@@ -36,7 +29,7 @@ export default function UniversalLayout({
 
       {/* Navbar */}
       <div className="relative z-10">
-        <Nav currentPath={currentPath} recentPosts={recentPosts} />
+        <Nav currentPath={currentPath} />
       </div>
 
       {/* Main Content */}

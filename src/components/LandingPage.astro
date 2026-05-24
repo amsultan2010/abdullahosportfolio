@@ -1,20 +1,14 @@
 ---
-export const prerender = false;
 import { getImage } from 'astro:assets';
 import AppLayout from '../layouts/AppLayout';
-import { getRecentBlogPosts } from '../utils/blog';
 import { getFixedBackgroundKey, getOptimizedBackgrounds } from '../utils/backgrounds';
 
 // Get optimized backgrounds
 const backgroundMap = await getOptimizedBackgrounds(getImage);
-
-// Fetch recent blog posts for navigation
-const recentPosts = await getRecentBlogPosts();
 ---
 
 <AppLayout
   client:load
   initialBg={getFixedBackgroundKey()}
   backgroundMap={backgroundMap}
-  recentPosts={recentPosts}
 />

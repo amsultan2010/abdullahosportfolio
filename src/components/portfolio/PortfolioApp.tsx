@@ -39,7 +39,7 @@ const BUILDING = [
   {
     label: 'abdullahos',
     href: '/desktop',
-    cover: '/readme/portfolio-desktop.png',
+    cover: '/readme/portfolio-desktop.jpg',
     desc: 'desktop-style portfolio w/ draggable windows and static apps.',
     tech: ['Astro', 'React', 'TypeScript'],
   },
@@ -844,7 +844,7 @@ export default function PortfolioApp() {
       {(phase === 'site' || phase === 'desktop') && (
         <div className={`peek-container ${expanded ? 'peek-expanded' : ''}`}>
           <div className="peek-desktop">
-            <Suspense fallback={<div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/images/wallpaper/wallpaper.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />}>
+            <Suspense fallback={<div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/images/wallpaper/wallpaper.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }} />}>
               <LazyDesktopShell skipBoot />
             </Suspense>
             {phase === 'desktop' && <OSCloseButton onClose={handleClose} />}

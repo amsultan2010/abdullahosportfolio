@@ -43,7 +43,7 @@ export default function MobileShell() {
       <div style={{
         position: 'fixed',
         inset: 0,
-        backgroundImage: `url(/images/wallpaper/wallpaper.png)`,
+        backgroundImage: `url(/images/wallpaper/wallpaper.jpg)`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         zIndex: 0,

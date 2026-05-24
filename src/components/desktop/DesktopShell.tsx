@@ -6189,7 +6189,7 @@ function MobileProjects({ onCardClick }: { onCardClick: (detail: DetailContent) 
     {
       title: 'abdullahos',
       desc: 'desktop-style personal portfolio built w/ astro, react, and a macos-inspired ui.',
-      coverImage: '/readme/portfolio-desktop.png',
+      coverImage: '/readme/portfolio-desktop.jpg',
       gradient: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #0f172a 100%)',
       tech: ['Astro', 'React', 'TypeScript'],
       repoUrl: '/desktop',

@@ -2,7 +2,6 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
-import vercel from '@astrojs/vercel';
 import sitemap from '@astrojs/sitemap';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -47,8 +46,7 @@ export default defineConfig({
   ],
 
   // Deployment configuration
-  output: 'server', // Server-side rendering - required for OpenAI API usage
-  adapter: vercel(), // Deploy to Vercel - optional
+  output: 'static',
   devToolbar: {
     enabled: false,
   },

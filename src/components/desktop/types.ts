@@ -10,8 +10,7 @@ export type WindowId =
   | 'email'
   | 'photos'
   | 'detail'
-  | 'content'
-  | 'stocks';
+  | 'content';
 
 export interface WindowState {
   id: WindowId;
@@ -64,5 +63,4 @@ export const WINDOW_DEFAULTS: Record<WindowId, { title: string; width: number; h
   photos:          { title: 'photos',                        width: 900, height: 640, x: 100, y: 50 },
   detail:          { title: 'detail',                       width: 650, height: 600, x: 200, y: 80 },
   content:         { title: 'reader',                       width: 900, height: 700, x: 150, y: 40 },
-  stocks:          { title: 'legacy market lab',            width: 480, height: 860, x: 550, y: 32 },
 };

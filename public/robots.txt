@@ -2,6 +2,3 @@ User-agent: *
 Allow: /
 
 Sitemap: https://github.com/amsultan2010/sitemap-index.xml
-
-# Avoid API routes
-Disallow: /api/

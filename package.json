@@ -2,6 +2,9 @@
   "name": "macos-terminal-portfolio",
   "type": "module",
   "version": "0.0.1",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -12,7 +15,6 @@
   "dependencies": {
     "@astrojs/react": "^4.2.0",
     "@astrojs/sitemap": "^3.2.1",
-    "@astrojs/vercel": "^8.0.5",
     "@astrolib/seo": "^1.0.0-beta.8",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@react-three/drei": "^10.7.7",

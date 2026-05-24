@@ -3,12 +3,6 @@ import AbdullahAsciiLogo from '../desktop/AbdullahAsciiLogo';
 
 interface NavProps {
   currentPath: string;
-  recentPosts?: Array<{
-    title: string;
-    slug: string;
-    publishedAt: string;
-    readingTime: number;
-  }>;
 }
 
 interface MenuBlockProps {
@@ -164,7 +158,7 @@ function MenuBlock({ trigger, triggerHref, items, isOpen, onToggle }: MenuBlockP
   );
 }
 
-export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
+export default function Nav({ currentPath }: NavProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -195,33 +189,16 @@ export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
   };
 
   // Menu block configurations
-  const blogItems = recentPosts.length > 0 
-    ? [
-        ...recentPosts.slice(0, 3).map(post => ({
-          label: post.title,
-          href: `/blog/${post.slug}`,
-          sublabel: `${post.readingTime} min read`
-        })),
-        { label: 'all education', href: '/blog', sublabel: 'view all items', divider: true },
-      ]
-    : [
-        { label: 'american international school in riyadh', href: '/blog/agentification-3-phases', sublabel: 'current school' },
-        { label: 'the pingry school', href: '/blog/demystifying-enterprise-saas', sublabel: '2021-2025' },
-        { label: 'all education', href: '/blog', sublabel: 'view all items', divider: true },
-      ];
+  const educationItems = [
+    { label: 'american international school in riyadh', href: '/portfolio', sublabel: '2025-present' },
+    { label: 'the pingry school', href: '/portfolio', sublabel: '2021-2025' },
+  ];
 
   const projectItems = [
     { label: 'abdullahos', href: '/desktop', sublabel: 'featured project' },
     { label: 'tutoringbyabdullah', href: 'https://tutoringbyabdullah.xyz', sublabel: 'education product' },
-    { label: 'quantbacktesterpy', href: '/projects/quantterminal', sublabel: 'python backtester' },
+    { label: 'quantbacktesterpy', href: '/projects', sublabel: 'python backtester' },
     { label: 'all projects', href: '/projects', sublabel: 'view all projects', divider: true },
-  ];
-
-  const caseStudyItems = [
-    { label: 'abdullahos', href: '/case-studies/netflix', sublabel: 'desktop portfolio' },
-    { label: 'tutoringbyabdullah', href: '/case-studies/uber', sublabel: 'education product' },
-    { label: 'vertical ai', href: '/case-studies/spotify', sublabel: 'automation + robotics' },
-    { label: 'all case studies', href: '/case-studies', sublabel: 'view all cases', divider: true },
   ];
 
   return (
@@ -245,10 +222,10 @@ export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
         {/* Education Block */}
         <MenuBlock
           trigger="education"
-          triggerHref="/blog"
-          items={blogItems}
-          isOpen={openMenu === 'blog'}
-          onToggle={() => handleMenuToggle('blog')}
+          triggerHref="/portfolio"
+          items={educationItems}
+          isOpen={openMenu === 'education'}
+          onToggle={() => handleMenuToggle('education')}
         />
 
         {/* Projects Block */}
@@ -258,20 +235,6 @@ export default function Nav({ currentPath, recentPosts = [] }: NavProps) {
           items={projectItems}
           isOpen={openMenu === 'projects'}
           onToggle={() => handleMenuToggle('projects')}
-        />
-
-        {/* Case Studies Block */}
-        <MenuBlock
-          trigger={
-            <>
-              <span className="hidden md:inline">Case Studies</span>
-              <span className="md:hidden">Cases</span>
-            </>
-          }
-          triggerHref="/case-studies"
-          items={caseStudyItems}
-          isOpen={openMenu === 'case-studies'}
-          onToggle={() => handleMenuToggle('case-studies')}
         />
 
         {/* Simple Link Blocks */}

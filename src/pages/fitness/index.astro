@@ -2,12 +2,9 @@
 import Layout from '../../layouts/Layout.astro';
 import Nav from '../../components/global/Nav';
 import FitnessCharts from '../../components/FitnessCharts';
-import { getRecentBlogPosts } from '../../utils/blog';
 
 import runsData from '../../data/runs.json';
 import liftsData from '../../data/lifts.json';
-
-const recentPosts = await getRecentBlogPosts();
 ---
 
 <Layout
@@ -15,7 +12,7 @@ const recentPosts = await getRecentBlogPosts();
   description='Running and strength training progress tracking'
   canonical='https://github.com/amsultan2010'
 >
-  <Nav currentPath="/fitness" recentPosts={recentPosts} />
+  <Nav currentPath="/fitness" />
   
   <main class="min-h-screen bg-bg pt-12">
     <div class="max-w-6xl mx-auto px-4 py-12">

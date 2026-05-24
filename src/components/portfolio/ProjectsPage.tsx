@@ -4,7 +4,7 @@ import PageShell, { useTheme, themeColors } from './PageShell';
 const PROJECTS = [
   {
     title: 'abdullahos',
-    cover: '/readme/portfolio-desktop.png',
+    cover: '/readme/portfolio-desktop.jpg',
     repo: '/desktop',
     demo: '/desktop',
     demoNewTab: true,

@@ -1,17 +1,12 @@
 ---
-export const prerender = false;
 import { getImage } from 'astro:assets';
 import Layout from '../../layouts/Layout.astro';
 import PicturesLayout from '../../layouts/_archive/PicturesLayout';
-import { getRecentBlogPosts } from '../../utils/blog';
 import { getFixedBackgroundKey, getOptimizedBackgrounds } from '../../utils/backgrounds';
 import { photos } from '../../data/photos';
 
 // Get optimized backgrounds
 const backgroundMap = await getOptimizedBackgrounds(getImage);
-
-// Fetch recent blog posts for navigation
-const recentPosts = await getRecentBlogPosts();
 ---
 
 <Layout
@@ -24,6 +19,5 @@ const recentPosts = await getRecentBlogPosts();
     photos={photos}
     initialBg={getFixedBackgroundKey()}
     backgroundMap={backgroundMap}
-    recentPosts={recentPosts}
   />
 </Layout>

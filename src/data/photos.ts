@@ -23,7 +23,7 @@ const captions = [
 ];
 
 export const photos = captions.map((caption, index) => {
-  const imagePath = `/images/gallery/image${index + 1}.png`;
+  const imagePath = `/images/gallery/image${index + 1}.jpg`;
 
   return {
     src: imagePath,

@@ -16,12 +16,6 @@ interface PicturesLayoutProps {
   photos: Photo[];
   initialBg: string;
   backgroundMap: Record<string, string>;
-  recentPosts?: Array<{
-    title: string;
-    slug: string;
-    publishedAt: string;
-    readingTime: number;
-  }>;
 }
 
 function formatDate(dateString: string) {
@@ -32,7 +26,7 @@ function formatDate(dateString: string) {
   });
 }
 
-export default function PicturesLayout({ photos, initialBg, backgroundMap, recentPosts }: PicturesLayoutProps) {
+export default function PicturesLayout({ photos, initialBg, backgroundMap }: PicturesLayoutProps) {
   // Always use bg-1 (the sand/mountain background)
   const currentBg = 'bg-1';
   
@@ -60,7 +54,7 @@ export default function PicturesLayout({ photos, initialBg, backgroundMap, recen
 
       {/* Navbar */}
       <div className="relative z-10">
-        <Nav currentPath="/pictures" recentPosts={recentPosts} />
+        <Nav currentPath="/pictures" />
       </div>
 
       {/* Main Content */}
