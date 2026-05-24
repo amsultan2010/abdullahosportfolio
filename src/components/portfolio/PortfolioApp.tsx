@@ -84,8 +84,8 @@ function MainAsciiBackdrop({ dark }: { dark: boolean }) {
   useEffect(() => {
     const setViewportSize = () => {
       setSize({
-        width: Math.max(760, Math.round(window.innerWidth * 1.12)),
-        height: Math.max(560, Math.round(window.innerHeight * 0.9)),
+        width: Math.max(1120, Math.round(window.innerWidth * 1.45)),
+        height: Math.max(760, Math.round(window.innerHeight * 1.15)),
       });
     };
 
@@ -100,7 +100,7 @@ function MainAsciiBackdrop({ dark }: { dark: boolean }) {
         width={size.width}
         height={size.height}
         color={dark ? '#f5f5f4' : '#1c1917'}
-        opacity={dark ? 0.075 : 0.065}
+        opacity={dark ? 0.13 : 0.115}
       />
     </div>
   );
@@ -395,7 +395,7 @@ function Inner() {
           justify-content: center;
           pointer-events: none;
           overflow: hidden;
-          transform: translate3d(12vw, 2vh, 0) rotate(-2deg);
+          transform: translate3d(9vw, 0, 0) rotate(-2deg);
           transition: opacity 0.3s ease;
           user-select: none;
         }
@@ -681,7 +681,7 @@ function Inner() {
         @media (max-width: 500px) {
           .rg-container { padding: 40px 20px 32px; }
           .rg-ascii-backdrop {
-            transform: translate3d(18vw, 0, 0) rotate(-2deg);
+            transform: translate3d(12vw, 0, 0) rotate(-2deg);
           }
         }
       `}</style>
