@@ -1,5 +1,6 @@
 ---
 import { AstroSeo } from '@astrolib/seo';
+import Analytics from '@vercel/analytics/astro';
 import PortfolioApp from '../components/portfolio/PortfolioApp';
 ---
 
@@ -69,5 +70,6 @@ import PortfolioApp from '../components/portfolio/PortfolioApp';
   </head>
   <body>
     <PortfolioApp client:only="react" />
+    <Analytics />
   </body>
 </html>

@@ -79,13 +79,18 @@ const SOCIALS = [
 ];
 
 function MainAsciiBackdrop({ dark }: { dark: boolean }) {
-  const [size, setSize] = useState({ width: 1180, height: 820 });
+  const [size, setSize] = useState({ width: 960, height: 820, mobile: false });
 
   useEffect(() => {
     const setViewportSize = () => {
+      const vw = window.innerWidth;
+      const mobile = vw <= 500;
+      const tablet = vw <= 900 && !mobile;
+      const asciiFraction = mobile ? 0.4 : tablet ? 0.42 : 0.5;
       setSize({
-        width: Math.max(760, Math.round(window.innerWidth * 0.62)),
-        height: Math.max(860, Math.round(window.innerHeight * 1.18)),
+        width: Math.max(mobile ? 160 : 480, Math.round(vw * asciiFraction)),
+        height: Math.max(mobile ? 240 : 600, Math.round(mobile ? window.innerHeight * 0.32 : window.innerHeight)),
+        mobile,
       });
     };
 
@@ -95,13 +100,16 @@ function MainAsciiBackdrop({ dark }: { dark: boolean }) {
   }, []);
 
   return (
-    <div className="rg-ascii-backdrop" aria-hidden="true">
+    <div className={`rg-ascii-backdrop${size.mobile ? ' rg-ascii-backdrop-mobile' : ''}`} aria-hidden="true">
       <AbdullahAsciiLogo
         width={size.width}
         height={size.height}
         color={dark ? '#f5f5f4' : '#1c1917'}
-        opacity={dark ? 0.26 : 0.23}
+        opacity={dark ? (size.mobile ? 0.1 : 0.36) : (size.mobile ? 0.07 : 0.32)}
         fontWeight={900}
+        scale={size.mobile ? 1 : 1.1}
+        lineHeight={1.02}
+        align="right"
       />
     </div>
   );
@@ -277,7 +285,7 @@ function Inner() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 8 }}>
                     {b.tech.map((tag, j) => (
                       <span key={j} style={{
-                        fontSize: 12, padding: '3px 9px', borderRadius: 99,
+                        fontSize: 13, padding: '3px 9px', borderRadius: 99,
                         background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
                         color: t.textMuted,
                       }}>{tag}</span>
@@ -287,7 +295,7 @@ function Inner() {
               ))}
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6, width: '100%' }}>
-              <a href="/projects" style={{ fontSize: 13, color: t.textMuted, textDecoration: 'none', transition: 'color 0.2s' }}
+              <a href="/projects" style={{ fontSize: 14, color: t.textMuted, textDecoration: 'none', transition: 'color 0.2s' }}
                 onMouseEnter={e => (e.currentTarget.style.color = t.textStrong)}
                 onMouseLeave={e => (e.currentTarget.style.color = t.textMuted)}
               >see more →</a>
@@ -355,7 +363,7 @@ function Inner() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             </FooterIcon>
           </div>
-          <p style={{ fontSize: 13, color: t.textMuted, marginTop: 4 }}>2026 &copy; Abdullah Sultan</p>
+          <p style={{ fontSize: 14, color: t.textMuted, marginTop: 4 }}>2026 &copy; Abdullah Sultan</p>
         </footer>
       </div>
 
@@ -392,14 +400,14 @@ function Inner() {
           top: 0;
           right: 0;
           bottom: 0;
-          width: min(62vw, 920px);
+          width: 50vw;
           z-index: 0;
           display: flex;
           align-items: center;
           justify-content: flex-end;
           pointer-events: none;
           overflow: hidden;
-          transform: translate3d(-4vw, -1vh, 0);
+          transform: none;
           transition: opacity 0.3s ease;
           user-select: none;
         }
@@ -413,11 +421,12 @@ function Inner() {
           z-index: 1;
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 24px;
           width: 100%;
-          max-width: 640px;
-          margin-left: clamp(48px, 15vw, 196px);
+          max-width: min(680px, calc(50vw - 72px));
+          margin-left: clamp(20px, 3vw, 48px);
           padding: 64px 24px 48px 0;
+          box-sizing: border-box;
         }
 
         /* Header */
@@ -425,13 +434,13 @@ function Inner() {
         .rg-name {
           font-family: 'NeueMontreal-Medium', -apple-system, sans-serif;
           font-weight: 600;
-          font-size: 20px;
+          font-size: 24px;
           margin: 0;
           letter-spacing: -0.01em;
         }
         .rg-nav { display: flex; gap: 18px; }
         .rg-nav-link {
-          font-size: 16px;
+          font-size: 18px;
           text-decoration: none;
           position: relative;
           transition: color 0.2s, opacity 0.2s;
@@ -464,14 +473,14 @@ function Inner() {
           padding: 0; margin: 0;
           display: flex;
           flex-direction: column;
-          gap: 8px;
-          font-size: 19px;
+          gap: 10px;
+          font-size: 22px;
         }
         .rg-item {
           display: flex;
           align-items: flex-start;
           gap: 18px;
-          padding-left: 18px;
+          padding-left: 20px;
           position: relative;
           transition: transform 0.2s;
         }
@@ -483,7 +492,7 @@ function Inner() {
         }
         .rg-diamond {
           position: absolute;
-          left: 0; top: 12px;
+          left: 0; top: 13px;
           width: 7px; height: 7px;
           transform: rotate(45deg);
           flex-shrink: 0;
@@ -519,10 +528,10 @@ function Inner() {
         .rg-build-label {
           font-family: 'NeueMontreal-Medium', sans-serif;
           font-weight: 600;
-          font-size: 17px;
+          font-size: 19px;
         }
         .rg-build-desc {
-          font-size: 15px;
+          font-size: 17px;
           line-height: 1.5;
         }
 
@@ -595,7 +604,7 @@ function Inner() {
           border-radius: 8px;
           border: 1px solid;
           text-decoration: none;
-          font-size: 14px;
+          font-size: 15px;
           transition: transform 0.3s, box-shadow 0.3s;
         }
         .rg-projects-link:hover {
@@ -638,19 +647,19 @@ function Inner() {
         .rg-education-title {
           font-family: 'NeueMontreal-Medium', sans-serif;
           font-weight: 500;
-          font-size: 17px;
+          font-size: 19px;
         }
         .rg-education-years {
-          font-size: 13px;
+          font-size: 15px;
           line-height: 1.4;
         }
         .rg-education-details {
-          font-size: 16px;
+          font-size: 18px;
           line-height: 1.5;
         }
 
         /* CTA */
-        .rg-cta { font-size: 16px; margin: 10px 0 0; }
+        .rg-cta { font-size: 18px; margin: 10px 0 0; }
         .rg-cta-link {
           text-decoration: none;
           border-bottom: 1px solid currentColor;
@@ -683,11 +692,21 @@ function Inner() {
         .rg-footer { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
         .rg-socials { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
 
+        @media (max-width: 900px) {
+          .rg-container {
+            max-width: min(680px, calc(100vw - clamp(20px, 3vw, 48px) - 32px));
+          }
+          .rg-ascii-backdrop {
+            opacity: 0.55;
+            width: 42vw;
+          }
+        }
+
         @media (max-width: 500px) {
           .rg-container {
-            margin-left: 36px;
-            max-width: calc(100vw - 56px);
-            padding: 40px 20px 32px 0;
+            margin-left: clamp(16px, 4vw, 24px);
+            max-width: calc(100vw - clamp(16px, 4vw, 24px) - 16px);
+            padding: 40px 16px 32px 0;
           }
           .rg-header {
             align-items: flex-start;
@@ -697,11 +716,17 @@ function Inner() {
             gap: 12px;
             flex-wrap: wrap;
           }
-          .rg-list { font-size: 17px; }
+          .rg-list { font-size: 19px; }
           .rg-build-card { padding: 16px; }
           .rg-ascii-backdrop {
-            width: 72vw;
-            transform: translate3d(10vw, 0, 0);
+            top: auto;
+            bottom: 0;
+            width: 40vw;
+            height: 32vh;
+            opacity: 1;
+          }
+          .rg-ascii-backdrop-mobile {
+            align-items: flex-end;
           }
         }
       `}</style>
@@ -742,7 +767,7 @@ function FooterIcon({ href, label, dark, children, external = true }: {
         maxWidth: hovered ? 80 : 0,
         marginLeft: hovered ? 6 : 0,
         opacity: hovered ? 1 : 0,
-        fontSize: 14,
+        fontSize: 15,
         whiteSpace: 'nowrap',
         transition: 'max-width 0.5s ease, opacity 0.5s ease, margin-left 0.3s ease',
       }}>

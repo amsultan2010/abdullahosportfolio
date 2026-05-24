@@ -6,6 +6,9 @@ interface AbdullahAsciiLogoProps {
   color?: string;
   opacity?: number;
   fontWeight?: number;
+  scale?: number;
+  lineHeight?: number;
+  align?: 'left' | 'center' | 'right';
 }
 
 export default function AbdullahAsciiLogo({
@@ -14,6 +17,9 @@ export default function AbdullahAsciiLogo({
   color = '#fff',
   opacity = 1,
   fontWeight = 400,
+  scale = 1,
+  lineHeight = 1.08,
+  align = 'center',
 }: AbdullahAsciiLogoProps) {
   const [ascii, setAscii] = useState('');
 
@@ -38,10 +44,12 @@ export default function AbdullahAsciiLogo({
     const lines = ascii.split('\n');
     const maxLine = Math.max(1, ...lines.map((line) => line.length));
     const lineCount = Math.max(1, lines.length);
-    const fontSize = Math.min(width / (maxLine * 0.58), height / (lineCount * 1.08));
+    const baseFontSize = Math.min(width / (maxLine * 0.58), height / (lineCount * lineHeight));
+    const maxWidthFit = width / (maxLine * 0.58);
+    const fontSize = Math.min(baseFontSize * scale, maxWidthFit);
 
     return { fontSize: Math.max(fontSize, 0.45) };
-  }, [ascii, height, width]);
+  }, [ascii, height, width, scale, lineHeight]);
 
   return (
     <div
@@ -52,7 +60,7 @@ export default function AbdullahAsciiLogo({
         overflow: 'hidden',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: align === 'right' ? 'flex-end' : align === 'left' ? 'flex-start' : 'center',
         pointerEvents: 'none',
       }}
     >
@@ -64,7 +72,7 @@ export default function AbdullahAsciiLogo({
           fontFamily: "'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace",
           fontWeight,
           fontSize: `${metrics.fontSize}px`,
-          lineHeight: 1.08,
+          lineHeight,
           letterSpacing: 0,
           whiteSpace: 'pre',
           textAlign: 'left',

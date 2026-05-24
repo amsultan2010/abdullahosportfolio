@@ -1,5 +1,6 @@
 ---
 import { AstroSeo } from '@astrolib/seo';
+import Analytics from '@vercel/analytics/astro';
 import DesktopShell from '../components/desktop/DesktopShell';
 ---
 
@@ -72,5 +73,6 @@ import DesktopShell from '../components/desktop/DesktopShell';
   </head>
   <body>
     <DesktopShell client:only="react" />
+    <Analytics />
   </body>
 </html>
