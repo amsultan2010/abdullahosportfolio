@@ -5710,27 +5710,6 @@ function TerminalContent() {
 
                 {/* ── Right Column ── */}
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                  {/* Reading */}
-                  <div style={sHead}>READING</div>
-                  <div style={sPara}>
-                    Most of what I read falls into biographies, strategy, and people trying to explain how the world actually works. I like biographies because they show how messy reality actually is.
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '10px' }}>
-                    {[
-                      'Zero to One — Peter Thiel',
-                      'The Laws of Human Nature — Robert Greene',
-                      'Poor Charlie\'s Almanack — Charlie Munger',
-                      'The Power Broker — Robert Caro',
-                    ].map((book, i) => (
-                      <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
-                        <span style={{ color: '#1d1d1f', fontSize: '9px', fontFamily: "'SF Mono', monospace" }}>›</span>
-                        <span style={{ ...sPara }}>{book}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div style={sRule} />
-
                   {/* Hardware */}
                   <div style={sHead}>HARDWARE</div>
                   <div style={sPara}>
@@ -6403,9 +6382,9 @@ function MobileLayout() {
   const sHead: React.CSSProperties = { color: '#fff', fontSize: '10px', fontWeight: 700, letterSpacing: '0.14em', marginBottom: '6px', fontFamily: "'SF Mono', monospace" };
   const sPara: React.CSSProperties = { color: 'rgba(255,255,255,0.88)', fontSize: '13px', lineHeight: 1.6, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 };
 
-  const SLIDE_TITLES = ['ABOUT', 'SOFTWARE', 'READING', 'CURRENT FOCUS'];
-  const nextSlide = () => setSlideIndex(i => (i + 1) % 4);
-  const prevSlide = () => setSlideIndex(i => (i + 3) % 4);
+  const SLIDE_TITLES = ['ABOUT', 'SOFTWARE', 'CURRENT FOCUS'];
+  const nextSlide = () => setSlideIndex(i => (i + 1) % 3);
+  const prevSlide = () => setSlideIndex(i => (i + 2) % 3);
 
   const mIcon = (src: string, alt: string, scale = 1.12) => (
     <div style={{ width: '56px', height: '56px', borderRadius: '14px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -6540,16 +6519,6 @@ function MobileLayout() {
                   )}
                   {slideIndex === 2 && (
                     <div>
-                      {['Zero to One — Thiel', "Poor Charlie's Almanack", 'The Power Broker — Caro', 'Laws of Human Nature'].map((book, i) => (
-                        <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginBottom: '3px' }}>
-                          <span style={{ color: '#fff', fontSize: '8px', fontFamily: "'SF Mono', monospace" }}>›</span>
-                          <span style={{ ...sPara, fontSize: '12px', lineHeight: 1.45 }}>{book}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {slideIndex === 3 && (
-                    <div>
                       {['abdullahos interface', 'shipping tutoringbyabdullah', 'robotics, automation, vertical ai, and quant tools'].map((item, i) => (
                         <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginBottom: '3px' }}>
                           <span style={{ color: '#fff', fontSize: '8px', fontFamily: "'SF Mono', monospace" }}>›</span>
@@ -6561,7 +6530,7 @@ function MobileLayout() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
                   <div style={{ display: 'flex', gap: '6px' }}>
-                    {[0, 1, 2, 3].map(i => (
+                    {[0, 1, 2].map(i => (
                       <div key={i} style={{
                         width: i === slideIndex ? '16px' : '6px', height: '6px',
                         borderRadius: '3px',
