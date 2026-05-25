@@ -949,6 +949,15 @@ export default function PortfolioApp() {
           >
             <span className="page-curl-chip">abdullahos →</span>
           </div>
+          <div
+            className={`peek-hint ${expanded ? 'curl-hidden' : ''}`}
+            onClick={togglePeek}
+            role="button"
+            aria-label="Open AbdullahOS"
+          >
+            <span className="peek-hint-text">open abdullahos</span>
+            <span className="peek-hint-arrow" aria-hidden="true">↗</span>
+          </div>
         </div>
       )}
 
@@ -995,6 +1004,53 @@ export default function PortfolioApp() {
           transition: opacity 0.3s linear;
         }
         .page-curl-chip { display: none; }
+        .peek-hint {
+          position: absolute;
+          top: 110px;
+          right: 18px;
+          z-index: 1002;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 14px;
+          border-radius: 999px;
+          background: rgba(20, 20, 20, 0.82);
+          color: #f5f5f4;
+          font-family: 'SF Mono', 'Menlo', monospace;
+          font-size: 12px;
+          letter-spacing: 0.02em;
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          box-shadow: 0 8px 22px rgba(0,0,0,0.22), inset 0 0 0 0.5px rgba(255,255,255,0.08);
+          cursor: pointer;
+          pointer-events: auto;
+          opacity: 0;
+          animation: peekHintReveal 0.5s ease-out 1.1s forwards, peekHintFloat 2.6s ease-in-out 1.6s infinite;
+          transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+          white-space: nowrap;
+          user-select: none;
+        }
+        .peek-hint:hover {
+          background: rgba(20, 20, 20, 0.94);
+          box-shadow: 0 10px 28px rgba(0,0,0,0.32), inset 0 0 0 0.5px rgba(255,255,255,0.12);
+        }
+        .peek-hint-arrow {
+          display: inline-block;
+          font-size: 13px;
+          animation: peekHintArrow 1.8s ease-in-out 1.6s infinite;
+        }
+        @keyframes peekHintReveal {
+          0% { opacity: 0; transform: translateY(-4px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes peekHintFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
+        }
+        @keyframes peekHintArrow {
+          0%, 100% { transform: translate(0, 0); opacity: 0.88; }
+          50% { transform: translate(2px, -2px); opacity: 1; }
+        }
         .curl-hidden {
           opacity: 0 !important;
           pointer-events: none;
@@ -1035,6 +1091,9 @@ export default function PortfolioApp() {
             -webkit-backdrop-filter: blur(12px);
             box-shadow: 0 4px 14px rgba(0,0,0,0.2);
             pointer-events: none;
+          }
+          .peek-hint {
+            display: none;
           }
           .os-close-btn {
             top: 14px;
