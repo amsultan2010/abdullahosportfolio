@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 interface PokemonDef {
   id: number;
@@ -35,17 +35,27 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
   const animRef = useRef<number>(0);
   const initRef = useRef<boolean>(false);
 
+  // Pick per-pokemon sizes synchronously so the <img> tags can match
+  const sizes = useMemo(() => {
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const isMobile = vw <= 768;
+    const baseSize = isMobile ? 78 : 104;
+    return POKEMON.map((_, i) => baseSize + (i % 2 === 0 ? 0 : 12));
+  }, []);
+
+  const containerHeight = useMemo(() => {
+    return Math.max(...sizes) + 12;
+  }, [sizes]);
+
   // Initialize positions once after mount
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
 
     const vw = window.innerWidth;
-    const isMobile = vw <= 768;
-    const baseSize = isMobile ? 44 : 60;
 
     stateRef.current = POKEMON.map((_, i) => {
-      const size = baseSize + Math.round((i % 2) * 6);
+      const size = sizes[i];
       const slotW = vw / POKEMON.length;
       // Distribute pokemon across screen, with a little jitter
       const x = slotW * i + slotW * 0.5 - size / 2 + (Math.random() - 0.5) * slotW * 0.4;
@@ -58,7 +68,7 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
         bobPhase: Math.random() * Math.PI * 2,
       };
     });
-  }, []);
+  }, [sizes]);
 
   // Track dock bounds (re-measure on resize + interval to handle dynamic mounts)
   useEffect(() => {
@@ -154,7 +164,7 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
         bottom: 0,
         left: 0,
         width: '100vw',
-        height: 96,
+        height: containerHeight,
         pointerEvents: 'none',
         zIndex,
         overflow: 'hidden',
@@ -171,15 +181,15 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
           draggable={false}
           style={{
             position: 'absolute',
-            bottom: 6,
+            bottom: 4,
             left: 0,
-            width: 64,
-            height: 64,
+            width: sizes[i],
+            height: sizes[i],
             objectFit: 'contain',
             objectPosition: 'bottom center',
             imageRendering: 'pixelated',
             willChange: 'transform',
-            filter: 'drop-shadow(0 3px 4px rgba(0,0,0,0.35))',
+            filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.4))',
             userSelect: 'none',
           }}
         />
