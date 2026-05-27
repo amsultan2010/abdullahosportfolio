@@ -96,7 +96,7 @@ export default function PokemonWalkers({ zIndex = 9999 }: Props) {
   const baseHeight = useMemo(() => {
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1200;
     const isMobile = vw <= 768;
-    return isMobile ? 64 : 108;
+    return isMobile ? 60 : 100;
   }, []);
 
   const heights = useMemo(() => {

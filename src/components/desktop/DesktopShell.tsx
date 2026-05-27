@@ -5752,7 +5752,7 @@ function TerminalContent() {
                     Using {showRotating && <RotatingWords />}
                   </div>
                   <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', fontWeight: 500, width: '100%', lineHeight: 1.45 }}>
-                    to become a man who knows tech like he does all 1,025 Pokémon and transform AI automation to reshape society.
+                    to become a co-founder/CTO of a YC-funded startup that integrates AI automation with robotics.
                   </div>
                 </div>
               </>
@@ -5776,7 +5776,7 @@ function TerminalContent() {
                 <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '15px', lineHeight: 1.6, fontWeight: 500, width: '100%' }}>
                   <div>Using</div>
                   <div style={{ minHeight: '30px' }}>{showRotating && <RotatingWords />}</div>
-                  <div>to become a man who knows tech like he does all 1,025 Pokémon and transform AI automation to reshape society.</div>
+                  <div>to become a co-founder/CTO of a YC-funded startup that integrates AI automation with robotics.</div>
                 </div>
               ) : (
                 <NowPlaying />

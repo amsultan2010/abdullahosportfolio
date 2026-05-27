@@ -173,14 +173,15 @@ function MenacingAura({ dark }: { dark: boolean }) {
       <span className="menacing-ch menacing-ch-4">ゴ</span>
       <span className="menacing-ch menacing-ch-5">ゴ</span>
       <style>{`
-        /* Desktop: pinned to the top-left of the ascii art (which lives in the right ~50vw) */
+        /* Desktop: pinned to the upper area of the ascii art, shifted right
+           so the aura overlaps the left edge of the visible ascii letters. */
         .menacing-aura {
           position: fixed;
-          top: 72px;
-          left: 50vw;
+          top: 64px;
+          left: 60vw;
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 6px;
           pointer-events: none;
           user-select: none;
           z-index: 3;
@@ -197,34 +198,34 @@ function MenacingAura({ dark }: { dark: boolean }) {
           text-shadow: ${shadow};
           animation: menacingPulse 1.8s ease-in-out infinite;
         }
-        /* Sizes are ~1.65x the previous values */
-        .menacing-ch-1 { font-size: 50px; left: 0;   transform: rotate(-3deg); animation-delay: 0s; }
-        .menacing-ch-2 { font-size: 44px; left: 16px; transform: rotate(2deg);  animation-delay: 0.22s; }
-        .menacing-ch-3 { font-size: 60px; left: 4px;  transform: rotate(-1deg); animation-delay: 0.44s; }
-        .menacing-ch-4 { font-size: 36px; left: 22px; transform: rotate(3deg);  animation-delay: 0.66s; }
-        .menacing-ch-5 { font-size: 46px; left: 6px;  transform: rotate(-2deg); animation-delay: 0.88s; }
+        /* Sizes are 2x larger than the previous step. */
+        .menacing-ch-1 { font-size: 100px; left: 0;   transform: rotate(-3deg); animation-delay: 0s; }
+        .menacing-ch-2 { font-size: 88px;  left: 32px; transform: rotate(2deg);  animation-delay: 0.22s; }
+        .menacing-ch-3 { font-size: 120px; left: 8px;  transform: rotate(-1deg); animation-delay: 0.44s; }
+        .menacing-ch-4 { font-size: 72px;  left: 44px; transform: rotate(3deg);  animation-delay: 0.66s; }
+        .menacing-ch-5 { font-size: 92px;  left: 12px; transform: rotate(-2deg); animation-delay: 0.88s; }
         @keyframes menacingPulse {
           0%, 100% { opacity: 0.4; top: 0; }
-          50%      { opacity: 1;   top: -4px; }
+          50%      { opacity: 1;   top: -6px; }
         }
         /* Tablet */
         @media (max-width: 900px) {
-          .menacing-aura { top: 64px; left: 56vw; gap: 3px; }
-          .menacing-ch-1 { font-size: 40px; }
-          .menacing-ch-2 { font-size: 34px; }
-          .menacing-ch-3 { font-size: 46px; }
-          .menacing-ch-4 { font-size: 28px; }
-          .menacing-ch-5 { font-size: 36px; }
+          .menacing-aura { top: 56px; left: 60vw; gap: 4px; }
+          .menacing-ch-1 { font-size: 80px; }
+          .menacing-ch-2 { font-size: 68px; }
+          .menacing-ch-3 { font-size: 92px; }
+          .menacing-ch-4 { font-size: 56px; }
+          .menacing-ch-5 { font-size: 72px; }
         }
         /* Mobile: ascii art sits at the bottom of the viewport, so move
            the aura to the top-left edge of that lower-half region. */
         @media (max-width: 500px) {
-          .menacing-aura { top: 50vh; left: 14px; gap: 2px; }
-          .menacing-ch-1 { font-size: 36px; }
-          .menacing-ch-2 { font-size: 30px; }
-          .menacing-ch-3 { font-size: 42px; }
-          .menacing-ch-4 { font-size: 26px; }
-          .menacing-ch-5 { font-size: 32px; }
+          .menacing-aura { top: 46vh; left: 18px; gap: 3px; }
+          .menacing-ch-1 { font-size: 56px; }
+          .menacing-ch-2 { font-size: 48px; }
+          .menacing-ch-3 { font-size: 66px; }
+          .menacing-ch-4 { font-size: 40px; }
+          .menacing-ch-5 { font-size: 50px; }
         }
       `}</style>
     </div>
@@ -508,8 +509,14 @@ function Inner() {
             <FooterIcon href="https://github.com/amsultan2010" label="projects" dark={dark}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             </FooterIcon>
+            <FooterIcon href="https://www.linkedin.com/in/abdullah-sultan-4a264939a/" label="linkedin" dark={dark}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.852 3.37-1.852 3.601 0 4.267 2.37 4.267 5.455v6.288zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.063 2.063 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </FooterIcon>
           </div>
-          <p style={{ fontSize: 14, color: t.textMuted, marginTop: 4 }}>2026 &copy; Abdullah Sultan</p>
+          <p style={{ fontSize: 14, color: t.textMuted, marginTop: 4 }} className="rg-copyright">
+            2026 &copy; Abdullah Sultan
+            <span className="rg-copyright-made"> — made with Cursor (Opus 4.7 Extra High and GPT-5.5 Medium)</span>
+          </p>
         </footer>
       </div>
 
@@ -1048,6 +1055,22 @@ function Inner() {
         /* Footer */
         .rg-footer { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
         .rg-socials { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+        .rg-copyright {
+          line-height: 1.5;
+        }
+        .rg-copyright-made {
+          opacity: 0.85;
+        }
+        @media (max-width: 500px) {
+          .rg-copyright {
+            font-size: 13px;
+          }
+          .rg-copyright-made {
+            display: block;
+            margin-top: 2px;
+            font-size: 12px;
+          }
+        }
 
         @media (max-width: 900px) {
           .rg-container {
