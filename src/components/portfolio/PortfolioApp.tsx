@@ -177,8 +177,8 @@ function MenacingAura({ dark }: { dark: boolean }) {
            so the aura overlaps the left edge of the visible ascii letters. */
         .menacing-aura {
           position: fixed;
-          top: 64px;
-          left: 60vw;
+          top: 40px;
+          left: 54vw;
           display: flex;
           flex-direction: column;
           gap: 6px;
@@ -210,7 +210,7 @@ function MenacingAura({ dark }: { dark: boolean }) {
         }
         /* Tablet */
         @media (max-width: 900px) {
-          .menacing-aura { top: 56px; left: 60vw; gap: 4px; }
+          .menacing-aura { top: 32px; left: 54vw; gap: 4px; }
           .menacing-ch-1 { font-size: 80px; }
           .menacing-ch-2 { font-size: 68px; }
           .menacing-ch-3 { font-size: 92px; }
@@ -220,7 +220,7 @@ function MenacingAura({ dark }: { dark: boolean }) {
         /* Mobile: ascii art sits at the bottom of the viewport, so move
            the aura to the top-left edge of that lower-half region. */
         @media (max-width: 500px) {
-          .menacing-aura { top: 46vh; left: 18px; gap: 3px; }
+          .menacing-aura { top: 42vh; left: 12px; gap: 3px; }
           .menacing-ch-1 { font-size: 56px; }
           .menacing-ch-2 { font-size: 48px; }
           .menacing-ch-3 { font-size: 66px; }
