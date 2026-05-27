@@ -245,19 +245,29 @@ function RollingTitles() {
 // ── Rotating words component (character-by-character typing) ──
 function RotatingWords() {
   const words = [
-    'homemade matcha',
-    'Cursor and caffeine',
-    'music in my ears',
-    'Don Toliver hype',
-    'Cinematic OSTs',
-    'procrastination and progress',
-    'larping on LinkedIn',
-    'sending cold emails',
+    'Drinking way too much homemade matcha',
+    'Coding with Cursor on caffeine',
+    'Listening to Don Toliver',
+    'Procrastinating with progress',
+    'Larping on LinkedIn',
+    'Sending cold emails',
+    'Vibecoding random stuff',
+    'Doing absolutely nothing in school',
+    'Watching Fireship videos',
+    'Bringing my Macbook to a Starbucks in San Francisco',
   ];
 
   const wordColors = [
-    '#60a5fa', '#c084fc', '#4ade80', '#fbbf24',
-    '#f472b6', '#22d3ee', '#fb923c', '#a78bfa',
+    '#4ade80', // matcha green
+    '#c084fc', // cursor purple
+    '#fbbf24', // amber
+    '#22d3ee', // cyan
+    '#60a5fa', // blue
+    '#f472b6', // pink
+    '#a78bfa', // violet
+    '#fb923c', // orange
+    '#ef4444', // fireship red
+    '#34d399', // starbucks-ish green
   ];
 
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -5748,11 +5758,11 @@ function TerminalContent() {
             })(            ) : !isMobileTerminal ? (
               <>
                 <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', fontWeight: 500 }}>
-                    Using {showRotating && <RotatingWords />}
+                  <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', fontWeight: 500, minHeight: '48px', lineHeight: 1.35 }}>
+                    {showRotating && <RotatingWords />}
                   </div>
                   <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '17px', fontWeight: 500, width: '100%', lineHeight: 1.45 }}>
-                    to become a co-founder/CTO of a YC-funded startup that integrates AI automation with robotics.
+                    so that I can become a co-founder/CTO of a YC-funded startup that integrates AI automation with robotics.
                   </div>
                 </div>
               </>
@@ -5774,9 +5784,8 @@ function TerminalContent() {
             <div style={{ width: '50%', minWidth: 0 }}>
               {isMobileTerminal ? (
                 <div style={{ fontFamily: "'SF Pro Text', -apple-system, sans-serif", color: 'rgba(255,255,255,0.85)', fontSize: '15px', lineHeight: 1.6, fontWeight: 500, width: '100%' }}>
-                  <div>Using</div>
-                  <div style={{ minHeight: '30px' }}>{showRotating && <RotatingWords />}</div>
-                  <div>to become a co-founder/CTO of a YC-funded startup that integrates AI automation with robotics.</div>
+                  <div style={{ minHeight: '54px' }}>{showRotating && <RotatingWords />}</div>
+                  <div>so that I can become a co-founder/CTO of a YC-funded startup that integrates AI automation with robotics.</div>
                 </div>
               ) : (
                 <NowPlaying />
