@@ -12,9 +12,9 @@ interface DockItem {
   href?: string;
 }
 
-const BASE_SIZE = 50;
-const MAX_SIZE = 72;
-const MAGNIFY_RANGE = 150; // px range of magnification
+const BASE_SIZE = 64;
+const MAX_SIZE = 92;
+const MAGNIFY_RANGE = 170; // px range of magnification
 
 export default function DesktopDock() {
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
@@ -86,16 +86,17 @@ export default function DesktopDock() {
   // Calculate icon scale based on distance from mouse
   const getScale = (index: number): number => {
     if (mouseX === null) return 1;
-    // Calculate center X of each icon slot
+    // Calculate center X of each icon slot (keep in sync with the dock
+    // container style: padding 16px, gap 6px, divider margin 6px each side)
     const iconCenters: number[] = [];
-    let x = 12; // padding
+    let x = 16; // padding-left
     for (let i = 0; i < allItems.length; i++) {
       if (allItems[i].id === 'divider') {
-        x += 9 + 8; // divider width + margin
+        x += 1 + 12 + 6; // divider width + horizontal margins + trailing gap
       } else {
         x += BASE_SIZE / 2;
         iconCenters.push(x);
-        x += BASE_SIZE / 2 + 4; // gap
+        x += BASE_SIZE / 2 + 6; // half icon + gap
       }
     }
 
@@ -113,9 +114,9 @@ export default function DesktopDock() {
   return (
     <div style={{
       position: 'fixed',
-      bottom: '6px',
+      bottom: '8px',
       left: '50%',
-      transform: isMobile ? 'translateX(-50%) scale(0.72)' : 'translateX(-50%)',
+      transform: isMobile ? 'translateX(-50%) scale(0.6)' : 'translateX(-50%)',
       transformOrigin: 'bottom center',
       zIndex: 9998,
       display: 'flex',
@@ -123,15 +124,14 @@ export default function DesktopDock() {
     }}>
       <div
         ref={dockRef}
-        data-pokemon-dock="true"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{
           display: 'flex',
           alignItems: 'flex-end',
-          gap: '4px',
-          padding: '6px 12px',
-          borderRadius: '18px',
+          gap: '6px',
+          padding: '8px 16px',
+          borderRadius: '22px',
           background: 'rgba(255, 255, 255, 0.5)',
           backdropFilter: 'saturate(200%) blur(32px)',
           WebkitBackdropFilter: 'saturate(200%) blur(32px)',
@@ -144,9 +144,9 @@ export default function DesktopDock() {
             return (
               <div key="divider" style={{
                 width: '1px',
-                height: '44px',
+                height: '56px',
                 background: 'rgba(0,0,0,0.1)',
-                margin: '0 4px',
+                margin: '0 6px',
                 alignSelf: 'center',
               }} />
             );
@@ -281,7 +281,7 @@ function DockImage({ src, alt, cropScale = 1.12, contain = false }: { src: strin
     <div style={{
       width: `${s}px`,
       height: `${s}px`,
-      borderRadius: '11px',
+      borderRadius: '14px',
       overflow: 'hidden',
       pointerEvents: 'none',
       display: 'flex',
@@ -309,7 +309,7 @@ function DockAsciiLogo() {
     <div style={{
       width: `${s}px`,
       height: `${s}px`,
-      borderRadius: '11px',
+      borderRadius: '14px',
       overflow: 'hidden',
       pointerEvents: 'none',
       display: 'flex',
@@ -328,7 +328,7 @@ function AppIcon({ gradient, iconEl }: { gradient: string; iconEl: React.ReactNo
     <div style={{
       width: `${BASE_SIZE - 6}px`,
       height: `${BASE_SIZE - 6}px`,
-      borderRadius: '11px',
+      borderRadius: '14px',
       background: gradient,
       display: 'flex',
       alignItems: 'center',

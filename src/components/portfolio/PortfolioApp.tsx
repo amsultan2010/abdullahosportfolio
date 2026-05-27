@@ -158,10 +158,12 @@ function MainAsciiBackdrop({ dark }: { dark: boolean }) {
    ══════════════════════════════════════════════════════════ */
 
 function MenacingAura({ dark }: { dark: boolean }) {
-  const color = dark ? 'rgba(245,245,244,0.95)' : 'rgba(15,15,15,0.95)';
+  // JoJo's menacing aura is iconically purple — a deep eggplant/violet
+  // with a stronger purple glow around it.
+  const color = dark ? 'rgba(180, 110, 220, 0.92)' : 'rgba(74, 30, 122, 0.95)';
   const shadow = dark
-    ? '0 0 8px rgba(220,30,30,0.55), 0 0 18px rgba(0,0,0,0.55)'
-    : '0 0 6px rgba(180,0,0,0.35), 1px 1px 0 rgba(0,0,0,0.25)';
+    ? '0 0 10px rgba(150, 60, 220, 0.7), 0 0 22px rgba(80, 20, 140, 0.55), 0 0 32px rgba(0,0,0,0.45)'
+    : '0 0 10px rgba(120, 50, 200, 0.55), 0 0 20px rgba(80, 20, 140, 0.35), 1px 1px 0 rgba(40, 10, 80, 0.4)';
 
   return (
     <div className="menacing-aura" aria-hidden="true">
@@ -174,11 +176,11 @@ function MenacingAura({ dark }: { dark: boolean }) {
         /* Desktop: pinned to the top-left of the ascii art (which lives in the right ~50vw) */
         .menacing-aura {
           position: fixed;
-          top: 80px;
-          left: 52vw;
+          top: 72px;
+          left: 50vw;
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 4px;
           pointer-events: none;
           user-select: none;
           z-index: 3;
@@ -195,33 +197,34 @@ function MenacingAura({ dark }: { dark: boolean }) {
           text-shadow: ${shadow};
           animation: menacingPulse 1.8s ease-in-out infinite;
         }
-        .menacing-ch-1 { font-size: 30px; left: 0;   transform: rotate(-3deg); animation-delay: 0s; }
-        .menacing-ch-2 { font-size: 26px; left: 10px; transform: rotate(2deg);  animation-delay: 0.22s; }
-        .menacing-ch-3 { font-size: 36px; left: 2px;  transform: rotate(-1deg); animation-delay: 0.44s; }
-        .menacing-ch-4 { font-size: 22px; left: 14px; transform: rotate(3deg);  animation-delay: 0.66s; }
-        .menacing-ch-5 { font-size: 28px; left: 4px;  transform: rotate(-2deg); animation-delay: 0.88s; }
+        /* Sizes are ~1.65x the previous values */
+        .menacing-ch-1 { font-size: 50px; left: 0;   transform: rotate(-3deg); animation-delay: 0s; }
+        .menacing-ch-2 { font-size: 44px; left: 16px; transform: rotate(2deg);  animation-delay: 0.22s; }
+        .menacing-ch-3 { font-size: 60px; left: 4px;  transform: rotate(-1deg); animation-delay: 0.44s; }
+        .menacing-ch-4 { font-size: 36px; left: 22px; transform: rotate(3deg);  animation-delay: 0.66s; }
+        .menacing-ch-5 { font-size: 46px; left: 6px;  transform: rotate(-2deg); animation-delay: 0.88s; }
         @keyframes menacingPulse {
-          0%, 100% { opacity: 0.35; top: 0; }
-          50%      { opacity: 1;    top: -3px; }
+          0%, 100% { opacity: 0.4; top: 0; }
+          50%      { opacity: 1;   top: -4px; }
         }
         /* Tablet */
         @media (max-width: 900px) {
-          .menacing-aura { top: 70px; left: 58vw; gap: 1px; }
-          .menacing-ch-1 { font-size: 24px; }
-          .menacing-ch-2 { font-size: 20px; }
-          .menacing-ch-3 { font-size: 28px; }
-          .menacing-ch-4 { font-size: 17px; }
-          .menacing-ch-5 { font-size: 22px; }
+          .menacing-aura { top: 64px; left: 56vw; gap: 3px; }
+          .menacing-ch-1 { font-size: 40px; }
+          .menacing-ch-2 { font-size: 34px; }
+          .menacing-ch-3 { font-size: 46px; }
+          .menacing-ch-4 { font-size: 28px; }
+          .menacing-ch-5 { font-size: 36px; }
         }
         /* Mobile: ascii art sits at the bottom of the viewport, so move
            the aura to the top-left edge of that lower-half region. */
         @media (max-width: 500px) {
-          .menacing-aura { top: 50vh; left: 14px; gap: 1px; }
-          .menacing-ch-1 { font-size: 22px; }
-          .menacing-ch-2 { font-size: 18px; }
-          .menacing-ch-3 { font-size: 26px; }
-          .menacing-ch-4 { font-size: 16px; }
-          .menacing-ch-5 { font-size: 20px; }
+          .menacing-aura { top: 50vh; left: 14px; gap: 2px; }
+          .menacing-ch-1 { font-size: 36px; }
+          .menacing-ch-2 { font-size: 30px; }
+          .menacing-ch-3 { font-size: 42px; }
+          .menacing-ch-4 { font-size: 26px; }
+          .menacing-ch-5 { font-size: 32px; }
         }
       `}</style>
     </div>

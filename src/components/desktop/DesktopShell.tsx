@@ -6093,7 +6093,7 @@ function Desktop() {
             );
           })}
 
-          <PokemonWalkers avoidDock />
+          <PokemonWalkers />
           <DesktopDock />
         </>
       )}

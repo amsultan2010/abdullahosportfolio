@@ -249,7 +249,6 @@ const Photos = ({ windowMode }: PhotosProps) => {
                 {new Date(selected.createdAt).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
-                  day: 'numeric'
                 })}
               </p>
             )}

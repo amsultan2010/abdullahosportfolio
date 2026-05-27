@@ -2,53 +2,59 @@ import { useEffect, useMemo, useRef } from 'react';
 
 interface PokemonDef {
   name: string;
-  /** Path slug used in the sprite URL. Usually just the dex id, but
-   *  some forms have a suffix (e.g. "423-east" for Gastrodon East Sea). */
+  /** Path slug used in the sprite URL (usually the dex id, sometimes a
+   *  form-suffixed value like "423-east"). */
   slug: string;
+  /** Per-pokemon size multiplier applied on top of the base height.
+   *  1.0 = normal. Used to balance visual mass differences in showdown
+   *  sprites (e.g. togekiss is drawn huge; eelektross is drawn tall). */
+  scale?: number;
 }
 
 const GARCHOMP: PokemonDef = { name: 'garchomp', slug: '445' };
 
 /** Candidate pool — Garchomp is always included separately. */
 const CANDIDATES: PokemonDef[] = [
-  { name: 'kyogre', slug: '382' },
-  { name: 'rayquaza', slug: '384' },
-  { name: 'zekrom', slug: '644' },
-  { name: 'ursaluna', slug: '901' },
-  { name: 'archaludon', slug: '1018' },
-  { name: 'incineroar', slug: '727' },
-  { name: 'crobat', slug: '169' },
-  { name: 'gengar', slug: '94' },
-  { name: 'kingdra', slug: '230' },
-  { name: 'dragonite', slug: '149' },
-  { name: 'flygon', slug: '330' },
-  { name: 'walrein', slug: '365' },
-  { name: 'relicanth', slug: '369' },
-  { name: 'metagross', slug: '376' },
-  { name: 'regirock', slug: '377' },
+  { name: 'kyogre',         slug: '382',      scale: 0.88 },
+  { name: 'rayquaza',       slug: '384' },
+  { name: 'zekrom',         slug: '644' },
+  { name: 'ursaluna',       slug: '901' },
+  { name: 'archaludon',     slug: '1018' },
+  { name: 'incineroar',     slug: '727' },
+  { name: 'crobat',         slug: '169',      scale: 1.18 },
+  { name: 'gengar',         slug: '94' },
+  { name: 'kingdra',        slug: '230' },
+  { name: 'dragonite',      slug: '149' },
+  { name: 'flygon',         slug: '330',      scale: 1.08 },
+  { name: 'walrein',        slug: '365',      scale: 0.88 },
+  { name: 'relicanth',      slug: '369' },
+  { name: 'metagross',      slug: '376' },
+  { name: 'regirock',       slug: '377' },
   { name: 'gastrodon-east', slug: '423-east' },
-  { name: 'togekiss', slug: '468' },
-  { name: 'regigigas', slug: '486' },
-  { name: 'zebstrika', slug: '523' },
-  { name: 'scolipede', slug: '545' },
+  { name: 'togekiss',       slug: '468',      scale: 0.82 },
+  { name: 'regigigas',      slug: '486' },
+  { name: 'zebstrika',      slug: '523' },
+  { name: 'scolipede',      slug: '545' },
   // Basculegion: default sprite (902) is the male form
-  { name: 'basculegion', slug: '902' },
-  { name: 'cofagrigus', slug: '563' },
-  { name: 'eelektross', slug: '604' },
-  { name: 'talonflame', slug: '663' },
-  { name: 'dragalge', slug: '691' },
-  { name: 'trevenant', slug: '709' },
-  { name: 'noivern', slug: '715' },
-  { name: 'golisopod', slug: '768' },
-  { name: 'corviknight', slug: '823' },
-  { name: 'grapploct', slug: '853' },
+  { name: 'basculegion',    slug: '902' },
+  { name: 'cofagrigus',     slug: '563' },
+  { name: 'eelektross',     slug: '604',      scale: 0.94 },
+  { name: 'talonflame',     slug: '663',      scale: 1.2 },
+  { name: 'dragalge',       slug: '691' },
+  { name: 'trevenant',      slug: '709' },
+  { name: 'noivern',        slug: '715',      scale: 1.18 },
+  { name: 'golisopod',      slug: '768' },
+  { name: 'corviknight',    slug: '823',      scale: 1.15 },
+  { name: 'grapploct',      slug: '853' },
   // Urshifu: default sprite (892) is the single-strike form
-  { name: 'urshifu', slug: '892' },
-  { name: 'cetitan', slug: '975' },
-  { name: 'baxcalibur', slug: '998' },
+  { name: 'urshifu',        slug: '892' },
+  { name: 'cetitan',        slug: '975' },
+  { name: 'baxcalibur',     slug: '998' },
 ];
 
-const RANDOM_COUNT = 10;
+/** Garchomp + this many random picks. Mobile gets fewer. */
+const DESKTOP_RANDOM_COUNT = 9;
+const MOBILE_RANDOM_COUNT = 4;
 
 const SPRITE_URL = (slug: string) =>
   `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${slug}.gif`;
@@ -70,38 +76,38 @@ interface WalkerState {
 }
 
 interface Props {
-  avoidDock?: boolean;
   zIndex?: number;
 }
 
-export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Props) {
-  // Pick a fresh roster on every mount (i.e. every page load / refresh):
-  // Garchomp + RANDOM_COUNT randomly-selected candidates.
+export default function PokemonWalkers({ zIndex = 9999 }: Props) {
+  // Pick a fresh roster on every mount. Mobile gets a smaller roster.
   const roster = useMemo<PokemonDef[]>(() => {
-    return [GARCHOMP, ...shuffle(CANDIDATES).slice(0, RANDOM_COUNT)];
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const count = vw <= 768 ? MOBILE_RANDOM_COUNT : DESKTOP_RANDOM_COUNT;
+    return [GARCHOMP, ...shuffle(CANDIDATES).slice(0, count)];
   }, []);
 
   const itemRefs = useRef<(HTMLImageElement | null)[]>([]);
   const stateRef = useRef<WalkerState[]>([]);
-  const dockBoundsRef = useRef<{ left: number; right: number } | null>(null);
   const animRef = useRef<number>(0);
   const initRef = useRef<boolean>(false);
 
-  // Equal *height* for every pokemon. Widths are derived from each
-  // sprite's natural aspect ratio so wider sprites are wider, but everyone
-  // stands the same tall along the ground.
-  const spriteHeight = useMemo(() => {
+  // Equal *base* height across all pokemon, modulated by per-pokemon scale.
+  const baseHeight = useMemo(() => {
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1200;
     const isMobile = vw <= 768;
-    return isMobile ? 60 : 108;
+    return isMobile ? 64 : 108;
   }, []);
 
-  const containerHeight = spriteHeight + 14;
+  const heights = useMemo(() => {
+    return roster.map(p => Math.round(baseHeight * (p.scale ?? 1)));
+  }, [roster, baseHeight]);
+
+  const containerHeight = Math.max(...heights) + 14;
 
   // Initialize positions once after mount. We don't know the per-sprite
   // width until each image loads, so start with a placeholder equal to the
-  // height; the onLoad handler will refine `size` to the actual rendered
-  // width for accurate collision/edge bouncing.
+  // height; onLoad refines it to the rendered width for accurate bounces.
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
@@ -109,7 +115,7 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
     const vw = window.innerWidth;
 
     stateRef.current = roster.map((_, i) => {
-      const size = spriteHeight; // placeholder until image loads
+      const size = heights[i];
       const slotW = vw / roster.length;
       const x = slotW * i + slotW * 0.5 - size / 2 + (Math.random() - 0.5) * slotW * 0.4;
       const dir = Math.random() < 0.5 ? -1 : 1;
@@ -121,30 +127,10 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
         bobPhase: Math.random() * Math.PI * 2,
       };
     });
-  }, [roster, spriteHeight]);
+  }, [roster, heights]);
 
-  // Track dock bounds (re-measure on resize + interval to handle dynamic mounts)
-  useEffect(() => {
-    if (!avoidDock) return;
-    const update = () => {
-      const el = document.querySelector('[data-pokemon-dock="true"]') as HTMLElement | null;
-      if (el) {
-        const r = el.getBoundingClientRect();
-        dockBoundsRef.current = { left: r.left - 12, right: r.right + 12 };
-      } else {
-        dockBoundsRef.current = null;
-      }
-    };
-    update();
-    const interval = window.setInterval(update, 500);
-    window.addEventListener('resize', update);
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener('resize', update);
-    };
-  }, [avoidDock]);
-
-  // Animation loop — write directly to DOM to avoid React re-renders
+  // Animation loop — write directly to DOM to avoid React re-renders.
+  // No dock avoidance: pokemon walk freely across the entire bottom edge.
   useEffect(() => {
     let last = performance.now();
     let mounted = true;
@@ -155,7 +141,6 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
       last = t;
 
       const vw = window.innerWidth;
-      const dock = dockBoundsRef.current;
       const states = stateRef.current;
 
       for (let i = 0; i < states.length; i++) {
@@ -169,20 +154,6 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
         } else if (s.x + s.size > vw) {
           s.x = vw - s.size;
           s.vx = -Math.abs(s.vx);
-        }
-
-        if (dock) {
-          const right = s.x + s.size;
-          const overlapping = right > dock.left && s.x < dock.right;
-          if (overlapping) {
-            if (s.vx > 0) {
-              s.x = dock.right;
-            } else {
-              s.x = dock.left - s.size;
-            }
-            if (s.x + s.size > vw) s.x = 0;
-            if (s.x < 0) s.x = vw - s.size;
-          }
         }
 
         const el = itemRefs.current[i];
@@ -229,7 +200,7 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
           onLoad={e => {
             const img = e.currentTarget;
             if (!img.naturalWidth || !img.naturalHeight) return;
-            const renderedW = (img.naturalWidth / img.naturalHeight) * spriteHeight;
+            const renderedW = (img.naturalWidth / img.naturalHeight) * heights[i];
             const s = stateRef.current[i];
             if (s) s.size = renderedW;
           }}
@@ -237,7 +208,7 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
             position: 'absolute',
             bottom: 4,
             left: 0,
-            height: spriteHeight,
+            height: heights[i],
             width: 'auto',
             willChange: 'transform',
             filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.4))',
