@@ -7,6 +7,7 @@ import BootScreen from './BootScreen';
 import DesktopDock from './DesktopDock';
 import DesktopMenuBar from './DesktopMenuBar';
 import AbdullahAsciiLogo from './AbdullahAsciiLogo';
+import PokemonWalkers from '../PokemonWalkers';
 import type { WindowId } from './types';
 
 // Section content — uses desktop-portfolio (master copies, untouched)
@@ -6092,6 +6093,7 @@ function Desktop() {
             );
           })}
 
+          <PokemonWalkers avoidDock />
           <DesktopDock />
         </>
       )}

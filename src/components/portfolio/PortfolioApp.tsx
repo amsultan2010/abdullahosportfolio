@@ -4,6 +4,7 @@ import ContentViewer from './ContentViewer';
 import type { ContentViewData } from './ContentViewer';
 import { contentMap } from './contentData';
 import AbdullahAsciiLogo from '../desktop/AbdullahAsciiLogo';
+import PokemonWalkers from '../PokemonWalkers';
 
 const LazyDesktopShell = lazy(() => import('../desktop/DesktopShell'));
 
@@ -258,6 +259,7 @@ function Inner() {
   return (
     <div className="rg-root" style={{ background: t.bg, color: t.text }}>
       <MainAsciiBackdrop dark={dark} />
+      <PokemonWalkers />
 
       <div className="rg-container">
         {/* ── Header ── */}

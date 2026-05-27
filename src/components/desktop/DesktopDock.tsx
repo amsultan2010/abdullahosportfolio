@@ -29,7 +29,7 @@ export default function DesktopDock() {
     { id: 'blog', label: 'abdullahos', icon: <DockAsciiLogo /> },
     { id: 'photos', label: 'photos', icon: <DockImage src="/icons/photos.png" alt="photos" /> },
     { id: 'email' as any, label: 'gmail', icon: <DockImage src="/images/logosicons/gmail.png" alt="gmail" cropScale={1} contain /> },
-    { id: 'watchlist', label: 'watchlist', icon: <DockImage src="/images/logosicons/netflix.png" alt="watchlist" cropScale={1} contain /> },
+    { id: 'watchlist', label: 'watchlist', icon: <DockImage src="/images/logosicons/netflix.svg" alt="watchlist" cropScale={1} contain /> },
   ];
 
   const externalItems: DockItem[] = [
@@ -123,6 +123,7 @@ export default function DesktopDock() {
     }}>
       <div
         ref={dockRef}
+        data-pokemon-dock="true"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{
