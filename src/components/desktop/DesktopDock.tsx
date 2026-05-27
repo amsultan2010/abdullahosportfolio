@@ -12,9 +12,16 @@ interface DockItem {
   href?: string;
 }
 
-const BASE_SIZE = 92;
-const MAX_SIZE = 132;
-const MAGNIFY_RANGE = 210; // px range of magnification
+const BASE_SIZE = 108;
+const MAX_SIZE = 156;
+const MAGNIFY_RANGE = 230; // px range of magnification
+
+/** Inner tile size for icons inside the dock buttons. */
+const TILE_SIZE = BASE_SIZE - 6;
+/** Glyph size used inside the gradient-tile social icons (github/linkedin
+ *  /instagram). Scales with the tile so they fill the same visual area as
+ *  the photo-style icons rather than looking tiny. */
+const SOCIAL_GLYPH_SIZE = Math.round(TILE_SIZE * 0.6);
 
 export default function DesktopDock() {
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
@@ -33,10 +40,10 @@ export default function DesktopDock() {
   ];
 
   const externalItems: DockItem[] = [
-    { id: 'github', label: 'github', icon: <AppIcon gradient="linear-gradient(135deg, #2d2d2d 0%, #434343 100%)" iconEl={<BsGithub size={24} color="white" />} />, isExternal: true, href: 'https://github.com/amsultan2010' },
+    { id: 'github', label: 'github', icon: <AppIcon gradient="linear-gradient(135deg, #2d2d2d 0%, #434343 100%)" iconEl={<BsGithub size={SOCIAL_GLYPH_SIZE} color="white" />} />, isExternal: true, href: 'https://github.com/amsultan2010' },
     { id: 'music', label: 'youtube music', icon: <DockImage src="/images/logosicons/youtubemusic.png" alt="youtube music" cropScale={1} contain />, isExternal: true, href: 'https://music.youtube.com/@amsultan303' },
-    { id: 'linkedin', label: 'linkedin', icon: <AppIcon gradient="linear-gradient(135deg, #0a66c2 0%, #004182 100%)" iconEl={<BsLinkedin size={24} color="white" />} />, isExternal: true, href: 'https://www.linkedin.com/in/abdullah-sultan-4a264939a/' },
-    { id: 'instagram', label: 'instagram', icon: <AppIcon gradient="linear-gradient(135deg, #833ab4 0%, #fd1d1d 55%, #fcb045 100%)" iconEl={<BsInstagram size={24} color="white" />} />, isExternal: true, href: 'https://www.instagram.com/a.m.sultan_/' },
+    { id: 'linkedin', label: 'linkedin', icon: <AppIcon gradient="linear-gradient(135deg, #0a66c2 0%, #004182 100%)" iconEl={<BsLinkedin size={SOCIAL_GLYPH_SIZE} color="white" />} />, isExternal: true, href: 'https://www.linkedin.com/in/abdullah-sultan-4a264939a/' },
+    { id: 'instagram', label: 'instagram', icon: <AppIcon gradient="linear-gradient(135deg, #833ab4 0%, #fd1d1d 55%, #fcb045 100%)" iconEl={<BsInstagram size={SOCIAL_GLYPH_SIZE} color="white" />} />, isExternal: true, href: 'https://www.instagram.com/a.m.sultan_/' },
   ];
 
   const allItems = [...windowItems, { id: 'divider' as any, label: '', icon: null }, ...externalItems];
@@ -87,16 +94,16 @@ export default function DesktopDock() {
   const getScale = (index: number): number => {
     if (mouseX === null) return 1;
     // Calculate center X of each icon slot (keep in sync with the dock
-    // container style: padding 22px, gap 9px, divider margin 9px each side)
+    // container style: padding 24px, gap 10px, divider margin 10px each side)
     const iconCenters: number[] = [];
-    let x = 22; // padding-left
+    let x = 24; // padding-left
     for (let i = 0; i < allItems.length; i++) {
       if (allItems[i].id === 'divider') {
-        x += 1 + 18 + 9; // divider width + horizontal margins + trailing gap
+        x += 1 + 20 + 10; // divider width + horizontal margins + trailing gap
       } else {
         x += BASE_SIZE / 2;
         iconCenters.push(x);
-        x += BASE_SIZE / 2 + 9; // half icon + gap
+        x += BASE_SIZE / 2 + 10; // half icon + gap
       }
     }
 
@@ -116,7 +123,7 @@ export default function DesktopDock() {
       position: 'fixed',
       bottom: '10px',
       left: '50%',
-      transform: isMobile ? 'translateX(-50%) scale(0.46)' : 'translateX(-50%)',
+      transform: isMobile ? 'translateX(-50%) scale(0.4)' : 'translateX(-50%)',
       transformOrigin: 'bottom center',
       zIndex: 9998,
       display: 'flex',
@@ -129,14 +136,14 @@ export default function DesktopDock() {
         style={{
           display: 'flex',
           alignItems: 'flex-end',
-          gap: '9px',
-          padding: '12px 22px',
-          borderRadius: '30px',
+          gap: '10px',
+          padding: '14px 24px',
+          borderRadius: '34px',
           background: 'rgba(255, 255, 255, 0.5)',
           backdropFilter: 'saturate(200%) blur(32px)',
           WebkitBackdropFilter: 'saturate(200%) blur(32px)',
           border: '0.5px solid rgba(0, 0, 0, 0.1)',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.15), inset 0 0.5px 0 rgba(255,255,255,0.6)',
+          boxShadow: '0 14px 44px rgba(0,0,0,0.16), inset 0 0.5px 0 rgba(255,255,255,0.6)',
         }}
       >
         {allItems.map((item, i) => {
@@ -144,9 +151,9 @@ export default function DesktopDock() {
             return (
               <div key="divider" style={{
                 width: '1px',
-                height: '80px',
+                height: '94px',
                 background: 'rgba(0,0,0,0.1)',
-                margin: '0 9px',
+                margin: '0 10px',
                 alignSelf: 'center',
               }} />
             );
@@ -281,7 +288,7 @@ function DockImage({ src, alt, cropScale = 1.12, contain = false }: { src: strin
     <div style={{
       width: `${s}px`,
       height: `${s}px`,
-      borderRadius: '19px',
+      borderRadius: '22px',
       overflow: 'hidden',
       pointerEvents: 'none',
       display: 'flex',
@@ -309,7 +316,7 @@ function DockAsciiLogo() {
     <div style={{
       width: `${s}px`,
       height: `${s}px`,
-      borderRadius: '19px',
+      borderRadius: '22px',
       overflow: 'hidden',
       pointerEvents: 'none',
       display: 'flex',
@@ -328,7 +335,7 @@ function AppIcon({ gradient, iconEl }: { gradient: string; iconEl: React.ReactNo
     <div style={{
       width: `${BASE_SIZE - 6}px`,
       height: `${BASE_SIZE - 6}px`,
-      borderRadius: '19px',
+      borderRadius: '22px',
       background: gradient,
       display: 'flex',
       alignItems: 'center',
