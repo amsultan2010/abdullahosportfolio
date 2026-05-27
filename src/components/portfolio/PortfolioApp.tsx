@@ -122,12 +122,15 @@ function MainAsciiBackdrop({ dark }: { dark: boolean }) {
   useEffect(() => {
     const setViewportSize = () => {
       const vw = window.innerWidth;
+      const vh = window.innerHeight;
       const mobile = vw <= 500;
       const tablet = vw <= 900 && !mobile;
-      const asciiFraction = mobile ? 0.78 : tablet ? 0.42 : 0.5;
+      const asciiFraction = tablet ? 0.42 : 0.5;
       setSize({
-        width: Math.max(mobile ? 280 : 480, Math.round(vw * asciiFraction)),
-        height: Math.max(mobile ? 360 : 600, Math.round(mobile ? window.innerHeight * 0.5 : window.innerHeight)),
+        /* Mobile uses desktop-scale dimensions so the art overflows and crops
+           (like desktop) instead of shrinking the entire piece into a corner. */
+        width: mobile ? Math.max(960, Math.round(vw * 2.5)) : Math.max(480, Math.round(vw * asciiFraction)),
+        height: mobile ? Math.max(vh, 1000) : Math.max(600, vh),
         mobile,
       });
     };
@@ -143,9 +146,9 @@ function MainAsciiBackdrop({ dark }: { dark: boolean }) {
         width={size.width}
         height={size.height}
         color={dark ? '#f5f5f4' : '#1c1917'}
-        opacity={dark ? (size.mobile ? 0.22 : 0.36) : (size.mobile ? 0.18 : 0.32)}
+        opacity={dark ? (size.mobile ? 0.28 : 0.36) : (size.mobile ? 0.22 : 0.32)}
         fontWeight={900}
-        scale={size.mobile ? 1 : 1.1}
+        scale={1.1}
         lineHeight={1.02}
         align="right"
       />
@@ -1101,12 +1104,15 @@ function Inner() {
           .rg-ascii-backdrop {
             top: auto;
             bottom: 0;
-            width: 82vw;
-            height: 52vh;
+            left: 0;
+            right: 0;
+            width: 100vw;
+            height: 50vh;
             opacity: 1;
+            align-items: center;
           }
           .rg-ascii-backdrop-mobile {
-            align-items: flex-end;
+            justify-content: flex-end;
           }
         }
       `}</style>
