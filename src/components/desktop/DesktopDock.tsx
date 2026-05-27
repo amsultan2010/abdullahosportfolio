@@ -12,9 +12,9 @@ interface DockItem {
   href?: string;
 }
 
-const BASE_SIZE = 64;
-const MAX_SIZE = 92;
-const MAGNIFY_RANGE = 170; // px range of magnification
+const BASE_SIZE = 78;
+const MAX_SIZE = 112;
+const MAGNIFY_RANGE = 190; // px range of magnification
 
 export default function DesktopDock() {
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
@@ -29,7 +29,7 @@ export default function DesktopDock() {
     { id: 'blog', label: 'abdullahos', icon: <DockAsciiLogo /> },
     { id: 'photos', label: 'photos', icon: <DockImage src="/icons/photos.png" alt="photos" /> },
     { id: 'email' as any, label: 'gmail', icon: <DockImage src="/images/logosicons/gmail.png" alt="gmail" cropScale={1} contain /> },
-    { id: 'watchlist', label: 'watchlist', icon: <DockImage src="/images/logosicons/netflix.svg" alt="watchlist" cropScale={1} contain /> },
+    { id: 'watchlist', label: 'watchlist', icon: <DockImage src="/images/logosicons/netflix.png" alt="watchlist" cropScale={1} contain /> },
   ];
 
   const externalItems: DockItem[] = [
@@ -87,16 +87,16 @@ export default function DesktopDock() {
   const getScale = (index: number): number => {
     if (mouseX === null) return 1;
     // Calculate center X of each icon slot (keep in sync with the dock
-    // container style: padding 16px, gap 6px, divider margin 6px each side)
+    // container style: padding 20px, gap 8px, divider margin 8px each side)
     const iconCenters: number[] = [];
-    let x = 16; // padding-left
+    let x = 20; // padding-left
     for (let i = 0; i < allItems.length; i++) {
       if (allItems[i].id === 'divider') {
-        x += 1 + 12 + 6; // divider width + horizontal margins + trailing gap
+        x += 1 + 16 + 8; // divider width + horizontal margins + trailing gap
       } else {
         x += BASE_SIZE / 2;
         iconCenters.push(x);
-        x += BASE_SIZE / 2 + 6; // half icon + gap
+        x += BASE_SIZE / 2 + 8; // half icon + gap
       }
     }
 
@@ -114,9 +114,9 @@ export default function DesktopDock() {
   return (
     <div style={{
       position: 'fixed',
-      bottom: '8px',
+      bottom: '10px',
       left: '50%',
-      transform: isMobile ? 'translateX(-50%) scale(0.6)' : 'translateX(-50%)',
+      transform: isMobile ? 'translateX(-50%) scale(0.54)' : 'translateX(-50%)',
       transformOrigin: 'bottom center',
       zIndex: 9998,
       display: 'flex',
@@ -129,14 +129,14 @@ export default function DesktopDock() {
         style={{
           display: 'flex',
           alignItems: 'flex-end',
-          gap: '6px',
-          padding: '8px 16px',
-          borderRadius: '22px',
+          gap: '8px',
+          padding: '10px 20px',
+          borderRadius: '26px',
           background: 'rgba(255, 255, 255, 0.5)',
           backdropFilter: 'saturate(200%) blur(32px)',
           WebkitBackdropFilter: 'saturate(200%) blur(32px)',
           border: '0.5px solid rgba(0, 0, 0, 0.1)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.12), inset 0 0.5px 0 rgba(255,255,255,0.6)',
+          boxShadow: '0 10px 36px rgba(0,0,0,0.14), inset 0 0.5px 0 rgba(255,255,255,0.6)',
         }}
       >
         {allItems.map((item, i) => {
@@ -144,9 +144,9 @@ export default function DesktopDock() {
             return (
               <div key="divider" style={{
                 width: '1px',
-                height: '56px',
+                height: '68px',
                 background: 'rgba(0,0,0,0.1)',
-                margin: '0 6px',
+                margin: '0 8px',
                 alignSelf: 'center',
               }} />
             );
@@ -281,7 +281,7 @@ function DockImage({ src, alt, cropScale = 1.12, contain = false }: { src: strin
     <div style={{
       width: `${s}px`,
       height: `${s}px`,
-      borderRadius: '14px',
+      borderRadius: '17px',
       overflow: 'hidden',
       pointerEvents: 'none',
       display: 'flex',
@@ -309,7 +309,7 @@ function DockAsciiLogo() {
     <div style={{
       width: `${s}px`,
       height: `${s}px`,
-      borderRadius: '14px',
+      borderRadius: '17px',
       overflow: 'hidden',
       pointerEvents: 'none',
       display: 'flex',
@@ -328,7 +328,7 @@ function AppIcon({ gradient, iconEl }: { gradient: string; iconEl: React.ReactNo
     <div style={{
       width: `${BASE_SIZE - 6}px`,
       height: `${BASE_SIZE - 6}px`,
-      borderRadius: '14px',
+      borderRadius: '17px',
       background: gradient,
       display: 'flex',
       alignItems: 'center',
