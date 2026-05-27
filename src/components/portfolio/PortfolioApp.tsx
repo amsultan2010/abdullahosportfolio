@@ -57,18 +57,55 @@ const PREVIOUSLY = [
   { role: 'robotics + automation systems, with quant as technical proof', company: 'builds', icon: '/icons/folder.png', href: '/projects' },
 ];
 
-const EDUCATION = [
+interface EducationEntry {
+  school: string;
+  years: string;
+  location: string;
+  logo: string;
+  details: string[];
+  activities: string[];
+  achievements: string[];
+  reflection: string;
+}
+
+const EDUCATION: EducationEntry[] = [
   {
     school: 'american international school in riyadh',
     years: '2025-present',
+    location: 'riyadh, saudi arabia',
     logo: '/images/logosicons/aisr.png',
     details: ['ap precalc, ap psych, ap compsci a', 'aspiring doctors club lead', '#2 varsity tennis seed'],
+    activities: [
+      'self-studying ap precalc, ap psych, and ap compsci a',
+      'highest achievable level of maths; one year of aa sl in 10th grade — 1 of 4 students in the grade',
+      "aspiring doctors' club: promoted to leader within first year; 14 recurring members",
+      "jv boys' badminton",
+      "#2 seed on varsity boys' tennis; season cancelled due to geopolitical conflict",
+    ],
+    achievements: [
+      'building products while keeping school as the operating base',
+    ],
+    reflection: 'current school chapter: harder academics, more responsibility, and more room to build.',
   },
   {
     school: 'the pingry school',
     years: '2021-2025',
+    location: 'basking ridge, nj',
     logo: '/images/logosicons/pingry.png',
     details: ['ap compsci principles 5/5', 'public forum debate', 'engineering + affinity leadership'],
+    activities: [
+      'self-studied ap compsci principles; scored 5/5',
+      'public forum debate club: 1st place w/ undefeated 5-0 record at horace mann juniors invitational',
+      'muslim affinity group: leader; 8 recurring members; weekly meetings',
+      'pingry research and innovation in modern engineering: 12 recurring members; 2 speaker sessions w/ engineering professors',
+      'f1 club',
+      "jv boys' tennis",
+      "jv boys' swim: 1st place in exhibition 50 at lawrenceville state championships",
+    ],
+    achievements: [
+      'built the habit of joining technical, academic, and community work early',
+    ],
+    reflection: 'pingry was where school became more than classes: debate, engineering, community, and competition.',
   },
 ];
 
@@ -185,11 +222,26 @@ function SLink({
 function Inner() {
   const { dark, toggle } = useContext(ThemeCtx);
   const [activeContent, setActiveContent] = useState<ContentViewData | null>(null);
+  const [selectedEdu, setSelectedEdu] = useState<EducationEntry | null>(null);
 
   const openPost = (slug: string) => {
     const data = contentMap[slug];
     if (data) setActiveContent(data);
   };
+
+  useEffect(() => {
+    if (!selectedEdu) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedEdu(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [selectedEdu]);
 
   const t = {
     bg: dark ? '#000000' : '#f5f5f4',
@@ -308,16 +360,29 @@ function Inner() {
             <span className="rg-section-label" style={{ color: t.text }}>education:</span>
             <div className="rg-education">
               {EDUCATION.map((edu, i) => (
-                <div key={i} className="rg-education-card" style={{ borderColor: t.border, background: dark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
+                <button
+                  key={i}
+                  type="button"
+                  className="rg-education-card"
+                  onClick={() => setSelectedEdu(edu)}
+                  aria-label={`Open details for ${edu.school}`}
+                  style={{
+                    borderColor: t.border,
+                    background: dark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+                    color: t.text,
+                    cursor: 'pointer',
+                  }}
+                >
                   <img src={edu.logo} alt="" className="rg-education-logo" />
-                  <div style={{ minWidth: 0 }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
                     <div className="rg-education-title" style={{ color: t.textStrong }}>{edu.school}</div>
                     <div className="rg-education-years" style={{ color: t.textMuted }}>{edu.years}</div>
                     <div className="rg-education-details" style={{ color: t.text }}>
                       {edu.details.join(' · ')}
                     </div>
                   </div>
-                </div>
+                  <span className="rg-education-chevron" style={{ color: t.textMuted }} aria-hidden="true">→</span>
+                </button>
               ))}
             </div>
           </li>
@@ -370,6 +435,80 @@ function Inner() {
       {/* Content viewer modal */}
       {activeContent && (
         <ContentViewer content={activeContent} onClose={() => setActiveContent(null)} />
+      )}
+
+      {/* Education detail modal */}
+      {selectedEdu && (
+        <div
+          className="rg-edu-backdrop"
+          onClick={() => setSelectedEdu(null)}
+          role="presentation"
+        >
+          <div
+            className="rg-edu-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${selectedEdu.school} details`}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: dark ? '#0c0c0c' : '#fafaf9',
+              color: t.text,
+              border: `1px solid ${t.border}`,
+            }}
+          >
+            <button
+              type="button"
+              className="rg-edu-close"
+              onClick={() => setSelectedEdu(null)}
+              aria-label="Close"
+              style={{ color: t.text, background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}
+            >
+              ✕
+            </button>
+            <div className="rg-edu-head">
+              <img src={selectedEdu.logo} alt="" className="rg-edu-logo" />
+              <div style={{ minWidth: 0 }}>
+                <h2 className="rg-edu-title" style={{ color: t.textStrong }}>{selectedEdu.school}</h2>
+                <div className="rg-edu-sub" style={{ color: t.textMuted }}>
+                  {selectedEdu.years} · {selectedEdu.location}
+                </div>
+              </div>
+            </div>
+
+            <div className="rg-edu-section">
+              <div className="rg-edu-heading" style={{ color: t.textMuted }}>highlights</div>
+              <ul className="rg-edu-list">
+                {selectedEdu.activities.map((a, i) => (
+                  <li key={i} style={{ color: t.text }}>
+                    <span className="rg-edu-bullet" style={{ color: t.textMuted }}>›</span>
+                    <span>{a}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {selectedEdu.achievements.length > 0 && (
+              <div className="rg-edu-section">
+                <div className="rg-edu-heading" style={{ color: t.textMuted }}>achievements</div>
+                <ul className="rg-edu-list">
+                  {selectedEdu.achievements.map((a, i) => (
+                    <li key={i} style={{ color: t.text }}>
+                      <span className="rg-edu-bullet" style={{ color: t.textMuted }}>›</span>
+                      <span>{a}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="rg-edu-section">
+              <div className="rg-edu-heading" style={{ color: t.textMuted }}>reflection</div>
+              <p className="rg-edu-reflection" style={{ color: t.textStrong, borderLeft: `2px solid ${t.border}` }}>
+                {selectedEdu.reflection}
+              </p>
+            </div>
+          </div>
+        </div>
       )}
 
       <style>{`
@@ -632,10 +771,147 @@ function Inner() {
           transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
           font-family: inherit;
           font-size: inherit;
+          width: 100%;
+          -webkit-tap-highlight-color: transparent;
         }
         .rg-education-card:hover {
           transform: translateY(-1px);
           box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+        }
+        .rg-education-card:hover .rg-education-chevron {
+          transform: translateX(3px);
+          opacity: 1;
+        }
+        .rg-education-card:focus-visible {
+          outline: 2px solid currentColor;
+          outline-offset: 2px;
+        }
+        .rg-education-chevron {
+          margin-left: 8px;
+          font-size: 18px;
+          opacity: 0.55;
+          flex-shrink: 0;
+          transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+
+        /* Education detail modal */
+        .rg-edu-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 2000;
+          background: rgba(0, 0, 0, 0.55);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          animation: rgEduFade 0.22s ease-out;
+        }
+        .rg-edu-modal {
+          position: relative;
+          width: 100%;
+          max-width: 600px;
+          max-height: calc(100vh - 48px);
+          overflow-y: auto;
+          border-radius: 16px;
+          padding: 36px 32px 30px;
+          box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+          animation: rgEduSlide 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .rg-edu-close {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: none;
+          font-size: 13px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s ease, transform 0.15s ease;
+        }
+        .rg-edu-close:hover { transform: scale(1.08); }
+        .rg-edu-head {
+          display: flex;
+          gap: 18px;
+          align-items: center;
+          margin-bottom: 28px;
+          padding-right: 36px;
+        }
+        .rg-edu-logo {
+          width: 58px;
+          height: 58px;
+          object-fit: contain;
+          border-radius: 12px;
+          flex-shrink: 0;
+        }
+        .rg-edu-title {
+          font-family: 'NeueMontreal-Medium', sans-serif;
+          font-weight: 500;
+          font-size: 22px;
+          line-height: 1.25;
+          margin: 0 0 4px;
+          letter-spacing: -0.01em;
+        }
+        .rg-edu-sub {
+          font-size: 14px;
+          line-height: 1.4;
+        }
+        .rg-edu-section { margin-bottom: 22px; }
+        .rg-edu-section:last-child { margin-bottom: 0; }
+        .rg-edu-heading {
+          font-family: 'SF Mono', 'Menlo', monospace;
+          font-size: 11px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          margin-bottom: 10px;
+        }
+        .rg-edu-list {
+          margin: 0;
+          padding: 0;
+          list-style: none;
+          display: flex;
+          flex-direction: column;
+          gap: 9px;
+        }
+        .rg-edu-list li {
+          display: flex;
+          gap: 10px;
+          align-items: baseline;
+          font-size: 15px;
+          line-height: 1.55;
+        }
+        .rg-edu-bullet {
+          font-family: 'SF Mono', 'Menlo', monospace;
+          font-size: 13px;
+          flex-shrink: 0;
+        }
+        .rg-edu-reflection {
+          font-size: 15px;
+          line-height: 1.65;
+          font-style: italic;
+          margin: 0;
+          padding-left: 14px;
+        }
+        @keyframes rgEduFade {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes rgEduSlide {
+          from { opacity: 0; transform: translateY(12px) scale(0.97); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @media (max-width: 500px) {
+          .rg-edu-backdrop { padding: 16px; }
+          .rg-edu-modal { padding: 30px 22px 24px; border-radius: 14px; }
+          .rg-edu-title { font-size: 19px; }
+          .rg-edu-logo { width: 50px; height: 50px; }
+          .rg-edu-list li { font-size: 14px; }
+          .rg-edu-reflection { font-size: 14px; }
         }
         .rg-education-logo {
           width: 44px;
