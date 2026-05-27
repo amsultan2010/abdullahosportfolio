@@ -87,20 +87,21 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
   const animRef = useRef<number>(0);
   const initRef = useRef<boolean>(false);
 
-  // Per-pokemon sizes. With 11 sprites we shrink a bit on mobile so they
-  // don't overlap heavily at startup; movement spreads them naturally.
-  const sizes = useMemo(() => {
+  // Equal *height* for every pokemon. Widths are derived from each
+  // sprite's natural aspect ratio so wider sprites are wider, but everyone
+  // stands the same tall along the ground.
+  const spriteHeight = useMemo(() => {
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1200;
     const isMobile = vw <= 768;
-    const baseSize = isMobile ? 64 : 104;
-    return roster.map((_, i) => baseSize + (i % 2 === 0 ? 0 : 12));
-  }, [roster]);
+    return isMobile ? 60 : 108;
+  }, []);
 
-  const containerHeight = useMemo(() => {
-    return Math.max(...sizes) + 12;
-  }, [sizes]);
+  const containerHeight = spriteHeight + 14;
 
-  // Initialize positions once after mount
+  // Initialize positions once after mount. We don't know the per-sprite
+  // width until each image loads, so start with a placeholder equal to the
+  // height; the onLoad handler will refine `size` to the actual rendered
+  // width for accurate collision/edge bouncing.
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
@@ -108,7 +109,7 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
     const vw = window.innerWidth;
 
     stateRef.current = roster.map((_, i) => {
-      const size = sizes[i];
+      const size = spriteHeight; // placeholder until image loads
       const slotW = vw / roster.length;
       const x = slotW * i + slotW * 0.5 - size / 2 + (Math.random() - 0.5) * slotW * 0.4;
       const dir = Math.random() < 0.5 ? -1 : 1;
@@ -120,7 +121,7 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
         bobPhase: Math.random() * Math.PI * 2,
       };
     });
-  }, [roster, sizes]);
+  }, [roster, spriteHeight]);
 
   // Track dock bounds (re-measure on resize + interval to handle dynamic mounts)
   useEffect(() => {
@@ -225,15 +226,19 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
           src={SPRITE_URL(p.slug)}
           alt=""
           draggable={false}
+          onLoad={e => {
+            const img = e.currentTarget;
+            if (!img.naturalWidth || !img.naturalHeight) return;
+            const renderedW = (img.naturalWidth / img.naturalHeight) * spriteHeight;
+            const s = stateRef.current[i];
+            if (s) s.size = renderedW;
+          }}
           style={{
             position: 'absolute',
             bottom: 4,
             left: 0,
-            width: sizes[i],
-            height: sizes[i],
-            objectFit: 'contain',
-            objectPosition: 'bottom center',
-            // Showdown sprites are smooth/anti-aliased, so leave default rendering
+            height: spriteHeight,
+            width: 'auto',
             willChange: 'transform',
             filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.4))',
             userSelect: 'none',

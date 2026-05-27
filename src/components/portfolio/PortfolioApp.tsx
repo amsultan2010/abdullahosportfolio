@@ -154,6 +154,81 @@ function MainAsciiBackdrop({ dark }: { dark: boolean }) {
 }
 
 /* ══════════════════════════════════════════════════════════
+   Menacing aura — JoJo-style ゴゴゴゴ above the ascii art
+   ══════════════════════════════════════════════════════════ */
+
+function MenacingAura({ dark }: { dark: boolean }) {
+  const color = dark ? 'rgba(245,245,244,0.95)' : 'rgba(15,15,15,0.95)';
+  const shadow = dark
+    ? '0 0 8px rgba(220,30,30,0.55), 0 0 18px rgba(0,0,0,0.55)'
+    : '0 0 6px rgba(180,0,0,0.35), 1px 1px 0 rgba(0,0,0,0.25)';
+
+  return (
+    <div className="menacing-aura" aria-hidden="true">
+      <span className="menacing-ch menacing-ch-1">ゴ</span>
+      <span className="menacing-ch menacing-ch-2">ゴ</span>
+      <span className="menacing-ch menacing-ch-3">ゴ</span>
+      <span className="menacing-ch menacing-ch-4">ゴ</span>
+      <span className="menacing-ch menacing-ch-5">ゴ</span>
+      <style>{`
+        /* Desktop: pinned to the top-left of the ascii art (which lives in the right ~50vw) */
+        .menacing-aura {
+          position: fixed;
+          top: 80px;
+          left: 52vw;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          pointer-events: none;
+          user-select: none;
+          z-index: 3;
+        }
+        .menacing-ch {
+          position: relative;
+          display: inline-block;
+          font-family: 'YuMincho', 'Hiragino Mincho ProN', 'MS Mincho', 'Times New Roman', serif;
+          font-weight: 900;
+          font-style: italic;
+          line-height: 0.9;
+          letter-spacing: -0.04em;
+          color: ${color};
+          text-shadow: ${shadow};
+          animation: menacingPulse 1.8s ease-in-out infinite;
+        }
+        .menacing-ch-1 { font-size: 30px; left: 0;   transform: rotate(-3deg); animation-delay: 0s; }
+        .menacing-ch-2 { font-size: 26px; left: 10px; transform: rotate(2deg);  animation-delay: 0.22s; }
+        .menacing-ch-3 { font-size: 36px; left: 2px;  transform: rotate(-1deg); animation-delay: 0.44s; }
+        .menacing-ch-4 { font-size: 22px; left: 14px; transform: rotate(3deg);  animation-delay: 0.66s; }
+        .menacing-ch-5 { font-size: 28px; left: 4px;  transform: rotate(-2deg); animation-delay: 0.88s; }
+        @keyframes menacingPulse {
+          0%, 100% { opacity: 0.35; top: 0; }
+          50%      { opacity: 1;    top: -3px; }
+        }
+        /* Tablet */
+        @media (max-width: 900px) {
+          .menacing-aura { top: 70px; left: 58vw; gap: 1px; }
+          .menacing-ch-1 { font-size: 24px; }
+          .menacing-ch-2 { font-size: 20px; }
+          .menacing-ch-3 { font-size: 28px; }
+          .menacing-ch-4 { font-size: 17px; }
+          .menacing-ch-5 { font-size: 22px; }
+        }
+        /* Mobile: ascii art sits at the bottom of the viewport, so move
+           the aura to the top-left edge of that lower-half region. */
+        @media (max-width: 500px) {
+          .menacing-aura { top: 50vh; left: 14px; gap: 1px; }
+          .menacing-ch-1 { font-size: 22px; }
+          .menacing-ch-2 { font-size: 18px; }
+          .menacing-ch-3 { font-size: 26px; }
+          .menacing-ch-4 { font-size: 16px; }
+          .menacing-ch-5 { font-size: 20px; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
    Inline icon helper
    ══════════════════════════════════════════════════════════ */
 
@@ -259,6 +334,7 @@ function Inner() {
   return (
     <div className="rg-root" style={{ background: t.bg, color: t.text }}>
       <MainAsciiBackdrop dark={dark} />
+      <MenacingAura dark={dark} />
       <PokemonWalkers />
 
       <div className="rg-container">
