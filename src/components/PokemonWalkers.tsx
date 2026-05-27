@@ -1,20 +1,66 @@
 import { useEffect, useMemo, useRef } from 'react';
 
 interface PokemonDef {
-  id: number;
   name: string;
+  /** Path slug used in the sprite URL. Usually just the dex id, but
+   *  some forms have a suffix (e.g. "423-east" for Gastrodon East Sea). */
+  slug: string;
 }
 
-const POKEMON: PokemonDef[] = [
-  { id: 445, name: 'garchomp' },
-  { id: 382, name: 'kyogre' },
-  { id: 384, name: 'rayquaza' },
-  { id: 483, name: 'dialga' },
-  { id: 644, name: 'zekrom' },
+const GARCHOMP: PokemonDef = { name: 'garchomp', slug: '445' };
+
+/** Candidate pool — Garchomp is always included separately. */
+const CANDIDATES: PokemonDef[] = [
+  { name: 'kyogre', slug: '382' },
+  { name: 'rayquaza', slug: '384' },
+  { name: 'zekrom', slug: '644' },
+  { name: 'ursaluna', slug: '901' },
+  { name: 'archaludon', slug: '1018' },
+  { name: 'incineroar', slug: '727' },
+  { name: 'crobat', slug: '169' },
+  { name: 'gengar', slug: '94' },
+  { name: 'kingdra', slug: '230' },
+  { name: 'dragonite', slug: '149' },
+  { name: 'flygon', slug: '330' },
+  { name: 'walrein', slug: '365' },
+  { name: 'relicanth', slug: '369' },
+  { name: 'metagross', slug: '376' },
+  { name: 'regirock', slug: '377' },
+  { name: 'gastrodon-east', slug: '423-east' },
+  { name: 'togekiss', slug: '468' },
+  { name: 'regigigas', slug: '486' },
+  { name: 'zebstrika', slug: '523' },
+  { name: 'scolipede', slug: '545' },
+  // Basculegion: default sprite (902) is the male form
+  { name: 'basculegion', slug: '902' },
+  { name: 'cofagrigus', slug: '563' },
+  { name: 'eelektross', slug: '604' },
+  { name: 'talonflame', slug: '663' },
+  { name: 'dragalge', slug: '691' },
+  { name: 'trevenant', slug: '709' },
+  { name: 'noivern', slug: '715' },
+  { name: 'golisopod', slug: '768' },
+  { name: 'corviknight', slug: '823' },
+  { name: 'grapploct', slug: '853' },
+  // Urshifu: default sprite (892) is the single-strike form
+  { name: 'urshifu', slug: '892' },
+  { name: 'cetitan', slug: '975' },
+  { name: 'baxcalibur', slug: '998' },
 ];
 
-const SPRITE_URL = (id: number) =>
-  `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`;
+const RANDOM_COUNT = 10;
+
+const SPRITE_URL = (slug: string) =>
+  `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${slug}.gif`;
+
+function shuffle<T>(arr: readonly T[]): T[] {
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
 
 interface WalkerState {
   x: number;
@@ -29,19 +75,26 @@ interface Props {
 }
 
 export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Props) {
+  // Pick a fresh roster on every mount (i.e. every page load / refresh):
+  // Garchomp + RANDOM_COUNT randomly-selected candidates.
+  const roster = useMemo<PokemonDef[]>(() => {
+    return [GARCHOMP, ...shuffle(CANDIDATES).slice(0, RANDOM_COUNT)];
+  }, []);
+
   const itemRefs = useRef<(HTMLImageElement | null)[]>([]);
   const stateRef = useRef<WalkerState[]>([]);
   const dockBoundsRef = useRef<{ left: number; right: number } | null>(null);
   const animRef = useRef<number>(0);
   const initRef = useRef<boolean>(false);
 
-  // Pick per-pokemon sizes synchronously so the <img> tags can match
+  // Per-pokemon sizes. With 11 sprites we shrink a bit on mobile so they
+  // don't overlap heavily at startup; movement spreads them naturally.
   const sizes = useMemo(() => {
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1200;
     const isMobile = vw <= 768;
-    const baseSize = isMobile ? 78 : 104;
-    return POKEMON.map((_, i) => baseSize + (i % 2 === 0 ? 0 : 12));
-  }, []);
+    const baseSize = isMobile ? 64 : 104;
+    return roster.map((_, i) => baseSize + (i % 2 === 0 ? 0 : 12));
+  }, [roster]);
 
   const containerHeight = useMemo(() => {
     return Math.max(...sizes) + 12;
@@ -54,10 +107,9 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
 
     const vw = window.innerWidth;
 
-    stateRef.current = POKEMON.map((_, i) => {
+    stateRef.current = roster.map((_, i) => {
       const size = sizes[i];
-      const slotW = vw / POKEMON.length;
-      // Distribute pokemon across screen, with a little jitter
+      const slotW = vw / roster.length;
       const x = slotW * i + slotW * 0.5 - size / 2 + (Math.random() - 0.5) * slotW * 0.4;
       const dir = Math.random() < 0.5 ? -1 : 1;
       const speed = 24 + Math.random() * 22; // px/sec
@@ -68,7 +120,7 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
         bobPhase: Math.random() * Math.PI * 2,
       };
     });
-  }, [sizes]);
+  }, [roster, sizes]);
 
   // Track dock bounds (re-measure on resize + interval to handle dynamic mounts)
   useEffect(() => {
@@ -77,7 +129,6 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
       const el = document.querySelector('[data-pokemon-dock="true"]') as HTMLElement | null;
       if (el) {
         const r = el.getBoundingClientRect();
-        // Add a small buffer so pokemon clearly steer around the dock
         dockBoundsRef.current = { left: r.left - 12, right: r.right + 12 };
       } else {
         dockBoundsRef.current = null;
@@ -111,7 +162,6 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
         s.x += s.vx * dt;
         s.bobPhase += dt * 6;
 
-        // Bounce off viewport edges
         if (s.x < 0) {
           s.x = 0;
           s.vx = Math.abs(s.vx);
@@ -120,19 +170,15 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
           s.vx = -Math.abs(s.vx);
         }
 
-        // Teleport around dock so we never cover it
         if (dock) {
           const right = s.x + s.size;
           const overlapping = right > dock.left && s.x < dock.right;
           if (overlapping) {
             if (s.vx > 0) {
-              // Moving right → exit to the right side of dock
               s.x = dock.right;
             } else {
-              // Moving left → exit to the left side of dock
               s.x = dock.left - s.size;
             }
-            // If teleport pushed us off-screen, wrap to the opposite edge
             if (s.x + s.size > vw) s.x = 0;
             if (s.x < 0) s.x = vw - s.size;
           }
@@ -140,8 +186,8 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
 
         const el = itemRefs.current[i];
         if (el) {
-          const bob = Math.sin(s.bobPhase) * 2; // gentle 2px walk bob
-          const flip = s.vx >= 0 ? -1 : 1; // face direction of travel
+          const bob = Math.sin(s.bobPhase) * 2;
+          const flip = s.vx >= 0 ? -1 : 1;
           el.style.transform = `translate3d(${s.x}px, ${bob}px, 0) scaleX(${flip})`;
         }
       }
@@ -170,13 +216,13 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
         overflow: 'hidden',
       }}
     >
-      {POKEMON.map((p, i) => (
+      {roster.map((p, i) => (
         <img
-          key={p.id}
+          key={`${p.slug}-${i}`}
           ref={el => {
             itemRefs.current[i] = el;
           }}
-          src={SPRITE_URL(p.id)}
+          src={SPRITE_URL(p.slug)}
           alt=""
           draggable={false}
           style={{
@@ -187,7 +233,7 @@ export default function PokemonWalkers({ avoidDock = false, zIndex = 9997 }: Pro
             height: sizes[i],
             objectFit: 'contain',
             objectPosition: 'bottom center',
-            imageRendering: 'pixelated',
+            // Showdown sprites are smooth/anti-aliased, so leave default rendering
             willChange: 'transform',
             filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.4))',
             userSelect: 'none',
