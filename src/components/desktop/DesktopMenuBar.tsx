@@ -102,35 +102,39 @@ export default function DesktopMenuBar() {
 
         {!isMobile && <div style={{ ...barItem, fontWeight: 600, padding: '0 14px 0 0' }}>abdullah sultan</div>}
 
-        <div
-          onMouseDown={() => {
-            const termWin = state.windows.terminal;
-            if (termWin?.isFullscreen) {
-              dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' });
-              setTimeout(() => dispatch({ type: 'OPEN_WINDOW', id: 'education' }), 150);
-            } else {
-              dispatch({ type: 'OPEN_WINDOW', id: 'education' });
-            }
-            close();
-          }}
-          onMouseEnter={() => hover('_edu')}
-          style={{ ...barItem, padding: '0 10px' }}
-        >About</div>
+        {!isMobile && (
+          <>
+            <div
+              onMouseDown={() => {
+                const termWin = state.windows.terminal;
+                if (termWin?.isFullscreen) {
+                  dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' });
+                  setTimeout(() => dispatch({ type: 'OPEN_WINDOW', id: 'education' }), 150);
+                } else {
+                  dispatch({ type: 'OPEN_WINDOW', id: 'education' });
+                }
+                close();
+              }}
+              onMouseEnter={() => hover('_edu')}
+              style={{ ...barItem, padding: '0 10px' }}
+            >About</div>
 
-        <div
-          onMouseDown={() => {
-            const termWin = state.windows.terminal;
-            if (termWin?.isFullscreen) {
-              dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' });
-              setTimeout(() => dispatch({ type: 'OPEN_WINDOW', id: 'experience' }), 150);
-            } else {
-              dispatch({ type: 'OPEN_WINDOW', id: 'experience' });
-            }
-            close();
-          }}
-          onMouseEnter={() => hover('_exp')}
-          style={{ ...barItem, padding: '0 10px' }}
-        >Projects</div>
+            <div
+              onMouseDown={() => {
+                const termWin = state.windows.terminal;
+                if (termWin?.isFullscreen) {
+                  dispatch({ type: 'TOGGLE_FULLSCREEN', id: 'terminal' });
+                  setTimeout(() => dispatch({ type: 'OPEN_WINDOW', id: 'experience' }), 150);
+                } else {
+                  dispatch({ type: 'OPEN_WINDOW', id: 'experience' });
+                }
+                close();
+              }}
+              onMouseEnter={() => hover('_exp')}
+              style={{ ...barItem, padding: '0 10px' }}
+            >Projects</div>
+          </>
+        )}
 
         <div
           onMouseDown={() => window.open('https://github.com/amsultan2010', '_blank')}

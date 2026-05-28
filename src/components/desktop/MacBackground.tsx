@@ -10,7 +10,7 @@ export default function MacBackground({ overlayOpacity = 0.1 }: { overlayOpacity
           height: '100%',
           zIndex: 0,
           pointerEvents: 'none',
-          backgroundImage: `url(/images/wallpaper/wallpaper.jpg)`,
+          backgroundImage: `url(/images/wallpaper/wallpaper.png)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

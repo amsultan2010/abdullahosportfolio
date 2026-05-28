@@ -7,7 +7,6 @@ import BootScreen from './BootScreen';
 import DesktopDock from './DesktopDock';
 import DesktopMenuBar from './DesktopMenuBar';
 import AbdullahAsciiLogo from './AbdullahAsciiLogo';
-import PokemonWalkers from '../PokemonWalkers';
 import type { WindowId } from './types';
 
 // Section content — uses desktop-portfolio (master copies, untouched)
@@ -5901,12 +5900,11 @@ function Desktop() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Open terminal on boot complete
+  // Open terminal on boot complete (desktop only — mobile uses MobileLayout)
   useEffect(() => {
-    if (state.bootComplete && Object.keys(state.windows).length === 0) {
-      dispatch({ type: 'OPEN_WINDOW', id: 'terminal' });
-    }
-  }, [state.bootComplete]);
+    if (!state.bootComplete || isMobile || Object.keys(state.windows).length > 0) return;
+    dispatch({ type: 'OPEN_WINDOW', id: 'terminal' });
+  }, [state.bootComplete, isMobile, dispatch]);
 
   // Desktop click — deselect all windows
   const handleDesktopClick = useCallback((e: React.MouseEvent) => {
@@ -6024,17 +6022,6 @@ function Desktop() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [state.focusedWindowId, dispatch]);
 
-  // On mobile, fullscreen non-terminal windows (terminal stays windowed to show hero)
-  useEffect(() => {
-    if (!isMobile) return;
-    const wins = Object.values(state.windows);
-    for (const w of wins) {
-      if (w.id !== 'terminal' && w.isOpen && !w.isFullscreen && !w.isMinimized) {
-        dispatch({ type: 'TOGGLE_FULLSCREEN', id: w.id });
-      }
-    }
-  }, [isMobile, state.windows]);
-
   const openWindows = Object.values(state.windows).filter(w => w.isOpen);
 
   return (
@@ -6055,55 +6042,56 @@ function Desktop() {
         <>
           <DesktopMenuBar />
 
-          {/* Windows */}
-          {openWindows.map(win => {
-            // Title bar bg matches each app's content color
-            const titleBarBgMap: Record<string, string> = {
-              projects: '#252526',
-              blog: '#f9f9f8',
-              email: '#ffffff',
-              photos: '#1a1a1f',
-              watchlist: '#141414',
-            };
-            // Apps with dark content need light title bar text
-            const darkTitleBars = ['projects', 'terminal', 'photos', 'watchlist'];
-            const titleBarBg = titleBarBgMap[win.id];
-            const titleBarDark = darkTitleBars.includes(win.id);
-            const hoverProps = {
-              onMouseEnter: () => setHoveredWindowId(win.id),
-              onMouseLeave: () => setHoveredWindowId(null),
-            };
-            if (win.id === 'detail' && state.activeDetail) {
-              return (
-                <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark} {...hoverProps}>
-                  <DetailPanel
-                    detail={state.activeDetail}
-                    onClose={() => dispatch({ type: 'CLOSE_DETAIL' })}
-                    windowMode
-                  />
-                </AppWindow>
-              );
-            }
-            if (win.id === 'content' && state.activeContent) {
-              return (
-                <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark} {...hoverProps}>
-                  <ContentViewer
-                    content={state.activeContent}
-                    onClose={() => dispatch({ type: 'CLOSE_CONTENT' })}
-                    windowMode
-                  />
-                </AppWindow>
-              );
-            }
-            return (
-              <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark} {...hoverProps}>
-                <WindowContent id={win.id} />
-              </AppWindow>
-            );
-          })}
-
-          <PokemonWalkers />
-          <DesktopDock />
+          {isMobile ? (
+            <MobileLayout />
+          ) : (
+            <>
+              {openWindows.map(win => {
+                const titleBarBgMap: Record<string, string> = {
+                  projects: '#252526',
+                  blog: '#f9f9f8',
+                  email: '#ffffff',
+                  photos: '#1a1a1f',
+                  watchlist: '#141414',
+                };
+                const darkTitleBars = ['projects', 'terminal', 'photos', 'watchlist'];
+                const titleBarBg = titleBarBgMap[win.id];
+                const titleBarDark = darkTitleBars.includes(win.id);
+                const hoverProps = {
+                  onMouseEnter: () => setHoveredWindowId(win.id),
+                  onMouseLeave: () => setHoveredWindowId(null),
+                };
+                if (win.id === 'detail' && state.activeDetail) {
+                  return (
+                    <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark} {...hoverProps}>
+                      <DetailPanel
+                        detail={state.activeDetail}
+                        onClose={() => dispatch({ type: 'CLOSE_DETAIL' })}
+                        windowMode
+                      />
+                    </AppWindow>
+                  );
+                }
+                if (win.id === 'content' && state.activeContent) {
+                  return (
+                    <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark} {...hoverProps}>
+                      <ContentViewer
+                        content={state.activeContent}
+                        onClose={() => dispatch({ type: 'CLOSE_CONTENT' })}
+                        windowMode
+                      />
+                    </AppWindow>
+                  );
+                }
+                return (
+                  <AppWindow key={win.id} windowState={win} titleBarBg={titleBarBg} titleBarDark={titleBarDark} {...hoverProps}>
+                    <WindowContent id={win.id} />
+                  </AppWindow>
+                );
+              })}
+              <DesktopDock />
+            </>
+          )}
         </>
       )}
 
@@ -6192,7 +6180,7 @@ function MobileStocks() {
   );
 }
 
-function MobileProjects({ onCardClick }: { onCardClick: (detail: DetailContent) => void }) {
+function MobileProjects({ onCardClick }: { onCardClick?: (detail: DetailContent) => void }) {
   // Import project data from Projects component — these are the same projects
   const mobileProjects = [
     {
@@ -6374,359 +6362,219 @@ function MobileLayout() {
   const [activeSection, setActiveSection] = useState<MobileSection>(null);
   const [activeDetail, setActiveDetail] = useState<DetailContent | null>(null);
   const [activeContent, setActiveContent] = useState<ContentViewData | null>(null);
-  const [slideIndex, setSlideIndex] = useState(0);
-  const [cardFlipped, setCardFlipped] = useState(false);
-  const [expandedPanel, setExpandedPanel] = useState<'sound' | 'wifi' | 'notif' | null>(null);
 
   const handleCardClick = (detail: DetailContent) => setActiveDetail(detail);
   const handleContentClick = (content: ContentViewData) => setActiveContent(content);
 
-  // Shared styles
   const glass: React.CSSProperties = {
-    background: 'rgba(20, 20, 28, 0.82)',
+    background: 'rgba(12, 14, 22, 0.88)',
     backdropFilter: 'saturate(140%) blur(24px)',
     WebkitBackdropFilter: 'saturate(140%) blur(24px)',
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.1)',
     borderRadius: '16px',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
   };
-  const sHead: React.CSSProperties = { color: '#fff', fontSize: '10px', fontWeight: 700, letterSpacing: '0.14em', marginBottom: '6px', fontFamily: "'SF Mono', monospace" };
-  const sPara: React.CSSProperties = { color: 'rgba(255,255,255,0.88)', fontSize: '13px', lineHeight: 1.6, fontFamily: "'SF Pro Text', -apple-system, sans-serif", fontWeight: 400 };
+  const sHead: React.CSSProperties = {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: '10px',
+    fontWeight: 700,
+    letterSpacing: '0.12em',
+    marginBottom: '10px',
+    fontFamily: "'SF Mono', monospace",
+    textTransform: 'uppercase',
+  };
 
-  const SLIDE_TITLES = ['ABOUT', 'SOFTWARE', 'CURRENT FOCUS'];
-  const nextSlide = () => setSlideIndex(i => (i + 1) % 3);
-  const prevSlide = () => setSlideIndex(i => (i + 2) % 3);
-
-  const mIcon = (src: string, alt: string, scale = 1.12) => (
-    <div style={{ width: '56px', height: '56px', borderRadius: '14px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <img src={src} alt={alt} style={{ width: `${56 * scale}px`, height: `${56 * scale}px`, objectFit: 'cover', pointerEvents: 'none' }} />
+  const ICON = 52;
+  const mIcon = (src: string, alt: string, scale = 1.08) => (
+    <div style={{ width: ICON, height: ICON, borderRadius: '13px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <img src={src} alt={alt} style={{ width: ICON * scale, height: ICON * scale, objectFit: 'cover', pointerEvents: 'none' }} />
     </div>
   );
+
+  const sectionTitle = (id: NonNullable<MobileSection>) => {
+    const titles: Record<NonNullable<MobileSection>, string> = {
+      education: 'education',
+      experience: 'about',
+      projects: 'projects',
+      photos: 'photos',
+      blog: 'abdullahos',
+      watchlist: 'watchlist',
+    };
+    return titles[id];
+  };
 
   const APP_GRID: { label: string; icon: React.ReactNode; action: () => void }[] = [
     { label: 'about', icon: mIcon('/images/logosicons/codex.png', 'about', 1), action: () => setActiveSection('experience') },
     { label: 'projects', icon: mIcon('/vscode.png', 'vscode', 1), action: () => setActiveSection('projects') },
-    { label: 'abdullahos', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: '#050505', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><AbdullahAsciiLogo width={48} height={48} color="#fff" opacity={0.9} /></div>, action: () => setActiveSection('blog') },
+    { label: 'abdullahos', icon: <div style={{ width: ICON, height: ICON, borderRadius: '13px', background: '#050505', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><AbdullahAsciiLogo width={44} height={44} color="#fff" opacity={0.9} /></div>, action: () => setActiveSection('blog') },
     { label: 'photos', icon: mIcon('/icons/photos.png', 'photos'), action: () => setActiveSection('photos') },
     { label: 'gmail', icon: mIcon('/images/logosicons/gmail.png', 'gmail', 1), action: () => { window.location.href = 'mailto:abdullahmsultan1@gmail.com'; } },
     { label: 'watchlist', icon: mIcon('/images/logosicons/netflix.png', 'watchlist', 1), action: () => setActiveSection('watchlist') },
-    { label: 'github', icon: <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'linear-gradient(135deg, #2d2d2d, #434343)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>, action: () => window.open('https://github.com/amsultan2010', '_blank') },
-    { label: 'youtube music', icon: mIcon('/images/logosicons/youtubemusic.png', 'youtube music', 1), action: () => window.open('https://music.youtube.com/@amsultan303', '_blank') },
+    { label: 'github', icon: <div style={{ width: ICON, height: ICON, borderRadius: '13px', background: 'linear-gradient(135deg, #2d2d2d, #434343)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>, action: () => window.open('https://github.com/amsultan2010', '_blank') },
+    { label: 'music', icon: mIcon('/images/logosicons/youtubemusic.png', 'youtube music', 1), action: () => window.open('https://music.youtube.com/@amsultan303', '_blank') },
   ];
 
   return (
     <div style={{
-      position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-      animation: 'mobileFadeIn 0.6s ease-out',
+      position: 'fixed',
+      top: 28,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 5000,
+      display: 'flex',
+      flexDirection: 'column',
       touchAction: 'manipulation',
+      animation: 'mobileFadeIn 0.4s ease-out',
     }}>
-      {/* Main scrollable content */}
-      <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', position: 'relative' }}>
-        <div style={{ padding: '0 20px 40px', animation: 'mobileFadeIn 0.4s ease-out' }}>
-          {/* Scrolling ticker strip */}
-          <div style={{
-            position: 'sticky', top: 0, zIndex: 10,
-            padding: '10px 0', marginBottom: '16px',
-            fontFamily: "'SF Mono', monospace", fontSize: '10px',
-            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-            marginLeft: '-20px', marginRight: '-20px',
-            borderBottom: '0.5px solid rgba(255,255,255,0.06)',
-            overflow: 'hidden',
-          }}>
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch',
+      }}>
+        <div style={{
+          padding: '16px max(16px, env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))',
+          maxWidth: '480px',
+          margin: '0 auto',
+        }}>
+          {/* Hero */}
+          <div style={{ ...glass, padding: 0, overflow: 'hidden', marginBottom: '22px' }}>
             <div style={{
-              display: 'inline-flex', gap: '24px', whiteSpace: 'nowrap',
-              animation: 'tickerScroll 20s linear infinite',
-              paddingLeft: '20px',
+              display: 'flex', alignItems: 'center', padding: '10px 14px',
+              borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.2)',
             }}>
-              <CompactFocus /><span style={{ color: 'rgba(255,255,255,0.1)' }}>│</span>
-              <CompactFocus /><span style={{ color: 'rgba(255,255,255,0.1)' }}>│</span>
-              <CompactFocus />
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f57' }} />
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#febc2e' }} />
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#28c840' }} />
+              </div>
+              <span style={{ flex: 1, textAlign: 'center', fontFamily: "'SF Mono', monospace", fontSize: '11px', color: 'rgba(255,255,255,0.45)' }}>
+                abdullahos — zsh
+              </span>
+              <div style={{ width: '42px' }} />
+            </div>
+            <div style={{ padding: '18px 16px 20px' }}>
+              <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 700, fontSize: '26px', color: '#fff', letterSpacing: '-0.4px', lineHeight: 1.15, marginBottom: '6px' }}>
+                Abdullah Sultan
+              </div>
+              <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.55)', marginBottom: '12px' }}>
+                Student builder · Riyadh
+              </div>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.78)', fontSize: '14px', lineHeight: 1.55 }}>
+                Building products for startups, vertical AI, robotics, education, and automation.
+              </p>
             </div>
           </div>
 
-          {/* Flippable Hero Card */}
-          <div style={{ perspective: '1000px', marginBottom: '20px' }}>
-            <div
-              onClick={() => setCardFlipped(f => !f)}
-              style={{
-                position: 'relative',
-                transformStyle: 'preserve-3d',
-                transform: cardFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                cursor: 'pointer',
-              }}
-            >
-              {/* Front: Hero */}
-              <div style={{
-                ...glass, padding: 0, overflow: 'hidden',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-              }}>
-                <div style={{
-                  display: 'flex', alignItems: 'center', padding: '10px 14px',
-                  borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)',
-                }}>
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f57' }} />
-                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#febc2e' }} />
-                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#28c840' }} />
-                  </div>
-                  <span style={{ flex: 1, textAlign: 'center', fontFamily: "'SF Mono', monospace", fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
-                    abdullah.tech — zsh
-                  </span>
-                  <div style={{ width: '42px' }} />
-                </div>
-                <div style={{ padding: '20px 18px 24px' }}>
-                  <div style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif", fontWeight: 800, fontSize: '28px', color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '4px' }}>
-                    Abdullah Sultan
-                  </div>
-                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontFamily: "'SF Pro Text', sans-serif", marginBottom: '12px' }}>
-                    Student builder
-                  </div>
-                  <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.5, fontFamily: "'SF Mono', monospace" }}>
-                    building products for startups,<br />vertical ai, robotics,<br />education, and automation.
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Pro Text', sans-serif" }}>
-                      {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                    </div>
-                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Mono', monospace" }}>tap to flip ↻</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Back: Slides */}
-              <div
-                onClick={(e) => e.stopPropagation()}
+          {/* Apps */}
+          <div style={sHead}>Apps</div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+            gap: '16px 10px',
+            justifyItems: 'center',
+            marginBottom: '24px',
+          }}>
+            {APP_GRID.map((app, i) => (
+              <button
+                key={`${app.label}-${i}`}
+                onClick={app.action}
                 style={{
-                  ...glass, padding: '18px',
-                  position: 'absolute', top: 0, left: 0, right: 0,
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  transform: 'rotateY(180deg)',
-                  minHeight: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '6px',
+                  width: '100%',
+                  maxWidth: '72px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  WebkitTapHighlightColor: 'transparent',
+                  padding: 0,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <button onClick={(e) => { e.stopPropagation(); prevSlide(); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: '16px', cursor: 'pointer', padding: '4px 8px', WebkitTapHighlightColor: 'transparent' }}>‹</button>
-                  <div style={sHead}>{SLIDE_TITLES[slideIndex]}</div>
-                  <button onClick={(e) => { e.stopPropagation(); nextSlide(); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: '16px', cursor: 'pointer', padding: '4px 8px', WebkitTapHighlightColor: 'transparent' }}>›</button>
-                </div>
-                <div key={slideIndex} style={{ animation: 'mobileFadeIn 0.25s ease-out' }}>
-                  {slideIndex === 0 && (
-                    <div>
-                      <div style={sPara}>
-                        currently based in Riyadh, Saudi Arabia. abdullah is a student builder interested in startups, vertical ai, robotics, education, and automation.
-                      </div>
-                      <div style={{ ...sPara, marginTop: '8px' }}>
-                        long term: become the cto of a yc-funded startup that actually does something meaningful.
-                      </div>
-                    </div>
-                  )}
-                  {slideIndex === 1 && (
-                    <div style={sPara}>
-                      abdullahos is the main custom project app. tutoringbyabdullah and the quant tools show product + technical range.
-                    </div>
-                  )}
-                  {slideIndex === 2 && (
-                    <div>
-                      {['abdullahos interface', 'shipping tutoringbyabdullah', 'robotics, automation, vertical ai, and quant tools'].map((item, i) => (
-                        <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginBottom: '3px' }}>
-                          <span style={{ color: '#fff', fontSize: '8px', fontFamily: "'SF Mono', monospace" }}>›</span>
-                          <span style={{ ...sPara, fontSize: '12px', lineHeight: 1.45 }}>{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    {[0, 1, 2].map(i => (
-                      <div key={i} style={{
-                        width: i === slideIndex ? '16px' : '6px', height: '6px',
-                        borderRadius: '3px',
-                        background: i === slideIndex ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.2)',
-                        transition: 'all 0.2s ease',
-                      }} />
-                    ))}
-                  </div>
-                  <div onClick={(e) => { e.stopPropagation(); setCardFlipped(false); }} style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontFamily: "'SF Mono', monospace", cursor: 'pointer' }}>↻ flip back</div>
-                </div>
-              </div>
-            </div>
+                {app.icon}
+                <span style={{
+                  fontSize: '11px',
+                  color: 'rgba(255,255,255,0.75)',
+                  fontFamily: "'SF Pro Text', sans-serif",
+                  fontWeight: 500,
+                  textAlign: 'center',
+                  lineHeight: 1.2,
+                  wordBreak: 'break-word',
+                }}>
+                  {app.label}
+                </span>
+              </button>
+            ))}
           </div>
 
-          {/* App Grid (iOS home screen style) */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '18px 12px', justifyItems: 'center' }}>
-              {APP_GRID.map((app, i) => (
-                <button
-                  key={`${app.label}-${i}`}
-                  onClick={app.action}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    WebkitTapHighlightColor: 'transparent', padding: 0,
-                  }}
-                >
-                  {app.icon}
-                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)', fontFamily: "'SF Pro Text', sans-serif", fontWeight: 500 }}>
-                    {app.label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Watch */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-            <ChronographWatch />
-          </div>
-
-          {/* World Clocks */}
-          <div style={{ textAlign: 'center', fontFamily: "'SF Mono', monospace", fontSize: '10px', marginBottom: '14px' }}>
-            <CompactClocks />
-          </div>
-
-          {/* Control Center: Sound, WiFi, Notifications */}
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
-            {/* Sound / Music */}
-            <button onClick={() => setExpandedPanel(expandedPanel === 'sound' ? null : 'sound')} style={{
-              ...glass, flex: 1, padding: '14px', border: expandedPanel === 'sound' ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.08)',
-              cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
-              WebkitTapHighlightColor: 'transparent', color: '#fff', textAlign: 'center',
-            }}>
-              <svg width="20" height="18" viewBox="0 0 16 14" fill="none">
-                <path d="M2 5h2l4-3v10l-4-3H2a1 1 0 01-1-1V6a1 1 0 011-1z" fill="rgba(255,255,255,0.9)" />
-                <path d="M11 4.5a3.5 3.5 0 010 5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-                <path d="M13 2.5a6.5 6.5 0 010 9" stroke="rgba(255,255,255,0.5)" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-              </svg>
-              <span style={{ fontSize: '10px', fontFamily: "'SF Pro Text', sans-serif", fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>Sound</span>
-            </button>
-
-            {/* WiFi */}
-            <button onClick={() => setExpandedPanel(expandedPanel === 'wifi' ? null : 'wifi')} style={{
-              ...glass, flex: 1, padding: '14px', border: expandedPanel === 'wifi' ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.08)',
-              cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
-              WebkitTapHighlightColor: 'transparent', color: '#fff', textAlign: 'center',
-            }}>
-              <svg width="20" height="16" viewBox="0 0 16 12" fill="none">
-                <path d="M8 10.5a1 1 0 100-2 1 1 0 000 2z" fill="rgba(255,255,255,1)" />
-                <path d="M5.17 7.17a4 4 0 015.66 0" stroke="rgba(255,255,255,0.9)" strokeWidth="1.3" strokeLinecap="round" fill="none" />
-                <path d="M2.93 4.93a7 7 0 0110.14 0" stroke="rgba(255,255,255,0.75)" strokeWidth="1.3" strokeLinecap="round" fill="none" />
-              </svg>
-              <span style={{ fontSize: '10px', fontFamily: "'SF Pro Text', sans-serif", fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>Wi-Fi</span>
-            </button>
-
-            {/* Notifications */}
-            <button onClick={() => setExpandedPanel(expandedPanel === 'notif' ? null : 'notif')} style={{
-              ...glass, flex: 1, padding: '14px', border: expandedPanel === 'notif' ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.08)',
-              cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
-              WebkitTapHighlightColor: 'transparent', color: '#fff', textAlign: 'center',
-            }}>
-              <svg width="18" height="20" viewBox="0 0 16 18" fill="none">
-                <path d="M8 1a4 4 0 00-4 4v3l-2 2v1h12v-1l-2-2V5a4 4 0 00-4-4z" fill="rgba(255,255,255,0.9)" />
-                <path d="M6 14a2 2 0 004 0" stroke="rgba(255,255,255,0.9)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-              </svg>
-              <span style={{ fontSize: '10px', fontFamily: "'SF Pro Text', sans-serif", fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>Activity</span>
-            </button>
-          </div>
-
-          {/* Expanded Panel */}
-          {expandedPanel === 'sound' && (
-            <div style={{ ...glass, padding: '16px', marginBottom: '14px', animation: 'mobileFadeIn 0.2s ease-out' }}>
-              <div style={{ ...sHead, marginBottom: '10px' }}>♫ YOUTUBE MUSIC</div>
-              <a href="https://music.youtube.com/@amsultan303" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', gap: '12px', alignItems: 'center', textDecoration: 'none', color: 'inherit', marginBottom: '12px' }}>
-                <div style={{ width: '52px', height: '52px', borderRadius: '8px', background: '#ff0033', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M10 8l6 4-6 4z" /></svg>
-                </div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>YouTube Music</div>
-                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>Static launcher</div>
-                </div>
-              </a>
-              {/* Volume slider */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '14px' }}>
-                <svg width="12" height="10" viewBox="0 0 16 14" fill="none" style={{ opacity: 0.45, flexShrink: 0 }}>
-                  <path d="M2 5h2l4-3v10l-4-3H2a1 1 0 01-1-1V6a1 1 0 011-1z" fill="rgba(255,255,255,0.55)" />
-                </svg>
-                <div style={{ flex: 1, height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', position: 'relative' }}>
-                  <div style={{ height: '100%', width: '70%', background: 'rgba(255,255,255,0.4)', borderRadius: '2px' }} />
-                  <div style={{ position: 'absolute', top: '-4px', left: '70%', transform: 'translateX(-50%)', width: '10px', height: '10px', borderRadius: '50%', background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
-                </div>
-                <svg width="14" height="10" viewBox="0 0 16 14" fill="none" style={{ opacity: 0.45, flexShrink: 0 }}>
-                  <path d="M2 5h2l4-3v10l-4-3H2a1 1 0 01-1-1V6a1 1 0 011-1z" fill="rgba(255,255,255,0.55)" />
-                  <path d="M11 4.5a3.5 3.5 0 010 5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-                  <path d="M13 2.5a6.5 6.5 0 010 9" stroke="rgba(255,255,255,0.25)" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-                </svg>
-              </div>
-            </div>
-          )}
-
-          {expandedPanel === 'wifi' && (
-            <div style={{ ...glass, padding: 0, marginBottom: '14px', animation: 'mobileFadeIn 0.2s ease-out', overflow: 'hidden' }}>
-              <WifiSettings />
-            </div>
-          )}
-
-          {expandedPanel === 'notif' && (
-            <div style={{ ...glass, padding: '14px', marginBottom: '14px', animation: 'mobileFadeIn 0.2s ease-out' }}>
-              <div style={sHead}>STATIC ACTIVITY</div>
-              <div style={sPara}>abdullahos ready. projects are static and local-only.</div>
-            </div>
-          )}
-
-          {/* Contact */}
-          <div style={{ ...glass, padding: '16px', marginBottom: '20px' }}>
-            <div style={sHead}>CONTACT</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontFamily: "'SF Mono', monospace", fontSize: '12px' }}>
-              <a href="https://music.youtube.com/@amsultan303" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>♫ music.youtube.com</a>
-              <a href="https://github.com/amsultan2010" target="_blank" rel="noopener" style={{ color: '#fff', textDecoration: 'none' }}>🐙 github.com/amsultan2010</a>
-              <a href="mailto:abdullahmsultan1@gmail.com" style={{ color: '#fff', textDecoration: 'none' }}>✉ abdullahmsultan1@gmail.com</a>
-              <span style={{ color: '#fff' }}>📍 Riyadh, Saudi Arabia</span>
+          {/* Quick links */}
+          <div style={{ ...glass, padding: '14px 16px', marginBottom: '16px' }}>
+            <div style={sHead}>Links</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontFamily: "'SF Mono', monospace", fontSize: '13px' }}>
+              <a href="https://github.com/amsultan2010" target="_blank" rel="noopener noreferrer" style={{ color: '#fff', textDecoration: 'none' }}>github.com/amsultan2010</a>
+              <a href="https://music.youtube.com/@amsultan303" target="_blank" rel="noopener noreferrer" style={{ color: '#fff', textDecoration: 'none' }}>music.youtube.com</a>
+              <a href="mailto:abdullahmsultan1@gmail.com" style={{ color: '#fff', textDecoration: 'none' }}>abdullahmsultan1@gmail.com</a>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Section Overlay ── */}
       {activeSection && (
         <div style={{
-          position: 'fixed', inset: 0, zIndex: 100,
-          background: 'rgba(10, 12, 20, 0.97)',
-          backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-          display: 'flex', flexDirection: 'column',
-          animation: 'mobileSlideUp 0.3s ease-out',
-          overflowY: 'auto', overscrollBehavior: 'contain',
+          position: 'fixed',
+          inset: 0,
+          zIndex: 10000,
+          background: 'rgba(8, 10, 18, 0.98)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          display: 'flex',
+          flexDirection: 'column',
+          animation: 'mobileSlideUp 0.28s ease-out',
+          overflowY: 'auto',
+          overscrollBehavior: 'contain',
         }}>
-          {/* Header */}
           <div style={{
-            position: 'sticky', top: 0, zIndex: 10,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '14px 16px', minHeight: '50px',
-            background: 'rgba(10, 12, 20, 0.9)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: 'max(12px, env(safe-area-inset-top)) 16px 12px',
+            minHeight: '48px',
+            background: 'rgba(8, 10, 18, 0.92)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
             borderBottom: '0.5px solid rgba(255,255,255,0.08)',
           }}>
             <button
               onClick={() => setActiveSection(null)}
               style={{
-                background: 'none', border: 'none', color: '#60a5fa', fontSize: '15px',
-                cursor: 'pointer', fontFamily: "'SF Pro Text', sans-serif", padding: '4px 0',
+                background: 'none',
+                border: 'none',
+                color: '#60a5fa',
+                fontSize: '16px',
+                cursor: 'pointer',
+                fontFamily: "'SF Pro Text', sans-serif",
+                padding: '6px 0',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              ← back
+              ← Back
             </button>
-            <span style={{ fontFamily: "'SF Mono', monospace", fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>
-              {activeSection === 'education' ? 'education' : activeSection === 'experience' ? 'about' : activeSection === 'projects' ? 'projects' : activeSection === 'photos' ? 'photos' : activeSection === 'watchlist' ? 'watchlist' : 'abdullahos'}
+            <span style={{ fontFamily: "'SF Mono', monospace", fontSize: '13px', color: 'rgba(255,255,255,0.65)' }}>
+              {sectionTitle(activeSection)}
             </span>
-            <div style={{ width: '50px' }} />
+            <div style={{ width: '56px' }} />
           </div>
-          {/* Section content */}
-          <div style={{ flex: 1, paddingBottom: '40px' }}>
+          <div style={{ flex: 1, paddingBottom: 'calc(32px + env(safe-area-inset-bottom))' }}>
             {activeSection === 'education' && <Education onCardClick={handleCardClick} windowMode />}
             {activeSection === 'experience' && <Experience onCardClick={handleCardClick} windowMode />}
-            {activeSection === 'projects' && <Projects onCardClick={handleCardClick} windowMode />}
+            {activeSection === 'projects' && <MobileProjects onCardClick={handleCardClick} />}
             {activeSection === 'photos' && <Photos windowMode />}
             {activeSection === 'blog' && <Blog onContentClick={handleContentClick} windowMode />}
             {activeSection === 'watchlist' && <Watchlist windowMode />}
@@ -6734,46 +6582,30 @@ function MobileLayout() {
         </div>
       )}
 
-      {/* ── Detail Overlay ── */}
       {activeDetail && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 200,
-          animation: 'mobileSlideRight 0.3s ease-out',
-        }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10100, animation: 'mobileSlideRight 0.28s ease-out' }}>
           <DetailPanel detail={activeDetail} onClose={() => setActiveDetail(null)} />
         </div>
       )}
 
-      {/* ── Content Overlay ── */}
       {activeContent && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 200,
-          animation: 'mobileSlideRight 0.3s ease-out',
-        }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10100, animation: 'mobileSlideRight 0.28s ease-out' }}>
           <ContentViewer content={activeContent} onClose={() => setActiveContent(null)} />
         </div>
       )}
 
       <style>{`
         @keyframes mobileFadeIn {
-          from { opacity: 0; transform: translateY(10px); }
+          from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
         }
         @keyframes mobileSlideUp {
-          from { transform: translateY(20px); opacity: 0; }
+          from { transform: translateY(16px); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
         }
         @keyframes mobileSlideRight {
-          from { transform: translateX(30%); opacity: 0; }
+          from { transform: translateX(24%); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes mobileDrawerUp {
-          from { transform: translateY(100%); }
-          to { transform: translateY(0); }
-        }
-        @keyframes tickerScroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-33.33%); }
         }
       `}</style>
     </div>
